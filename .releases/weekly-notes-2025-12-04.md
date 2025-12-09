@@ -72,31 +72,6 @@ new Option<string>(
 )
 ```
 
-**Option Icons:**
-
-Options now support icons for visual indicators:
-
-```csharp
-new Option<string>("Active", "active", icon: Icons.CheckCircle)
-```
-
-### File Input Improvements
-
-**Event Handlers:**
-
-```csharp
-files.ToFileInput(upload)
-    .HandleBlur((Event<IAnyInput> e) => {
-        // Fires when file dialog closes (selected or cancelled)
-    })
-    .HandleCancel((Guid fileId) => {
-        // Fires when user clicks X button on a file
-        upload.Value.Cancel(fileId);
-    });
-```
-
-Explore the [FileInput documentation](https://docs.ivy.app/widgets/inputs/file) for complete API reference.
-
 ### Kanban Widget
 
 **CardBuilder Now Required:**
@@ -113,14 +88,6 @@ tasks.ToKanban(
     .Description(task.Description)
     .HandleClick(() => showTaskSheet(task.Id)))  // Card click example
 ```
-
-**HandleMove Renamed:**
-
-`.HandleCardMove()` renamed to `.HandleMove()` for consistency.
-
-**Removed Event Handlers:**
-
-`.HandleClick()` and `.HandleDelete()` removed from Kanban API. Implement click/delete functionality within `.CardBuilder()` instead using Card's `.HandleClick()` method.
 
 **Custom Card Ordering:**
 
@@ -168,7 +135,7 @@ More information in the [Table documentation](https://docs.ivy.app/widgets/commo
 
 **Row Action Improvements:**
 
-Row actions enhanced with better event handling. **Important**: You must specify `idSelector` when using row actions to properly identify rows:
+Row actions are enhanced with better event handling. **Important**: You must specify `idSelector` when using row actions to properly identify rows:
 
 ```csharp
 users.ToDataTable(idSelector: e => e.Id)
@@ -186,13 +153,6 @@ users.ToDataTable(idSelector: e => e.Id)
         var action = e.Value.Tag;  // Menu item tag
     });
 ```
-
-**Key Changes:**
-
-`RowActionClickEventArgs` simplified:
-
-- **New**: `Id` (row's unique identifier), `Tag` (menu item's tag)
-- **Removed**: `ActionId`, `EventName`, `RowIndex`, `RowData`
 
 **Column Resizing:**
 
@@ -262,36 +222,6 @@ Learn more: [Grid Layout documentation](https://docs.ivy.app/widgets/layouts/gri
 
 The `Sizes` enum has been renamed to `Scale` throughout the framework. All components (Forms, Inputs, Tables, Expandables) now support consistent `.Small()`, `.Medium()`, and `.Large()` configuration methods. Form inputs default to `Medium` if unspecified.
 
-### Expandable Widget
-
-Check the [Expandable documentation](https://docs.ivy.app/widgets/common/expandable) for more examples.
-
-### Box Widget
-
-**Plain() Extension Method:**
-
-New `Box.Plain()` extension method provides a reusable preset for demo/documentation styling:
-
-```csharp
-new Box().Plain().Content(content)
-```
-
-Documentation: [Box widget](https://docs.ivy.app/widgets/primitives/box).
-
-### Button Variants
-
-**SkinnyGhost Variant:**
-
-A new `SkinnyGhost` button variant provides ultra-compact button layouts for tight spaces:
-
-```csharp
-new Button("Edit")
-    .SkinnyGhost()
-    .Icon(Icons.Pencil);
-```
-
-Read the [Button documentation](https://docs.ivy.app/widgets/common/button) for all variants and options.
-
 ### Layout System
 
 **TopCenter Alignment:**
@@ -354,8 +284,6 @@ Ivy automatically detects and prevents routing conflicts between app IDs and fra
 
 ```csharp
 server.ReservePaths("/admin", "/reports", "/dashboard")
-    .RegisterApp<MyApp>("users")
-    .Start();
 ```
 
 ### Chrome Customization
@@ -392,33 +320,6 @@ products.ToTable().ColumnWidth(e => e.Sku, Size.Fraction(0.15f));  // Was .Width
 
 // Kanban
 tasks.ToKanban(...).ColumnWidth(Size.Rem(20));  // Uniform width
-```
-
-### Kanban Widget API Simplification
-
-- **CardBuilder required**: `titleSelector`/`descriptionSelector` removed. Use `.CardBuilder()` instead
-- **`.HandleCardMove()` - `.HandleMove()`**: Method renamed
-- **Removed handlers**: `.HandleClick()` and `.HandleDelete()` removed. Use Card's `.HandleClick()` within `.CardBuilder()`
-
-```csharp
-tasks.ToKanban(..., idSelector: e => e.Id, orderSelector: e => e.Priority)
-    .CardBuilder(task => new Card().Title(task.Title).Description(task.Description))
-    .HandleMove(...);
-```
-
-### DataTable Row Actions API Change
-
-- **Simplified event args**: `e.Value.Id` and `e.Value.Tag` instead of `e.Value.RowData["Id"]` and `e.Value.ActionId`
-- **Removed**: `ActionId` (use `Tag`), `EventName`, `RowIndex`, `RowData` (use `Id`)
-- **`idSelector` required**: Must specify when using row actions
-
-```csharp
-users.ToDataTable(idSelector: e => e.Id)  // Required
-    .RowActions(...)
-    .HandleRowAction(async e => {
-        var userId = e.Value.Id;   // Direct access
-        var action = e.Value.Tag;   // Was ActionId
-    });
 ```
 
 ### Authentication API Changes
@@ -489,3 +390,73 @@ Comprehensive URL validation across all components to prevent open redirect vuln
 - **URL Validation**: Fixed various edge cases in URL validation for images, audio, video, and links
 - **Padding Removal**: Updated padding removal class from `remove-ancestor-padding` to `remove-parent-padding` for more predictable and maintainable padding behavior across widgets
 - **Option Constructor**: Fixed missing parameter in Option constructor when creating enum options - now properly passes all 5 parameters (label, value, group, description, icon)
+
+## What's Changed
+
+- (release): quick fixes by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1579
+- (kanban): fix build error in docs by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1595
+- feat: enhance FormBuilder with comprehensive DataAnnotations support by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1518
+- [FileInput]: update implementation based on Copilot review by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1581
+- [Chrome]: for ?chrome=false fix redirect to prev and next page links by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1583
+- (routing): resolve custom route conflicts and prevent app ID collisions by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1580
+- (codex): Cleanup unnecessary logging statements by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1591
+- [HotFix]: update renamed API methods in kanban and table by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1601
+- [Expandable]: implement scale by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1608
+- [Time]: style improvements by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1606
+- [Scale]: set scale medium by default by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1604
+- fix: adjust chart yaxis min when negative values are present by @ViktorWb in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1600
+- fix: don't vary logging message templates by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1602
+- (kanban): API updates, simplification and fix of Header Layout issues by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1612
+- Add Stepper widget with selectable steps by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1615
+- (kanban): add example with card click by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1619
+- (form): size api fixes by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1621
+- [AsyncSelect]: make dividers go all the width by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1568
+- [Security]: validate urls to avoid Redirecting to a URL that is constructed from parts of the DOM by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1544
+- (form): FE api refactoring by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1625
+- (DemoBox): (removal): replace with Box.Plain and smart TOC by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1623
+- (async select): new styles that look good when mixed with other elements by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1628
+- [Grid]: Implement new Grid API and Color Opacity by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1624
+- New grid and cohort implementation by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1632
+- (expandable): ui updates to match everything in forms by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1636
+- (expandable): chevron icon updates by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1637
+- (expandable): handle edge cases with switches by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1638
+- [Kanban]: clear column highlight after drag ends by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1640
+- [Charts]: show tools only on hover if enabled by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1616
+- [Docs]: Sync docs with Release v1.1.1 by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1645
+- (codex): format main readme by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1655
+- (blades): fix misleading view name by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1658
+- (onboarding): remove unneccessary numbers in list in docs by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1648
+- (kanban): Kanban drag interactions and styling by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1657
+- (selects): refactor docs for select and async select by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1661
+- (kanban): scroll bar padding and rounded corners by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1666
+- (forms): better logic for handling cutoff by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1665
+- (tables): actually work with new API by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1670
+- (docs): made alert buttons horizontal layout by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1668
+- (routing): Implement 404 error for unrecognized apps by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1560
+- (table): propery implement align api by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1674
+- (codex): fix remove parent padding by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1673
+- (tooltip): multiline text in tooltip if it's long by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1688
+- (kanban): demo card ordering by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1685
+- (codex): implement proper usage of remove parent padding for footer and async select by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1683
+- [Grid]: improve text contrast with opacity in dark mode by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1660
+- (datatable): complete FE solution rework by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1656
+- [Docs]: fix dialog form width in few app examples in Forms by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1698
+- (options): fix missed param in ctor by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1701
+- (auth): get tokens out of frontend, add `IAuthSession` interface with checked access by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1607
+- (fix): Removed focus:ring (green color) from git codespaces button by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1699
+- (chore): Refactor of TextInput by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1696
+- (stepper): implement docs by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1689
+- [Sheet]: Implement use case in docs to show sheet creation algorithm in complete layouts by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1582
+- [tabs]: move underline inside container bounds by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1702
+- fix: errors sent by AppHub during connection are masked by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1710
+- (tabs): adjust colors by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1714
+- (docs): add conceptual documentation for Apps and the `[App]` attribute by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1711
+- Remove nullable Scale prop from input widgets by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1718
+- (fix): fix semantic structure and styling for cards by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1700
+- feat: prepare for patchnotes by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1697
+
+## New Contributors
+
+- @joshuauaua made their first contribution in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1658
+
+**Full Changelog**: https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.1.1...v1.1.2

@@ -95,13 +95,16 @@ public static class WidgetSerializer
         }
         json["props"] = props;
 
-        var eventsArray = new JsonArray();
-        foreach (var eventInfo in metadata.EventProperties)
+        if (metadata.EventProperties.Length > 0)
         {
-            if (eventInfo.Property.GetValue(widget) != null)
-                eventsArray.Add(eventInfo.Property.Name);
+            var eventsArray = new JsonArray();
+            foreach (var eventInfo in metadata.EventProperties)
+            {
+                if (eventInfo.Property.GetValue(widget) != null)
+                    eventsArray.Add(eventInfo.Property.Name);
+            }
+            json["events"] = eventsArray;
         }
-        json["events"] = eventsArray;
 
         return json;
     }

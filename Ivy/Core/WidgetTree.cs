@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -276,6 +277,10 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 
     private WidgetTreeChanged? _RefreshView(string viewId, bool isHotReload)
     {
+#if DEBUG
+        var stopWatch = Stopwatch.StartNew();
+#endif
+
         if (!_nodes.TryGetValue(viewId, out var node))
             throw new NotSupportedException($"Node '{viewId}' not found.");
 
@@ -330,7 +335,8 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if DEBUG
             if (Environment.GetEnvironmentVariable("IVY_DUMP_WIDGET_TREES") == "1")
             {
-                DebugHelpers.LogUpdatedTree(previous, update, patch);
+                stopWatch.Start();
+                DebugHelpers.LogUpdatedTree(previous, update, patch, stopWatch.ElapsedMilliseconds);
             }
 #endif
 

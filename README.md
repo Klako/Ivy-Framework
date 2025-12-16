@@ -39,7 +39,7 @@ The whole framework is built around strict enterprise security constraints. As t
 
 ### Quick Start
 
-> ⚠️ **Note:** Ivy.Console is still in beta, and the agentic features require an account. [Sign up for our waitlist](https://ivy.app/join-waitlist) to be among the first to get access.
+> ⚠️ **Note:** Ivy.Console is still in beta, and the agentic features require an account. [Register](https://ivy.app/auth/sign-up) for a free account to be among the first to try these features.
 
 Make sure you have the [.NET 9 SDK installed](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 

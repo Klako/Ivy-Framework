@@ -394,35 +394,44 @@ This security fix is automatic and requires no code changes in your applications
 - **Badge Icons**: Improved placement and scaling across all size variants.
 
 ## What's Changed
+* (card): align titles with horizontal content by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1722
+* (fix): Fixed inconsistencies in the Forms app (Ivy.Samples) by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1758
+* (security): fix Incomplete string escaping or encoding by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1724
+* (forms): update validation section and clean up form test apps by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1728
+* (security): fix url sanitization warning in the embed widget by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1723
+* [Docs]: Add interactive chat with streaming output example by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1716
+* (chore): Added Form apps into one menu folder. Removed FromSizeApp by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1692
+* docs: remove several Json widget examples from documentation by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1801
+* Update README to remove sign-up links by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1806
+* [Docs]: adjust Setters column width in Properties table by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1805
+* (fix): Added width inline style for number input by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1807
+* [FileInput]: enable tooltip for invalid icon by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1804
+* (chore): Readded Form app with scaffolding after compile errors by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1803
+* (chore): Ability to set new sidebar width by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1721
+* (theme): Added neutral and chromatic colors to design system and themeing by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1720
+* [Details]: implement scale api  by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1680
+* (docs): a lot of bug fixes by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1817
+* [badge]: improved icon placement and styles by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1821
+* [blades]: Set minimum height for blade demo containers in documentation by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1824
+* (kanban): remove margin top by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1826
+* [dropdown]: stop click propagation in DropdownMenuContent by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1828
+* Changed hardcoded color to Ivy Design color by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1836
+* (fix): Fixed text cutoff in charts by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1835
+* (fix): Fixed bug for AsyncSelect Icon placement by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1832
+* [forms]: fix multiple boolean input validation error by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1823
+* (button): create AI animated button by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1811
+* [blades]: fixed spacing issue in blades header by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1830
+* (callout): use text-foreground on callouts by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1837
+* fix(docs): spaces in title "C L I Overview" by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1839
+* [code]: Add XML syntax highlighting support for code blocks by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1841
+* (docs): rewrite frontend architecture documentation by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1838
+* [fonts]: prevent font flicker by changing font-display to fallback by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1829
+* (codex): implement hook rules by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1550
+* (codex): upgrade to .NET 10 by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1825
+* [details]: Update samples with better Details demonstration by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1850
+* (fix): Email validation checks for dots after @ symbol now by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1854
+* feat: add Clerk auth provider by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1452
+* [SelectInput]: nullable when cleared should have no selected value by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1853
 
-- (fix): Email validation checks for dots after @ symbol now by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1854>
-- [SelectInput]: nullable when cleared should have no selected value by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1853>
-- [details]: Update samples with better Details demonstration by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1850>
-- Restructure HTTP tunnel error response null check for clarity by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1845>
-- [code]: Add XML syntax highlighting support for code blocks by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1841>
-- fix(docs): spaces in title "C L I Overview" by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1839>
-- (docs): rewrite frontend architecture documentation by @dcrjodle in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1838>
-- (callout): use text-foreground on callouts by @dcrjodle in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1837>
-- Changed hardcoded color to Ivy Design color by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1836>
-- (fix): Fixed text cutoff in charts by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1835>
-- (fix): Fixed bug for AsyncSelect Icon placement by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1832>
-- [blades]: fixed spacing issue in blades header by @joshuauaua in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1830>
-- [fonts]: prevent font flicker by changing font-display to fallback by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1829>
-- [dropdown]: stop click propagation in DropdownMenuContent by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1828>
-- (kanban): remove margin top by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1826>
-- (codex): upgrade to .NET 10 by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1825>
-- [blades]: Set minimum height for blade demo containers in documentation by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1824>
-- [forms]: fix multiple boolean input validation error by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1823>
-- [badge]: improved icon placement and styles by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1821>
-- (docs): a lot of bug fixes by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1817>
-- (button): create AI animated button by @dcrjodle in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1811>
-- (fix): Added width inline style for number input by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1807>
-- Update README to remove sign-up links by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1806>
-- [Docs]: adjust Setters column width in Properties table by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1805>
-- [FileInput]: enable tooltip for invalid icon by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1804>
-- (chore): Readded Form app with scaffolding after compile errors by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1803>
-- docs: remove several Json widget examples from documentation by @joshuauaua in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1801>
-- (chrome): handle default page padding for chrome false mode by @ArtemKhvorostianyi in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1785>
-- refactor: remove Box.Plain() extension by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1759>
-- (fix): Fixed inconsistencies in the Forms app (Ivy.Samples) by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1758>
-- Add UseRef hook and enhance UseAlert and UseTrigger logic by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1757>
+
+**Full Changelog**: https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.1.4...v1.2.5

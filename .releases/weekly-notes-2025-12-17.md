@@ -234,8 +234,6 @@ record.ToDetails().Large()
 - Added `.Small()`, `.Medium()`, and `.Large()` extension methods to `DetailsBuilder`
 - The scale setting cascades to nested details through context
 
-This is perfect for creating information hierarchies where primary details are larger and more prominent while nested or secondary details can be smaller:
-
 ```csharp
 var record = new
 {

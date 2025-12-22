@@ -25,9 +25,7 @@ public static class Utils
             return ValueTask.CompletedTask;
         };
 
-    [RequiresUnreferencedCode()]
-    [RequiresDynamicCode()]
-    public static object? ConvertJsonNode(JsonNode? jsonNode, Type valueType)
+    public static object? ConvertJsonNode(JsonNode? jsonNode, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type valueType)
     {
         if (jsonNode is null) return null;
         // Get underlying type to handle nullable types properly with Convert.ChangeType

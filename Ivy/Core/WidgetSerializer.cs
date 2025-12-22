@@ -8,8 +8,6 @@ using Ivy.Core.Helpers;
 
 namespace Ivy.Core;
 
-[RequiresUnreferencedCode()]
-[RequiresDynamicCode()]
 public static class WidgetSerializer
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -60,8 +58,6 @@ public static class WidgetSerializer
         });
     }
 
-    [RequiresUnreferencedCode()]
-    [RequiresDynamicCode()]
     public static JsonNode Serialize(IWidget widget)
     {
         var children = widget.Children;

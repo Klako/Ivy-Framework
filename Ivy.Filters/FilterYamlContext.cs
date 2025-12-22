@@ -1,16 +1,4 @@
-using YamlDotNet.Serialization;
-
 namespace Ivy.Filters;
-
-/// <summary>
-/// YAML static context for AOT-compatible serialization
-/// </summary>
-[YamlStaticContext]
-[YamlSerializable(typeof(List<FieldMetaYaml>))]
-[YamlSerializable(typeof(FieldMetaYaml))]
-public partial class FilterYamlContext : StaticContext
-{
-}
 
 /// <summary>
 /// YAML-serializable representation of field metadata

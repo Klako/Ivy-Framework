@@ -52,10 +52,4 @@
     <EmbeddedResource Include="Filters.g4" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <IsAotCompatible>true</IsAotCompatible>
-    <IsTrimmable>true</IsTrimmable>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-  </PropertyGroup>
-
 </Project>

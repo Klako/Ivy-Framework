@@ -493,7 +493,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   }, []);
 
   return (
-    <div className={textContainerClass}>
+    <div className={cn(textContainerClass)}>
       <ReactMarkdown
         components={{
           ...componentsParams,

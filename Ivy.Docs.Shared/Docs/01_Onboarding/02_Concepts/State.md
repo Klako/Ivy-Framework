@@ -16,7 +16,7 @@ State management is a fundamental concept in Ivy that allows you to handle and u
 
 ## Basic Usage
 
-The `UseState` hook is the primary way to create reactive state in Ivy [views](./Views.md):
+The `UseState` hook is the primary way to create reactive state in Ivy views:
 
 ```csharp demo-below
 public class CounterApp : ViewBase
@@ -153,7 +153,7 @@ public class User
 }
 ```
 
-State updates in Ivy are handled through the Set method, which can accept direct values or computed values. Updates trigger automatic [re-renders](../01_GettingStarted/01_Introduction.md) of the affected components, ensuring the UI stays synchronized with the current state:
+State updates in Ivy are handled through the Set method, which can accept direct values or computed values. Updates trigger automatic re-renders of the affected components, ensuring the UI stays synchronized with the current state:
 
 ```csharp demo-tabs
 public class StateUpdatesDemo : ViewBase

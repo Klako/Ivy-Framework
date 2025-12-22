@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 type TextBlockVariant =
   | 'Literal'
@@ -143,9 +144,9 @@ const variantMap: VariantMap = {
     </code>
   ),
   Lead: ({ children, className, style }) => (
-    <p className={cn(textBlockClassMap.Lead, className)} style={style}>
-      {children}
-    </p>
+    <div className={cn(textBlockClassMap.Lead, className)} style={style}>
+      <MarkdownRenderer content={children} />
+    </div>
   ),
   ExtraLarge: ({ children, className, style }) => (
     <div className={cn('text-3xl ', className)} style={style}>

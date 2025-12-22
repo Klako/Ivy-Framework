@@ -219,8 +219,11 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
 
     // Filter out headings that are inside example boxes
     const elements = allHeadings.filter(heading => {
-      // Check if the heading is inside a demo tab
-      const isInsideDemoTab = (() => {
+      // Check if the heading is inside a demo tab or excluded demo content
+      const isExcluded = (() => {
+        // Check for explicit exclusion via test-id (used for demo-below boxes)
+        if (heading.closest('[data-testid="docs-demo-content"]')) return true;
+
         const tabPanel = heading.closest('[role="tabpanel"]');
         if (!tabPanel) return false;
 
@@ -236,7 +239,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
 
         return demoTab !== undefined;
       })();
-      return !isInsideDemoTab;
+      return !isExcluded;
     });
 
     const observer = new IntersectionObserver(

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,6 +8,8 @@ using Ivy.Core.Helpers;
 
 namespace Ivy.Core;
 
+[RequiresUnreferencedCode()]
+[RequiresDynamicCode()]
 public static class WidgetSerializer
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -57,6 +60,8 @@ public static class WidgetSerializer
         });
     }
 
+    [RequiresUnreferencedCode()]
+    [RequiresDynamicCode()]
     public static JsonNode Serialize(IWidget widget)
     {
         var children = widget.Children;
@@ -101,7 +106,7 @@ public static class WidgetSerializer
             foreach (var eventInfo in metadata.EventProperties)
             {
                 if (eventInfo.Property.GetValue(widget) != null)
-                    eventsArray.Add(eventInfo.Property.Name);
+                    eventsArray.Add(JsonValue.Create(eventInfo.Property.Name));
             }
             json["events"] = eventsArray;
         }

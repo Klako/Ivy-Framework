@@ -7,7 +7,7 @@ namespace Ivy.Filters;
 public class FilterParserAgent(IChatClient chatClient, ILogger? logger = null)
 {
     private const int MaxRetries = 2;
-    private readonly ISerializer _yamlSerializer = new SerializerBuilder().Build();
+    private readonly ISerializer _yamlSerializer = new StaticSerializerBuilder(new FilterYamlContext()).Build();
     private readonly IChatClient _chatClient = chatClient
         .AsBuilder().UseFunctionInvocation().Build();
 
@@ -207,10 +207,10 @@ public class FilterParserAgent(IChatClient chatClient, ILogger? logger = null)
 
     private string SerializeFieldsAsYaml(FieldMeta[] fields)
     {
-        var fieldsList = fields.Select(f => new
+        var fieldsList = fields.Select(f => new FieldMetaYaml
         {
-            f.DisplayName,
-            f.ColId,
+            DisplayName = f.DisplayName,
+            ColId = f.ColId,
             Type = f.Type.ToString()
         }).ToList();
 

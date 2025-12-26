@@ -6,7 +6,7 @@ namespace Ivy;
 
 public record Kanban : WidgetBase<Kanban>
 {
-    public Kanban(params KanbanCard[] cards) : base([.. cards.Cast<object>()])
+    public Kanban(params KanbanCard[] cards) : base([.. cards])
     {
     }
 

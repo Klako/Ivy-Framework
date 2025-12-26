@@ -30,7 +30,7 @@ public abstract record SelectInputBase : WidgetBase<SelectInputBase>, IAnySelect
 
     [Prop] public string? Placeholder { get; set; }
 
-    [Prop] public SelectInputs Variant { get; set; }
+    [Prop] public SelectInputs Variant { get; set; } = SelectInputs.Select;
 
     [Prop] public bool SelectMany { get; set; } = false;
 

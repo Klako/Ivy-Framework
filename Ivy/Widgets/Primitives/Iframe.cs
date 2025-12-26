@@ -18,7 +18,7 @@ public record Iframe : WidgetBase<Iframe>
         Height = Size.Full();
     }
 
-    [Prop] public string Src { get; set; }
+    [Prop] public string Src { get; set; } = null!;
 
     [Prop] public long? RefreshToken { get; }
 }

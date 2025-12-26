@@ -54,7 +54,11 @@ public record ChatMessage : WidgetBase<ChatMessage>
         Sender = sender;
     }
 
-    [Prop] public ChatSender Sender { get; set; }
+    internal ChatMessage()
+    {
+    }
+
+    [Prop] public ChatSender Sender { get; set; } = ChatSender.User;
 }
 
 public record ChatLoading : WidgetBase<ChatLoading>

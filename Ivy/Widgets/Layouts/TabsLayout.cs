@@ -22,13 +22,12 @@ public record TabsLayout : WidgetBase<TabsLayout>
         OnRefresh = onRefresh;
         OnReorder = onReorder;
         SelectedIndex = selectedIndex;
-        Width = Size.Full();
-        Height = Size.Full();
-        RemoveParentPadding = true;
     }
 
     internal TabsLayout()
     {
+        Width = Size.Full();
+        Height = Size.Full();
     }
 
     public TabsLayout(Action<Event<TabsLayout, int>>? onSelect, Action<Event<TabsLayout, int>>? onClose,
@@ -71,7 +70,7 @@ public record TabsLayout : WidgetBase<TabsLayout>
 
     [Prop] public TabsVariant Variant { get; set; } = TabsVariant.Content;
 
-    [Prop] public bool RemoveParentPadding { get; set; }
+    [Prop] public bool RemoveParentPadding { get; set; } = false;
 
     [Prop] public Thickness? Padding { get; set; } = new Thickness(4);
 

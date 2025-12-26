@@ -36,7 +36,7 @@ public abstract record BoolInputBase : WidgetBase<BoolInputBase>, IAnyBoolInput
 
     [Prop] public string? Description { get; set; }
 
-    [Prop] public BoolInputs Variant { get; set; }
+    [Prop] public BoolInputs Variant { get; set; } = BoolInputs.Checkbox;
 
     [Prop] public Icons Icon { get; set; }
 

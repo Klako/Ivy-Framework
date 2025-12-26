@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Ivy.Core.Helpers;
 
@@ -13,7 +14,10 @@ public static class WidgetSerializer
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers = { AddDefaultValueComparison }
+        },
         Converters =
         {
             new JsonEnumConverter(),
@@ -21,7 +25,48 @@ public static class WidgetSerializer
         }
     };
 
-    // Cached metadata per widget type to avoid repeated reflection
+    // Cache for default instances used by JSON serialization
+    private static readonly ConcurrentDictionary<Type, object?> DefaultInstanceCache = new();
+
+    private static void AddDefaultValueComparison(JsonTypeInfo typeInfo)
+    {
+        if (typeInfo.Kind != JsonTypeInfoKind.Object)
+            return;
+
+        var defaultInstance = DefaultInstanceCache.GetOrAdd(typeInfo.Type, static t =>
+        {
+            var ctor = t.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                Type.EmptyTypes,
+                null);
+
+            if (ctor == null)
+                return null;
+
+            try
+            {
+                return ctor.Invoke(null);
+            }
+            catch
+            {
+                return null;
+            }
+        });
+
+        if (defaultInstance == null)
+            return;
+
+        foreach (var property in typeInfo.Properties)
+        {
+            if (property.Get == null)
+                continue;
+
+            var defaultValue = property.Get(defaultInstance);
+            property.ShouldSerialize = (_, currentValue) => !Equals(currentValue, defaultValue);
+        }
+    }
+
     private static readonly ConcurrentDictionary<Type, SerializationTypeMetadata> MetadataCache = new();
 
     private sealed record PropInfo(PropertyInfo Property, PropAttribute Attribute, string CamelCaseName);
@@ -31,7 +76,8 @@ public static class WidgetSerializer
     private sealed record SerializationTypeMetadata(
         string TypeName,
         PropInfo[] PropProperties,
-        EventInfo[] EventProperties
+        EventInfo[] EventProperties,
+        IWidget? DefaultInstance
     );
 
     private static SerializationTypeMetadata GetMetadata(Type type)
@@ -51,9 +97,28 @@ public static class WidgetSerializer
                 .Select(p => new EventInfo(p))
                 .ToArray();
 
+            IWidget? defaultInstance = null;
+            var defaultCtor = t.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                Type.EmptyTypes,
+                null);
+
+            if (defaultCtor != null)
+            {
+                try
+                {
+                    defaultInstance = defaultCtor.Invoke(null) as IWidget;
+                }
+                catch
+                {
+                    // Ignore construction failures - we'll just not have default values
+                }
+            }
+
             var typeName = CleanTypeName(t);
 
-            return new SerializationTypeMetadata(typeName, propProperties, eventProperties);
+            return new SerializationTypeMetadata(typeName, propProperties, eventProperties, defaultInstance);
         });
     }
 
@@ -94,8 +159,19 @@ public static class WidgetSerializer
         foreach (var propInfo in metadata.PropProperties)
         {
             var value = GetPropertyValue(widget, propInfo.Property, propInfo.Attribute);
-            if (value == null)
+
+            // Skip properties that match their default values
+            if (metadata.DefaultInstance != null)
+            {
+                var defaultValue = GetPropertyValue(metadata.DefaultInstance, propInfo.Property, propInfo.Attribute);
+                if (Equals(value, defaultValue))
+                    continue;
+            }
+            else if (value == null)
+            {
                 continue;
+            }
+
             props[propInfo.CamelCaseName] = JsonSerializer.SerializeToNode(value, SerializerOptions);
         }
         json["props"] = props;

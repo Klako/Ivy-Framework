@@ -11,6 +11,11 @@ import {
 import { ChartType, PieChartWidgetProps } from './chartTypes';
 import { generateDataProps } from './sharedUtils';
 import { getChartThemeColors } from './styles';
+import {
+  PIE_DEFAULTS,
+  PIE_LEGEND_DEFAULTS,
+  applyDefaults,
+} from './chartDefaults';
 
 const PieChartWidget: React.FC<PieChartWidgetProps> = ({
   data,
@@ -70,11 +75,15 @@ const PieChartWidget: React.FC<PieChartWidgetProps> = ({
   const series = useMemo(
     () =>
       valueKeys.map(key => {
-        const pieProperties = pies?.find(a => a.dataKey.toLowerCase() === key);
+        const rawPieConfig = pies?.find(a => a.dataKey.toLowerCase() === key);
+        // Apply C# defaults for pie config
+        const pieConfig = rawPieConfig
+          ? applyDefaults(rawPieConfig, PIE_DEFAULTS)
+          : PIE_DEFAULTS;
 
         // Adjust vertical center based on total and legend presence
-        let centerY = pieProperties?.cy ?? '50%';
-        if (!pieProperties?.cy) {
+        let centerY = pieConfig.cy ?? '50%';
+        if (!pieConfig.cy) {
           // Only adjust if not explicitly set
           if (total && legend) {
             centerY = '45%'; // Both total and legend need space
@@ -89,13 +98,13 @@ const PieChartWidget: React.FC<PieChartWidgetProps> = ({
           name: key.charAt(0).toUpperCase() + key.slice(1),
           type: ChartType.Pie,
           radius: [
-            pieProperties?.innerRadius ?? '40%',
-            pieProperties?.outerRadius ?? '70%',
+            pieConfig.innerRadius ?? '40%',
+            pieConfig.outerRadius ?? '70%',
           ],
-          center: [pieProperties?.cx ?? '50%', centerY],
-          startAngle: pieProperties?.startAngle ?? 90,
-          endAngle: pieProperties?.endAngle ?? 450,
-          animation: pieProperties?.animated ?? true,
+          center: [pieConfig.cx ?? '50%', centerY],
+          startAngle: pieConfig.startAngle ?? PIE_DEFAULTS.startAngle,
+          endAngle: pieConfig.endAngle ?? PIE_DEFAULTS.endAngle,
+          animation: pieConfig.animated ?? PIE_DEFAULTS.animated,
           avoidLabelOverlap: false,
           label: {
             show: false,
@@ -114,10 +123,10 @@ const PieChartWidget: React.FC<PieChartWidgetProps> = ({
             show: false,
           },
           itemStyle: {
-            color: pieProperties?.fill ?? undefined,
-            opacity: pieProperties?.fillOpacity ?? undefined,
-            borderColor: pieProperties?.stroke ?? undefined,
-            borderWidth: pieProperties?.strokeWidth ?? undefined,
+            color: pieConfig.fill ?? undefined,
+            opacity: pieConfig.fillOpacity ?? undefined,
+            borderColor: pieConfig.stroke ?? undefined,
+            borderWidth: pieConfig.strokeWidth ?? PIE_DEFAULTS.strokeWidth,
           },
           data: newData,
         };
@@ -126,30 +135,33 @@ const PieChartWidget: React.FC<PieChartWidgetProps> = ({
   );
 
   // Memoize option configuration
-  const option = useMemo(
-    () => ({
+  const option = useMemo(() => {
+    // Apply C# defaults for legend
+    const leg = legend ? applyDefaults(legend, PIE_LEGEND_DEFAULTS) : null;
+
+    return {
       color: chartColors,
-      ...(legend && {
+      ...(leg && {
         legend: {
           orient:
-            legend.layout?.toLowerCase() === 'vertical'
+            leg.layout?.toLowerCase() === 'vertical'
               ? 'vertical'
               : 'horizontal',
           left:
-            legend.align?.toLowerCase() === 'left'
+            leg.align?.toLowerCase() === 'left'
               ? 'left'
-              : legend.align?.toLowerCase() === 'right'
+              : leg.align?.toLowerCase() === 'right'
                 ? 'right'
                 : 'center',
           top:
-            legend.verticalAlign?.toLowerCase() === 'top'
+            leg.verticalAlign?.toLowerCase() === 'top'
               ? 'top'
-              : legend.verticalAlign?.toLowerCase() === 'middle'
+              : leg.verticalAlign?.toLowerCase() === 'middle'
                 ? 'middle'
                 : 'bottom',
-          icon: legend.iconType ?? 'circle',
-          itemWidth: legend.iconSize ?? 12,
-          itemHeight: legend.iconSize ?? 12,
+          icon: leg.iconType ?? 'circle',
+          itemWidth: leg.iconSize ?? PIE_LEGEND_DEFAULTS.iconSize,
+          itemHeight: leg.iconSize ?? PIE_LEGEND_DEFAULTS.iconSize,
           type: 'scroll',
           textStyle: generateTextStyle(
             themeColors.foreground,
@@ -172,9 +184,8 @@ const PieChartWidget: React.FC<PieChartWidgetProps> = ({
       },
       series: series,
       toolbox: generateEChartToolbox(toolbox),
-    }),
-    [chartColors, legend, themeColors, tooltip, series, toolbox]
-  );
+    };
+  }, [chartColors, legend, themeColors, tooltip, series, toolbox]);
 
   return (
     <div style={styles}>

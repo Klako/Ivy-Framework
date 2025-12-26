@@ -31,6 +31,11 @@ import {
   YAxisProps,
 } from './chartTypes';
 import { ChartData } from './chartTypes';
+import {
+  BAR_DEFAULTS,
+  REFERENCE_LINE_DEFAULTS,
+  applyDefaults,
+} from './chartDefaults';
 
 interface BarChartWidgetProps {
   id: string;
@@ -131,12 +136,18 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
     [referenceDots]
   );
 
-  // Merge MarkLine[] into single markLine config
+  // Merge MarkLine[] into single markLine config with C# defaults
   const markLine = useMemo(
     () =>
       referenceLines.length > 0
         ? {
             ...referenceLines[0],
+            lineStyle: {
+              width:
+                referenceLines[0]?.lineStyle?.width ??
+                REFERENCE_LINE_DEFAULTS.strokeWidth,
+              ...referenceLines[0]?.lineStyle,
+            },
             data: referenceLines.flatMap(ml => ml.data),
           }
         : {},
@@ -158,24 +169,39 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
   // Memoize series configuration
   const series = useMemo(
     () =>
-      valueKeys.map((key, i) => ({
-        name: key,
-        type: ChartType.Bar,
-        legendHoverLink: true,
-        showBackground: true,
-        data: data.map(d => d[key]),
-        stack:
-          bars && bars[i]?.stackId !== undefined
-            ? String(bars[i].stackId)
-            : undefined,
-        barGap: barGap ? `${barGap}%` : '4%',
-        barCategoryGap: barCategoryGap ? `${barCategoryGap}%` : '10%',
-        barMaxWidth: maxBarSize,
-        stackOrder: reverseStackOrder ? 'seriesDesc' : 'seriesAsc',
-        markPoint,
-        markLine,
-        markArea: markAreaConfig,
-      })),
+      valueKeys.map((key, i) => {
+        const rawBarConfig = bars?.[i];
+        // Apply C# defaults for bar config
+        const barConfig = rawBarConfig
+          ? applyDefaults(rawBarConfig, BAR_DEFAULTS)
+          : BAR_DEFAULTS;
+
+        return {
+          name: key,
+          type: ChartType.Bar,
+          legendHoverLink: true,
+          showBackground: true,
+          data: data.map(d => d[key]),
+          stack:
+            barConfig.stackId !== undefined
+              ? String(barConfig.stackId)
+              : undefined,
+          barGap: barGap ? `${barGap}%` : '4%',
+          barCategoryGap: barCategoryGap ? `${barCategoryGap}%` : '10%',
+          barMaxWidth: maxBarSize,
+          stackOrder: reverseStackOrder ? 'seriesDesc' : 'seriesAsc',
+          itemStyle: {
+            borderRadius: barConfig.radius ?? BAR_DEFAULTS.radius,
+            borderColor: barConfig.stroke ?? undefined,
+            borderWidth: barConfig.strokeWidth ?? BAR_DEFAULTS.strokeWidth,
+            color: barConfig.fill ?? undefined,
+            opacity: barConfig.fillOpacity ?? undefined,
+          },
+          markPoint,
+          markLine,
+          markArea: markAreaConfig,
+        };
+      }),
     [
       valueKeys,
       data,

@@ -29,6 +29,11 @@ import {
 import { ChartData } from './chartTypes';
 import { getTransformValueFn } from './sharedUtils';
 import { ReferenceDot } from './chartTypes';
+import {
+  LINE_DEFAULTS,
+  REFERENCE_LINE_DEFAULTS,
+  applyDefaults,
+} from './chartDefaults';
 
 interface AreaChartWidgetProps {
   id: string;
@@ -125,12 +130,18 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
     [referenceDots]
   );
 
-  // Merge MarkLine[] into single markLine config
+  // Merge MarkLine[] into single markLine config with C# defaults
   const markLine = useMemo(
     () =>
       referenceLines.length > 0
         ? {
             ...referenceLines[0],
+            lineStyle: {
+              width:
+                referenceLines[0]?.lineStyle?.width ??
+                REFERENCE_LINE_DEFAULTS.strokeWidth,
+              ...referenceLines[0]?.lineStyle,
+            },
             data: referenceLines.flatMap(ml => ml.data),
           }
         : {},
@@ -153,21 +164,26 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
   const series = useMemo(
     () =>
       valueKeys.map((key, i) => {
-        const areaConfig = areas?.find(a => a.dataKey.toLowerCase() === key);
+        const rawAreaConfig = areas?.find(a => a.dataKey.toLowerCase() === key);
+        // Apply C# defaults for area config
+        const areaConfig = rawAreaConfig
+          ? applyDefaults(rawAreaConfig, LINE_DEFAULTS)
+          : LINE_DEFAULTS;
 
         return {
           name: key,
           type: ChartType.Line,
-          smooth: areaConfig?.curveType?.toLowerCase() === 'natural',
+          smooth: areaConfig.curveType?.toLowerCase() === 'natural',
           lineStyle: {
-            width: areaConfig?.strokeWidth ?? 2,
-            color: areaConfig?.stroke ?? chartColors[i],
-            type: areaConfig?.strokeDashArray ? 'dashed' : 'solid',
+            width: areaConfig.strokeWidth ?? LINE_DEFAULTS.strokeWidth,
+            color: areaConfig.stroke ?? chartColors[i],
+            type: areaConfig.strokeDashArray ? 'dashed' : 'solid',
           },
           showSymbol: false,
           areaStyle: gradientColors[i],
           emphasis: { focus: 'series' },
           data: data.map(d => d[key]),
+          connectNulls: areaConfig.connectNulls ?? LINE_DEFAULTS.connectNulls,
           markPoint,
           markLine,
           markArea: markAreaConfig,

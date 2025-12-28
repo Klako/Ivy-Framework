@@ -29,7 +29,7 @@ internal static class DebugHelpers
         }
     }
 
-    public static void CheckIfIdUsedMultipleTimes(TreeNode? nodeTree)
+    public static void CheckIfIdUsedMultipleTimes(WidgetTreeNode? nodeTree)
     {
         if (nodeTree == null) return;
 
@@ -44,7 +44,7 @@ internal static class DebugHelpers
         }
     }
 
-    private static void CollectIds(TreeNode node, Dictionary<string, int> idCounts)
+    private static void CollectIds(WidgetTreeNode node, Dictionary<string, int> idCounts)
     {
         if (!idCounts.TryAdd(node.Id, 1))
         {

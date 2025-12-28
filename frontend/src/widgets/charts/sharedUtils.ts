@@ -87,7 +87,7 @@ export function generateEChartGrid(
 
   if (!cartesianGrid) return defaultGrid;
 
-  // Apply C# defaults for cartesianGrid
+  // Apply defaults for cartesianGrid
   const grid = applyDefaults(cartesianGrid, CARTESIAN_GRID_DEFAULTS);
 
   return {
@@ -115,7 +115,7 @@ export function generateEChartLegend(
   };
   if (!legend) return defaultLegends;
 
-  // Apply C# defaults for legend
+  // Apply defaults for legend
   const leg = applyDefaults(legend, LEGEND_DEFAULTS);
 
   return {
@@ -168,7 +168,7 @@ export const generateSeries = (
         }
       : {};
 
-  // Merge MarkLine[] into single markLine config with C# defaults
+  // Merge MarkLine[] into single markLine config with defaults
   const markLine =
     referenceLines && referenceLines.length > 0
       ? {
@@ -194,7 +194,7 @@ export const generateSeries = (
 
   return valueKeys.map((key, i) => {
     const rawLineConfig = lines?.[i];
-    // Apply C# defaults for line config
+    // Apply defaults for line config
     const lineConfig = rawLineConfig
       ? applyDefaults(rawLineConfig, LINE_DEFAULTS)
       : LINE_DEFAULTS;
@@ -351,7 +351,7 @@ export const generateTooltip = (
   type?: string,
   themeColors?: { foreground: string; fontSans: string; background: string }
 ) => {
-  // Apply C# defaults for tooltip
+  // Apply defaults for tooltip
   const tip = tooltip
     ? applyDefaults(tooltip, TOOLTIP_DEFAULTS)
     : TOOLTIP_DEFAULTS;
@@ -379,7 +379,6 @@ export const generateEChartToolbox = (toolbox?: ToolboxProps) => {
     return { show: false };
   }
 
-  // Apply C# defaults for toolbox
   const box = applyDefaults(toolbox, TOOLBOX_DEFAULTS);
 
   const features: ToolboxFeatures = {};

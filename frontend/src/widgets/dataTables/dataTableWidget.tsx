@@ -41,23 +41,21 @@ export const DataTable: React.FC<TableProps> = ({
   connection,
   config = {},
   editable = false,
-  width,
-  height,
+  width = 'Full',
+  height = 'Full',
   rowActions,
   'data-testid': dataTestId,
 }) => {
-  // Apply C# backend default config values
   const finalConfig = useMemo(
     () => ({
       ...applyConfigDefaults(config),
-      // Frontend-only config options (not in C# backend)
+      // Frontend-only config options (not in backend)
       filterType: config.filterType,
       enableRowHover: config.enableRowHover ?? true,
     }),
     [config]
   );
 
-  // Apply C# backend default column values
   const finalColumns = useMemo(() => applyColumnsDefaults(columns), [columns]);
 
   // Create styles object with width and height if provided

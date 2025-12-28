@@ -28,6 +28,24 @@ public static class WidgetSerializer
     // Cache for default instances used by JSON serialization
     private static readonly ConcurrentDictionary<Type, object?> DefaultInstanceCache = new();
 
+    private static bool ValuesAreEqual(object? a, object? b)
+    {
+        if (Equals(a, b)) return true;
+
+        if (a is Array arrA && b is Array arrB)
+        {
+            if (arrA.Length != arrB.Length) return false;
+            for (int i = 0; i < arrA.Length; i++)
+            {
+                if (!ValuesAreEqual(arrA.GetValue(i), arrB.GetValue(i)))
+                    return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     private static void AddDefaultValueComparison(JsonTypeInfo typeInfo)
     {
         if (typeInfo.Kind != JsonTypeInfoKind.Object)
@@ -63,7 +81,7 @@ public static class WidgetSerializer
                 continue;
 
             var defaultValue = property.Get(defaultInstance);
-            property.ShouldSerialize = (_, currentValue) => !Equals(currentValue, defaultValue);
+            property.ShouldSerialize = (_, currentValue) => !ValuesAreEqual(currentValue, defaultValue);
         }
     }
 
@@ -164,7 +182,7 @@ public static class WidgetSerializer
             if (metadata.DefaultInstance != null)
             {
                 var defaultValue = GetPropertyValue(metadata.DefaultInstance, propInfo.Property, propInfo.Attribute);
-                if (Equals(value, defaultValue))
+                if (ValuesAreEqual(value, defaultValue))
                     continue;
             }
             else if (value == null)

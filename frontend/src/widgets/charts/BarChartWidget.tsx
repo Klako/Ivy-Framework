@@ -62,8 +62,8 @@ interface BarChartWidgetProps {
 
 const BarChartWidget: React.FC<BarChartWidgetProps> = ({
   data,
-  width,
-  height,
+  width = 'Full',
+  height = 'Full',
   bars,
   cartesianGrid,
   xAxis = [],

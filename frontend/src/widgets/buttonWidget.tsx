@@ -10,7 +10,7 @@ import {
   isExternalUrl,
   isMailtoUrl,
   normalizeRelativePath,
-} from '@/lib/urlValidation';
+} from '@/lib/url';
 import { useEventHandler } from '@/components/event-handler';
 import withTooltip from '@/hoc/withTooltip';
 import { Loader2 } from 'lucide-react';
@@ -91,16 +91,16 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
   id,
   title,
   icon,
-  iconPosition,
-  variant,
-  disabled,
+  iconPosition = 'Left',
+  variant = 'Primary',
+  disabled = false,
   tooltip,
   foreground,
   url,
-  loading,
+  loading = false,
   width,
   children,
-  borderRadius,
+  borderRadius = 'Rounded',
   scale = Scales.Medium,
   'data-testid': dataTestId,
 }) => {

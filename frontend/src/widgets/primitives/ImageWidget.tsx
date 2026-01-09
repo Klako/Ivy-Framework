@@ -1,10 +1,6 @@
 import { getHeight, getWidth } from '@/lib/styles';
 import { getIvyHost } from '@/lib/utils';
-import {
-  validateImageUrl,
-  isFullUrl,
-  normalizeRelativePath,
-} from '@/lib/urlValidation';
+import { validateImageUrl, isFullUrl, normalizeRelativePath } from '@/lib/url';
 import React from 'react';
 
 interface ImageWidgetProps {
@@ -37,8 +33,8 @@ const getImageUrl = (url: string | undefined | null): string | null => {
 export const ImageWidget: React.FC<ImageWidgetProps> = ({
   id,
   src,
-  width,
-  height,
+  width = 'MinContent',
+  height = 'MinContent',
 }) => {
   const styles: React.CSSProperties = {
     ...getWidth(width),

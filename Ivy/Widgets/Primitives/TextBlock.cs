@@ -11,12 +11,15 @@ public enum TextVariant
     H2,
     H3,
     H4,
+    H5,
+    H6,
     Block,
     P,
     Inline,
     Blockquote,
     InlineCode,
     Lead,
+    ExtraLarge,
     Large,
     Small,
     Muted,
@@ -52,13 +55,17 @@ public record TextBlock : WidgetBase<TextBlock>
         Muted = muted;
     }
 
+    internal TextBlock()
+    {
+    }
+
     [Prop] public Overflow? Overflow { get; set; }
 
     [Prop] public bool NoWrap { get; set; }
 
-    [Prop] public string Content { get; set; }
+    [Prop] public string Content { get; set; } = String.Empty;
 
-    [Prop] public TextVariant Variant { get; set; }
+    [Prop] public TextVariant Variant { get; set; } = TextVariant.Literal;
 
     [Prop] public bool StrikeThrough { get; set; }
 

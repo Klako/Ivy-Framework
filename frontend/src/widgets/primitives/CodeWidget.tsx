@@ -4,7 +4,7 @@ import React, { CSSProperties, useMemo, memo, lazy, Suspense } from 'react';
 const SyntaxHighlighter = lazy(() =>
   import('react-syntax-highlighter').then(mod => ({ default: mod.Prism }))
 );
-import { createPrismTheme } from '@/lib/ivy-prism-theme';
+import { createPrismTheme } from '@/lib/prismTheme';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -44,7 +44,7 @@ const mapLanguageToPrism = (language: string): string | undefined => {
 };
 
 const MemoizedCopyButton = memo(({ textToCopy }: { textToCopy: string }) => (
-  <div className="absolute top-2 right-2 z-50">
+  <div className="absolute top-3 right-3 z-50">
     <CopyToClipboardButton textToCopy={textToCopy} />
   </div>
 ));
@@ -52,13 +52,13 @@ const MemoizedCopyButton = memo(({ textToCopy }: { textToCopy: string }) => (
 const CodeWidget: React.FC<CodeWidgetProps> = memo(
   ({
     id,
-    content,
-    language,
-    showCopyButton = false,
+    content = '',
+    language = 'Csharp',
+    showCopyButton = true,
     showLineNumbers = false,
     showBorder = true,
-    width,
-    height,
+    width = 'Full',
+    height = 'MaxContent,,Px:800',
   }) => {
     const styles = useMemo<CSSProperties>(() => {
       const baseStyles: CSSProperties = {

@@ -34,11 +34,7 @@ var readOnly = new ReadOnlyInput("User ID: 12345");
 ```
 ### LLM-Friendly Documentation
 
-[Ivy.Docs](https://docs.ivy.app/onboarding/getting-started/introduction) had gotten a lot of LLM-friendly updates. 
-
-- `UseSitemap()` - Automatically generates `/robots.txt` and `/sitemap.xml` based on your visible apps.
-- `UseSsrMarkdown()` - Detects bot user agents (ChatGPT, Claude, Perplexity, etc.) and serves simplified HTML with markdown content
-- `UseMarkdownFiles()` - Serves embedded `.md` files directly at URLs like `/api/button.md`, with caching for performance
+[Ivy.Docs](https://docs.ivy.app/onboarding/getting-started/introduction) had gotten a lot of LLM-friendly updates. `/robots.txt` and `/sitemap.xml` are now provided at the root for bots
 
 ### Enhanced Calendar Navigation
 

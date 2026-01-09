@@ -19,6 +19,7 @@ The `Audio` widget has been renamed to `AudioPlayer` for better clarity and cons
 ### Icons Enum Updated to Match Lucide React 0.562.0
 
 The `Icons` enum [has been updated](https://github.com/Ivy-Interactive/Ivy-Framework/pull/1912) to align with the latest version of lucide-react (0.562.0).
+
 - 10 icons were renamed (e.g., AlignCenter → TextAlignCenter, Chrome → Chromium)
 - 16 icons were removed (mostly *2 variants like FileCheck2, plus Text, FileJson, LetterText)
 More info on how to use Icons can be found [here](https://docs.ivy.app/widgets/primitives/icon)
@@ -32,6 +33,7 @@ The `ReadOnlyInput` widget now includes a non-generic constructor for string val
 ```csharp
 var readOnly = new ReadOnlyInput("User ID: 12345");
 ```
+
 ### LLM-Friendly Documentation
 
 [Ivy.Docs](https://docs.ivy.app/onboarding/getting-started/introduction) had gotten a lot of LLM-friendly updates. `/robots.txt` and `/sitemap.xml` are now provided at the root for bots
@@ -165,3 +167,53 @@ yield return new AppDescriptor(
     MenuItems: [/* ... */]
 )
 ```
+
+## What's Changed
+
+- [PieChart]: disable magicType in toolbox by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1906>
+
+- [frontend]: fix font flickering using ivy-design-system fonts by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1901>
+- [Icons]: update Icons enum to match lucide-react last version by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1912>
+- [frontend]: correct font preload paths to prevent flickering by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1914>
+- [Docs]: fix misalignment in demo elements by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1915>
+- [Icon]: update icon color from Muted to Neutral in CardExtensions by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1916>
+- Refactor widgets and core, enhance chart features, improve diff logic by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1919>
+- [widgetRenderer]: add scale inheritance for nested widgets by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1913>
+- [AsyncSelectInput]: fix bad styling by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1918>
+- [Datatables]: lazy initialize GrpcTableService to avoid overhead for apps without datatables by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1926>
+- (tooltip): fix word breaks and limit max height by @ArtemKhvorostianyi in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1929>
+- (DateTimeInput): split FE into modal structure by @ArtemKhvorostianyi in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1928>
+- [Sheet]: remove focus outline on sheet container by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1923>
+- (DatabaseGenerator): delete initial migration after applying by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1930>
+- fix(core): full replacement of root node by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1931>
+- [Auth]: allow user to logout even without user info by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1927>
+- fix(docs): Authentication Overview link by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1940>
+- (fix): unblock OAuth popups on Safari by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1939>
+- (codex): rename `NavigationPurpose` to `HistoryOp` by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1934>
+- [Widgets]: Add missing parameterless constructors and fix docs API defaults by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1922>
+- (Docs): Sync docs with Release v1.2.6 by @ArtemKhvorostianyi in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1924>
+- [Docs]: fix bunch of issues by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1943>
+- [VideoPlayer]: add example of large video file in docs page by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1937>
+- [Docs]: add Layout page by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1936>
+- (feat): dynamic page titles by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1935>
+- [auth]: Update and improve GitHub Auth Provider by @ArtemLazarchuk in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1944>
+- feat: make Spacer constructor public by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1950>
+- (docs tocs):  display proper names for GitHub contributors by @ArtemKhvorostianyi in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1952>
+- [TerminalWidget]: add copy-to-clipboard button by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1945>
+- [Auth]: add login form customization API by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1941>
+- [Color-Input]: add automatic validation for invalid hex values by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1907>
+- [Docs]: refactor to appear in teaching order by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1957>
+- [Widgets]: add missing defaults by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1956>
+- (theme): add popover to theme presets by @dcrjodle in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1897>
+- chore: add readmes to some of the pacakges by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1960>
+- [Calendar]: make date clickable and fix view by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1959>
+- [Docs]: refactor by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1953>
+- (fix): Fixed sidebar arrow for nested grouped items by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1963>
+- (docs): update and refactor typography by @dcrjodle in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1961>
+- (fix): Removed cropping from code snippets and edited copy button by @KaiserReich95 in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1932>
+- (docs): implement llms.txt by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1639>
+- [Serialization]: add AlwaysSerialize for input Value properties by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1971>
+- chore: Update Grpc.AspNetCore.* by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1978>
+- chore: prepare release notes by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/1970>
+
+**Full Changelog**: <https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.2.6...v1.2.7>

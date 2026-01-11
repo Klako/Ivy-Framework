@@ -17,13 +17,15 @@ The `Server.UseBuilder()` method has been renamed to `UseWebApplicationBuilder()
 
 ### Audio Widget Renamed to AudioPlayer
 
-The `Audio` widget has been renamed to `AudioPlayer` for better clarity and consistency. [Read more here](https://docs.ivy.app/widgets/primitives/audio-player)
+The `Audio` widget has been renamed to `AudioPlayer` for better clarity and consistency. It can be visible in the AudioPlayer [doc page](https://docs.ivy.app/widgets/primitives/audio-player)
+
+<img width="782" height="100" alt="Screenshot 2026-01-10 at 04 48 14" src="https://github.com/user-attachments/assets/271105c4-124e-4f69-9287-e1b1c9f3904c" />
 
 ### Icons Enum Updated to Match Lucide React 0.562.0
 
 The `Icons` enum [has been updated](https://github.com/Ivy-Interactive/Ivy-Framework/pull/1912) to align with the latest version of lucide-react (0.562.0).
 
-- 10 icons were renamed (e.g., AlignCenter → TextAlignCenter, Chrome → Chromium)
+- 10 icons were renamed (e.g., AlignCenter - TextAlignCenter, Chrome - Chromium)
 - 16 icons were removed (mostly *2 variants like FileCheck2, plus Text, FileJson, LetterText)
 More info on how to use Icons can be found [here](https://docs.ivy.app/widgets/primitives/icon)
 
@@ -31,11 +33,13 @@ More info on how to use Icons can be found [here](https://docs.ivy.app/widgets/p
 
 ### ReadOnlyInput Simplified Constructor
 
-The `ReadOnlyInput` widget now includes a non-generic constructor for string values. [Read more here](https://docs.ivy.app/widgets/inputs/read-only)
+The `ReadOnlyInput` widget now includes a non-generic constructor for string values. [For more info visit full doc page](https://docs.ivy.app/widgets/inputs/read-only)
 
 ```csharp
 var readOnly = new ReadOnlyInput("User ID: 12345");
 ```
+
+<img width="786" height="94" alt="Screenshot 2026-01-10 at 04 48 37" src="https://github.com/user-attachments/assets/f0787a55-57ef-44c8-bea3-1eb819511ff4" />
 
 ### LLM-Friendly Documentation
 
@@ -51,6 +55,8 @@ Calendar widgets (`DateInput`, `DateTimeInput`, `DateRangeInput`) now include dr
 
 More info on the [Date Time input here](https://docs.ivy.app/widgets/inputs/date-time) and on [Date Range input here](https://docs.ivy.app/widgets/inputs/date-range)
 
+<img width="663" height="315" alt="Screenshot 2026-01-10 at 04 49 30" src="https://github.com/user-attachments/assets/d4817c57-9f52-4381-8346-afdc05d70412" />
+
 ### Font Loading Performance
 
 Font flickering during page load has been eliminated by migrating to the Ivy Design System package.
@@ -59,11 +65,11 @@ Font flickering during page load has been eliminated by migrating to the Ivy Des
 
 The `ColorInput` widget now automatically validates color values and displays an error state when invalid formats are entered.
 
-**What's validated:**
-
 - **Hex colors** - Must match valid formats: `#RGB`, `#RRGGBB`, or `#RRGGBBAA`
 - **Color enums** - Must be a valid value from the `Colors` enum
 - **Invalid entries** - Automatically marked with "Invalid color format" error message
+
+<img width="550" height="236" alt="Screenshot 2026-01-10 at 16 24 03" src="https://github.com/user-attachments/assets/4306ca18-9627-41f5-a6c0-3449bfeaa787" />
 
 ### Widget Serialization Optimization
 
@@ -73,11 +79,17 @@ Added `AlwaysSerialize` property to `Prop` attribute to bypass default value opt
 
 Widgets now inherit scale settings from their parent widgets, ensuring consistent sizing throughout nested component hierarchies. When you set a scale on a parent widget, all children automatically inherit that scale unless explicitly overridden.
 
+<img width="1200" height="588" alt="Screenshot 2026-01-10 at 16 42 08" src="https://github.com/user-attachments/assets/3b084b7b-dbd8-42c7-b93c-80ecbb742cc5" />
+
 ### Terminal Widget Copy Button
 
 The `Terminal` widget now includes a convenient copy-to-clipboard button that automatically extracts and copies only command lines from the terminal display.
 
+<img width="780" height="96" alt="Screenshot 2026-01-10 at 04 51 43" src="https://github.com/user-attachments/assets/a1e917fe-19c2-404e-a639-c3bdd34b9da8" />
+
 ### Code Snippet Copy Button Enhancement
+
+<img width="756" height="107" alt="Screenshot 2026-01-10 at 04 56 59" src="https://github.com/user-attachments/assets/1d31e0c6-97d8-4c6c-acc2-72219337e010" />
 
 ## Bug Fixes
 
@@ -89,9 +101,7 @@ The `Terminal` widget now includes a convenient copy-to-clipboard button that au
 - Chart Configuration Consistency
 - GrpcDataTableService is now loaded lazily
 - Fixed incorrent display of x-axis labels in some charts
-- When applying a new theme, if some variables were not defined in the new theme, defaults are now applied
-
-## New Features
+- When applying a new theme, if some variables were not defined in the new theme, defaults are now applied.
 
 ### Clerk Authentication Provider
 
@@ -170,6 +180,8 @@ yield return new AppDescriptor(
     MenuItems: [/* ... */]
 )
 ```
+
+<img width="261" height="41" alt="Screenshot 2026-01-10 at 16 33 32" src="https://github.com/user-attachments/assets/fb59a13b-fe5b-445c-a921-206c9c1e494f" />
 
 ## What's Changed
 

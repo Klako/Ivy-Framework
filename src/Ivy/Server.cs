@@ -41,6 +41,7 @@ public record ServerArgs
     public string? MetaTitle { get; set; } = null;
     public string? MetaDescription { get; set; } = null;
     public Assembly? AssetAssembly { get; set; } = null;
+    public bool EnableDevTools { get; set; } = false;
 #if DEBUG
     public bool FindAvailablePort { get; set; } = true;
 #else
@@ -657,8 +658,14 @@ public static class WebApplicationExtensions
                         $"<meta name=\"ivy-license-public-key\" content=\"{ivyLicensePublicKey}\" />";
                     html = html.Replace("</head>", $"  {ivyLicensePublicKeyTag}\n</head>");
                 }
-#endif
 
+                if (serverArgs.EnableDevTools)
+                {
+                    var ivyEnableDevToolsTag = $"<meta name=\"ivy-enable-dev-tools\" content=\"true\" />";
+                    html = html.Replace("</head>", $"  {ivyEnableDevToolsTag}\n</head>");
+                }
+                
+#endif
                 //Inject Meta Title and Description
                 if (!string.IsNullOrEmpty(serverArgs.MetaDescription))
                 {

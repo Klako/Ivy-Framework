@@ -1,5 +1,5 @@
 import React, { Suspense, memo } from 'react';
-import { WidgetNode } from '@/types/widgets';
+import { WidgetNode, CallSite } from '@/types/widgets';
 import { widgetMap } from '@/widgets/widgetMap';
 import { Scales } from '@/types/scale';
 import {
@@ -11,6 +11,9 @@ import {
   wrapExternalWidget,
   ExternalWidgetWrapper,
 } from '@/widgets/ExternalWidgetWrapper';
+
+// Registry for widget callsite information, keyed by widget id
+export const widgetCallSiteRegistry = new Map<string, CallSite>();
 
 // Cache for wrapped external widget components
 const wrappedExternalWidgetCache = new Map<
@@ -140,6 +143,10 @@ const MemoizedWidget = memo(
       );
     }
 
+    if (node.callSite) {
+      widgetCallSiteRegistry.set(node.id, node.callSite);
+    }
+
     const content = (
       <ivy-widget id={node.id} type={node.type}>
         <Component {...props} slots={slots}>
@@ -215,6 +222,10 @@ const renderExternalWidget = (
     props.widgetNodeChildren = children.filter(
       child => child.type === 'Ivy.KanbanCard'
     );
+  }
+
+  if (node.callSite) {
+    widgetCallSiteRegistry.set(node.id, node.callSite);
   }
 
   const content = (

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Ivy.Core.Helpers;
@@ -12,6 +13,9 @@ public abstract record AbstractWidget : IWidget
     protected AbstractWidget(params object[] children)
     {
         Children = children;
+#if DEBUG
+        CallSite = CallSite.From(new StackTrace(fNeedFileInfo: true));
+#endif
     }
 
     public void SetAttachedValue(Type parentType, string name, object? value)
@@ -38,6 +42,8 @@ public abstract record AbstractWidget : IWidget
     }
 
     public string? Key { get; set; }
+
+    public CallSite? CallSite { get; set; }
 
     public object[] Children { get; set; }
 

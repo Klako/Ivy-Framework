@@ -54,6 +54,7 @@ An app is built into a tree of widgets. This is what's rendered to the screen.
 [Image](https://docs.ivy.app/widgets/common/image.md)
 [Avatar](https://docs.ivy.app/widgets/common/avatar.md)
 [Spacer](https://docs.ivy.app/widgets/primitives/spacer.md)
+[Callout](hhttps://docs.ivy.app/widgets/primitives/callout.md)
 
 ## Layouts
 
@@ -147,12 +148,17 @@ UseState hook returns a state object IState<T> that provides:
 
 ### UseEffect
 
-void UseEffect(Action effect, params object[] triggers)
-void UseEffect(Func<Task> asyncEffect, params object[] dependencies)
-void UseEffect(Func<IDisposable> effectWithCleanup, params object[] dependencies)
-void UseEffect(Func<Task<IDisposable>> asyncEffectWithCleanup, params object[] dependencies)
+void UseEffect(Action effect, params IEffectTriggers[] triggers)
+void UseEffect(Func<Task> asyncEffect, params IEffectTriggers[] triggers)
+void UseEffect(Func<IDisposable> effectWithCleanup, params IEffectTriggers[] triggers)
+void UseEffect(Func<Task<IDisposable>> asyncEffectWithCleanup, IEffectTriggers object[] triggers)
 
-//Todo: EffectTriggers
+- EffectTrigger.OnBuild() - runs after every build
+- EffectTrigger.OnMount() - runs once when the view is first mounted
+- EffectTrigger.OnStateChange(IState<T>) - runs when the specified state changes
+
+- IState<T> is automatically converted to EffectTrigger.OnStateChange
+- If no triggers are provided, the effect trigger is assumed to be OnMount.
 
 ### Other Hooks
 
@@ -166,11 +172,24 @@ UseSignal
 
 ## Inputs
 
-[Todo]
+Ivy has several Input widgets for handling user input. There are rarely used directly - instead we use 
+extension methods on IState<T> to bind state to inputs.
 
-## Forms
+var userNameState = UseState(""); 
+var input = userNameState.ToTextInput().Placeholder("Enter your name");
 
-[Todo]
+ToTextInput()
+ToNumberInput()
+ToBoolInput()
+ToSelectInput(IEnumerable<IAnyOption>)
+ToCodeInput(Language)
+ToColorInput()
+ToDateTimeInput()
+ToDateRangeInput()
+ToFeedbackInput()
+
+Most inputs have extension methods for common configurations:
+userNameState.ToTextInput().Required().MaxLength(50).Placeholder("Enter your name");
 
 ## Best Practices
 
@@ -185,13 +204,20 @@ UseSignal
 
 ## Further Reading
 
-Services
-Program.cs
-Colors
-Size
-Icons
-UseAlert
-UseTrigger
+[Forms](https://docs.ivy.app/onboarding/concepts/forms.md)
+[DataTable](https://docs.ivy.app/widgets/advanced/data-table.md)
+[Table](https://docs.ivy.app/widgets/common/table.md)
+[Details](https://docs.ivy.app/widgets/common/details.md) - Display structured label-value pairs 
+[Services](https://docs.ivy.app/onboarding/concepts/services.md)
+[Program.cs](https://docs.ivy.app/onboarding/concepts/program.md)
+[Colors](https://docs.ivy.app/api-reference/ivy-shared/colors.md)
+[Size](https://docs.ivy.app/api-reference/ivy-shared/size.md)
+[Align](https://docs.ivy.app/api-reference/ivy-shared/align.md)
+[UseAlert](https://docs.ivy.app/onboarding/concepts/alerts.md)
+[RefreshTokens](https://docs.ivy.app/onboarding/concepts/refresh-tokens.md)
+[Downloads](https://docs.ivy.app/onboarding/concepts/downloads.md)
+[Uploads](https://docs.ivy.app/widgets/inputs/file.md)
+
 
 
 

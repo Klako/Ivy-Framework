@@ -8,7 +8,7 @@ searchHints:
   - cross-component
 ---
 
-# Signals
+# UseSignal
 
 <Ingress>
 Signals enable inter-component communication in Ivy [applications](../../../01_Onboarding/02_Concepts/15_Apps.md), allowing components to send and receive messages across the component tree.
@@ -208,16 +208,6 @@ public class DataProvider : ViewBase
 }
 ```
 
-## API Reference
-
-### Required Imports
-
-Add `using Ivy.Hooks;` to access signal functionality:
-
-```csharp
-using Ivy.Hooks;
-```
-
 ### Key Types
 
 - **`AbstractSignal<TInput, TOutput>`** - Base class for signals
@@ -294,5 +284,5 @@ graph TB
 
 ## See Also
 
-- [State Management](../../03_Hooks/Core/03_State.md)
-- [Effects](../../03_Hooks/Core/04_Effect.md)
+- [State Management](../../03_Hooks/Core/03_UseState.md)
+- [Effects](../../03_Hooks/Core/04_UseEffect.md)

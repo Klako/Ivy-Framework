@@ -51,7 +51,7 @@ public class SimpleCounterApp : ViewBase
 - 🔥 **Hot-Reloading**: Full support for hot-reloading with maintained state as much as possible.
 - 🤖 **LLM Code-Generation Compatibility**: Designed to maximize compatibility with LLM code generation tools.
 
-Ivy maintains state on the server and sends updates over WebSocket. The frontend consists of a pre-built React-based rendering engine. With Ivy, you never need to touch any HTML, CSS, or JavaScript. Only if you want to add you’re own widgets.
+Ivy maintains state on the server and sends updates over WebSocket. The frontend consists of a pre-built React-based rendering engine. With Ivy, you never need to touch any HTML, CSS, or JavaScript. Only if you want to add your own widgets.
 
 ## Tools
 

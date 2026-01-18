@@ -57,10 +57,9 @@ public class MyApp : ViewBase
 
 ## Layouts
 
-Use Layout.Vertical() or Layout.Horizontal() to create stack layouts.
-
-- Call Layout.Vertical() or Layout.Horizontal() from the Layout helper utility class.
-- Layout is used to create stack-based layouts (Vertical() or Horizontal()), Grid(), and Wrap() layouts.
+- Use Layout.Vertical() or Layout.Horizontal() to create stack layouts.
+- Layout.Grid()
+— Layout.Wrap() 
 - Add Children: Pipe child elements using the | operator to arrange them top-to-bottom (vertical) or left-to-right (horizontal).
 - Layouts can be customized with methods like .Gap(int number) to set spacing between children. Use .Left(), .Center(), or .Right() methods to control alignment.
 - The number in Gap(int number) works the same as in Tailwind CSS spacing scale (e.g., 1 = 0.25rem, 2 = 0.5rem, etc.).

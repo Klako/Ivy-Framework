@@ -235,3 +235,38 @@ new BarChart(data)
 - `Terminal` widget had been now exposed as a widget and can be used to display terminal-styled output with commands and responses.
 - `Chat` widget now automatically displays `Cancel` button when streaming or loading is active
 - All charts now support `SortBy` API giving you control over the order of data displayed on the X-axis
+
+## What's Changed
+* (docs): split up deploy docs like it is done for auth and db integration by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1998
+* (epic) External Widgets by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2000
+* chore: use pascal case for widgets by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1993
+* [Icons]: remove page and move icon search to Icon widget page by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2004
+* [Blade]: Update container layout and scroll behavior by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1989
+* [TOC]: add API section by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2002
+* [DocumentTools]: refactor to use backend markdown API by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2003
+* [AI Chat]: Add cancel request functionality for AI chat  by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1979
+* (hooks): implement hooks category with pages for each hook by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1999
+* Feat/query hook by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2013
+* [Charts]: add SortBy API for X-axis data sorting by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/1972
+* (skeleton): support theming by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2018
+* (fix): CodeWidget and Copybutton has better padding by @KaiserReich95 in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2019
+* Feat/typography fixes vol3 by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2022
+* (docs): small refactors of example for better visibility by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2023
+* chore: fix workflows & update to .net10 by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2024
+* [Vite]: proxy .md requests to backend in dev mode by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2031
+* [Docs]: fix broken image links in db integration and auth docs by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2033
+* [Text]: remove scale like values implement scale instead by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2027
+* (hooks): implement all hooks docs by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2035
+* (text): refactor margins logic by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2025
+* [Connections]: add page to docs by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2036
+* (hooks): refactor docs, rename files, update links, compess some pages by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2042
+* refactor: inputs now have correct filenames by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2054
+* [CodeInputWidget]: use basic Lucide CopyToClipboard button to avoid visual bugs  by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2053
+* (feature): add languages.yaml by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2052
+* (form): avoid infinite recursive after validation data presented with array by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2048
+* (terminal): move widget from internal to primitives by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2049
+* Feat/prepare patchnotes by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2057
+* (design-system): bump version by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2079
+
+
+**Full Changelog**: https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.2.10...v1.2.11

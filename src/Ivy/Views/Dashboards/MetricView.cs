@@ -26,7 +26,7 @@ public class MetricView(
             return new Card(
                 Layout.Vertical().Gap(2)
                 | (Layout.Horizontal().Gap(2)
-                   | Text.Small(title).NoWrap().Overflow(Overflow.Ellipsis).Color(Colors.Gray)
+                   | Text.P(title).Small().NoWrap().Overflow(Overflow.Ellipsis).Color(Colors.Gray)
                    | new Spacer().Width(Size.Grow())
                    | (icon?.ToIcon().Color(Colors.Gray)))
                 | new ErrorTeaserView(query.Error)
@@ -38,7 +38,7 @@ public class MetricView(
             return new Card(
                 Layout.Vertical().Gap(2)
                 | (Layout.Horizontal().Gap(2)
-                   | Text.Small(title).NoWrap().Overflow(Overflow.Ellipsis).Color(Colors.Gray)
+                   | Text.P(title).Small().NoWrap().Overflow(Overflow.Ellipsis).Color(Colors.Gray)
                    | new Spacer().Width(Size.Grow())
                    | (icon?.ToIcon().Color(Colors.Gray)))
                 | new Skeleton()
@@ -54,18 +54,19 @@ public class MetricView(
             : null;
 
         return new Card(
-                content: Text.ExtraLarge(x.MetricFormatted).NoWrap().Overflow(Overflow.Clip),
+                content: Text.P(x.MetricFormatted).Large().NoWrap().Overflow(Overflow.Clip),
                 header: Layout.Horizontal().Align(Align.Center)
-                    | Text.H4(title).WithLayout().Grow()
+                    | Text.H4(title).NoWrap().Overflow(Overflow.Ellipsis).Width(Size.Grow())
                     | (Layout.Horizontal().Align(Align.Right).Gap(1).Width(Size.Fit())
                         | (x.TrendComparedToPreviousPeriod != null ? x.TrendComparedToPreviousPeriod >= 0
                                 ? Icons.TrendingUp.ToIcon().Color(Colors.Success).Small()
                                 : Icons.TrendingDown.ToIcon().Color(Colors.Destructive).Small()
                             : null)
                         | (x.TrendComparedToPreviousPeriod != null ? x.TrendComparedToPreviousPeriod >= 0
-                                ? Text.Small(x.TrendComparedToPreviousPeriod.Value.ToString("P1")).Color(Colors.Success)
-                                : Text.Small(x.TrendComparedToPreviousPeriod.Value.ToString("P1")).Color(Colors.Destructive)
-                            : null)),
+                                ? Text.P(x.TrendComparedToPreviousPeriod.Value.ToString("P1")).Small().Color(Colors.Success)
+                                : Text.P(x.TrendComparedToPreviousPeriod.Value.ToString("P1")).Small().Color(Colors.Destructive)
+                            : null)
+                        | (icon?.ToIcon().Color(Colors.Gray))),
                 footer: footer
         ).Height(Size.Full());
     }

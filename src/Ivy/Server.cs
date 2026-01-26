@@ -359,13 +359,13 @@ public class Server
 
                 if (attemptCount >= maxAttempts)
                 {
-                    Console.WriteLine($@"Could not find an available port after checking {maxAttempts} ports starting from {originalPort}.");
+                    Console.WriteLine($"\x1b[31mCould not find an available port after checking {maxAttempts} ports starting from {originalPort}.\x1b[0m");
                     return;
                 }
 
                 if (_args.Port != originalPort)
                 {
-                    Console.WriteLine($@"Port {originalPort} is in use. Using port {_args.Port} instead.");
+                    Console.WriteLine($"\x1b[33mPort {originalPort} is in use. Using port {_args.Port} instead.\x1b[0m");
                 }
             }
             else
@@ -373,7 +373,7 @@ public class Server
                 Console.WriteLine($@"Port {_args.Port} is already in use on this machine.");
 
                 Console.WriteLine(
-                    @"Specify a different port using '--port <number>' or '--i-kill-for-this-port' to just take it.");
+                    "Specify a different port using '--port <number>', '--find-available-port', or '--i-kill-for-this-port' to just take it.");
 
                 return;
             }
@@ -465,6 +465,12 @@ public class Server
         builder.Logging.AddConsole();
 
         builder.Logging.SetMinimumLevel(!_args.Verbose ? LogLevel.Warning : LogLevel.Debug);
+
+        // Suppress hosting startup errors when not verbose (we handle IOException with a friendly message)
+        if (!_args.Verbose)
+        {
+            builder.Logging.AddFilter("Microsoft.Extensions.Hosting.Internal.Host", LogLevel.None);
+        }
 
         var app = builder.Build();
         ServiceProvider = app.Services;

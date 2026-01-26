@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Ivy;
 
+/// <summary>
+/// Renders markdown content.
+/// </summary>
 public record Markdown : WidgetBase<Markdown>
 {
     [OverloadResolutionPriority(1)]
@@ -46,4 +49,5 @@ public static class MarkdownExtensions
     {
         return button with { OnLinkClick = @event => { onLinkClick(@event.Value); return ValueTask.CompletedTask; } };
     }
+
 }

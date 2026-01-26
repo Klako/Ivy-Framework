@@ -6,6 +6,11 @@ searchHints:
   - drawer
   - stack
   - master-detail
+  - blades
+  - useblades
+  - side-panel
+  - slide-out
+  - panel
 ---
 
 # Blades
@@ -110,7 +115,7 @@ public class ProductDetailView(string productName) : ViewBase
 
 ## Refresh Tokens
 
-You can use [Refresh Tokens](../../01_Onboarding/02_Concepts/25_RefreshTokens.md) to trigger updates in parent blades when returning from a child blade. This is common for "save and close" workflows.
+You can use [Refresh Tokens](../../../03_Hooks/02_Core/16_UseRefreshToken.md) to trigger updates in parent blades when returning from a child blade. This is common for "save and close" workflows.
 
 ```csharp demo-tabs
 public class BladeRefreshDemo : ViewBase
@@ -204,5 +209,22 @@ public class BladeWithError : ViewBase
     }
 }
 ```
+
+## UseBlades
+
+The `UseBlades` hook creates a blade service context and initializes a root blade. It returns a `BladesView` that manages the blade stack and provides navigation through the `IBladeService` context.
+
+```mermaid
+graph LR
+    A[UseBlades Hook] --> B[Create Blade Service]
+    B --> C[Initialize Root Blade]
+    C --> D[Create Context]
+    D --> E[Return BladesView]
+```
+
+<Callout Type="info">
+In most cases, you'll use `UseBlades()` directly in your views. The hook manages the blade stack and provides `IBladeService` through context for pushing and popping blades.
+</Callout>
+
 
 <WidgetDocs Type="Ivy.Blade" ExtensionTypes="Ivy.Views.Blades.UseBladesExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/Ivy/Views/Blades/UseBlades.cs"/>

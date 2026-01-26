@@ -14,7 +14,7 @@ searchHints:
 
 Understand how Views work as the core building blocks of Ivy [apps](./15_Apps.md), similar to React components but written entirely in C#.
 
-Views are the fundamental building blocks of Ivy apps. They are similar to React components, providing a way to encapsulate UI logic and [state management](../../03_Hooks/Core/03_State.md) in a reusable way. Every view inherits from `ViewBase` and implements a `Build()` method that returns the UI structure.
+Views are the fundamental building blocks of Ivy apps. They are similar to React components, providing a way to encapsulate UI logic and [state management](../../03_Hooks/02_Core/03_UseState.md) in a reusable way. Every view inherits from `ViewBase` and implements a `Build()` method that returns the UI structure.
 
 ## Basic Usage
 
@@ -31,7 +31,7 @@ All views inherit from the abstract `ViewBase` class, which provides:
 - **Build() method**: The core method that returns the UI structure
 - **Lifecycle management**: Automatic disposal and cleanup
 - **Hook access**: Built-in state management and effect [hooks](../../03_Hooks/02_RulesOfHooks.md)
-- **Service injection**: Access to [application services](./18_Services.md)
+- **Service injection**: Access to [application services](../../03_Hooks/02_Core/11_UseService.md)
 - **Context management**: Shared data between parent and child views
 
 ### Build Method
@@ -114,7 +114,7 @@ new Button("Show Toast",
 
 ## Effects and Side Effects
 
-Use `UseEffect()` for [side effects](../../03_Hooks/Core/04_Effect.md) like API calls, timers, or [subscriptions](./06_Signals.md):
+Use `UseEffect()` for [side effects](../../03_Hooks/02_Core/04_UseEffect.md) like API calls, timers, or [subscriptions](../../03_Hooks/02_Core/10_UseSignal.md):
 
 ```csharp demo-below
 public class TimerView : ViewBase
@@ -148,19 +148,19 @@ Layout.Vertical()
     | new Card(
         Layout.Vertical()
             | Text.H4("Alice Smith")
-            | Text.Small("alice@example.com").Color(Colors.Gray)
+            | Text.P("alice@example.com").Small().Color(Colors.Gray)
             | new Badge("Admin").Secondary()
     )
     | new Card(
         Layout.Vertical()
             | Text.H4("Bob Johnson")
-            | Text.Small("bob@example.com").Color(Colors.Gray)
+            | Text.P("bob@example.com").Small().Color(Colors.Gray)
             | new Badge("User").Secondary()
     )
     | new Card(
         Layout.Vertical()
             | Text.H4("Carol Brown")
-            | Text.Small("carol@example.com").Color(Colors.Gray)
+            | Text.P("carol@example.com").Small().Color(Colors.Gray)
             | new Badge("Manager").Secondary()
     )
 ```

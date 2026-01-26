@@ -110,6 +110,16 @@ UseState("interface User {\n  name: string;\n  age: number;\n}\n\nconst user: Us
     .Language(Languages.Typescript)
 ```
 
+### YAML
+
+```csharp demo-tabs
+UseState("name: my-app\nversion: 1.0.0\nservices:\n  web:\n    image: nginx:latest\n    ports:\n      - \"80:80\"")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Yaml)
+```
+
 ### Plain Text
 
 ```csharp demo-tabs
@@ -170,44 +180,11 @@ public class CodeInputWithValidation : ViewBase
                     .Language(Languages.Javascript)
                     .WithField()
                     .Label("Enter Code:")
-            | Text.Small(isValid 
+            | Text.P(isValid 
                 ? "Entered code is valid ✅" 
-                : "Enter some code to validate");
+                : "Enter some code to validate").Small();
     }
 }
 ```
 
 <WidgetDocs Type="Ivy.CodeInput" ExtensionTypes="Ivy.CodeInputExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/Ivy/Widgets/Inputs/CodeInput.cs"/>
-
-## Examples
-
-<Details>
-<Summary>
-DBML Editor with Live Preview
-</Summary>
-<Body>
-
-```csharp demo-tabs
-public class DBMLEditorDemo : ViewBase
-{
-    public override object? Build()
-    {
-        var sampleDbml = @"Table users {
-                            id integer [primary key]
-                            username varchar
-                            role varchar
-                            created_at timestamp
-                    }";
-        var dbml = UseState(sampleDbml);
-        return Layout.Horizontal().RemoveParentPadding().Height(Size.Screen())
-                | dbml.ToCodeInput()
-                    .Width(Size.Units(50))
-                    .Height(Size.Auto())
-                    .Language(Languages.Dbml)
-                | new DbmlCanvas(dbml.Value).Width(Size.Grow());
-   }
-}
-```
-
-</Body>
-</Details>

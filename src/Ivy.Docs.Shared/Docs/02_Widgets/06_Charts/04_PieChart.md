@@ -10,6 +10,10 @@ searchHints:
 
 # PieChart
 
+<Ingress>
+Represent parts of a whole with pie and donut charts, supporting custom labels and drill-down interactions.
+</Ingress>
+
 `PieChart`s represent parts of a whole. Each slice is drawn from the provided data.
 
 The following example showcases a sample case where possible sale data from a store is listed.
@@ -37,7 +41,7 @@ public class PieChartDemo : ViewBase
         };
          //Showing default placement of the legend at the bottom of the chart
          return Layout.Vertical()
-            | Text.Large("Mobile sales over Q1(January-March)")
+            | Text.P("Mobile sales over Q1(January-March)").Large()
            | data.ToPieChart
                  (
                     e => e.Month,
@@ -45,7 +49,7 @@ public class PieChartDemo : ViewBase
                     PieChartStyles.Dashboard
                 )
                 .Toolbox(new Toolbox())
-           | Text.Large("Desktop sales over Q1(January-March)")
+           | Text.P("Desktop sales over Q1(January-March)").Large()
            // Showing custom placement of the legend at the right bottom of the chart
            | data.ToPieChart
                  (
@@ -235,12 +239,12 @@ public class DrillDownDemo : ViewBase
         return Layout.Vertical()
                 | (Layout.Horizontal()
                 | (Layout.Vertical()
-                   | Text.Small("Countries Population")
+                   | Text.P("Countries Population").Small()
                    | new PieChart(countryData)
                         .Pie("Measure", "Dimension")
                         .Tooltip())
                 | (Layout.Vertical()
-                    | Text.Small($"{country.Value} - States Population")
+                    | Text.P($"{country.Value} - States Population").Small()
                     | new PieChart(selectedCountryStates)
                             .Pie("Measure", "Dimension")
                             .Tooltip()))
@@ -248,3 +252,5 @@ public class DrillDownDemo : ViewBase
     }
 }
 ```
+
+<WidgetDocs Type="Ivy.PieChart" ExtensionTypes="Ivy.PieChartExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/Ivy/Widgets/Charts/PieChart.cs"/>

@@ -10,6 +10,10 @@ searchHints:
 
 # AreaChart
 
+<Ingress>
+Display quantitative data over time with filled areas that can be stacked with different colors.
+</Ingress>
+
 `AreaChart`s display quantitative data over time. Multiple series can be stacked
 with different colors.
 
@@ -26,7 +30,7 @@ public class BasicAreaChart : ViewBase
         };
     
         return Layout.Vertical()
-            | Text.Large("Sales figures")
+            | Text.P("Sales figures").Large()
             | new AreaChart(data)
                     .ColorScheme(ColorScheme.Default)
                     .Area(new Area("Mobile", 1).Fill(Colors.Red).LegendType(LegendTypes.Square))

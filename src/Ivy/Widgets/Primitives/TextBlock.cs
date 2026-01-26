@@ -19,9 +19,6 @@ public enum TextVariant
     Blockquote,
     InlineCode,
     Lead,
-    ExtraLarge,
-    Large,
-    Small,
     Muted,
     Danger,
     Warning,
@@ -37,6 +34,9 @@ public enum TextVariant
     Strong
 }
 
+/// <summary>
+/// Displays text.
+/// </summary>
 public record TextBlock : WidgetBase<TextBlock>
 {
     internal TextBlock(string content = "", TextVariant variant = TextVariant.Literal, Size? width = null,

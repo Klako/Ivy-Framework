@@ -16,7 +16,7 @@ searchHints:
 Display page [navigation](../../01_Onboarding/02_Concepts/14_Navigation.md) controls for traversing large sets of data, with customizable appearance and dynamic updates.
 </Ingress>
 
-The `Pagination` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) is used to provide navigation between multiple pages of content, such as [lists](07_List.md) or [tables](08_Table.md). It displays a set of page links, previous/next buttons, and optional ellipsis for skipped ranges. The widget can be customized for appearance and supports binding to [state](../../03_Hooks/Core/03_State.md) for dynamic updates.
+The `Pagination` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) is used to provide navigation between multiple pages of content, such as [lists](07_List.md) or [tables](08_Table.md). It displays a set of page links, previous/next buttons, and optional ellipsis for skipped ranges. The widget can be customized for appearance and supports binding to [state](../../03_Hooks/02_Core/03_UseState.md) for dynamic updates.
 
 ## Basic Usage
 
@@ -44,11 +44,11 @@ public class PaginationConfigurationApp : ViewBase
         var page = UseState(5);
 
         return Layout.Vertical().Gap(4)
-            | Text.Large("Siblings")
+            | Text.P("Siblings").Large()
             | (Layout.Vertical()
                 | new Pagination(page.Value, 20, newPage => page.Set(newPage.Value)).Siblings(1)
                 | new Pagination(page.Value, 20, newPage => page.Set(newPage.Value)).Siblings(2))
-            | Text.Large("Boundaries")
+            | Text.P("Boundaries").Large()
             | (Layout.Vertical()
                 | new Pagination(page.Value, 20, newPage => page.Set(newPage.Value)).Boundaries(1)
                 | new Pagination(page.Value, 20, newPage => page.Set(newPage.Value)).Boundaries(2));

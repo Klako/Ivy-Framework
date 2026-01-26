@@ -18,7 +18,7 @@ The `AudioRecorder` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) allo
 
 ## Basic Usage
 
-Here's a simple example of an `AudioRecorder` that uploads audio to the server and stores it in [state](../../03_Hooks/Core/03_State.md):
+Here's a simple example of an `AudioRecorder` that uploads audio to the server and stores it in [state](../../03_Hooks/02_Core/03_UseState.md):
 
 ```csharp demo-below
 public class BasicAudioRecorderDemo : ViewBase
@@ -63,9 +63,9 @@ public class ChunkedUploadDemo : ViewBase
                | Text.P("Records audio and uploads in 2-second chunks while recording. Each chunk is accumulated into a single file.")
                | new AudioRecorder(upload.Value, "Start chunked recording", "Recording (uploading every 2s)...")
                    .ChunkInterval(2000)
-               | Text.Small($"Chunks received: {chunkCount.Value}")
+               | Text.P($"Chunks received: {chunkCount.Value}").Small()
                | (audioFile.Value != null
-                   ? Text.Small($"Total accumulated: {Utils.FormatBytes(audioFile.Value.Length)}")
+                   ? Text.P($"Total accumulated: {Utils.FormatBytes(audioFile.Value.Length)}").Small()
                    : null);
     }
 }
@@ -96,7 +96,7 @@ public class AudioFormatDemo : ViewBase
                | new AudioRecorder(upload.Value, "Record WebM", "Recording WebM...")
                    .MimeType("audio/webm")
                | (audioFile.Value != null
-                   ? Text.Small($"Format: {audioFile.Value.ContentType}, Size: {Utils.FormatBytes(audioFile.Value.Length)}")
+                   ? Text.P($"Format: {audioFile.Value.ContentType}, Size: {Utils.FormatBytes(audioFile.Value.Length)}").Small()
                    : null);
     }
 }

@@ -13,6 +13,7 @@ import {
   widgetContentOverrides,
   subscribeToContentOverride,
 } from '@/widgets/widgetRenderer';
+import { Scales } from '@/types/scale';
 
 type TextBlockVariant =
   | 'Literal'
@@ -28,9 +29,6 @@ type TextBlockVariant =
   | 'Blockquote'
   | 'InlineCode'
   | 'Lead'
-  | 'ExtraLarge'
-  | 'Large'
-  | 'Small'
   | 'Muted'
   | 'Danger'
   | 'Warning'
@@ -50,6 +48,7 @@ interface TextBlockWidgetProps {
   bold?: boolean;
   italic?: boolean;
   muted?: boolean;
+  scale?: Scales;
 }
 
 interface VariantMap {
@@ -161,21 +160,6 @@ const variantMap: VariantMap = {
       <MarkdownRenderer content={children} />
     </div>
   ),
-  ExtraLarge: ({ children, className, style }) => (
-    <div className={cn(typography.extralarge, className)} style={style}>
-      {children}
-    </div>
-  ),
-  Large: ({ children, className, style }) => (
-    <div className={cn(typography.large, className)} style={style}>
-      {children}
-    </div>
-  ),
-  Small: ({ children, className, style }) => (
-    <div className={cn(typography.small, className)} style={style}>
-      {children}
-    </div>
-  ),
   Muted: ({ children, className, style }) => (
     <div className={cn(typography.muted, className)} style={style}>
       {children}
@@ -220,6 +204,7 @@ export const TextBlockWidget: React.FC<TextBlockWidgetProps> = ({
   bold,
   italic,
   muted,
+  scale,
 }) => {
   const [, forceUpdate] = useState(0);
 
@@ -237,6 +222,11 @@ export const TextBlockWidget: React.FC<TextBlockWidgetProps> = ({
     ...getOverflow(overflow),
   };
 
+  const scaleClasses: Record<string, string> = {
+    [Scales.Small]: typography.small,
+    [Scales.Large]: typography.large,
+  };
+
   const Component = variantMap[variant];
   return (
     <Component
@@ -246,7 +236,8 @@ export const TextBlockWidget: React.FC<TextBlockWidgetProps> = ({
         noWrap && 'whitespace-nowrap',
         bold && 'font-semibold',
         italic && 'italic',
-        muted && 'text-muted-foreground'
+        muted && 'text-muted-foreground',
+        scale && scaleClasses[scale]
       )}
     >
       {displayContent}

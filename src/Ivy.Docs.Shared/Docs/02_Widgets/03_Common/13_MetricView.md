@@ -20,7 +20,7 @@ The `MetricView` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) is a sp
 
 ## Basic Usage
 
-Here's a simple example of a metric view showing total sales with a trend indicator and goal progress. The third parameter is a hook function that receives an `IViewContext` and returns a `QueryResult<MetricRecord>`.
+Here's a simple example of a metric view showing total sales with a trend indicator and goal progress. The second parameter is an optional icon, and the third parameter is a hook function that receives an `IViewContext` and returns a `QueryResult<MetricRecord>`.
 
 ```csharp demo-below
 new MetricView(

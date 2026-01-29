@@ -56,9 +56,7 @@ public abstract record AbstractWidget : IWidget
     [ScaffoldColumn(false)]
     public string? Key { get; set; }
 
-#if DEBUG
     public string? Path { get; set; }
-#endif
 
     public CallSite? CallSite { get; set; }
 

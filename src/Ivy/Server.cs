@@ -383,7 +383,7 @@ public class Server
                     return;
                 }
 
-                if (_args.Port != originalPort)
+                if (_args.Port != originalPort && !_args.Silent)
                 {
                     Console.WriteLine($"\x1b[33mPort {originalPort} is in use. Using port {_args.Port} instead.\x1b[0m");
                 }
@@ -446,6 +446,7 @@ public class Server
         builder.Services.AddSingleton<IQueryableRegistry, QueryableRegistry>();
         builder.Services.AddSingleton(_contentBuilder ?? new DefaultContentBuilder());
         builder.Services.AddSingleton(sessionStore);
+        builder.Services.AddSingleton<IOAuthCallbackRegistry, OAuthCallbackRegistry>();
         builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
         builder.Services.AddHealthChecks();
         builder.Services.AddQueryManager();

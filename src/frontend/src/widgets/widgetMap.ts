@@ -50,8 +50,8 @@ import {
   TabWidget,
   SidebarLayoutWidget,
   SidebarMenuWidget,
-  ResizeablePanelGroupWidget,
-  ResizeablePanelWidget,
+  ResizablePanelGroupWidget,
+  ResizablePanelWidget,
   FloatingPanelWidget,
 } from '@/widgets/layouts';
 import { ListWidget, ListItemWidget } from '@/widgets/lists';
@@ -156,8 +156,8 @@ export const widgetMap = {
   'Ivy.Tab': TabWidget,
   'Ivy.SidebarLayout': SidebarLayoutWidget,
   'Ivy.SidebarMenu': SidebarMenuWidget,
-  'Ivy.ResizeablePanelGroup': ResizeablePanelGroupWidget,
-  'Ivy.ResizeablePanel': ResizeablePanelWidget,
+  'Ivy.ResizablePanelGroup': ResizablePanelGroupWidget,
+  'Ivy.ResizablePanel': ResizablePanelWidget,
   'Ivy.FloatingPanel': FloatingPanelWidget,
 
   // Inputs
@@ -226,5 +226,10 @@ export const widgetMap = {
 
   'Ivy.Widgets.Internal.SidebarNews': React.lazy(
     () => import('@/widgets/internal/SidebarNewsWidget')
+  ),
+  'Ivy.Widgets.Internal.ThemeColorPicker': React.lazy(() =>
+    import('@/widgets/internal/ThemeColorPickerWidget').then(m => ({
+      default: m.ThemeColorPickerWidget,
+    }))
   ),
 };

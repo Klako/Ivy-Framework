@@ -14,12 +14,7 @@ import {
 import { useEventHandler } from '@/components/event-handler';
 import withTooltip from '@/hoc/withTooltip';
 import { Loader2 } from 'lucide-react';
-import {
-  BorderRadius,
-  getBorderRadius,
-  getColor,
-  getWidth,
-} from '@/lib/styles';
+import { BorderRadius, getColor, getWidth } from '@/lib/styles';
 import { Scales } from '@/types/scale';
 
 const ButtonWithTooltip = withTooltip(Button);
@@ -45,6 +40,7 @@ interface ButtonWidgetProps {
   foreground?: string;
   loading?: boolean;
   url?: string;
+  target?: 'Blank' | 'Self';
   width?: string;
   children?: React.ReactNode;
   borderRadius?: BorderRadius;
@@ -97,6 +93,7 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
   tooltip,
   foreground,
   url,
+  target = 'Self',
   loading = false,
   width,
   children,
@@ -106,10 +103,19 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
 }) => {
   const eventHandler = useEventHandler();
 
+  // For 'Rounded' (default), rely on the 'rounded-field' class from buttonVariants.
+  // Only add inline style to override the class for 'None'/'Full'.
+  const borderRadiusStyle: React.CSSProperties =
+    borderRadius === 'Full'
+      ? { borderRadius: '9999px' }
+      : borderRadius === 'None'
+        ? { borderRadius: '0' }
+        : {}; // 'Rounded' uses the rounded-field class
+
   const styles: React.CSSProperties = {
     ...getWidth(width),
     ...getColor(foreground),
-    ...getBorderRadius(borderRadius),
+    ...borderRadiusStyle,
   };
 
   let buttonSize: 'icon' | 'default' | 'sm' | 'lg' | null | undefined =
@@ -277,7 +283,10 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
               href={validatedHref}
               {...(isDownloadUrl || isMailto
                 ? {}
-                : { target: '_blank', rel: 'noopener noreferrer' })}
+                : {
+                    target: target === 'Self' ? '_self' : '_blank',
+                    rel: target === 'Self' ? undefined : 'noopener noreferrer',
+                  })}
             >
               {buttonContent}
             </a>
@@ -326,7 +335,10 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
           href={validatedHref}
           {...(isDownloadUrl || isMailto
             ? {}
-            : { target: '_blank', rel: 'noopener noreferrer' })}
+            : {
+                target: target === 'Self' ? '_self' : '_blank',
+                rel: target === 'Self' ? undefined : 'noopener noreferrer',
+              })}
         >
           {buttonContent}
         </a>

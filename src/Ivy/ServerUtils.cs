@@ -39,6 +39,10 @@ public static class ServerUtils
             EnableDevTools = parser.GetValue(parsedArgs, "enable-dev-tools", false),
         };
         serverArgs = serverArgs with { FindAvailablePort = parser.GetValue(parsedArgs, "find-available-port", false) };
+        if (serverArgs.Describe)
+        {
+            serverArgs = serverArgs with { FindAvailablePort = true, Silent = true };
+        }
         return serverArgs;
     }
 }

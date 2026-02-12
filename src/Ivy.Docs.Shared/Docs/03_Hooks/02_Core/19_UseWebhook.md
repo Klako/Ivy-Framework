@@ -52,7 +52,7 @@ The `UseWebhook` hook:
 
 1. **Generates a Unique ID**: Creates a unique identifier for the webhook endpoint
 2. **Registers the Handler**: Registers your request handler with the webhook registry
-3. **Returns Webhook Endpoint**: Provides a `WebhookEndpoint` with the URL that external systems can call
+3. **Returns Callback Endpoint**: Provides a `WebhookEndpoint` with the URL that external systems can call
 
 ```mermaid
 sequenceDiagram

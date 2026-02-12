@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
-using Ivy.Hooks;
+using Ivy.Core;
 using Ivy.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +30,8 @@ public class ClerkAuthProvider : IAuthProvider
     private DateTime _signingKeysLastFetched = DateTime.MinValue;
     private readonly bool _isProduction;
     private string? _origin = null;
+
+    public static bool OpenOAuthLoginInNewTab => true;
 
     private static (bool IsProduction, string Key) ParseKey(string name, string type, string key)
     {

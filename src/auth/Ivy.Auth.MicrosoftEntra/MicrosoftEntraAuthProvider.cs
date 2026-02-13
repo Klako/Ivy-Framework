@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text.Json;
 using Ivy.Shared;
 using Microsoft.AspNetCore.Http;
@@ -43,13 +42,8 @@ public class MicrosoftEntraAuthProvider : IAuthProvider
 
     record struct RefreshToken([property: JsonPropertyName("secret")] string Secret);
 
-    public MicrosoftEntraAuthProvider()
+    public MicrosoftEntraAuthProvider(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddUserSecrets(Assembly.GetEntryAssembly()!)
-            .Build();
-
         _tenantId = configuration.GetValue<string>("MicrosoftEntra:TenantId") ?? throw new Exception("MicrosoftEntra:TenantId is required");
         _clientId = configuration.GetValue<string>("MicrosoftEntra:ClientId") ?? throw new Exception("MicrosoftEntra:ClientId is required");
         _clientSecret = configuration.GetValue<string>("MicrosoftEntra:ClientSecret") ?? throw new Exception("MicrosoftEntra:ClientSecret is required");

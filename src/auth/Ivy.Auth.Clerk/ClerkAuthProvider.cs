@@ -1,6 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
 using Ivy.Core;
 using Ivy.Shared;
 using Microsoft.AspNetCore.Http;
@@ -43,13 +42,8 @@ public class ClerkAuthProvider : IAuthProvider
         return (tokens[1] == "live", tokens[2]);
     }
 
-    public ClerkAuthProvider()
+    public ClerkAuthProvider(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddUserSecrets(Assembly.GetEntryAssembly()!)
-            .Build();
-
         _secretKey = configuration.GetValue<string>("Clerk:SecretKey") ?? throw new Exception("Clerk:SecretKey is required");
         var publishableKey = configuration.GetValue<string>("Clerk:PublishableKey") ?? throw new Exception("Clerk:PublishableKey is required");
 

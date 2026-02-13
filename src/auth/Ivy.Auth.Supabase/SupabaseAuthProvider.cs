@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
 using Ivy.Core;
 using Ivy.Shared;
@@ -35,13 +34,8 @@ public class SupabaseAuthProvider : IAuthProvider
     private JsonWebKeySet? _cachedJwks = null;
     private DateTime _jwksCacheExpiry = DateTime.MinValue;
 
-    public SupabaseAuthProvider()
+    public SupabaseAuthProvider(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddUserSecrets(Assembly.GetEntryAssembly()!)
-            .Build();
-
         var url = configuration.GetValue<string>("Supabase:Url") ?? throw new Exception("Supabase:Url is required");
         var apiKey = configuration.GetValue<string>("Supabase:ApiKey") ?? throw new Exception("Supabase:ApiKey is required");
         var legacyJwtSecret = configuration.GetValue<string?>("Supabase:LegacyJwtSecret");

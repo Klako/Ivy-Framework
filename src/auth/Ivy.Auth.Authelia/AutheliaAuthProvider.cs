@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Ivy.Core;
@@ -19,12 +18,8 @@ public class AutheliaAuthProvider : IAuthProvider
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
     };
 
-    public AutheliaAuthProvider()
+    public AutheliaAuthProvider(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddUserSecrets(Assembly.GetEntryAssembly()!)
-            .Build();
         _baseUrl = configuration.GetValue<string>("Authelia:Url")
             ?? throw new Exception("Authelia:Url is required");
         _cookieContainer = new CookieContainer();

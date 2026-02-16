@@ -30,7 +30,7 @@ public class ClerkAuthProvider : IAuthProvider
     private readonly bool _isProduction;
     private string? _origin = null;
 
-    public static bool OpenOAuthLoginInNewTab => true;
+    public bool OpenOAuthLoginInNewTab => true;
 
     private static (bool IsProduction, string Key) ParseKey(string name, string type, string key)
     {
@@ -44,6 +44,11 @@ public class ClerkAuthProvider : IAuthProvider
 
     public ClerkAuthProvider(IConfiguration configuration)
     {
+        var userAgent = AuthProviderHelpers.GetUserAgent(configuration, "Clerk:UserAgent");
+
+        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
+
         _secretKey = configuration.GetValue<string>("Clerk:SecretKey") ?? throw new Exception("Clerk:SecretKey is required");
         var publishableKey = configuration.GetValue<string>("Clerk:PublishableKey") ?? throw new Exception("Clerk:PublishableKey is required");
 
@@ -67,8 +72,6 @@ public class ClerkAuthProvider : IAuthProvider
         {
             throw new Exception("Clerk:PublishableKey contains an invalid base64 string", ex);
         }
-
-        _httpClient = new HttpClient();
     }
 
     private FrontendApiClient MakeFrontendApiClient(IAuthSession authSession)

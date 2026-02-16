@@ -23,6 +23,7 @@ public class SupabaseOAuthException(string? error, string? errorCode, string? er
 public class SupabaseAuthProvider : IAuthProvider
 {
     private readonly global::Supabase.Client _client;
+    private readonly HttpClient _httpClient;
     private readonly string _jwksUrl;
     private readonly string _issuer;
     private readonly SymmetricSecurityKey? _legacyJwtKey = null;
@@ -52,6 +53,10 @@ public class SupabaseAuthProvider : IAuthProvider
         };
 
         _client = new global::Supabase.Client(url, apiKey, options);
+
+        var userAgent = AuthProviderHelpers.GetUserAgent(configuration, "Supabase:UserAgent");
+        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
 
         // Setup JWKS URL
         _issuer = new Uri(new Uri(url), "auth/v1").ToString();
@@ -351,8 +356,7 @@ public class SupabaseAuthProvider : IAuthProvider
                 // Check cache first
                 if (_cachedJwks == null || DateTime.UtcNow >= _jwksCacheExpiry)
                 {
-                    using var httpClient = new HttpClient();
-                    var jwksJson = await httpClient.GetStringAsync(_jwksUrl, cancellationToken);
+                    var jwksJson = await _httpClient.GetStringAsync(_jwksUrl, cancellationToken);
                     _cachedJwks = new JsonWebKeySet(jwksJson);
                     _jwksCacheExpiry = DateTime.UtcNow.AddHours(24);
                 }

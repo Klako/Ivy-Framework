@@ -28,7 +28,6 @@ public class MicrosoftEntraAuthProvider : IAuthProvider
     private string? _baseUrl = null;
     private readonly string[] _scopes = ["User.Read", "openid", "profile", "email", "offline_access"];
 
-    private readonly List<AuthOption> _authOptions = [];
     TokenCache? _tokenCache = null;
 
     private string? _codeVerifier = null;
@@ -268,10 +267,7 @@ public class MicrosoftEntraAuthProvider : IAuthProvider
         }
     }
 
-    public AuthOption[] GetAuthOptions()
-    {
-        return [.. _authOptions];
-    }
+    public AuthOption[] GetAuthOptions() => [new AuthOption(AuthFlow.OAuth, "Microsoft", "microsoft", Icons.Microsoft)];
 
     public async Task<TokenLifetime?> GetAccessTokenLifetimeAsync(IAuthSession authSession, CancellationToken cancellationToken)
     {
@@ -290,11 +286,8 @@ public class MicrosoftEntraAuthProvider : IAuthProvider
         }
     }
 
-    public MicrosoftEntraAuthProvider UseMicrosoftEntra()
-    {
-        _authOptions.Add(new AuthOption(AuthFlow.OAuth, "Microsoft", "microsoft", Icons.Microsoft));
-        return this;
-    }
+    [Obsolete("Microsoft Entra OAuth is now enabled by default. This method is no longer necessary and will be removed in a future version.")]
+    public MicrosoftEntraAuthProvider UseMicrosoftEntra() => this;
 
     private static string GenerateCodeVerifier()
     {

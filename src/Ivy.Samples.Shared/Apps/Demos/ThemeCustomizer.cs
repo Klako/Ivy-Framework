@@ -4,6 +4,7 @@ using Ivy.Hooks;
 using Ivy.Samples.Shared.Helpers;
 using Ivy.Views.Forms;
 using Ivy;
+using Ivy.Widgets.Internal;
 
 namespace Ivy.Samples.Shared.Apps.Demos;
 
@@ -134,7 +135,9 @@ public class ThemeCustomizer : SampleBase
             Name = source.Name,
             FontFamily = source.FontFamily,
             FontSize = source.FontSize,
-            BorderRadius = source.BorderRadius,
+            BorderRadiusBoxes = source.BorderRadiusBoxes,
+            BorderRadiusFields = source.BorderRadiusFields,
+            BorderRadiusSelectors = source.BorderRadiusSelectors,
             Colors = new ThemeColorScheme
             {
                 Light = CloneThemeColors(source.Colors.Light),
@@ -225,9 +228,7 @@ public class ThemeCustomizer : SampleBase
                     },
                     options: presetOptions
                 )
-
                 | new Separator()
-
                 // Mode toggle
                 | Text.H3("Theme Mode").Small()
                 | (Layout.Horizontal()
@@ -257,42 +258,42 @@ public class ThemeCustomizer : SampleBase
                     content: Layout.Vertical()
                         | Text.Block("Main Colors").Small()
                         | (Layout.Grid().Columns(4).Gap(2)
-                            | new ColorInput(currentColors.Primary ?? "#000000", e => UpdateColor(c => c.Primary = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Primary").WithTooltip($"Primary: {currentColors.Primary ?? "#000000"}")
-                            | new ColorInput(currentColors.PrimaryForeground ?? "#000000", e => UpdateColor(c => c.PrimaryForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Primary Foreground: {currentColors.PrimaryForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Secondary ?? "#000000", e => UpdateColor(c => c.Secondary = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Secondary").WithTooltip($"Secondary: {currentColors.Secondary ?? "#000000"}")
-                            | new ColorInput(currentColors.SecondaryForeground ?? "#000000", e => UpdateColor(c => c.SecondaryForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Secondary Foreground: {currentColors.SecondaryForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Background ?? "#000000", e => UpdateColor(c => c.Background = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Background").WithTooltip($"Background: {currentColors.Background ?? "#000000"}")
-                            | new ColorInput(currentColors.Foreground ?? "#000000", e => UpdateColor(c => c.Foreground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Foreground: {currentColors.Foreground ?? "#000000"}"))
+                            | new ThemeColorPicker(currentColors.Primary ?? "#000000", e => UpdateColor(c => c.Primary = e.Value), placeholder: "Primary").WithField().Medium().Description("Primary").WithTooltip($"Primary: {currentColors.Primary ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.PrimaryForeground ?? "#000000", e => UpdateColor(c => c.PrimaryForeground = e.Value), placeholder: "Primary Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Primary Foreground: {currentColors.PrimaryForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Secondary ?? "#000000", e => UpdateColor(c => c.Secondary = e.Value), placeholder: "Secondary").WithField().Medium().Description("Secondary").WithTooltip($"Secondary: {currentColors.Secondary ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.SecondaryForeground ?? "#000000", e => UpdateColor(c => c.SecondaryForeground = e.Value), placeholder: "Secondary Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Secondary Foreground: {currentColors.SecondaryForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Background ?? "#000000", e => UpdateColor(c => c.Background = e.Value), placeholder: "Background").WithField().Medium().Description("Background").WithTooltip($"Background: {currentColors.Background ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Foreground ?? "#000000", e => UpdateColor(c => c.Foreground = e.Value), placeholder: "Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Foreground: {currentColors.Foreground ?? "#000000"}"))
 
                         | new Separator()
 
                         | Text.Block("Semantic Colors").Small()
                         | (Layout.Grid().Columns(4).Gap(2)
-                            | new ColorInput(currentColors.Success ?? "#000000", e => UpdateColor(c => c.Success = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Success").WithTooltip($"Success: {currentColors.Success ?? "#000000"}")
-                            | new ColorInput(currentColors.SuccessForeground ?? "#000000", e => UpdateColor(c => c.SuccessForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Success Foreground: {currentColors.SuccessForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Destructive ?? "#000000", e => UpdateColor(c => c.Destructive = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Destructive").WithTooltip($"Destructive: {currentColors.Destructive ?? "#000000"}")
-                            | new ColorInput(currentColors.DestructiveForeground ?? "#000000", e => UpdateColor(c => c.DestructiveForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Destructive Foreground: {currentColors.DestructiveForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Warning ?? "#000000", e => UpdateColor(c => c.Warning = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Warning").WithTooltip($"Warning: {currentColors.Warning ?? "#000000"}")
-                            | new ColorInput(currentColors.WarningForeground ?? "#000000", e => UpdateColor(c => c.WarningForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Warning Foreground: {currentColors.WarningForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Info ?? "#000000", e => UpdateColor(c => c.Info = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Info").WithTooltip($"Info: {currentColors.Info ?? "#000000"}")
-                            | new ColorInput(currentColors.InfoForeground ?? "#000000", e => UpdateColor(c => c.InfoForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Info Foreground: {currentColors.InfoForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Success ?? "#000000", e => UpdateColor(c => c.Success = e.Value), placeholder: "Success").WithField().Medium().Description("Success").WithTooltip($"Success: {currentColors.Success ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.SuccessForeground ?? "#000000", e => UpdateColor(c => c.SuccessForeground = e.Value), placeholder: "Success Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Success Foreground: {currentColors.SuccessForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Destructive ?? "#000000", e => UpdateColor(c => c.Destructive = e.Value), placeholder: "Destructive").WithField().Medium().Description("Destructive").WithTooltip($"Destructive: {currentColors.Destructive ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.DestructiveForeground ?? "#000000", e => UpdateColor(c => c.DestructiveForeground = e.Value), placeholder: "Destructive Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Destructive Foreground: {currentColors.DestructiveForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Warning ?? "#000000", e => UpdateColor(c => c.Warning = e.Value), placeholder: "Warning").WithField().Medium().Description("Warning").WithTooltip($"Warning: {currentColors.Warning ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.WarningForeground ?? "#000000", e => UpdateColor(c => c.WarningForeground = e.Value), placeholder: "Warning Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Warning Foreground: {currentColors.WarningForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Info ?? "#000000", e => UpdateColor(c => c.Info = e.Value), placeholder: "Info").WithField().Medium().Description("Info").WithTooltip($"Info: {currentColors.Info ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.InfoForeground ?? "#000000", e => UpdateColor(c => c.InfoForeground = e.Value), placeholder: "Info Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Info Foreground: {currentColors.InfoForeground ?? "#000000"}")
       )
 
                         | new Separator()
 
                         | Text.Block("UI Element Colors").Small()
                         | (Layout.Grid().Columns(4).Gap(2)
-                            | new ColorInput(currentColors.Muted ?? "#000000", e => UpdateColor(c => c.Muted = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Muted").WithTooltip($"Muted: {currentColors.Muted ?? "#000000"}")
-                            | new ColorInput(currentColors.MutedForeground ?? "#000000", e => UpdateColor(c => c.MutedForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Muted Foreground: {currentColors.MutedForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Accent ?? "#000000", e => UpdateColor(c => c.Accent = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Accent").WithTooltip($"Accent: {currentColors.Accent ?? "#000000"}")
-                            | new ColorInput(currentColors.AccentForeground ?? "#000000", e => UpdateColor(c => c.AccentForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Accent Foreground: {currentColors.AccentForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Border ?? "#000000", e => UpdateColor(c => c.Border = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Border").WithTooltip($"Border: {currentColors.Border ?? "#000000"}")
-                            | new ColorInput(currentColors.Input ?? "#000000", e => UpdateColor(c => c.Input = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Input").WithTooltip($"Input: {currentColors.Input ?? "#000000"}")
-                            | new ColorInput(currentColors.Ring ?? "#000000", e => UpdateColor(c => c.Ring = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Ring").WithTooltip($"Ring: {currentColors.Ring ?? "#000000"}")
-                            | new ColorInput(currentColors.Card ?? "#000000", e => UpdateColor(c => c.Card = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Card").WithTooltip($"Card: {currentColors.Card ?? "#000000"}")
-                            | new ColorInput(currentColors.CardForeground ?? "#000000", e => UpdateColor(c => c.CardForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Card Foreground: {currentColors.CardForeground ?? "#000000"}")
-                            | new ColorInput(currentColors.Popover ?? "#000000", e => UpdateColor(c => c.Popover = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("Popover").WithTooltip($"Popover: {currentColors.Popover ?? "#000000"}")
-                            | new ColorInput(currentColors.PopoverForeground ?? "#000000", e => UpdateColor(c => c.PopoverForeground = e.Value), variant: ColorInputs.Picker).WithField().Medium().Description("\u00A0").WithTooltip($"Popover Foreground: {currentColors.PopoverForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Muted ?? "#000000", e => UpdateColor(c => c.Muted = e.Value), placeholder: "Muted").WithField().Medium().Description("Muted").WithTooltip($"Muted: {currentColors.Muted ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.MutedForeground ?? "#000000", e => UpdateColor(c => c.MutedForeground = e.Value), placeholder: "Muted Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Muted Foreground: {currentColors.MutedForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Accent ?? "#000000", e => UpdateColor(c => c.Accent = e.Value), placeholder: "Accent").WithField().Medium().Description("Accent").WithTooltip($"Accent: {currentColors.Accent ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.AccentForeground ?? "#000000", e => UpdateColor(c => c.AccentForeground = e.Value), placeholder: "Accent Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Accent Foreground: {currentColors.AccentForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Border ?? "#000000", e => UpdateColor(c => c.Border = e.Value), placeholder: "Border").WithField().Medium().Description("Border").WithTooltip($"Border: {currentColors.Border ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Input ?? "#000000", e => UpdateColor(c => c.Input = e.Value), placeholder: "Input").WithField().Medium().Description("Input").WithTooltip($"Input: {currentColors.Input ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Ring ?? "#000000", e => UpdateColor(c => c.Ring = e.Value), placeholder: "Ring").WithField().Medium().Description("Ring").WithTooltip($"Ring: {currentColors.Ring ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Card ?? "#000000", e => UpdateColor(c => c.Card = e.Value), placeholder: "Card").WithField().Medium().Description("Card").WithTooltip($"Card: {currentColors.Card ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.CardForeground ?? "#000000", e => UpdateColor(c => c.CardForeground = e.Value), placeholder: "Card Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Card Foreground: {currentColors.CardForeground ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.Popover ?? "#000000", e => UpdateColor(c => c.Popover = e.Value), placeholder: "Popover").WithField().Medium().Description("Popover").WithTooltip($"Popover: {currentColors.Popover ?? "#000000"}")
+                            | new ThemeColorPicker(currentColors.PopoverForeground ?? "#000000", e => UpdateColor(c => c.PopoverForeground = e.Value), placeholder: "Popover Foreground").Foreground(true).WithField().Medium().Description("\u00A0").WithTooltip($"Popover Foreground: {currentColors.PopoverForeground ?? "#000000"}")
       )
                 ).Height(Size.Fit()).Open()
 
@@ -310,11 +311,11 @@ public class ThemeCustomizer : SampleBase
                             onChange: e => UpdateThemeProperty(t => t.FontSize = string.IsNullOrWhiteSpace(e.Value) ? null : e.Value),
                             placeholder: "e.g., 16px, 1rem"
                         ).WithField().Label("Font Size")
-                        | new TextInput(
-                            value: editingTheme.Value.BorderRadius ?? "",
-                            onChange: e => UpdateThemeProperty(t => t.BorderRadius = string.IsNullOrWhiteSpace(e.Value) ? null : e.Value),
-                            placeholder: "e.g., 0.5rem, 8px"
-                        ).WithField().Label("Border Radius")
+                        | new Separator()
+                        | new BorderRadiusSelector(
+                            editingTheme,
+                            UpdateThemeProperty
+                        )
                 );
 
         }
@@ -354,6 +355,100 @@ public class ThemeCustomizer : SampleBase
                     },
                     variant: ColorInputs.TextAndPicker
                 );
+        }
+    }
+
+    /// <summary>
+    /// Border radius selector with visual preview boxes
+    /// </summary>
+    private class BorderRadiusSelector(IState<Theme> editingTheme, Action<Action<Theme>> updateThemeProperty) : ViewBase
+    {
+        // Constants for consistent sizing
+        private const int PreviewSize = 35;
+        private const int CardSize = 60;
+        private const int SvgViewBox = 32;
+
+        // Available border radius options: (cssValue, pxRadius)
+        private static readonly (string Value, int Pixels)[] RadiusOptions =
+        [
+            ("0px", 0),
+            ("0.5rem", 8),
+            ("1rem", 16),
+            ("1.5rem", 24),
+            ("2rem", 32)
+        ];
+
+        public override object Build()
+        {
+            return Layout.Vertical().Gap(3)
+                | Text.Block("Radius").Small().Bold()
+                | BuildRadiusCategory(
+                    "Boxes",
+                    "card, modal, alert",
+                    editingTheme.Value.BorderRadiusBoxes,
+                    value => updateThemeProperty(t => t.BorderRadiusBoxes = value))
+                | BuildRadiusCategory(
+                    "Fields",
+                    "button, input, select, tab",
+                    editingTheme.Value.BorderRadiusFields,
+                    value => updateThemeProperty(t => t.BorderRadiusFields = value))
+                | BuildRadiusCategory(
+                    "Selectors",
+                    "checkbox, toggle, badge",
+                    editingTheme.Value.BorderRadiusSelectors,
+                    value => updateThemeProperty(t => t.BorderRadiusSelectors = value));
+        }
+
+        private static object BuildRadiusCategory(
+            string title,
+            string subtitle,
+            string? currentValue,
+            Action<string?> onUpdate)
+        {
+            var options = Layout.Horizontal().Gap(2);
+            foreach (var (value, pixels) in RadiusOptions)
+            {
+                options = options | CreateOption(value, pixels, currentValue, onUpdate);
+            }
+
+            return Layout.Vertical()
+                | Text.Block(title).Bold().Small()
+                | Text.Block(subtitle).Muted().Italic()
+                | options;
+        }
+
+        private static object CreateOption(
+            string remValue,
+            int pxRadius,
+            string? currentValue,
+            Action<string?> onUpdate)
+        {
+            // Normalize both values to compare (treat null/empty as "0px")
+            var normalizedCurrent = string.IsNullOrWhiteSpace(currentValue) ? "0px" : currentValue;
+            var normalizedOption = remValue == "0px" ? "0px" : remValue;
+            var isSelected = normalizedCurrent == normalizedOption;
+            var fillColor = isSelected ? "var(--primary)" : "var(--secondary)";
+
+            // Allow rectangle to be larger than viewbox to support large radii without capping
+            // If rect is 32x32, max radius is 16. If rect is 64x64, max radius is 32.
+            var rectSize = SvgViewBox * 2;
+
+            // ViewBox shows the top-left 32x32 area
+            // Radii: 0, 8, 16, 24, 32 will now be visually distinct
+            var svgContent = $@"<svg width='100%' height='100%' viewBox='0 0 {SvgViewBox} {SvgViewBox}' xmlns='http://www.w3.org/2000/svg'>
+                <rect width='{rectSize}' height='{rectSize}' rx='{pxRadius}' fill='{fillColor}' />
+            </svg>";
+
+            return new Card(
+                    Layout.Center()
+                        | new Svg(svgContent)
+                            .Width(Size.Px(PreviewSize))
+                            .Height(Size.Px(PreviewSize))
+                )
+                .Width(Size.Px(CardSize))
+                .Height(Size.Px(CardSize))
+                .HandleClick(() => onUpdate(remValue == "0px" ? null : remValue))
+                .WithTooltip($"{remValue} ({pxRadius}px)");
         }
     }
 
@@ -819,7 +914,9 @@ var server = new Server()
         }}
         theme.FontFamily = ""{theme.FontFamily}"";
         theme.FontSize = ""{theme.FontSize}"";
-        theme.BorderRadius = ""{theme.BorderRadius}"";
+        theme.BorderRadiusBoxes = ""{theme.BorderRadiusBoxes}"";
+        theme.BorderRadiusFields = ""{theme.BorderRadiusFields}"";
+        theme.BorderRadiusSelectors = ""{theme.BorderRadiusSelectors}""; 
     }});";
     }
 
@@ -829,7 +926,9 @@ var server = new Server()
         Name = "Ocean",
         FontFamily = "Geist",
         FontSize = "16px",
-        BorderRadius = "0.5rem",
+        BorderRadiusBoxes = Theme.Default.BorderRadiusBoxes,
+        BorderRadiusFields = Theme.Default.BorderRadiusFields,
+        BorderRadiusSelectors = Theme.Default.BorderRadiusSelectors,
         Colors = new ThemeColorScheme
         {
             Light = new ThemeColors
@@ -896,7 +995,9 @@ var server = new Server()
         Name = "Forest",
         FontFamily = "Geist",
         FontSize = "16px",
-        BorderRadius = "0.5rem",
+        BorderRadiusBoxes = Theme.Default.BorderRadiusBoxes,
+        BorderRadiusFields = Theme.Default.BorderRadiusFields,
+        BorderRadiusSelectors = Theme.Default.BorderRadiusSelectors,
         Colors = new ThemeColorScheme
         {
             Light = new ThemeColors
@@ -963,7 +1064,9 @@ var server = new Server()
         Name = "Sunset",
         FontFamily = "Geist",
         FontSize = "16px",
-        BorderRadius = "0.5rem",
+        BorderRadiusBoxes = Theme.Default.BorderRadiusBoxes,
+        BorderRadiusFields = Theme.Default.BorderRadiusFields,
+        BorderRadiusSelectors = Theme.Default.BorderRadiusSelectors,
         Colors = new ThemeColorScheme
         {
             Light = new ThemeColors
@@ -1030,7 +1133,9 @@ var server = new Server()
         Name = "Midnight",
         FontFamily = "Geist",
         FontSize = "16px",
-        BorderRadius = "0.5rem",
+        BorderRadiusBoxes = Theme.Default.BorderRadiusBoxes,
+        BorderRadiusFields = Theme.Default.BorderRadiusFields,
+        BorderRadiusSelectors = Theme.Default.BorderRadiusSelectors,
         Colors = new ThemeColorScheme
         {
             Light = new ThemeColors

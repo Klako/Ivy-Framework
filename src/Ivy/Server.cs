@@ -38,6 +38,8 @@ public record ServerArgs
     public string? DefaultAppId { get; set; } = null;
     public bool Silent { get; set; } = false;
     public bool Describe { get; set; } = false;
+    public string? DescribeConnection { get; set; } = null;
+    public string? TestConnection { get; set; } = null;
     public string? MetaTitle { get; set; } = null;
     public string? MetaDescription { get; set; } = null;
     public Assembly? AssetAssembly { get; set; } = null;
@@ -383,7 +385,7 @@ public class Server
                     return;
                 }
 
-                if (_args.Port != originalPort)
+                if (_args.Port != originalPort && !_args.Silent)
                 {
                     Console.WriteLine($"\x1b[33mPort {originalPort} is in use. Using port {_args.Port} instead.\x1b[0m");
                 }
@@ -446,6 +448,7 @@ public class Server
         builder.Services.AddSingleton<IQueryableRegistry, QueryableRegistry>();
         builder.Services.AddSingleton(_contentBuilder ?? new DefaultContentBuilder());
         builder.Services.AddSingleton(sessionStore);
+        builder.Services.AddSingleton<IOAuthCallbackRegistry, OAuthCallbackRegistry>();
         builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
         builder.Services.AddHealthChecks();
         builder.Services.AddQueryManager();
@@ -575,6 +578,80 @@ public class Server
         {
             var description = ServerDescription.Gather(this, app.Services);
             Console.WriteLine(description.ToYaml());
+            return;
+        }
+
+        if (_args.DescribeConnection != null)
+        {
+            var connection = ServerDescription.FindConnection(this, app.Services, _args.DescribeConnection);
+            if (connection == null)
+            {
+                Console.Error.WriteLine($"Connection '{_args.DescribeConnection}' not found.");
+                return;
+            }
+
+            var serializer = new YamlDotNet.Serialization.SerializerBuilder()
+                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
+                .ConfigureDefaultValuesHandling(YamlDotNet.Serialization.DefaultValuesHandling.OmitNull)
+                .Build();
+
+            var connectionPath = Path.Combine(Directory.GetCurrentDirectory(), "Connections", connection.GetName());
+            string? context = null;
+            try { context = connection.GetContext(connectionPath); } catch { }
+
+            var secrets = (connection is Ivy.Services.IHaveSecrets hasSecrets)
+                ? hasSecrets.GetSecrets().Select(s => s.Key).ToList()
+                : new List<string>();
+
+            var connectionDescription = new
+            {
+                name = connection.GetName(),
+                type = connection.GetConnectionType(),
+                @namespace = connection.GetNamespace(),
+                context = string.IsNullOrEmpty(context) ? null : context,
+                secrets,
+                entities = connection.GetEntities().Select(e => e.Plural).ToList()
+            };
+
+            Console.WriteLine(serializer.Serialize(connectionDescription));
+            return;
+        }
+
+        if (_args.TestConnection != null)
+        {
+            var connection = ServerDescription.FindConnection(this, app.Services, _args.TestConnection);
+            if (connection == null)
+            {
+                Console.Error.WriteLine($"Connection '{_args.TestConnection}' not found.");
+                return;
+            }
+
+            if (connection is Ivy.Services.IHaveSecrets hasSecrets)
+            {
+                var config = app.Services.GetRequiredService<IConfiguration>();
+                var missing = hasSecrets.GetSecrets()
+                    .Where(s => string.IsNullOrEmpty(config[s.Key]))
+                    .Select(s => s.Key)
+                    .ToList();
+
+                if (missing.Count > 0)
+                {
+                    Console.Error.WriteLine($"Missing secrets: {string.Join(", ", missing)}");
+                    return;
+                }
+            }
+
+            var configuration = app.Services.GetRequiredService<IConfiguration>();
+            var (ok, message) = await connection.TestConnection(configuration);
+
+            if (ok)
+            {
+                Console.WriteLine($"OK: {message ?? "Connection successful."}");
+            }
+            else
+            {
+                Console.Error.WriteLine($"FAILED: {message ?? "Connection test failed."}");
+            }
             return;
         }
 

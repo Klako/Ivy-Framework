@@ -1,7 +1,6 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
-using Ivy.Hooks;
+using Ivy.Core;
 using Ivy.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +30,8 @@ public class ClerkAuthProvider : IAuthProvider
     private readonly bool _isProduction;
     private string? _origin = null;
 
+    public static bool OpenOAuthLoginInNewTab => true;
+
     private static (bool IsProduction, string Key) ParseKey(string name, string type, string key)
     {
         var tokens = key.Split('_', 3);
@@ -41,13 +42,8 @@ public class ClerkAuthProvider : IAuthProvider
         return (tokens[1] == "live", tokens[2]);
     }
 
-    public ClerkAuthProvider()
+    public ClerkAuthProvider(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddUserSecrets(Assembly.GetEntryAssembly()!)
-            .Build();
-
         _secretKey = configuration.GetValue<string>("Clerk:SecretKey") ?? throw new Exception("Clerk:SecretKey is required");
         var publishableKey = configuration.GetValue<string>("Clerk:PublishableKey") ?? throw new Exception("Clerk:PublishableKey is required");
 

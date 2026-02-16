@@ -35,6 +35,47 @@ export const useCellInteractions = ({
 
       const cellContent = getCellContent(cell);
 
+      if (enableCellClickEvents ?? false) {
+        const visibleColumns = columns.filter(c => !c.hidden);
+        const column = visibleColumns[cell[0]];
+
+        const getCellValue = (content: GridCell) => {
+          if (
+            content.kind === 'text' ||
+            content.kind === 'number' ||
+            content.kind === 'boolean'
+          ) {
+            return content.data;
+          } else if ('data' in content) {
+            const cellData = (content as unknown as { data: unknown }).data;
+
+            if (
+              cellData &&
+              typeof cellData === 'object' &&
+              'kind' in cellData &&
+              (cellData as { kind: string }).kind === 'link-cell' &&
+              'url' in cellData
+            ) {
+              return (cellData as unknown as { url: string }).url;
+            } else {
+              return cellData;
+            }
+          }
+          return null;
+        };
+
+        const cellValue = getCellValue(cellContent);
+
+        eventHandler('OnCellClick', widgetId, [
+          {
+            rowIndex: cell[1],
+            columnIndex: cell[0],
+            columnName: column?.name || '',
+            cellValue: cellValue,
+          },
+        ]);
+      }
+
       // Handle click on custom link cells
       if (
         cellContent.kind === GridCellKind.Custom &&
@@ -68,36 +109,6 @@ export const useCellInteractions = ({
             window.location.href = redirectUrl;
           }
         }
-        return; // Don't proceed with other click handling
-      }
-
-      if (enableCellClickEvents ?? false) {
-        // Get actual cell value
-        const visibleColumns = columns.filter(c => !c.hidden);
-        const column = visibleColumns[cell[0]];
-
-        // Extract the actual value from the cell based on its kind
-        let cellValue: unknown = null;
-        if (
-          cellContent.kind === 'text' ||
-          cellContent.kind === 'number' ||
-          cellContent.kind === 'boolean'
-        ) {
-          cellValue = cellContent.data;
-        } else if ('data' in cellContent) {
-          // Cast to unknown first, then access the data property
-          cellValue = (cellContent as unknown as { data: unknown }).data;
-        }
-
-        // Send event to backend as a single object matching CellClickEventArgs structure
-        eventHandler('OnCellClick', widgetId, [
-          {
-            rowIndex: cell[1],
-            columnIndex: cell[0],
-            columnName: column?.name || '',
-            cellValue: cellValue,
-          },
-        ]);
       }
       // Do NOT prevent default - let selection happen normally!
     },

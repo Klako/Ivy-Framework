@@ -398,6 +398,24 @@ ivy-widget {
   }
 }
 
+/* Semantic border radius utility classes */
+@layer utilities {
+  /* For large container components: Card, Sheet, Dialog, Alert, Modal */
+  .rounded-box {
+    border-radius: var(--radius-boxes);
+  }
+
+  /* For input field components: Button, Input, TextArea, Select */
+  .rounded-field {
+    border-radius: var(--radius-fields);
+  }
+
+  /* For small selector components: Badge, Checkbox, Toggle, Radio */
+  .rounded-selector {
+    border-radius: var(--radius-selectors);
+  }
+}
+
 /* 
   Override default padding in AppHost (and potentially other containers).
   We need to look deep into the structure because wrappers like Ivy.Fragment 

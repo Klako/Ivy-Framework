@@ -12,9 +12,11 @@ import {
 } from '@/components/ui/input/color-input-variants';
 import { Scales } from '@/types/scale';
 import { xIconVariants } from '@/components/ui/input/text-input-variants';
+
 interface ColorInputWidgetProps {
   id: string;
   value: string | null;
+
   disabled?: boolean;
   invalid?: string;
   placeholder?: string;
@@ -22,6 +24,7 @@ interface ColorInputWidgetProps {
   events?: string[];
   variant?: 'Text' | 'Picker' | 'TextAndPicker' | 'Swatch';
   scale?: Scales;
+  foreground?: boolean;
 }
 
 // Hoisted color map for backend Colors enum
@@ -132,32 +135,6 @@ export const ColorInputWidget: React.FC<ColorInputWidgetProps> = ({
   const displayValue = value ?? '';
   const inputValue = value ?? '';
 
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    eventHandler('OnChange', id, [newValue]);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    eventHandler('OnChange', id, [newValue]);
-  };
-
-  const handleInputBlur = () => {
-    const convertedValue = convertToHex(inputValue);
-    eventHandler('OnChange', id, [convertedValue]);
-    if (events.includes('OnBlur')) eventHandler('OnBlur', id, [convertedValue]);
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleInputBlur();
-    }
-  };
-
-  const handleClear = () => {
-    eventHandler('OnChange', id, [null]);
-  };
-
   const getThemeColorHex = (cssVar: string): string | undefined => {
     if (typeof window === 'undefined') return undefined;
     const value = getComputedStyle(document.documentElement)
@@ -184,6 +161,37 @@ export const ColorInputWidget: React.FC<ColorInputWidgetProps> = ({
       const b = parseInt(rgbMatch[3]);
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
+    const hslMatch = colorValue.match(
+      /hsla?\((\d+),\s*(\d+)%?,\s*(\d+)%?(?:,\s*[\d.]+)?\)/
+    );
+    if (hslMatch) {
+      const h = parseInt(hslMatch[1]) / 360;
+      const s = parseInt(hslMatch[2]) / 100;
+      const l = parseInt(hslMatch[3]) / 100;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l; // achromatic
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1 / 6) return p + (q - p) * 6 * t;
+          if (t < 1 / 2) return q;
+          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+      }
+      const toHex = (x: number) => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
     // More comprehensive OKLCH detection
     const isOklch = /^oklch\s*\(/i.test(colorValue.trim());
     if (isOklch) {
@@ -207,6 +215,32 @@ export const ColorInputWidget: React.FC<ColorInputWidgetProps> = ({
     const hexValue = convertToHex(displayValue);
     if (hexValue.startsWith('var(')) return '#000000';
     return hexValue.startsWith('#') ? hexValue : '#000000';
+  };
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    eventHandler('OnChange', id, [newValue]);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    eventHandler('OnChange', id, [newValue]);
+  };
+
+  const handleInputBlur = () => {
+    const convertedValue = convertToHex(inputValue);
+    eventHandler('OnChange', id, [convertedValue]);
+    if (events.includes('OnBlur')) eventHandler('OnBlur', id, [convertedValue]);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleInputBlur();
+    }
+  };
+
+  const handleClear = () => {
+    eventHandler('OnChange', id, [null]);
   };
 
   // --- Variant rendering logic ---

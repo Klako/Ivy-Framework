@@ -1,8 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using Ivy.Hooks;
+using Ivy.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -20,13 +19,8 @@ public class BasicAuthProvider : IAuthProvider
 
     private static string TokenUseClaim => "https://ivy.app/claims/token_use";
 
-    public BasicAuthProvider()
+    public BasicAuthProvider(IConfiguration configuration)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddUserSecrets(Assembly.GetEntryAssembly()!)
-            .Build();
-
         var hashSecret = configuration["BasicAuth:HashSecret"] ?? throw new Exception("BasicAuth:HashSecret is required");
         var jwtSecret = configuration["BasicAuth:JwtSecret"] ?? throw new Exception("BasicAuth:JwtSecret is required");
         _issuer = configuration["BasicAuth:JwtIssuer"] ?? "ivy";

@@ -3,7 +3,7 @@ import {
   BorderRadius,
   BorderStyle,
   getAlign,
-  getBorderRadius,
+  getBoxRadius,
   getBorderStyle,
   getBorderThickness,
   getColor,
@@ -49,6 +49,14 @@ export const BoxWidget: React.FC<BoxWidgetProps> = ({
   borderOpacity,
   className,
 }) => {
+  // Use semantic box radius for 'Rounded', explicit values for 'None'/'Full'
+  const borderRadiusStyle: React.CSSProperties =
+    borderRadius === 'Rounded'
+      ? getBoxRadius()
+      : borderRadius === 'Full'
+        ? { borderRadius: '9999px' }
+        : { borderRadius: '0' };
+
   const styles: React.CSSProperties = {
     // Layout and spacing should always apply
     ...getPadding(padding),
@@ -58,7 +66,7 @@ export const BoxWidget: React.FC<BoxWidgetProps> = ({
     ...getHeight(height),
     ...getBorderStyle(borderStyle),
     ...getBorderThickness(borderThickness),
-    ...getBorderRadius(borderRadius),
+    ...borderRadiusStyle,
     ...getColor(color, 'backgroundColor', 'background', opacity),
     ...getColor(color, 'color', 'foreground'),
     ...getColor(borderColor, 'borderColor', 'background', borderOpacity),

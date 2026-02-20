@@ -255,3 +255,42 @@ See the full [migration guide](./Refactors/1.2.15/Button-URL-Target.md).
 - **Textarea**: Improved resize handle appearance to match theme; added `.Rows()` for initial height control.
 - **Code Block**: Fixed indentation inconsistency on the first line.
 - **Avatar**: Fixed a crash when rendering avatars with empty user information.
+
+## What's Changed
+* [DataTable]: remove footer overlay to fix last row cropping by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2211
+* [Security]: resolve lodash-es prototype pollution vulnerability by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2214
+* (theme): add border radius support to themes by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2169
+* (resizable): resolved bad API by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2186
+* [theme-customizer]: add semantic border radius configurator by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2224
+* (code):fix extra first-line indentation in code blocks by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2227
+* (sidebar): search considers spaces or not by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2226
+* [InlineCode]: add h-fit to styles by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2231
+* (docs): implement file based apps doc page by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2189
+* [theme customizer]: add custom color-picker variant by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2225
+* Revert "Revert "[OAuth]: implement same-tab OAuth flow"" by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2210
+* (describe): don't depend on port 5010 being available by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2230
+* [DataTable]: bind HandleCellAction to OnCellClick and fix link cell event propagation by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2235
+* (docs): implement external widgets doc page by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2229
+* (color-input-widget): refactored theme-picker into internal widget by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2234
+* (text area): redesign drag button by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2207
+* fix: Improve foreground color display logic in the theme picker, refa… by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2243
+* [DataTable]: unify Align usage with global styles by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2245
+* (bool input): fix incorrect vertical alignment and missing top spacing by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2237
+* [BoolInput]: add icon support for switch component by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2247
+* [TextInput]: add .Rows() support for TextAreaInput by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2251
+* (Claude): remove Claude specific unstructions by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2252
+* [Docs]: serve /agents.md and /llms.txt routes by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2250
+* (auth): Fix Microsoft Entra auth by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2258
+* (auth): add auth provider example projects, and several other small improvements by @zachwolfe in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2240
+* (icons): loading icon always spin by @dcrjodle in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2263
+* [theme-customizer] fixed color inputs, fixed component cards, HEX copypaste functionality by @joshuauaua in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2261
+* [ThemeCustomizer]: use local ThemeService to prevent global theme leak by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2254
+* Revert "(icons): loading icon always spin" by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2264
+* Update .NET version and Claude action version by @nielsbosma in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2276
+* [Docs]: Update icon documentation with animation references by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2269
+* Add Button.Success() extension method by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2279
+* (bool): improve visibility to respect theme customiser and ivy desighn system by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2262
+* (chore): patch notes for upcoming release by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2293
+
+
+**Full Changelog**: https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.2.14...v1.2.15

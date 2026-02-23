@@ -225,7 +225,7 @@ public class CodeInputApp : SampleBase
             """;
 
         var socialMediaLinks = new Card(
-            new Code(socialMediaLinksContent, Languages.Text).ShowCopyButton().ShowBorder(false)
+            new CodeBlock(socialMediaLinksContent, Languages.Text).ShowCopyButton().ShowBorder(false)
         );
 
         return Layout.Vertical()

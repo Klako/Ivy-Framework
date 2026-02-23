@@ -23,7 +23,7 @@ public class CodeView(Type type) : ViewBase
             }
         }
 
-        return new Code(code, Languages.Csharp)
+        return new CodeBlock(code, Languages.Csharp)
             .Height(Size.Full());
     }
 }

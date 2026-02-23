@@ -577,7 +577,7 @@ StringBuilder viewBuilder, HashSet<string> usedClassNames, bool isNestedContent 
         else
         {
             AppendAsMultiLineStringIfNecessary(baseIndentLevel, codeContent, codeBuilder,
-                isNestedContent ? ", Code(" : "| Code(",
+                isNestedContent ? ", new CodeBlock(" : "| new CodeBlock(",
                 $",{MapLanguageToEnum(language)})");
         }
     }
@@ -602,7 +602,7 @@ StringBuilder viewBuilder, HashSet<string> usedClassNames, bool isNestedContent 
         {
             cb.AppendTab(baseIndentLevel).AppendLine((isNestedContent ? ", " : "| ") + "Tabs( ");
             cb.AppendTab(baseIndentLevel + 1).AppendLine($"new Tab(\"Demo\", new Box().Content({insert})),");
-            AppendAsMultiLineStringIfNecessary(baseIndentLevel + 1, code, cb, "new Tab(\"Code\", new Code(", $",{MapLanguageToEnum(lang)}))")
+            AppendAsMultiLineStringIfNecessary(baseIndentLevel + 1, code, cb, "new Tab(\"Code\", new CodeBlock(", $",{MapLanguageToEnum(lang)}))")
                 ;
             cb.AppendTab(baseIndentLevel).AppendLine(").Height(Size.Fit()).Variant(TabsVariant.Content)");
         }
@@ -611,7 +611,7 @@ StringBuilder viewBuilder, HashSet<string> usedClassNames, bool isNestedContent 
         {
             cb.AppendTab(baseIndentLevel).AppendLine((isNestedContent ? ", " : "| ") + "(Vertical() ");
             if (!demoBelow) AppendDemoContent(cb, baseIndentLevel + 1, insert);
-            AppendAsMultiLineStringIfNecessary(baseIndentLevel + 1, code, cb, "| Code(", $",{MapLanguageToEnum(lang)})");
+            AppendAsMultiLineStringIfNecessary(baseIndentLevel + 1, code, cb, "| new CodeBlock(", $",{MapLanguageToEnum(lang)})");
             if (demoBelow) AppendDemoContent(cb, baseIndentLevel + 1, insert);
             cb.AppendTab(baseIndentLevel).AppendLine(")");
         }
@@ -620,7 +620,7 @@ StringBuilder viewBuilder, HashSet<string> usedClassNames, bool isNestedContent 
         {
             cb.AppendTab(baseIndentLevel).AppendLine((isNestedContent ? ", " : "| ") + "(Grid().Columns(2) ");
             if (!demoRight) AppendDemoContent(cb, baseIndentLevel + 1, insert);
-            AppendAsMultiLineStringIfNecessary(baseIndentLevel + 1, code, cb, "| Code(", $",{MapLanguageToEnum(lang)})");
+            AppendAsMultiLineStringIfNecessary(baseIndentLevel + 1, code, cb, "| new CodeBlock(", $",{MapLanguageToEnum(lang)})");
             if (demoRight) AppendDemoContent(cb, baseIndentLevel + 1, insert);
             cb.AppendTab(baseIndentLevel).AppendLine(")");
         }

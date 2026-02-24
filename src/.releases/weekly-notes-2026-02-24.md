@@ -120,3 +120,22 @@ new List(new[]
 ### DataTable - Automatic Data Refresh
 
 DataTables now automatically refresh when the underlying data source changes. Previously, you had to manually trigger refreshes when adding, removing, or modifying data. Now the DataTable detects changes to the `IQueryable` and reloads automatically.
+
+|## What's Changed
+* [Tabs]: use visibility instead of display to prevent canvas flicker on tab switch by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2292
+* (chore): Update weekly notes for February 19 by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2304
+* [multiselect]: responsive badge count using ResizeObserver by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2307
+* [CodeBlock]: Rename Code widget to CodeBlock by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2285
+* [ListItem]: add Content() support for embedding child widgets by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2288
+* [DataTable]: implement automatic data refresh by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2206
+* (Card): Add Content() and Footer() fluent API methods by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2278
+* (select): add Options() chained method and ToSelectInput overload by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2277
+* [DataTable]: add RowActions usage example to documentation by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2311
+* [ExternalWidgets]: clarify multiple widgets sharing same frontend by @ArtemLazarchuk in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2312
+* [Security]: fix cookie attributes and markdown-it ReDoS vulnerability by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2309
+* (floating panel): refactor docs by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2320
+* [Widgets]: add Tree widget by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2306
+* Feat/patchnotes5 by @rorychatt in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2321
+
+
+**Full Changelog**: https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.2.15...v1.2.16

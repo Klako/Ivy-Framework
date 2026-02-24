@@ -121,7 +121,7 @@ new List(new[]
 
 DataTables now automatically refresh when the underlying data source changes. Previously, you had to manually trigger refreshes when adding, removing, or modifying data. Now the DataTable detects changes to the `IQueryable` and reloads automatically.
 
-|## What's Changed
+## What's Changed
 * [Tabs]: use visibility instead of display to prevent canvas flicker on tab switch by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2292
 * (chore): Update weekly notes for February 19 by @ArtemKhvorostianyi in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2304
 * [multiselect]: responsive badge count using ResizeObserver by @defymecobra in https://github.com/Ivy-Interactive/Ivy-Framework/pull/2307

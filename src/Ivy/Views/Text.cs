@@ -314,7 +314,7 @@ public class TextBuilder(string content, TextVariant variant, Languages codeLang
 
     public TextBuilder Medium() => Scale(Ivy.Scale.Medium);
 
-    public TextBuilder Large() => Scale(Ivy.Shared.Scale.Large);
+    public TextBuilder Large() => Scale(Ivy.Scale.Large);
 
     public TextBuilder Align(TextAlignment alignment)
     {
@@ -322,13 +322,13 @@ public class TextBuilder(string content, TextVariant variant, Languages codeLang
         return this;
     }
 
-    public TextBuilder Left() => Align(TextAlignment.Left);
+    public static TextBuilder Left() => Align(TextAlignment.Left);
 
-    public TextBuilder Center() => Align(TextAlignment.Center);
+    public static TextBuilder Center() => Align(TextAlignment.Center);
 
-    public TextBuilder Right() => Align(TextAlignment.Right);
+    public static TextBuilder Right() => Align(TextAlignment.Right);
 
-    public TextBuilder Justify() => Align(TextAlignment.Justify);
+    public static TextBuilder Justify() => Align(TextAlignment.Justify);
 }
 
 

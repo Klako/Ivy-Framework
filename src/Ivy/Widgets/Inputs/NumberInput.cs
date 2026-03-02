@@ -120,7 +120,7 @@ public record NumberInput<TNumber> : NumberInputBase, IInput<TNumber>, IAnyNumbe
 
     internal NumberInput() { }
 
-    [Prop] public TNumber Value { get; } = default!;
+    [Prop] public TNumber Value { get; init; } = default!;
 
     [Prop] public new bool Nullable { get; set; } = typeof(TNumber).IsNullableType();
 
@@ -240,4 +240,14 @@ public static class NumberInputExtensions
     {
         return widget.HandleBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
+
+    public static NumberInputBase Value<T>(this NumberInputBase widget, T value)
+    {
+        if (widget is NumberInput<T> typedWidget)
+        {
+            return typedWidget with { Value = value };
+        }
+        throw new InvalidOperationException($"Cannot set Value: widget is not NumberInput<{typeof(T).Name}>");
+    }
+
 }

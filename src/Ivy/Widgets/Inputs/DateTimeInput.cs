@@ -83,7 +83,7 @@ public record DateTimeInput<TDate> : DateTimeInputBase, IInput<TDate>
 
     internal DateTimeInput() { }
 
-    [Prop] public TDate Value { get; set; } = default!;
+    [Prop] public TDate Value { get; init; } = default!;
 
     [Prop] public new bool Nullable { get; set; } = typeof(TDate) == typeof(DateTime?) || typeof(TDate) == typeof(DateTimeOffset?) || typeof(TDate) == typeof(DateOnly?) || typeof(TDate) == typeof(TimeOnly?);
 
@@ -251,4 +251,14 @@ public static class DateTimeInputExtensions
     {
         return widget.HandleBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
+
+    public static DateTimeInputBase Value<T>(this DateTimeInputBase widget, T value)
+    {
+        if (widget is DateTimeInput<T> typedWidget)
+        {
+            return typedWidget with { Value = value };
+        }
+        throw new InvalidOperationException($"Cannot set Value: widget is not DateTimeInput<{typeof(T).Name}>");
+    }
+
 }

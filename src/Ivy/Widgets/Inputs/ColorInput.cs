@@ -80,7 +80,7 @@ public record ColorInput<TColor> : ColorInputBase, IInput<TColor>
 
     internal ColorInput() { }
 
-    [Prop] public TColor Value { get; } = default!;
+    [Prop] public TColor Value { get; init; } = default!;
 
     [Event] public Func<Event<IInput<TColor>, TColor>, ValueTask>? OnChange { get; }
 }
@@ -198,4 +198,14 @@ public static class ColorInputExtensions
     {
         return widget.HandleBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
+
+    public static ColorInputBase Value<T>(this ColorInputBase widget, T value)
+    {
+        if (widget is ColorInput<T> typedWidget)
+        {
+            return typedWidget with { Value = value };
+        }
+        throw new InvalidOperationException($"Cannot set Value: widget is not ColorInput<{typeof(T).Name}>");
+    }
+
 }

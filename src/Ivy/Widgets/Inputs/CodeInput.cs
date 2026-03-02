@@ -83,7 +83,7 @@ public record CodeInput<TString> : CodeInputBase, IInput<TString>
         Height = Size.Units(25);
     }
 
-    [Prop] public TString Value { get; } = default!;
+    [Prop] public TString Value { get; init; } = default!;
 
     [Prop] public new bool Nullable { get; set; } = typeof(TString).IsNullableType();
 
@@ -157,4 +157,14 @@ public static class CodeInputExtensions
     {
         return widget.HandleBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
+
+    public static CodeInputBase Value<T>(this CodeInputBase widget, T value)
+    {
+        if (widget is CodeInput<T> typedWidget)
+        {
+            return typedWidget with { Value = value };
+        }
+        throw new InvalidOperationException($"Cannot set Value: widget is not CodeInput<{typeof(T).Name}>");
+    }
+
 }

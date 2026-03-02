@@ -80,7 +80,7 @@ public record FeedbackInput<TNumber> : FeedbackInputBase, IInput<TNumber>
 
     internal FeedbackInput() { }
 
-    [Prop] public TNumber Value { get; } = default!;
+    [Prop] public TNumber Value { get; init; } = default!;
 
     [Prop] public new bool Nullable { get; set; } = typeof(TNumber).IsNullableType();
 
@@ -124,4 +124,14 @@ public static class FeedbackInputExtensions
     {
         return widget.HandleBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
+
+    public static FeedbackInputBase Value<T>(this FeedbackInputBase widget, T value)
+    {
+        if (widget is FeedbackInput<T> typedWidget)
+        {
+            return typedWidget with { Value = value };
+        }
+        throw new InvalidOperationException($"Cannot set Value: widget is not FeedbackInput<{typeof(T).Name}>");
+    }
+
 }

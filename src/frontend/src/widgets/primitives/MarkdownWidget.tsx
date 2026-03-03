@@ -7,17 +7,20 @@ import {
 } from '@/widgets/widgetRenderer';
 
 import { Scales } from '@/types/scale';
+import { TextAlignment } from '@/types/textAlignment';
 
 interface MarkdownWidgetProps {
   id: string;
   content: string;
   scale?: Scales;
+  textAlignment?: TextAlignment;
 }
 
 const MarkdownWidget: React.FC<MarkdownWidgetProps> = ({
   id,
   content = '',
   scale = Scales.Medium,
+  textAlignment,
 }) => {
   const eventHandler = useEventHandler();
   const [, forceUpdate] = useState(0);
@@ -60,6 +63,10 @@ const MarkdownWidget: React.FC<MarkdownWidgetProps> = ({
     gap: '1rem',
     wordBreak: 'normal',
     overflowWrap: 'break-word',
+    ...(textAlignment && {
+      textAlign:
+        textAlignment.toLowerCase() as React.CSSProperties['textAlign'],
+    }),
     ...getScaleStyle(scale),
   };
 

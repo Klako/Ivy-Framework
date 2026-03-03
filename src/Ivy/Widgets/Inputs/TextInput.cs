@@ -54,6 +54,8 @@ public abstract record TextInputBase : WidgetBase<TextInputBase>, IAnyTextInput
 
     [Prop] public int? MaxLength { get; set; }
 
+    [Prop] public int? MinLength { get; set; }
+
     [Prop] public int? Rows { get; set; }
 
     [Prop] public bool Nullable { get; set; }
@@ -97,7 +99,7 @@ public record TextInput<TString> : TextInputBase, IInput<TString>
 
     internal TextInput() { }
 
-    [Prop] public TString Value { get; } = default!;
+    [Prop] public TString Value { get; init; } = default!;
 
     [Prop] public new bool Nullable { get; set; } = typeof(TString).IsNullableType();
 
@@ -178,6 +180,8 @@ public static class TextInputExtensions
 
     public static TextInputBase MaxLength(this TextInputBase widget, int maxLength) => widget with { MaxLength = maxLength };
 
+    public static TextInputBase MinLength(this TextInputBase widget, int minLength) => widget with { MinLength = minLength };
+
     public static TextInputBase Rows(this TextInputBase widget, int rows) => widget with { Rows = rows };
 
     public static TextInputBase Prefix(this TextInputBase widget, string prefixText)
@@ -207,4 +211,14 @@ public static class TextInputExtensions
     {
         return widget.HandleBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
+
+    public static TextInputBase Value<T>(this TextInputBase widget, T value)
+    {
+        if (widget is TextInput<T> typedWidget)
+        {
+            return typedWidget with { Value = value };
+        }
+        throw new InvalidOperationException($"Cannot set Value: widget is not TextInput<{typeof(T).Name}>");
+    }
+
 }

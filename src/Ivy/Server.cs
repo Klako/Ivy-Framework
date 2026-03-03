@@ -625,7 +625,7 @@ public class Server
             {
                 var config = app.Services.GetRequiredService<IConfiguration>();
                 var missing = hasSecrets.GetSecrets()
-                    .Where(s => string.IsNullOrEmpty(config[s.Key]))
+                    .Where(s => s.Preset == null && string.IsNullOrEmpty(config[s.Key]))
                     .Select(s => s.Key)
                     .ToList();
 
@@ -718,7 +718,7 @@ public class Server
         Dictionary<string, List<string>> missingByProvider)
     {
         var missing = provider.GetSecrets()
-            .Where(s => string.IsNullOrEmpty(config[s.Key]))
+            .Where(s => s.Preset == null && string.IsNullOrEmpty(config[s.Key]))
             .Select(s => s.Key)
             .ToList();
 

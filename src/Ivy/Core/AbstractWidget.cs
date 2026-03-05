@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -8,7 +9,7 @@ namespace Ivy.Core;
 public abstract record AbstractWidget : IWidget
 {
     private string? _id;
-    private readonly Dictionary<(Type, string), object?> _attachedProps = new();
+    private readonly ConcurrentDictionary<(Type, string), object?> _attachedProps = new();
 
 #if DEBUG
     /// <summary>

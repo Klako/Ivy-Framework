@@ -124,9 +124,9 @@ public class SpacingExamplesView : ViewBase
 
 ### Advanced Features & Interactions
 
-Use the [Thickness](../../04_ApiReference/IvyShared/Thickness.md) class for more precise control over padding on different sides. This allows you to specify different spacing values for left, top, right, and bottom edges.
+Use the [Thickness](../../04_ApiReference/Ivy/Thickness.md) class for more precise control over padding on different sides. This allows you to specify different spacing values for left, top, right, and bottom edges.
 
-Boxes also support a wide range of [Colors](../../04_ApiReference/IvyShared/Colors.md), and interactive states using `OnClick` and `Hover()`.
+Boxes also support a wide range of [Colors](../../04_ApiReference/Ivy/Colors.md), and interactive states using `OnClick` and `Hover()`.
 
 The following example demonstrates combining these features to create status indicators, interactive selections, and professional card layouts.
 
@@ -202,7 +202,7 @@ public class ColorExamplesView : ViewBase
 }
 ```
 
-For more colors, see the [Colors](../../04_ApiReference/IvyShared/Colors.md) reference.
+For more colors, see the [Colors](../../04_ApiReference/Ivy/Colors.md) reference.
 
 <WidgetDocs Type="Ivy.Box" ExtensionTypes="Ivy.BoxExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Primitives/Box.cs"/>
 

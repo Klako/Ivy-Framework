@@ -60,7 +60,7 @@ public class FieldApp : SampleBase
                     .Required()
 
                 // TextArea input using .WithField()
-                | addressState.ToTextAreaInput()
+                | addressState.ToTextareaInput()
                     .Placeholder("Street, City, ZIP")
                     .WithField()
                     .Label("Address")

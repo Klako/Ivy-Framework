@@ -170,7 +170,7 @@ public class KanbanBuilderExample : ViewBase
                 .CardBuilder(task => new Card(
                     content: task.ToDetails()
                         .Remove(x => x.Id)
-                        .MultiLine(x => x.Description)
+                        .Multiline(x => x.Description)
                 ))
                 .ColumnOrder(e => GetStatusOrder(e.Status))
                 .Width(Size.Full())
@@ -284,9 +284,9 @@ public class KanbanBuilderWithClickExample : ViewBase
                 .CardBuilder(task => new Card(
                     content: task.ToDetails()
                         .Remove(x => x.Id)
-                        .MultiLine(x => x.Description)
+                        .Multiline(x => x.Description)
                 )
-                .HandleClick(() => showTaskSheet(task.Id)))
+                .OnClick(() => showTaskSheet(task.Id)))
                 .ColumnOrder(e => GetStatusOrder(e.Status))
                 .Width(Size.Full())
                 .HandleMove(moveData =>
@@ -501,7 +501,7 @@ public class KanbanHeaderLayoutExample : ViewBase
         var createBtn = new Button("Add Task")
             .Icon(Icons.Plus)
             .Variant(ButtonVariant.Primary)
-            .HandleClick(OnAddTask);
+            .OnClick(OnAddTask);
 
         var kanban = tasks.Value
             .ToKanban(

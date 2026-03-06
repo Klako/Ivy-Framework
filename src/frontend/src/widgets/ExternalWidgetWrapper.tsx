@@ -1,8 +1,8 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { useEventHandler } from '@/components/event-handler';
 import { useStreamSubscriber } from '@/components/stream-handler';
 
-interface ExternalWidgetWrapperProps {
+export interface ExternalWidgetWrapperProps {
   Component: React.ComponentType<Record<string, unknown>>;
   props: Record<string, unknown>;
   children?: React.ReactNode;
@@ -30,24 +30,4 @@ export const ExternalWidgetWrapper: React.FC<ExternalWidgetWrapperProps> = ({
   };
 
   return <Component {...enhancedProps}>{children}</Component>;
-};
-
-/**
- * Creates a wrapped version of an external widget component.
- */
-export const wrapExternalWidget = (
-  LazyComponent: React.LazyExoticComponent<
-    React.ComponentType<Record<string, unknown>>
-  >
-): React.FC<Record<string, unknown>> => {
-  const WrappedComponent: React.FC<Record<string, unknown>> = props => (
-    <Suspense>
-      <ExternalWidgetWrapper Component={LazyComponent} props={props}>
-        {props.children as React.ReactNode}
-      </ExternalWidgetWrapper>
-    </Suspense>
-  );
-
-  WrappedComponent.displayName = 'ExternalWidget';
-  return WrappedComponent;
 };

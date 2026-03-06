@@ -35,4 +35,10 @@ public static class BuilderFactoryExtensions
     {
         return new FuncBuilder<TModel, TIn>(func);
     }
+
+    public static ProgressBuilder<TModel> Progress<TModel>(
+        this IBuilderFactory<TModel> factory)
+    {
+        return new ProgressBuilder<TModel>();
+    }
 }

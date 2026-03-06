@@ -57,7 +57,7 @@ public class ThemeCustomizer : SampleBase
             | new Button("Copy Configuration")
                 .Primary()
                 .Icon(Icons.Copy)
-                .HandleClick(() => isExportOpen.Set(true))
+                .OnClick(() => isExportOpen.Set(true))
                 .Width(Size.Full());
 
         // Right side - Live Preview
@@ -78,7 +78,7 @@ public class ThemeCustomizer : SampleBase
                                 | new Button("Copy C# Code")
                                     .Primary()
                                     .Icon(Icons.ClipboardCopy, Align.Right)
-                                    .HandleClick(() =>
+                                    .OnClick(() =>
                                     {
                                         client.CopyToClipboard(GenerateCSharpCode(editingTheme.Value));
                                         client.Toast("C# theme configuration copied to clipboard!", "Export");
@@ -95,7 +95,7 @@ public class ThemeCustomizer : SampleBase
                                 | new Button("Copy JSON")
                                     .Primary()
                                     .Icon(Icons.ClipboardCopy, Align.Right)
-                                    .HandleClick(() =>
+                                    .OnClick(() =>
                                     {
                                         var json = System.Text.Json.JsonSerializer.Serialize(
                                             editingTheme.Value,
@@ -230,7 +230,7 @@ public class ThemeCustomizer : SampleBase
                     | new Button("Light")
                         .Variant(selectedMode.Value == "light" ? ButtonVariant.Primary : ButtonVariant.Outline)
                         .Icon(Icons.Sun)
-                        .HandleClick(() =>
+                        .OnClick(() =>
                         {
                             selectedMode.Set("light");
                             client.SetThemeMode(ThemeMode.Light);
@@ -239,7 +239,7 @@ public class ThemeCustomizer : SampleBase
                     | new Button("Dark")
                         .Variant(selectedMode.Value == "dark" ? ButtonVariant.Primary : ButtonVariant.Outline)
                         .Icon(Icons.Moon)
-                        .HandleClick(() =>
+                        .OnClick(() =>
                         {
                             selectedMode.Set("dark");
                             client.SetThemeMode(ThemeMode.Dark);
@@ -442,7 +442,7 @@ public class ThemeCustomizer : SampleBase
                 )
                 .Width(Size.Px(CardSize))
                 .Height(Size.Px(CardSize))
-                .HandleClick(() => onUpdate(remValue == "0px" ? null : remValue))
+                .OnClick(() => onUpdate(remValue == "0px" ? null : remValue))
                 .WithTooltip($"{remValue} ({pxRadius}px)");
         }
     }
@@ -591,7 +591,7 @@ public class ThemeCustomizer : SampleBase
                 .Builder(m => m.NameOnCard, s => s.ToTextInput().Disabled(disableInputs.Value))
                 .Builder(m => m.CardNumber, s => s.ToTextInput().Disabled(disableInputs.Value))
                 .Builder(m => m.Cvv, s => s.ToPasswordInput().Placeholder("CVV").Disabled(disableInputs.Value))
-                .Builder(m => m.Comments, s => s.ToTextAreaInput().Placeholder("Add any additional comments").Disabled(disableInputs.Value))
+                .Builder(m => m.Comments, s => s.ToTextareaInput().Placeholder("Add any additional comments").Disabled(disableInputs.Value))
                 .Builder(m => m.Month, s => s.ToTextInput().Disabled(disableInputs.Value))
                 .Builder(m => m.Year, s => s.ToTextInput().Disabled(disableInputs.Value))
                 .Builder(m => m.BillingAddress, s => s.ToTextInput().Disabled(disableInputs.Value))
@@ -628,11 +628,11 @@ public class ThemeCustomizer : SampleBase
             Button CreateLoadingButton(string name, ButtonVariant variant) =>
                 new Button(name, variant: variant)
                 {
-                    OnClick = _ =>
+                    OnClick = new(_ =>
                     {
                         client.Toast($"{name} button clicked", "Action");
                         return ValueTask.CompletedTask;
-                    }
+                    })
                 }.Width(Size.Full()).Disabled(disableButtons.Value);
 
             static object GetPaginationContent(int page, int total) =>

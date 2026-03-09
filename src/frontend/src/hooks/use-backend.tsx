@@ -916,12 +916,15 @@ export const useBackend = (
         });
         return;
       }
-      connection.invoke('Event', eventName, widgetId, args).then(() => {
-        console.debug('[Event] Invoke succeeded:', eventName, widgetId);
-      }).catch(err => {
-        console.error('[Event] Invoke failed:', eventName, widgetId, err);
-        logger.error('SignalR Error when sending event:', err);
-      });
+      connection
+        .invoke('Event', eventName, widgetId, args)
+        .then(() => {
+          console.debug('[Event] Invoke succeeded:', eventName, widgetId);
+        })
+        .catch(err => {
+          console.error('[Event] Invoke failed:', eventName, widgetId, err);
+          logger.error('SignalR Error when sending event:', err);
+        });
     },
     [connection, connectionId]
   );

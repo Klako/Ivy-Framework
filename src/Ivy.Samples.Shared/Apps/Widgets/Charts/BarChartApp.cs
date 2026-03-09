@@ -13,7 +13,7 @@ public class BarChartApp : SampleBase
             | new BarChart3()
             | new BarChart4()
             | new BarChart5()
-            | new BarChart6()
+            | new BarChart9()
         ;
     }
 }

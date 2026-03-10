@@ -3,7 +3,7 @@ using Xunit;
 using VerifyCS = Microsoft.CodeAnalysis.CSharp.Testing.XUnit.AnalyzerVerifier<
     Ivy.Analyser.Analyzers.AppConstructorAnalyzer>;
 
-namespace Ivy.Analyser.Tests;
+namespace Ivy.Analyser.Test;
 
 public class AppConstructorAnalyzerTests
 {

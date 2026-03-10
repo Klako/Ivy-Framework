@@ -757,3 +757,11 @@ new Box(content).Padding(20)
 
 ### Found In
 84faf65a-c7df-4b5a-888b-4c49255c50ab (trace 004)
+
+## Server Configuration
+
+| Hallucinated API | Correct API |
+|-----------------|-------------|
+| `server.UseSingleApp()` | `server.UseDefaultApp(typeof(AppType))` |
+| `server.UseNoChrome()` | `server.UseDefaultApp(typeof(AppType))` — omit `UseChrome()` instead |
+| `server.UseDefaultApp<T>()` | `server.UseDefaultApp(typeof(T))` — takes Type, not generic |

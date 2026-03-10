@@ -864,3 +864,35 @@ new Box(Text.H1("$0.00")).AlignItems(Align.Center)
 
 **Found In:**
 713546f7-32fb-4961-ab78-def91e7c010d
+
+## Server.OnReady / Server.OnStartup — non-existent lifecycle callbacks
+
+**Hallucinated API:**
+```csharp
+server.OnReady(() => { /* seed data */ });
+server.OnStartup(() => { /* initialize */ });
+```
+
+**Error:** `CS1061: 'Server' does not contain a definition for 'OnReady'`
+
+**Correct API:**
+```csharp
+// Seed data via the context factory pattern:
+var connection = server.UseConnection<MyDbContext>(options =>
+    options.ContextFactory = () =>
+    {
+        var ctx = new MyDbContext();
+        ctx.Database.EnsureCreated();
+        SeedData(ctx);
+        return ctx;
+    });
+
+// Or resolve services directly in Program.cs:
+var myService = server.Services.GetRequiredService<IMyService>();
+myService.Initialize();
+```
+
+The `Server` class does not have `OnReady`, `OnStartup`, or similar lifecycle callback methods. To run initialization code (e.g., database seeding), use the connection's context factory pattern — seed data in the factory's `CreateContext` method or use `server.Services` to resolve and call services directly in `Program.cs`.
+
+**Found In:**
+(session not yet recorded)

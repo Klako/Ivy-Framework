@@ -836,3 +836,31 @@ DecisionMatrixApp.cs (two occurrences of `Align.End`)
 | `server.UseSingleApp()` | `server.UseDefaultApp(typeof(AppType))` |
 | `server.UseNoChrome()` | `server.UseDefaultApp(typeof(AppType))` — omit `UseChrome()` instead |
 | `server.UseDefaultApp<T>()` | `server.UseDefaultApp(typeof(T))` — takes Type, not generic |
+
+## TextBuilder.AlignCenter() — non-existent method
+
+**Hallucinated API:**
+```csharp
+Text.H1("$0.00").AlignCenter()
+Text.H3("00:00:00").AlignCenter()
+Text.P("Rate: $50.00/hour").AlignCenter()
+```
+
+**Error:** `CS1061: 'TextBuilder' does not contain a definition for 'AlignCenter'`
+
+**Correct API:**
+```csharp
+// TextBuilder does not have alignment methods.
+// To center text, wrap it in a layout:
+Layout.Vertical().AlignItems(Align.Center)
+    | Text.H1("$0.00")
+    | Text.H3("00:00:00")
+
+// Or use a Box:
+new Box(Text.H1("$0.00")).AlignItems(Align.Center)
+```
+
+`TextBuilder` has no `.AlignCenter()` method. Text alignment is controlled at the layout/container level, not on individual text elements.
+
+**Found In:**
+713546f7-32fb-4961-ab78-def91e7c010d

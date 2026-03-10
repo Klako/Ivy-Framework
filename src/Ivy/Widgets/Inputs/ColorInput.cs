@@ -33,6 +33,7 @@ public abstract record ColorInputBase : WidgetBase<ColorInputBase>, IAnyColorInp
 
     [Prop] public bool? Foreground { get; set; }
 
+    [Prop] public bool Ghost { get; set; }
     [Prop] public bool AllowAlpha { get; set; }
 
     [Prop] public ColorInputVariant Variant { get; set; } = ColorInputVariant.TextAndPicker;
@@ -181,6 +182,11 @@ public static class ColorInputExtensions
     public static ColorInputBase Foreground(this ColorInputBase widget, bool? foreground = true)
     {
         return widget with { Foreground = foreground };
+    }
+
+    public static ColorInputBase Ghost(this ColorInputBase widget, bool ghost = true)
+    {
+        return widget with { Ghost = ghost };
     }
 
     public static ColorInputBase AllowAlpha(this ColorInputBase widget, bool allowAlpha = true)

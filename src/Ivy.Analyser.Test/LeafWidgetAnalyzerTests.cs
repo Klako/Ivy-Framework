@@ -35,7 +35,20 @@ namespace Ivy
     public class SidebarLayout : AbstractWidget { }
     public class SidebarMenu : AbstractWidget { }
     public class FooterLayout : AbstractWidget { }
+    public class MenuItem : AbstractWidget
+    {
+        public MenuItem(string text) { }
+    }
+
+    [ChildType(typeof(MenuItem))]
     public class DropDownMenu : AbstractWidget { }
+
+    [System.AttributeUsage(System.AttributeTargets.Class)]
+    public class ChildTypeAttribute : System.Attribute
+    {
+        public ChildTypeAttribute(System.Type type) { Type = type; }
+        public System.Type Type { get; }
+    }
     public class DataTable : AbstractWidget { }
     public class LineChart : AbstractWidget { }
     public class PieChart : AbstractWidget { }
@@ -303,15 +316,94 @@ public class Test
         await VerifyCS.VerifyAnalyzerAsync(test);
     }
 
+    // ── IVYCHILD003: Wrong child type errors ──
+
     [Fact]
-    public async Task DropDownMenu_WithChild_ReportsError()
+    public async Task DropDownMenu_WithMenuItem_NoDiagnostic()
     {
         var test = Stubs + @"
 public class Test
 {
     public void M()
     {
-        var result = {|IVYCHILD001:new Ivy.DropDownMenu() | ""child""|};
+        var result = new Ivy.DropDownMenu() | new Ivy.MenuItem(""x"");
+    }
+}
+";
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task DropDownMenu_WithText_ReportsWrongChildType()
+    {
+        var test = Stubs + @"
+public class Test
+{
+    public void M()
+    {
+        var result = {|IVYCHILD003:new Ivy.DropDownMenu() | new Ivy.Text(""x"")|};
+    }
+}
+";
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task DropDownMenu_WithString_ReportsWrongChildType()
+    {
+        var test = Stubs + @"
+public class Test
+{
+    public void M()
+    {
+        var result = {|IVYCHILD003:new Ivy.DropDownMenu() | ""child""|};
+    }
+}
+";
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task DropDownMenu_WithMenuItemArray_NoDiagnostic()
+    {
+        var test = Stubs + @"
+public class Test
+{
+    public void M()
+    {
+        var items = new Ivy.MenuItem[] { new Ivy.MenuItem(""a""), new Ivy.MenuItem(""b"") };
+        var result = new Ivy.DropDownMenu() | items;
+    }
+}
+";
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task DropDownMenu_WithStringArray_ReportsWrongChildType()
+    {
+        var test = Stubs + @"
+public class Test
+{
+    public void M()
+    {
+        var items = new string[] { ""a"", ""b"" };
+        var result = {|IVYCHILD003:new Ivy.DropDownMenu() | items|};
+    }
+}
+";
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task DropDownMenu_WithMultipleMenuItems_NoDiagnostic()
+    {
+        var test = Stubs + @"
+public class Test
+{
+    public void M()
+    {
+        var result = new Ivy.DropDownMenu() | new Ivy.MenuItem(""a"") | new Ivy.MenuItem(""b"");
     }
 }
 ";

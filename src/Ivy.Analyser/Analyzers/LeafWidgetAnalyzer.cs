@@ -12,6 +12,7 @@ namespace Ivy.Analyser.Analyzers
     {
         public const string LeafDiagnosticId = "IVYCHILD001";
         public const string SingleChildDiagnosticId = "IVYCHILD002";
+        public const string WrongChildTypeDiagnosticId = "IVYCHILD003";
 
         private static readonly DiagnosticDescriptor LeafRule = new DiagnosticDescriptor(
             LeafDiagnosticId,
@@ -33,6 +34,16 @@ namespace Ivy.Analyser.Analyzers
             description:
             "This widget only supports a single child. Adding multiple children via chained | operators will throw NotSupportedException at runtime.");
 
+        private static readonly DiagnosticDescriptor WrongChildTypeRule = new DiagnosticDescriptor(
+            WrongChildTypeDiagnosticId,
+            "Wrong Child Type for Widget",
+            "'{0}' only accepts children of type '{1}'. Got '{2}'.",
+            "Usage",
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            description:
+            "This widget only accepts children of a specific type. Passing a different type via the | operator will throw NotSupportedException at runtime.");
+
         private static readonly HashSet<string> LeafWidgetTypes = new HashSet<string>
         {
             "Ivy.Button",
@@ -46,7 +57,6 @@ namespace Ivy.Analyser.Analyzers
             "Ivy.SidebarLayout",
             "Ivy.SidebarMenu",
             "Ivy.FooterLayout",
-            "Ivy.DropDownMenu",
             "Ivy.DataTable",
             "Ivy.LineChart",
             "Ivy.PieChart",
@@ -69,7 +79,7 @@ namespace Ivy.Analyser.Analyzers
         };
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-            ImmutableArray.Create(LeafRule, SingleChildRule);
+            ImmutableArray.Create(LeafRule, SingleChildRule, WrongChildTypeRule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -91,6 +101,27 @@ namespace Ivy.Analyser.Analyzers
                 var diagnostic = Diagnostic.Create(LeafRule, binaryExpr.GetLocation(), leftType.Name);
                 context.ReportDiagnostic(diagnostic);
                 return;
+            }
+
+            // Check for type-restricted children via [ChildType] attribute
+            var widgetType = leftType;
+            if (binaryExpr.Left is BinaryExpressionSyntax leftChained
+                && leftChained.IsKind(SyntaxKind.BitwiseOrExpression))
+            {
+                widgetType = GetRootType(leftChained, context.SemanticModel, context.CancellationToken) ?? leftType;
+            }
+
+            var allowedChildType = GetChildTypeFromAttribute(widgetType);
+            if (allowedChildType != null)
+            {
+                var rightType = context.SemanticModel.GetTypeInfo(binaryExpr.Right, context.CancellationToken).Type;
+                if (rightType != null && !IsCompatibleChildType(rightType, allowedChildType))
+                {
+                    var diagnostic = Diagnostic.Create(WrongChildTypeRule, binaryExpr.GetLocation(),
+                        widgetType.Name, allowedChildType.Name, rightType.Name);
+                    context.ReportDiagnostic(diagnostic);
+                    return;
+                }
             }
 
             if (binaryExpr.Left is BinaryExpressionSyntax leftBinary
@@ -142,6 +173,64 @@ namespace Ivy.Analyser.Analyzers
             while (current != null)
             {
                 if (SingleChildWidgetTypes.Contains(GetFullTypeName(current)))
+                    return true;
+                current = current.BaseType;
+            }
+
+            return false;
+        }
+
+        private static ITypeSymbol? GetChildTypeFromAttribute(ITypeSymbol type)
+        {
+            var current = type;
+            while (current != null)
+            {
+                foreach (var attr in current.GetAttributes())
+                {
+                    if (attr.AttributeClass != null
+                        && attr.AttributeClass.Name == "ChildTypeAttribute"
+                        && attr.ConstructorArguments.Length == 1
+                        && attr.ConstructorArguments[0].Value is ITypeSymbol allowedType)
+                    {
+                        return allowedType;
+                    }
+                }
+
+                current = current.BaseType;
+            }
+
+            return null;
+        }
+
+        private static bool IsCompatibleChildType(ITypeSymbol actualType, ITypeSymbol allowedType)
+        {
+            // Direct match or subtype
+            if (IsOrDerivedFrom(actualType, allowedType))
+                return true;
+
+            // Check if it's an array or IEnumerable<T> where T is compatible
+            if (actualType is IArrayTypeSymbol arrayType)
+                return IsOrDerivedFrom(arrayType.ElementType, allowedType);
+
+            foreach (var iface in actualType.AllInterfaces)
+            {
+                if (iface.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T
+                    && iface.TypeArguments.Length == 1
+                    && IsOrDerivedFrom(iface.TypeArguments[0], allowedType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsOrDerivedFrom(ITypeSymbol type, ITypeSymbol target)
+        {
+            var current = type;
+            while (current != null)
+            {
+                if (SymbolEqualityComparer.Default.Equals(current, target))
                     return true;
                 current = current.BaseType;
             }

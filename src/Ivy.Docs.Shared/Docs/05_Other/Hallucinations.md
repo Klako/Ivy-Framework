@@ -942,6 +942,30 @@ if (upload.Status == FileUploadStatus.Finished)
 **Found In:**
 (session not yet recorded)
 
+## UseDownload — ambiguous overload between sync and async
+
+**Hallucinated API:**
+```csharp
+UseDownload(() => bytes, "file.txt", "text/plain")
+```
+
+**Error:** `CS0121: The call is ambiguous between 'ViewBase.UseDownload(Func<byte[]>, string, string)' and 'ViewBase.UseDownload(Func<Task<byte[]>>, string, string)'`
+
+**Correct API:**
+```csharp
+// For sync: explicitly type the delegate
+UseDownload((Func<byte[]>)(() => bytes), "file.txt", "text/plain")
+
+// Or use a named method:
+byte[] GetBytes() => bytes;
+UseDownload(GetBytes, "file.txt", "text/plain")
+```
+
+When using `UseDownload` with a lambda, you must explicitly cast to `Func<byte[]>` or `Func<Task<byte[]>>` to avoid ambiguity.
+
+**Found In:**
+(session not yet recorded)
+
 ## Server.OnReady / Server.OnStartup — non-existent lifecycle callbacks
 
 **Hallucinated API:**

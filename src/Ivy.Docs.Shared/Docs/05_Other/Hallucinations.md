@@ -830,6 +830,21 @@ The agent draws from CSS `justify-content: flex-end` / `align-items: flex-end` t
 **Found In:**
 DecisionMatrixApp.cs (two occurrences of `Align.End`)
 
+## LayoutView.Border() — now supported
+
+LayoutView supports `.Border(color, thickness)` for adding borders. Example:
+
+```csharp
+new LayoutView()
+    .Border(Colors.Gray, 1)
+    .Padding(4)
+    .Vertical(content);
+```
+
+Individual properties are also available: `.BorderColor()`, `.BorderThickness()`, `.BorderStyle()`, `.BorderRadius()`.
+
+Note: `.Border()` expects a `Colors` enum as the first argument, not a string. Thickness accepts `int` (uniform) or `Thickness` struct — do NOT pass `Ivy.Thickness` where `int` is expected.
+
 ## Server Configuration
 
 | Hallucinated API | Correct API |
@@ -888,6 +903,25 @@ new Box(Text.H1("$0.00")).AlignItems(Align.Center)
 
 **Found In:**
 713546f7-32fb-4961-ab78-def91e7c010d
+
+## FileUploadStatus.Completed — non-existent enum value
+
+**Hallucinated API:**
+```csharp
+if (upload.Status == FileUploadStatus.Completed)
+```
+
+**Error:** `'FileUploadStatus' does not contain a definition for 'Completed'`
+
+**Correct API:**
+```csharp
+if (upload.Status == FileUploadStatus.Finished)
+```
+
+`FileUploadStatus` values are: `Pending`, `Aborted`, `Loading`, `Failed`, `Finished`. There is no `Completed` value. **Auto-fixed:** The refactoring service automatically rewrites `FileUploadStatus.Completed` → `FileUploadStatus.Finished`.
+
+**Found In:**
+(session not yet recorded)
 
 ## Server.OnReady / Server.OnStartup — non-existent lifecycle callbacks
 

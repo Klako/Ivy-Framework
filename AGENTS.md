@@ -122,14 +122,7 @@ Align values: TopLeft, TopCenter, TopRight, Left, Center, Right, BottomLeft, Bot
 
 [Layouts](https://docs.ivy.app/onboarding/concepts/layout.md)
 
-### Centered Max-Width Layout
-
-For simpler tools and apps, it's quite nice to give the app a max width and position it in the center:
-
-return Layout.TopCenter()
-    | (Layout.Vertical().Width(Size.Full().Max(200)).TopMargin(10)
-        | ...
-        );
+> For full-height layout patterns (header + content + footer), centered max-width layouts, and common pitfalls, see the Layout workflow reference in `Ivy.Internals/Workflows/Apps/CreateApp/AdHoc/References/Layout.md`.
 
 ## Text
 

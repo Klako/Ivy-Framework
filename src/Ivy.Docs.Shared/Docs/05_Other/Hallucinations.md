@@ -187,14 +187,17 @@ var selectedItem = UseState<InventoryItem?>(null);
 
 **Correct API:**
 ```csharp
+// Best: omit the null argument — the default is already null:
+var selectedItem = UseState<InventoryItem?>();
+// Or cast null to the explicit type:
 var selectedItem = UseState<InventoryItem?>((InventoryItem?)null);
-// or use a lambda:
+// Or use a lambda:
 var selectedItem = UseState(() => (InventoryItem?)null);
 ```
 
-When `T` is a reference type, `null` matches both `T?` and `Func<T>`, causing overload ambiguity. Either cast null to the explicit type or wrap it in a lambda.
+When `T` is a reference type, `null` matches both `T?` and `Func<T>`, causing overload ambiguity. The simplest fix is to omit the `null` argument entirely — the default parameter is already `null`/`default`. Alternatively, cast null to the explicit type or wrap it in a lambda.
 
-**Note:** The related `IState<T>.Set(null)` ambiguity has been fixed via `[OverloadResolutionPriority(1)]` on the `Set(T value)` overload. `.Set(null)` now resolves correctly without casting.
+**Note:** Unlike `IState<T>.Set(null)` (which was fixed via `[OverloadResolutionPriority(1)]`), `UseState` cannot use the same approach because T is inferred from the argument — C# 10+ lambda natural types cause the `T?` overload to steal ALL lambda calls when given higher priority, breaking `UseState(() => expr)` throughout the codebase.
 
 **Found In:**
 f20dced8-1689-4289-a2d8-ee67136eb6ce

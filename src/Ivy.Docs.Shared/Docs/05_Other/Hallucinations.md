@@ -244,18 +244,26 @@ The `Button` constructor signature is `Button(string label, Func<Event<Button>, 
 **Found In:**
 f20dced8-1689-4289-a2d8-ee67136eb6ce
 
-## NumberInputBase.Label() — AxisExtensions method used on input
+## InputBase.Label() — AxisExtensions method used on input
 
 **Hallucinated API:**
 ```csharp
+// NumberInputBase
 stockAdjustment.ToNumberInput().Label("Adjustment amount")
+
+// DateTimeInputBase
+dateState.ToDateInput().Label("Birthdate")
 ```
 
-**Error:** `The type 'Ivy.NumberInputBase' cannot be used as type parameter 'T' in the generic type or method 'AxisExtensions.Label<T>(T, string)'`
+**Error:** `The type 'Ivy.NumberInputBase' cannot be used as type parameter 'T' in the generic type or method 'AxisExtensions.Label<T>(T, string)'` (same CS0311 error for `DateTimeInputBase`, `TextInputBase`, `SelectInputBase`, `BoolInputBase`, etc.)
 
 **Correct API:**
 ```csharp
-// Use Text.Label() as a separate element above the input:
+// Use .WithField().Label() to wrap the input in a labeled field:
+stockAdjustment.ToNumberInput().WithField().Label("Adjustment amount")
+dateState.ToDateInput().WithField().Label("Birthdate")
+
+// Or use Text.Label() as a separate element above the input:
 Layout.Vertical()
     | Text.Label("Adjustment amount")
     | stockAdjustment.ToNumberInput()
@@ -264,10 +272,11 @@ Layout.Vertical()
 state.ToForm().Label(m => m.Amount, "Adjustment amount")
 ```
 
-`.Label()` is an `AxisExtensions` method for chart axes, not for inputs. For labeling inputs, use `Text.Label()` as a separate element or use the form builder's `.Label()` method.
+`.Label()` is an `AxisExtensions` method for chart axes, not for inputs. This applies to ALL input types (`NumberInputBase`, `DateTimeInputBase`, `TextInputBase`, `SelectInputBase`, `BoolInputBase`, etc.). The preferred way to label an input is `.WithField().Label("...")`, which wraps the input in a `Field` with a label.
 
 **Found In:**
 f20dced8-1689-4289-a2d8-ee67136eb6ce
+2e91e9c7-9c03-4b86-a9d2-c0417bcf715f
 
 ## Tab.Content() — non-existent fluent method
 

@@ -1021,3 +1021,24 @@ new MetricView("Title", "Value", icon: Icons.Activity)
 
 **Found In:**
 c008af27-1cb1-4ab3-b41a-36aa711c6a41
+
+## Disposable.Create() — missing using statement
+
+**Hallucinated usage (missing using):**
+```csharp
+return Disposable.Create(() => timer?.Dispose());
+```
+
+**Error:** `CS0103: The name 'Disposable' does not exist in the current context`
+
+**Fix:** Add the using statement — the package IS available as a transitive dependency:
+```csharp
+using System.Reactive.Disposables;
+
+return Disposable.Create(() => timer?.Dispose());
+```
+
+`System.Reactive` is a transitive dependency of Ivy Framework. The error occurs because the agent omits the `using System.Reactive.Disposables;` directive, not because the package is missing.
+
+**Found In:**
+fb184b5b-8254-4a1f-b8f2-ab8e8657fdbc

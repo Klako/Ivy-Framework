@@ -108,9 +108,9 @@ public class SelectInputVariantsExample : ViewBase
         var colorState = UseState(Colors.Red);
         var colorArrayState = UseState(Array.Empty<Colors>());
         var nullableColorArrayState = UseState<Colors[]?>(() => null);
-        var colorOptions = typeof(Colors).ToOptions();
         var iconsState = UseState<string>("bold");
         var nullableIconsState = UseState<string?>();
+        var colorOptions = typeof(Colors).ToOptions();
 
         return Layout.Vertical()
             | Text.H3("Variants")
@@ -317,11 +317,10 @@ public class SelectInputAdvancedPropsExample : ViewBase
         var fwNullableMultiList = UseState<Frameworks[]?>(() => null);
         var fwNullableMultiToggle = UseState<Frameworks[]?>(() => null);
         var fwNullableMultiSelect = UseState<Frameworks[]?>(() => null);
-
-        var options = typeof(Frameworks).ToOptions();
-
         var isLoading = UseState(false);
         var isSearchable = UseState(true);
+
+        var options = typeof(Frameworks).ToOptions();
 
         return Layout.Vertical()
             | Text.H3("Advanced properties")

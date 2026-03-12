@@ -7,7 +7,7 @@ namespace Ivy.Desktop;
 
 public class DesktopWindow(Server server)
 {
-    private string _title = "Ivy App";
+    private string _title = Assembly.GetEntryAssembly()?.GetName().Name ?? "Ivy App";
     private int _width = 1280;
     private int _height = 800;
     private bool _resizable = true;

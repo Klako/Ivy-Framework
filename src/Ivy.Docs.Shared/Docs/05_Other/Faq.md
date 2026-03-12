@@ -579,3 +579,22 @@ UseEffect(() =>
     return cts; // CancellationTokenSource implements IDisposable
 }, dependencies);
 ```
+
+## How do I display dictionary or dynamic data in a DataTable?
+
+`ToDataTable()` uses reflection to discover columns from the model type's top-level properties. It does not expand `Dictionary<TKey, TValue>` properties into separate columns.
+
+To display dynamic data, project it into a flat record first:
+
+```csharp
+// Instead of this:
+record DataRow(int Id, Dictionary<string, string> Values);
+rows.AsQueryable().ToDataTable(); // Shows "Id" and "Values" columns
+
+// Do this — project into a flat anonymous type or record:
+record FlatRow(string Name, int Age, string City);
+var flat = rows.Select(r => new FlatRow(r.Values["Name"], int.Parse(r.Values["Age"]), r.Values["City"]));
+flat.AsQueryable().ToDataTable(); // Shows Name, Age, City columns
+```
+
+If columns are truly dynamic (unknown at compile time), consider building a `List<Dictionary<string, object>>` and using `.ToTable()` with explicit column definitions instead.

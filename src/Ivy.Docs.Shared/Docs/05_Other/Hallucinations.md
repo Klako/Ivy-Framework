@@ -243,6 +243,7 @@ The `Button` constructor signature is `Button(string label, Func<Event<Button>, 
 
 **Found In:**
 f20dced8-1689-4289-a2d8-ee67136eb6ce
+7a9aadf3-097e-448d-8d5c-bc86152710a6
 
 ## InputBase.Label() — AxisExtensions method used on input
 
@@ -277,6 +278,7 @@ state.ToForm().Label(m => m.Amount, "Adjustment amount")
 **Found In:**
 f20dced8-1689-4289-a2d8-ee67136eb6ce
 2e91e9c7-9c03-4b86-a9d2-c0417bcf715f
+7a9aadf3-097e-448d-8d5c-bc86152710a6
 
 ## Tab.Content() — non-existent fluent method
 

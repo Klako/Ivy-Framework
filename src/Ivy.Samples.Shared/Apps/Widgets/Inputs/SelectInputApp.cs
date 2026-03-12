@@ -1,7 +1,6 @@
 #pragma warning disable IVYHOOK001
 
 using System.ComponentModel;
-using Ivy.Shared;
 
 namespace Ivy.Samples.Shared.Apps.Widgets.Inputs;
 

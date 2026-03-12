@@ -400,3 +400,37 @@ UseEffect(() =>
 
 </Body>
 </Details>
+
+<Details>
+<Summary>
+Why does my UseEffect fire multiple times?
+</Summary>
+<Body>
+
+`UseEffect` with `AfterChange` triggers (state dependencies) fires once per `Set()` call on the watched state. If the state is updated multiple times in quick succession (e.g., file upload status transitions), the effect runs for each update.
+
+Use a guard pattern to prevent duplicate processing:
+
+```csharp
+var processedFile = UseRef<string?>(null);
+var uploadedFile = UseState<FileUpload?>(null);
+
+UseEffect(() =>
+{
+    var file = uploadedFile.Value;
+    if (file == null) return;
+    if (processedFile.Value == file.FileName) return; // Guard: already processed
+    processedFile.Value = file.FileName;
+
+    // Process file and show toast
+    alert.Toast($"Loaded {file.FileName}");
+}, uploadedFile);
+```
+
+Key points:
+- Use `UseRef` to track processed state without triggering re-renders
+- Always check if the meaningful value actually changed before taking action
+- For file uploads, guard on the file name or a unique identifier
+
+</Body>
+</Details>

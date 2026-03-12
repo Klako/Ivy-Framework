@@ -1102,3 +1102,22 @@ return null;
 
 **Found In:**
 (session not yet recorded)
+
+## TextInput.Grow() — Box-only extension called on TextInput
+
+**Hallucinated API:**
+```csharp
+new TextInput(query).Grow()
+```
+
+**Error:** `CS1929: 'TextInput' does not contain a definition for 'Grow'`
+
+**Correct API:**
+```csharp
+new TextInput(query).Width(Size.Grow())
+```
+
+`Grow()` was originally defined only as a `Box`-specific extension method in `Box.cs`. It is not available on `TextInput` or other widget types. Use `.Width(Size.Grow())` directly, or note that `Grow()` has since been promoted to a generic `WidgetBase<T>` extension and is now available on all widgets.
+
+**Found In:**
+7a9aadf3

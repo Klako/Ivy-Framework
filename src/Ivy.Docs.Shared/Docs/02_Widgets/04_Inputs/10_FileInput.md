@@ -622,3 +622,22 @@ public class ConfiguredUploadExample : ViewBase
 | `MaxFiles`   | `int?`         | Maximum number of files (for multiple file uploads)              |
 
 <WidgetDocs Type="Ivy.FileInput" ExtensionTypes="Ivy.FileInputExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Inputs/FileInput.cs"/>
+
+## Faq
+
+### What is the return type of UseUpload?
+
+`UseUpload` returns `IState<UploadContext>`, not `UploadContext` directly. Pass this state object to `ToFileInput()`:
+
+```csharp
+var upload = UseUpload(MemoryStreamUploadHandler.Create(fileState));
+// upload is IState<UploadContext> — pass it directly to ToFileInput
+return fileState.ToFileInput(upload);
+```
+
+Do NOT use `IUploadContext` — this type does not exist. The correct type is `UploadContext` (wrapped in `IState<>`).
+
+To access validation configuration, use extension methods that chain on `IState<UploadContext>`:
+```csharp
+var upload = UseUpload(handler).Accept(".csv").MaxFileSize(FileSize.FromMegabytes(10));
+```

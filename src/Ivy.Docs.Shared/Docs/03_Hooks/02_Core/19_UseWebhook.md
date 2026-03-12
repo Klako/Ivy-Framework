@@ -18,7 +18,7 @@ The `UseWebhook` [hook](../02_RulesOfHooks.md) creates HTTP endpoints that can b
 
 ## Overview
 
-`UseWebhook` allows your components to define and handle HTTP endpoints dynamically. It is essential for:
+`UseWebhook` allows your components to define and handle HTTP endpoints dynamically. All standard HTTP methods are supported (GET, POST, PUT, DELETE, PATCH). It is essential for:
 
 - **Third-Party Integrations**: Receiving webhooks from Stripe, Slack, GitHub, etc.
 - **Asynchronous Workflows**: Triggering background jobs or state updates from external events.
@@ -73,7 +73,7 @@ sequenceDiagram
     
     Note over Component,Endpoint: Component renders with webhook URL
     
-    External->>Endpoint: HTTP POST /ivy/webhook/{id}
+    External->>Endpoint: HTTP Request /ivy/webhook/{id}
     Endpoint->>Registry: Lookup handler by ID
     Registry->>Handler: Execute handler(request)
     Handler->>State: Update state (e.g., counter.Set())

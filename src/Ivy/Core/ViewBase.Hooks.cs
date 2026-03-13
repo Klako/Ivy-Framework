@@ -33,11 +33,11 @@ public abstract partial class ViewBase
             ? this.Context.UseState<T>(initialValue: default, buildOnChange)
             : this.Context.UseState(buildInitialValue, buildOnChange);
 
-    protected IState<T> UseRef<T>(T? initialValue = default) =>
+    protected IRef<T> UseRef<T>(T? initialValue = default) =>
         this.Context.UseRef(initialValue);
 
     [OverloadResolutionPriority(1)]
-    protected IState<T> UseRef<T>(Func<T>? buildInitialValue) =>
+    protected IRef<T> UseRef<T>(Func<T>? buildInitialValue) =>
         buildInitialValue is null
             ? this.Context.UseRef<T>(initialValue: default)
             : this.Context.UseRef(buildInitialValue);

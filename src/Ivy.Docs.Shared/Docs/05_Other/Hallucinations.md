@@ -2,6 +2,10 @@
 
 Known cases where the agent hallucinated Ivy Framework APIs. Use this as a reference when debugging build errors in agent sessions.
 
+## IRef\<T\> — now supported
+
+`IRef<T>` was previously a hallucinated interface. It has since been added to the framework as `IRef<T> : IState<T>`. Both `UseRef<T>()` return types are now `IRef<T>`, while `UseState<T>()` continues to return `IState<T>`. The two interfaces are interchangeable — `IRef<T>` is a marker subtype used for clarity.
+
 ## SelectInputBase.Options() — chained options method
 
 **Hallucinated API:**

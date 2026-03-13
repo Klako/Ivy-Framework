@@ -179,6 +179,9 @@ public abstract partial class ViewBase
     protected DataTableConnection? UseDataTable(IQueryable queryable, Func<object, object?>? idSelector, RefreshToken? refreshToken = null) =>
         this.Context.UseDataTable(queryable, idSelector, refreshToken);
 
+    protected DataTableConnection? UseDataTable(IQueryable queryable, Func<object, object?>? idSelector, DataTableColumn[]? columns, RefreshToken? refreshToken = null) =>
+        this.Context.UseDataTable(queryable, idSelector, columns, refreshToken);
+
     protected IView UseBlades(Func<IView> rootBlade, string? title = null, Size? width = null) =>
         this.Context.UseBlades(rootBlade, title, width);
 

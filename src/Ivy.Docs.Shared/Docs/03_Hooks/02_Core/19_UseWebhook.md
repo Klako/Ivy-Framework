@@ -6,6 +6,8 @@ searchHints:
   - api-endpoint
   - external-callback
   - http-handler
+  - base-url
+  - server-url
 imports:
   - Ivy.Core.Hooks
 ---
@@ -105,6 +107,29 @@ sequenceDiagram
 - **Update state safely** - State updates from handlers are automatically thread-safe
 - **Keep handlers fast** - Complete quickly and queue heavy work for background processing
 - **Cleanup is automatic** - Webhooks are automatically unregistered when components unmount
+
+## Faq
+
+### How do I get the current base URL or server URL in Ivy?
+
+**Recommended:** Use `AppContext.BaseUrl` via `UseService`:
+
+```csharp
+var appContext = UseService<AppContext>();
+var baseUrl = appContext.BaseUrl; // e.g., "https://localhost:5001"
+```
+
+This works in all rendering contexts including WebSocket rendering where `IHttpContextAccessor` is not available.
+
+**Alternative:** If you already have a webhook, `WebhookEndpoint` also exposes `BaseUrl`:
+
+```csharp
+var webhook = UseWebhook("my-hook", async ctx => { });
+var baseUrl = webhook.BaseUrl; // e.g., "https://localhost:5001"
+var fullUrl = webhook.GetUri(); // Full endpoint URL
+```
+
+Note: `IClientProvider` does NOT have a `BaseUrl` property. Do not attempt to use it for URL construction.
 
 ## See Also
 

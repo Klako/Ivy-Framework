@@ -87,7 +87,8 @@ export function convertArrowTableToData(
   for (let j = 0; j < table.schema.fields.length; j++) {
     const field = table.schema.fields[j];
     if (field.type.toString().toLowerCase().includes('decimal')) {
-      decimalScales.set(j, (field.type as any).scale ?? 0);
+      const scale = (field.type as arrow.Decimal).scale;
+      decimalScales.set(j, scale);
     }
   }
 

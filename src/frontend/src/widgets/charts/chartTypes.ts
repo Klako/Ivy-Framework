@@ -362,3 +362,60 @@ export interface ScatterChartWidgetProps {
   referenceDots?: ReferenceDot[];
   colorScheme: ColorScheme;
 }
+
+export type PolarGridTypes = 'Polygon' | 'Circle';
+
+export interface PolarGridProps {
+  gridType?: PolarGridTypes;
+  stroke?: string | null;
+  radialLines?: boolean;
+}
+
+export interface PolarAngleAxisProps {
+  dataKey?: string | null;
+  stroke?: string | null;
+  axisLine?: boolean;
+  tickLine?: boolean;
+}
+
+export interface PolarRadiusAxisProps {
+  angle?: number | null;
+  domain?: unknown[] | null;
+  tickCount?: number | null;
+  stroke?: string | null;
+}
+
+export interface RadialBarProps {
+  animated?: boolean;
+  background?: boolean;
+  dataKey: string;
+  fill?: string | null;
+  labelLists?: string[];
+  legendType?: string;
+  minAngle?: number;
+  name?: string | null;
+}
+
+export interface RadialBarChartWidgetProps {
+  id: string;
+  data: ChartData[];
+  width?: string;
+  height?: string;
+  radialBars?: RadialBarProps[];
+  tooltip?: ToolTipProps;
+  legend?: LegendProps;
+  toolbox?: ToolboxProps;
+  colorScheme: ColorScheme;
+  polarAngleAxis?: PolarAngleAxisProps | null;
+  polarRadiusAxis?: PolarRadiusAxisProps | null;
+  polarGrid?: PolarGridProps | null;
+  cx?: number | string | null;
+  cy?: number | string | null;
+  innerRadius?: number | string | null;
+  outerRadius?: number | string | null;
+  startAngle?: number;
+  endAngle?: number;
+  barGap?: number;
+  barCategoryGap?: number | string | null;
+  barSize?: number | null;
+}

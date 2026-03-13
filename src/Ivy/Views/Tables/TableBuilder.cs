@@ -99,6 +99,7 @@ public class TableBuilder<TModel> : ViewBase, IStateless
             .Union(
                 type
                     .GetProperties()
+                    .Where(p => p.GetIndexParameters().Length == 0)
                     .Where(p => p.GetCustomAttribute<ScaffoldColumnAttribute>()?.Scaffold != false)
                     .Select(e => new { e.Name, Type = e.PropertyType, FieldInfo = (FieldInfo)null!, PropertyInfo = e })
             )

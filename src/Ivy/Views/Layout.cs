@@ -49,6 +49,11 @@ public static class Layout
         return new GridView(Flatten(elements));
     }
 
+    public static Spacer Spacer()
+    {
+        return new Spacer();
+    }
+
     public static TabView Tabs(params Tab[] tabs)
     {
         return new TabView(tabs.ToArray());

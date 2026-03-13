@@ -1,12 +1,20 @@
 import { getHeight, getWidth } from '@/lib/styles';
-import { getIvyHost } from '@/lib/utils';
-import { validateImageUrl, isFullUrl, normalizeRelativePath } from '@/lib/url';
+import { getIvyHost, convertAppUrlToPath } from '@/lib/utils';
+import {
+  validateImageUrl,
+  isFullUrl,
+  normalizeRelativePath,
+  validateLinkUrl,
+  isExternalUrl,
+  isAppProtocol,
+} from '@/lib/url';
 import React from 'react';
 
 interface ImageWidgetProps {
   id: string;
   src: string | undefined | null;
   caption?: string;
+  link?: string;
   width?: string;
   height?: string;
 }
@@ -31,10 +39,34 @@ const getImageUrl = (url: string | undefined | null): string | null => {
   return `${getIvyHost()}${relativePath}`;
 };
 
+const getLinkProps = (
+  link: string
+): { href: string; target?: string; rel?: string } | null => {
+  const validatedUrl = validateLinkUrl(link);
+  if (validatedUrl === '#') return null;
+
+  if (isAppProtocol(validatedUrl)) {
+    return { href: convertAppUrlToPath(validatedUrl) };
+  }
+
+  if (isExternalUrl(validatedUrl)) {
+    return {
+      href: validatedUrl,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    };
+  }
+
+  // Relative path
+  const relativePath = normalizeRelativePath(validatedUrl);
+  return { href: `${getIvyHost()}${relativePath}` };
+};
+
 export const ImageWidget: React.FC<ImageWidgetProps> = ({
   id,
   src,
   caption,
+  link,
   width = 'MinContent',
   height = 'MinContent',
 }) => {
@@ -62,12 +94,34 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     );
   }
 
+  const linkProps = link ? getLinkProps(link) : null;
+
+  const imgElement = <img src={validatedImageSrc} alt="" />;
+
+  const wrappedImg = linkProps ? (
+    <a {...linkProps} style={{ cursor: 'pointer' }}>
+      {imgElement}
+    </a>
+  ) : (
+    imgElement
+  );
+
   if (caption) {
     return (
       <figure key={id} style={styles} className="flex flex-col items-center">
-        <img src={validatedImageSrc} alt="" />
-        <figcaption className="text-sm text-muted-foreground mt-1">{caption}</figcaption>
+        {wrappedImg}
+        <figcaption className="text-sm text-muted-foreground mt-1">
+          {caption}
+        </figcaption>
       </figure>
+    );
+  }
+
+  if (linkProps) {
+    return (
+      <a key={id} {...linkProps} style={{ ...styles, cursor: 'pointer' }}>
+        <img src={validatedImageSrc} alt="" />
+      </a>
     );
   }
 

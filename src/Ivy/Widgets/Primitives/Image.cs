@@ -21,4 +21,18 @@ public record Image : WidgetBase<Image>
 
     [Prop] public string Src { get; set; } = String.Empty;
     [Prop] public string? Caption { get; set; }
+    [Prop] public string? Link { get; set; }
+}
+
+public static class ImageExtensions
+{
+    public static Image Link(this Image image, string url)
+    {
+        var validatedUrl = ValidationHelper.ValidateLinkUrl(url);
+        if (validatedUrl == null)
+        {
+            throw new ArgumentException($"Invalid URL: {url}. Only safe URLs (http/https, relative paths, app://, anchors) are allowed.", nameof(url));
+        }
+        return image with { Link = validatedUrl };
+    }
 }

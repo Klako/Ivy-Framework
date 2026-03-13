@@ -23,6 +23,8 @@ public record Image : WidgetBase<Image>
     [Prop] public string? Alt { get; set; }
     [Prop] public string? Caption { get; set; }
     [Prop] public string? Link { get; set; }
+
+    [Event] public EventHandler<Event<Image>>? OnClick { get; set; }
 }
 
 public static class ImageExtensions
@@ -36,4 +38,16 @@ public static class ImageExtensions
         }
         return image with { Link = validatedUrl };
     }
+
+    public static Image OnClick(this Image image, Func<Event<Image>, ValueTask> onClick)
+        => image with { OnClick = new(onClick) };
+
+    public static Image OnClick(this Image image, Action<Event<Image>> onClick)
+        => image with { OnClick = new(onClick.ToValueTask()) };
+
+    public static Image OnClick(this Image image, Action onClick)
+        => image with { OnClick = new(_ => { onClick(); return ValueTask.CompletedTask; }) };
+
+    public static Image OnClick(this Image image, Func<ValueTask> onClick)
+        => image with { OnClick = new(_ => onClick()) };
 }

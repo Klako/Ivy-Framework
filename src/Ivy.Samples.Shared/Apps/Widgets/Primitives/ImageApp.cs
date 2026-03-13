@@ -6,10 +6,13 @@ public class ImageApp : SampleBase
 {
     protected override object? BuildSample()
     {
+        var clickCount = this.UseState(0);
+
         return new object[]
         {
             new Image("https://placehold.co/600x400") { Alt = "A placeholder image", Caption = "A placeholder image" },
             new Image("https://placehold.co/600x400") { Caption = "Click to visit example.com" }.Link("https://example.com"),
+            new Image("https://placehold.co/600x400") { Caption = $"Clicked {clickCount.Value} times" }.OnClick(() => clickCount.Value++),
         };
     }
 }

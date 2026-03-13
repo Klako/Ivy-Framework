@@ -8,7 +8,8 @@ import {
   isExternalUrl,
   isAppProtocol,
 } from '@/lib/url';
-import React from 'react';
+import { useEventHandler } from '@/components/event-handler';
+import React, { useCallback } from 'react';
 
 interface ImageWidgetProps {
   id: string;
@@ -16,6 +17,7 @@ interface ImageWidgetProps {
   alt?: string;
   caption?: string;
   link?: string;
+  events?: string[];
   width?: string;
   height?: string;
 }
@@ -69,9 +71,17 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
   alt,
   caption,
   link,
+  events,
   width = 'MinContent',
   height = 'MinContent',
 }) => {
+  const eventHandler = useEventHandler();
+  const hasOnClick = events?.includes('OnClick') ?? false;
+
+  const handleClick = useCallback(() => {
+    if (hasOnClick) eventHandler('OnClick', id, []);
+  }, [id, eventHandler, hasOnClick]);
+
   const styles: React.CSSProperties = {
     ...getWidth(width),
     ...getHeight(height),
@@ -96,11 +106,16 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     );
   }
 
-  const linkProps = link ? getLinkProps(link) : null;
+  // OnClick takes precedence over Link
+  const linkProps = !hasOnClick && link ? getLinkProps(link) : null;
 
   const altText = alt ?? caption ?? "";
 
-  const imgElement = <img src={validatedImageSrc} alt={altText} />;
+  const clickProps = hasOnClick
+    ? { onClick: handleClick, style: { cursor: 'pointer' as const } }
+    : {};
+
+  const imgElement = <img src={validatedImageSrc} alt={altText} {...clickProps} />;
 
   const wrappedImg = linkProps ? (
     <a {...linkProps} style={{ cursor: 'pointer' }}>
@@ -129,5 +144,5 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     );
   }
 
-  return <img src={validatedImageSrc} key={id} style={styles} alt={altText} />;
+  return <img src={validatedImageSrc} key={id} style={{ ...styles, ...(hasOnClick ? { cursor: 'pointer' } : {}) }} alt={altText} onClick={hasOnClick ? handleClick : undefined} />;
 };

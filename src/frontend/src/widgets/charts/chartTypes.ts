@@ -4,6 +4,7 @@ export enum ChartType {
   Bar = 'bar',
   Line = 'line',
   Pie = 'pie',
+  Scatter = 'scatter',
 }
 
 export interface ChartData {
@@ -312,4 +313,52 @@ export interface PieLegendProps {
   iconType?: string | null;
   layout?: string;
   verticalAlign?: string;
+}
+
+export type ScatterShape = 'Circle' | 'Square' | 'Cross' | 'Diamond' | 'Star' | 'Triangle' | 'Wye';
+
+export type ScatterLineType = 'Joint' | 'Fitting';
+
+export interface ZAxisProps {
+  dataKey?: string;
+  rangeMin?: number;
+  rangeMax?: number;
+  unit?: string | null;
+  name?: string | null;
+  scale?: string;
+}
+
+export interface ScatterProps {
+  animated?: boolean;
+  dataKey: string;
+  fill?: string | null;
+  fillOpacity?: number | null;
+  legendType?: ScatterShape | null;
+  line?: boolean;
+  lineType?: ScatterLineType;
+  name: string;
+  shape?: ScatterShape;
+  stroke?: string | null;
+  strokeDashArray?: string | null;
+  strokeWidth?: number;
+  unit?: string | null;
+}
+
+export interface ScatterChartWidgetProps {
+  id: string;
+  data: ChartData[];
+  width?: string;
+  height?: string;
+  scatters?: ScatterProps[];
+  cartesianGrid?: CartesianGridProps;
+  xAxis?: XAxisProps[];
+  yAxis?: YAxisProps[];
+  zAxis?: ZAxisProps | null;
+  tooltip?: ToolTipProps;
+  toolbox?: ToolboxProps;
+  legend?: LegendProps;
+  referenceLines?: MarkLine[];
+  referenceAreas?: MarkArea[];
+  referenceDots?: ReferenceDot[];
+  colorScheme: ColorScheme;
 }

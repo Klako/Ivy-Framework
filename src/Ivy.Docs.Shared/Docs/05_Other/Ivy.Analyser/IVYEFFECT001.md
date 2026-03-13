@@ -58,4 +58,4 @@ private static async Task ResetAfterDelay(State<int> state, CancellationToken to
 
 ## See Also
 
-- [UseEffect](../../../03_Hooks/UseEffect.md)
+- [UseEffect](../../../03_Hooks/02_Core/04_UseEffect.md)

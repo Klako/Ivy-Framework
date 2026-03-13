@@ -33,4 +33,4 @@ public override object? Build()
 
 ## See Also
 
-- [Layouts](../../../02_Widgets/01_Layout/00_Layout.md)
+- [Layouts](../../../02_Widgets/02_Layouts/01_StackLayout.md)

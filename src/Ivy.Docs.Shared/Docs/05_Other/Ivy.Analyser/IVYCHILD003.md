@@ -32,4 +32,4 @@ public override object? Build()
 
 ## See Also
 
-- [Sidebar Layout](../../../02_Widgets/01_Layout/02_SidebarLayout.md)
+- [Sidebar Layout](../../../02_Widgets/02_Layouts/06_SidebarLayout.md)

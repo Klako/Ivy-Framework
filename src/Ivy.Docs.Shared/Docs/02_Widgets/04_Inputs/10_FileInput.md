@@ -168,7 +168,7 @@ public class FileUploadValidation : ViewBase
                     .Placeholder("Choose up to 3 images (max 5 MB each)")
                | selectedFiles.Value.ToTable()
                    .Width(Size.Full())
-                   .Builder(e => e.Length, e => e.Func((long x) => Utils.FormatBytes(x)))
+                   .Builder(e => e.Length, e => e.Func((long x) => StringHelper.FormatBytes(x)))
                    .Builder(e => e.Progress, e => e.Func((float x) => x.ToString("P0")))
                    .Remove(e => e.Id);
     }
@@ -228,7 +228,7 @@ public class FileSizeLimitDemo : ViewBase
                     .ToFileInput(upload)
                     .Placeholder("Min 2 MB, Max 5 MB")
                 | (file.Value != null
-                    ? Text.P($"Selected: {file.Value.FileName} ({Utils.FormatBytes(file.Value.Length)})")
+                    ? Text.P($"Selected: {file.Value.FileName} ({StringHelper.FormatBytes(file.Value.Length)})")
                     : null);
     }
 }
@@ -312,7 +312,7 @@ public class UploadProgressDemo : ViewBase
                     .Placeholder("Choose files")
                 | files.Value.ToTable()
                     .Width(Size.Full())
-                    .Builder(e => e.Length, e => e.Func((long x) => Utils.FormatBytes(x)))
+                    .Builder(e => e.Length, e => e.Func((long x) => StringHelper.FormatBytes(x)))
                     .Builder(e => e.Progress, e => e.Func((float x) => x.ToString("P0")))
                     .Remove(e => e.Id);
     }

@@ -30,7 +30,7 @@ public abstract partial class ViewBase
     [OverloadResolutionPriority(1)]
     protected IState<T> UseState<T>(Func<T>? buildInitialValue, bool buildOnChange = true) =>
         buildInitialValue is null
-            ? this.Context.UseState<T>(default, buildOnChange)
+            ? this.Context.UseState<T>(initialValue: default, buildOnChange)
             : this.Context.UseState(buildInitialValue, buildOnChange);
 
     protected IState<T> UseRef<T>(T? initialValue = default) =>
@@ -39,7 +39,7 @@ public abstract partial class ViewBase
     [OverloadResolutionPriority(1)]
     protected IState<T> UseRef<T>(Func<T>? buildInitialValue) =>
         buildInitialValue is null
-            ? this.Context.UseRef<T>(default)
+            ? this.Context.UseRef<T>(initialValue: default)
             : this.Context.UseRef(buildInitialValue);
 
     [OverloadResolutionPriority(1)]

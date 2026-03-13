@@ -60,6 +60,14 @@ public record Button : WidgetBase<Button>
         OnClick = onClick == null ? null : new(_ => { onClick(); return ValueTask.CompletedTask; });
     }
 
+    public Button(string? title = null, Func<ValueTask>? onClick = null, ButtonVariant variant = ButtonVariant.Primary, Icons? icon = null)
+    {
+        Title = title;
+        Variant = variant;
+        Icon = icon;
+        OnClick = onClick == null ? null : new(_ => onClick());
+    }
+
     [Prop] public string? Title { get; set; }
 
     [Prop] public ButtonVariant Variant { get; set; } = ButtonVariant.Primary;
@@ -101,6 +109,11 @@ public static class ButtonExtensions
     }
 
     public static Button ToButton(this Icons icon, Action<Event<Button>>? onClick = null, ButtonVariant variant = ButtonVariant.Primary)
+    {
+        return new Button(null, onClick, icon: icon, variant: variant);
+    }
+
+    public static Button ToButton(this Icons icon, Func<ValueTask>? onClick = null, ButtonVariant variant = ButtonVariant.Primary)
     {
         return new Button(null, onClick, icon: icon, variant: variant);
     }

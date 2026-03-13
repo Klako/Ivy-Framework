@@ -81,11 +81,13 @@ export function convertArrowTableToData(
       };
     });
 
-  // Precompute which columns are decimal type so we can convert Arrow Decimal objects to JS numbers
-  const decimalColumns = new Set<number>();
+  // Precompute decimal column scales for proper Decimal128 → JS number conversion.
+  // Arrow's DecimalBigNum.valueOf(scale) needs the scale to divide the unscaled integer.
+  const decimalScales = new Map<number, number>();
   for (let j = 0; j < table.schema.fields.length; j++) {
-    if (table.schema.fields[j].type.toString().toLowerCase().includes('decimal')) {
-      decimalColumns.add(j);
+    const field = table.schema.fields[j];
+    if (field.type.toString().toLowerCase().includes('decimal')) {
+      decimalScales.set(j, (field.type as any).scale ?? 0);
     }
   }
 
@@ -96,10 +98,11 @@ export function convertArrowTableToData(
       const column = table.getChildAt(j);
       if (column) {
         let value = column.get(i);
-        // Arrow Decimal128 values are returned as objects, not JS numbers.
-        // Convert them to numbers for proper rendering.
-        if (decimalColumns.has(j) && value != null && typeof value === 'object') {
-          value = Number(value);
+        // Arrow Decimal128 values are DecimalBigNum objects containing unscaled integers.
+        // We must pass the column's scale to valueOf() so it divides correctly.
+        const scale = decimalScales.get(j);
+        if (scale !== undefined && value != null && typeof value === 'object') {
+          value = value.valueOf(scale);
         }
         values.push(value);
       }

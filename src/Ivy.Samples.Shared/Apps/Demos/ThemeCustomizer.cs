@@ -829,7 +829,7 @@ public class ThemeCustomizer : SampleBase
                     new Box("Preview")
                         .Width(Size.Px(100))
                         .Height(Size.Px(60))
-                        .Color(previewColor)
+                        .Background(previewColor)
                         .BorderRadius(BorderRadius.Rounded)
                         .ContentAlign(Align.Center),
                     Layout.Vertical()

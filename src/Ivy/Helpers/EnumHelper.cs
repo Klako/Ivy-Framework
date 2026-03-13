@@ -14,6 +14,6 @@ public static class EnumHelper
     {
         var field = value.GetType().GetField(value.ToString());
         var description = field?.GetCustomAttribute<DescriptionAttribute>()?.Description;
-        return description ?? Utils.SplitPascalCase(value.ToString()) ?? value.ToString();
+        return description ?? StringHelper.SplitPascalCase(value.ToString()) ?? value.ToString();
     }
 }

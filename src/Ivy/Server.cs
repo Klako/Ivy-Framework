@@ -448,11 +448,11 @@ public class Server
 
         // CLI-only commands (--describe, --describe-connection, --test-connection) never start
         // the web host, so skip port checks entirely. Port 0 will be used below.
-        if (!_args.IsCliCommand && Utils.IsPortInUse(_args.Port))
+        if (!_args.IsCliCommand && ProcessHelper.IsPortInUse(_args.Port))
         {
             if (_args.IKillForThisPort)
             {
-                Utils.KillProcessUsingPort(_args.Port);
+                ProcessHelper.KillProcessUsingPort(_args.Port);
             }
             else if (_args.FindAvailablePort)
             {
@@ -460,7 +460,7 @@ public class Server
                 var maxAttempts = 100;
                 var attemptCount = 0;
 
-                while (Utils.IsPortInUse(_args.Port) && attemptCount < maxAttempts)
+                while (ProcessHelper.IsPortInUse(_args.Port) && attemptCount < maxAttempts)
                 {
                     _args = _args with { Port = _args.Port + 1 };
                     attemptCount++;
@@ -677,7 +677,7 @@ public class Server
             }
             if (_args.Browse)
             {
-                Utils.OpenBrowser(localUrl);
+                ProcessHelper.OpenBrowser(localUrl);
             }
         });
 

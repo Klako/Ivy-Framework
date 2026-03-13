@@ -150,7 +150,7 @@ public static class ButtonExtensions
     public static Button Url(this Button button, string url)
     {
         // Validate URL to prevent open redirect vulnerabilities
-        var validatedUrl = Utils.ValidateLinkUrl(url);
+        var validatedUrl = ValidationHelper.ValidateLinkUrl(url);
         if (validatedUrl == null)
         {
             throw new ArgumentException($"Invalid URL: {url}. Only safe URLs (http/https, relative paths, app://, anchors) are allowed.", nameof(url));

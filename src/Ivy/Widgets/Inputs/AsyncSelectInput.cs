@@ -186,9 +186,9 @@ public static class AsyncSelectInputViewExtensions
         var stateType = state.GetStateType();
 
         // If the state is nullable but TValue is a non-nullable value type
-        if (stateType.IsNullableType() && 
-            targetValueType.IsValueType && 
-            !targetValueType.IsNullableType() && 
+        if (stateType.IsNullableType() &&
+            targetValueType.IsValueType &&
+            !targetValueType.IsNullableType() &&
             Nullable.GetUnderlyingType(stateType) == targetValueType)
         {
             var method = typeof(AsyncSelectInputViewExtensions).GetMethod(nameof(CreateNullableAsyncSelectInput), BindingFlags.NonPublic | BindingFlags.Static);
@@ -274,9 +274,9 @@ public static class AsyncSelectInputViewExtensions
         AsyncSelectSearchDelegate<TValue?> nullableSearch = (ctx, query) =>
         {
             var res = search(ctx, query);
-            
+
             var options = res.Value?.Select(opt => new Option<TValue?>(opt.Label, opt.TypedValue, opt.Group, opt.Description, opt.Icon, opt.Disabled)).ToArray();
-            
+
             var newMutator = new QueryMutator<Option<TValue?>[]>(
                 (_, _) => { },
                 res.Mutator.Revalidate,
@@ -287,22 +287,22 @@ public static class AsyncSelectInputViewExtensions
 
         AsyncSelectLookupDelegate<TValue?> nullableLookup = (ctx, id) =>
         {
-            if (!id.HasValue) 
+            if (!id.HasValue)
             {
                 var emptyMutator = new QueryMutator<Option<TValue?>?>(
                     (_, _) => { }, () => { }, () => { });
                 return new QueryResult<Option<TValue?>?>(null, false, false, false, emptyMutator);
             }
-            
+
             var res = lookup(ctx, id.Value);
-            
+
             Option<TValue?>? mapped = null;
             if (res.Value != null)
             {
                 var opt = res.Value;
                 mapped = new Option<TValue?>(opt.Label, opt.TypedValue, opt.Group, opt.Description, opt.Icon, opt.Disabled);
             }
-            
+
             var newMutator = new QueryMutator<Option<TValue?>?>(
                 (_, _) => { },
                 res.Mutator.Revalidate,

@@ -14,7 +14,7 @@ searchHints:
 A secondary navigation component that shows the user's location within a hierarchy. Perfect for multi-level navigation and hierarchical applications.
 </Ingress>
 
-The `Breadcrumbs` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) renders a navigation trail showing the user's location within a hierarchy. Each item is clickable (except the current/last item), enabling quick navigation to ancestor pages. It integrates naturally with the [UseNavigation](../../03_Hooks/02_Core/09_UseNavigation.md) hook.
+The `Breadcrumbs` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) renders a navigation trail showing the user's location within a hierarchy. Each item is clickable (except the current/last item), enabling quick navigation to ancestor pages.
 
 ## Basic Usage
 
@@ -32,18 +32,18 @@ The last item in the list is rendered as non-clickable, representing the current
 
 ## With Navigation
 
-Integrate breadcrumbs with Ivy's navigation system:
+Integrate breadcrumbs with state management for navigation:
 
 ```csharp demo-tabs
 public class BreadcrumbsNavigationDemo : ViewBase
 {
     public override object? Build()
     {
-        var nav = UseNavigation();
+        var currentPage = UseState("Details");
 
         return new Breadcrumbs(
-            new BreadcrumbItem("Home", () => nav.Navigate<HomeApp>()),
-            new BreadcrumbItem("Products", () => nav.Navigate<ProductsApp>()),
+            new BreadcrumbItem("Home", () => currentPage.Set("Home")),
+            new BreadcrumbItem("Products", () => currentPage.Set("Products")),
             new BreadcrumbItem("Product Details")
         );
     }

@@ -29,6 +29,7 @@ public static class Layout
     public static LayoutView Center(params IEnumerable<object?> elements)
     {
         return Horizontal(Flatten(elements))
+            .Height(Size.Screen())
             .RemoveParentPadding().Align(Align.Center);
     }
 

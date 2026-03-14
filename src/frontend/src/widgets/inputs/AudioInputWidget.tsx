@@ -27,7 +27,6 @@ interface AudioInputWidgetProps {
   width?: string;
   uploadUrl: string;
   chunkInterval: number;
-  /** Target sample rate in Hz (e.g. 16000 for speech, 48000 for high-fidelity). When null/undefined, browser default is used. */
   sampleRate?: number | null;
   density?: Densities;
 }

@@ -29,7 +29,6 @@ public class LayoutView : ViewBase, IStateless
     private Align? _alignment = null;
     private Scroll _scroll = Ivy.Scroll.None;
     private bool _removeParentPadding = false;
-    private bool _visible = true;
     private Colors? _borderColor = null;
     private Ivy.BorderRadius _borderRadius = Ivy.BorderRadius.None;
     private Ivy.BorderStyle _borderStyle = Ivy.BorderStyle.None;
@@ -53,12 +52,6 @@ public class LayoutView : ViewBase, IStateless
     {
         _rowGap = rowGap;
         _columnGap = columnGap;
-        return this;
-    }
-
-    public LayoutView Visible(bool visible)
-    {
-        _visible = visible;
         return this;
     }
 
@@ -421,8 +414,7 @@ public class LayoutView : ViewBase, IStateless
             BorderThickness = _borderThickness
         }
             .Width(_width)
-            .Height(_height)
-            .Visible(_visible);
+            .Height(_height);
 
         return layout;
     }

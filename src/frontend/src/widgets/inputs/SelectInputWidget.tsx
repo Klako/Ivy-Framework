@@ -77,6 +77,7 @@ export type NullableSelectValue =
 interface Option {
   value: string | number;
   label?: string;
+  description?: string;
   group?: string;
   icon?: string;
   disabled?: boolean;
@@ -278,7 +279,16 @@ const ToggleOptionItem: React.FC<{
           className={cn(iconClasses[density], !option.label && 'mx-auto')}
         />
       )}
-      {option.label}
+      {option.description ? (
+        <div className="flex flex-col items-center">
+          <span>{option.label}</span>
+          <span className="text-xs text-muted-foreground mt-0.5 font-normal">
+            {option.description}
+          </span>
+        </div>
+      ) : (
+        option.label
+      )}
     </ToggleGroupItem>
   );
 
@@ -620,7 +630,16 @@ const RadioVariant: React.FC<SelectInputWidgetProps> = ({
                         className="h-4 w-4 flex-shrink-0"
                       />
                     )}
-                    {option.label}
+                    {option.description ? (
+                      <div className="flex flex-col">
+                        <span>{option.label}</span>
+                        <span className="text-xs text-muted-foreground mt-0.5 font-normal">
+                          {option.description}
+                        </span>
+                      </div>
+                    ) : (
+                      option.label
+                    )}
                   </Label>
                 </div>
               );
@@ -898,7 +917,16 @@ const CheckboxVariant: React.FC<SelectInputWidgetProps> = ({
                           className="h-4 w-4 flex-shrink-0"
                         />
                       )}
-                      {option.label}
+                      {option.description ? (
+                        <div className="flex flex-col">
+                          <span>{option.label}</span>
+                          <span className="text-xs text-muted-foreground mt-0.5 font-normal">
+                            {option.description}
+                          </span>
+                        </div>
+                      ) : (
+                        option.label
+                      )}
                     </Label>
                   </div>
                 );

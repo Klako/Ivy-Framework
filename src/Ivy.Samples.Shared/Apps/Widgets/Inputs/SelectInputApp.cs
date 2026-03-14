@@ -16,7 +16,8 @@ public class SelectInputApp : SampleBase
             new Tab("Disabled Options", new SelectInputDisabledOptionsExample()),
             new Tab("Nullable & Edge Cases", new SelectInputAdvancedExample()),
             new Tab("Advanced Props", new SelectInputAdvancedPropsExample()),
-            new Tab("Ghost", new SelectInputGhostExample())
+            new Tab("Ghost", new SelectInputGhostExample()),
+            new Tab("Descriptions", new SelectInputDescriptionsExample())
         ).Variant(TabsVariant.Content);
     }
 }
@@ -390,6 +391,47 @@ public class SelectInputGhostExample : ViewBase
                 | (Layout.Vertical().Gap(2)
                     | Text.Monospaced("Ghost (Toggle)")
                     | colorArrayState.ToSelectInput(colorOptions).Variant(SelectInputVariant.Toggle).Ghost());
+    }
+}
+
+public class SelectInputDescriptionsExample : ViewBase
+{
+    public override object? Build()
+    {
+        var genreToggle = UseState("Comedy");
+        var genreRadio = UseState("Comedy");
+        var genreCheckbox = UseState<string[]>([]);
+
+        var genreOptions = new IAnyOption[]
+        {
+            new Option<string>("Comedy", "Comedy") { Description = "Laugh out loud." },
+            new Option<string>("Drama", "Drama") { Description = "Get the popcorn." },
+            new Option<string>("Documentary", "Documentary") { Description = "Never stop learning." },
+            new Option<string>("Action", "Action") { Description = "Edge of your seat thrills." },
+        };
+
+        return Layout.Vertical()
+            | Text.H3("Option Descriptions")
+            | Text.P("Options can include descriptions that appear as caption text below the label in Toggle and Radio/Checkbox (List) variants.")
+            | Layout.Vertical().Gap(6)
+                | (Layout.Vertical().Gap(2)
+                    | Text.Monospaced("Toggle Variant")
+                    | genreToggle.ToSelectInput(genreOptions)
+                        .Variant(SelectInputVariant.Toggle)
+                        .WithField()
+                        .Label("Favorite genre"))
+                | (Layout.Vertical().Gap(2)
+                    | Text.Monospaced("Radio Variant (List, Single-Select)")
+                    | genreRadio.ToSelectInput(genreOptions)
+                        .Variant(SelectInputVariant.List)
+                        .WithField()
+                        .Label("Favorite genre"))
+                | (Layout.Vertical().Gap(2)
+                    | Text.Monospaced("Checkbox Variant (List, Multi-Select)")
+                    | genreCheckbox.ToSelectInput(genreOptions)
+                        .Variant(SelectInputVariant.List)
+                        .WithField()
+                        .Label("Favorite genres"));
     }
 }
 

@@ -136,12 +136,12 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
     (async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio:
-            sampleRate != null ? { sampleRate: { ideal: sampleRate } } : true,
+          audio: true,
         });
         if (cancelled) {
           return;
         }
+
         const mediaRecorderAvailable = typeof MediaRecorder !== 'undefined';
         const canProbeTypeSupport =
           mediaRecorderAvailable &&
@@ -178,7 +178,38 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
 
         selectedMimeTypeRef.current = supportedMimeType;
 
-        const mediaRecorder = new MediaRecorder(stream, {
+        const audioContext =
+          sampleRate != null
+            ? new AudioContext({ sampleRate })
+            : new AudioContext();
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+        if (cancelled) return;
+        const source = audioContext.createMediaStreamSource(stream);
+
+        let streamToRecord: MediaStream;
+        if (sampleRate != null) {
+          const destination = audioContext.createMediaStreamDestination();
+          source.connect(destination);
+          streamToRecord = destination.stream;
+          const micRate = stream
+            .getAudioTracks()[0]
+            ?.getSettings?.()?.sampleRate;
+          logger.warn(
+            `AudioInput: requested ${sampleRate} Hz, mic ${micRate ?? '?'} Hz - recording at ${audioContext.sampleRate} Hz (resampled)`
+          );
+        } else {
+          streamToRecord = stream;
+          const micRate = stream
+            .getAudioTracks()[0]
+            ?.getSettings?.()?.sampleRate;
+          logger.warn(
+            `AudioInput: no sample rate set, recording at ${micRate ?? audioContext.sampleRate} Hz (mic default)`
+          );
+        }
+
+        const mediaRecorder = new MediaRecorder(streamToRecord, {
           mimeType: supportedMimeType,
         });
 
@@ -191,8 +222,6 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
         mediaRecorder.start(chunkInterval);
         setRecordingStartedAt(Date.now());
 
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);

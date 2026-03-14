@@ -386,17 +386,6 @@ export interface PolarRadiusAxisProps {
   stroke?: string | null;
 }
 
-export interface RadialBarProps {
-  animated?: boolean;
-  background?: boolean;
-  dataKey: string;
-  fill?: string | null;
-  labelLists?: string[];
-  legendType?: string;
-  minAngle?: number;
-  name?: string | null;
-}
-
 export interface RadarProps {
   dataKey: string;
   name?: string | null;
@@ -528,26 +517,3 @@ export type FunnelProps = {
   labelLists?: string[];
 };
 
-export interface RadialBarChartWidgetProps {
-  id: string;
-  data: ChartData[];
-  width?: string;
-  height?: string;
-  radialBars?: RadialBarProps[];
-  tooltip?: ToolTipProps;
-  legend?: LegendProps;
-  toolbox?: ToolboxProps;
-  colorScheme: ColorScheme;
-  polarAngleAxis?: PolarAngleAxisProps | null;
-  polarRadiusAxis?: PolarRadiusAxisProps | null;
-  polarGrid?: PolarGridProps | null;
-  cx?: number | string | null;
-  cy?: number | string | null;
-  innerRadius?: number | string | null;
-  outerRadius?: number | string | null;
-  startAngle?: number;
-  endAngle?: number;
-  barGap?: number;
-  barCategoryGap?: number | string | null;
-  barSize?: number | null;
-}

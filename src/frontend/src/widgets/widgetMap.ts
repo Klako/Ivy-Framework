@@ -237,7 +237,6 @@ export const widgetMap = {
   'Ivy.AreaChart': React.lazy(() => import('@/widgets/charts/AreaChartWidget')),
   'Ivy.BarChart': React.lazy(() => import('@/widgets/charts/BarChartWidget')),
   'Ivy.ScatterChart': React.lazy(() => import('@/widgets/charts/ScatterChartWidget')),
-  'Ivy.RadialBarChart': React.lazy(() => import('@/widgets/charts/RadialBarChartWidget')),
   'Ivy.RadarChart': React.lazy(() => import('@/widgets/charts/RadarChartWidget')),
   'Ivy.SankeyChart': React.lazy(() => import('@/widgets/charts/SankeyChartWidget')),
   'Ivy.ChordChart': React.lazy(() => import('@/widgets/charts/ChordChartWidget')),

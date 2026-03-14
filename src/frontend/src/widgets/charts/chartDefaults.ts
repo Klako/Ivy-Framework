@@ -16,7 +16,6 @@ import type {
   ToolboxProps,
   XAxisProps,
   YAxisProps,
-  RadialBarProps,
   RadarProps,
   PolarGridProps,
   PolarAngleAxisProps,
@@ -138,14 +137,6 @@ export const Y_AXIS_DEFAULTS: Partial<YAxisProps> = {
 // ReferenceLine defaults (ReferenceLine.cs)
 export const REFERENCE_LINE_DEFAULTS = {
   strokeWidth: 1,
-};
-
-// RadialBar defaults (RadialBar.cs)
-export const RADIAL_BAR_DEFAULTS: Partial<RadialBarProps> = {
-  legendType: 'Line',
-  animated: true,
-  background: false,
-  minAngle: 0,
 };
 
 // PolarGrid defaults (PolarGrid.cs)

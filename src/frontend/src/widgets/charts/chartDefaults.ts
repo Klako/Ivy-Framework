@@ -171,5 +171,13 @@ export const FUNNEL_DEFAULTS: Partial<FunnelProps> = {
   maxSize: '100%',
 };
 
+// Funnel Legend defaults
+export const FUNNEL_LEGEND_DEFAULTS: Partial<PieLegendProps> = {
+  layout: 'Horizontal',
+  align: 'Center',
+  verticalAlign: 'Bottom',
+  iconSize: 14,
+};
+
 // Re-export applyDefaults from shared utils
 export { applyDefaults } from '@/lib/utils';

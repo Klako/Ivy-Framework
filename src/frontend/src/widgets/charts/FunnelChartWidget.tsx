@@ -7,14 +7,13 @@ import {
   generateTextStyle,
   generateEChartToolbox,
   generateTooltip,
-  generateEChartLegend,
 } from './sharedUtils';
-import { FunnelChartWidgetProps } from './chartTypes';
+import { ChartType, FunnelChartWidgetProps } from './chartTypes';
 import { generateDataProps } from './sharedUtils';
 import { getChartThemeColors } from './styles';
 import {
   FUNNEL_DEFAULTS,
-  PIE_LEGEND_DEFAULTS,
+  FUNNEL_LEGEND_DEFAULTS,
   applyDefaults,
 } from './chartDefaults';
 
@@ -103,7 +102,7 @@ const FunnelChartWidget: React.FC<FunnelChartWidgetProps> = ({
 
         return {
           name: key,
-          type: 'funnel' as const,
+          type: ChartType.Funnel,
           sort: echartsSort,
           orient: echartsOrient,
           gap: gap ?? 0,
@@ -143,7 +142,7 @@ const FunnelChartWidget: React.FC<FunnelChartWidgetProps> = ({
   );
 
   const option = useMemo(() => {
-    const leg = legend ? applyDefaults(legend, PIE_LEGEND_DEFAULTS) : null;
+    const leg = legend ? applyDefaults(legend, FUNNEL_LEGEND_DEFAULTS) : null;
 
     return {
       color: chartColors,
@@ -166,8 +165,8 @@ const FunnelChartWidget: React.FC<FunnelChartWidgetProps> = ({
                 ? 'middle'
                 : 'bottom',
           icon: leg.iconType ?? 'circle',
-          itemWidth: leg.iconSize ?? PIE_LEGEND_DEFAULTS.iconSize,
-          itemHeight: leg.iconSize ?? PIE_LEGEND_DEFAULTS.iconSize,
+          itemWidth: leg.iconSize ?? FUNNEL_LEGEND_DEFAULTS.iconSize,
+          itemHeight: leg.iconSize ?? FUNNEL_LEGEND_DEFAULTS.iconSize,
           type: 'scroll',
           textStyle: generateTextStyle(
             themeColors.foreground,

@@ -317,9 +317,22 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      // Don't trigger file selection if clicking on a file item or button
+      // Don't trigger file selection if clicking on a file item or a non-trigger button
       const target = e.target as HTMLElement;
-      if (target.closest('button') || target.closest('[data-file-item]')) {
+      const button = target.closest('button');
+
+      if (
+        (button && !button.hasAttribute('data-file-input-trigger')) ||
+        target.closest('[data-file-item]')
+      ) {
+        return;
+      }
+
+      // For Standard variant, if we only want the trigger to work (and not the area around it)
+      if (
+        variant === 'Standard' &&
+        !target.closest('[data-file-input-trigger]')
+      ) {
         return;
       }
 
@@ -333,7 +346,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
         inputRef.current.click();
       }
     },
-    [disabled, hasBlurHandler]
+    [disabled, hasBlurHandler, variant]
   );
 
   // Render individual file item for multiple files view
@@ -401,7 +414,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
       <div
         className={cn(
           fileInputVariant({ variant, density, isDragging }),
-          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-default'
         )}
         onClick={handleClick}
         role="button"
@@ -436,10 +449,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
                   isDragging && 'border-primary ring-2 ring-primary'
                 )}
                 disabled={disabled}
-                onClick={e => {
-                  e.stopPropagation();
-                  handleClick(e as unknown as React.MouseEvent);
-                }}
+                data-file-input-trigger
               >
                 <Upload className="h-4 w-4" />
                 {placeholder || 'Select files'}

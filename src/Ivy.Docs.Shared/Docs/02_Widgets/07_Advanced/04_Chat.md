@@ -231,6 +231,8 @@ public class InteractiveChatDemo : ViewBase
 {
     public override object? Build()
     {
+        var formName = UseState("");
+        var formEmail = UseState("");
         var messages = UseState(ImmutableArray.Create<ChatMessage>(
             new ChatMessage(ChatSender.Assistant, "I can show interactive elements! Try sending 'buttons', 'card', or 'form' to see different responses.")
         ));
@@ -250,8 +252,8 @@ public class InteractiveChatDemo : ViewBase
                 "card" => new Card("Interactive Card", new Button("Action")),
 
                 "form" => Layout.Vertical().Gap(1)
-                    | new TextInput().Placeholder("Enter your name")
-                    | new TextInput().Placeholder("Enter your email")
+                    | formName.ToTextInput().Placeholder("Enter your name")
+                    | formEmail.ToTextInput().Placeholder("Enter your email")
                     | new Button("Submit").Variant(ButtonVariant.Primary),
 
                 _ => $"You said: '{@event.Value}'. Try sending 'buttons', 'card', or 'form' for interactive responses!"
@@ -321,6 +323,11 @@ public class AdvancedChatDemo : ViewBase
 {
     public override object? Build()
     {
+        var projName = UseState("");
+        var projDesc = UseState("");
+        var projType = UseState("Web");
+        var projPriority = UseState("Low");
+        
         var messages = UseState(ImmutableArray.Create<ChatMessage>(
             new ChatMessage(ChatSender.Assistant,
                 "Welcome to the Advanced Chat! Try these commands:\n" +
@@ -352,10 +359,10 @@ public class AdvancedChatDemo : ViewBase
                     """, Languages.Csharp),
 
                 "create form" => Layout.Vertical().Gap(1)
-                    | new TextInput().Placeholder("Enter project name")
-                    | new TextInput().Placeholder("Enter description")
-                    | new SelectInput<string>(new[] { new Option<string>("Web", "Web"), new Option<string>("Mobile", "Mobile"), new Option<string>("Desktop", "Desktop") })
-                    | new SelectInput<string>(new[] { new Option<string>("Low", "Low"), new Option<string>("Medium", "Medium"), new Option<string>("High", "High") })
+                    | projName.ToTextInput().Placeholder("Enter project name")
+                    | projDesc.ToTextInput().Placeholder("Enter description")
+                    | projType.ToSelectInput(["Web", "Mobile", "Desktop"])
+                    | projPriority.ToSelectInput(["Low", "Medium", "High"])
                     | new Button("Create Project").Variant(ButtonVariant.Primary),
 
                 "show chart" => new LineChart(

@@ -315,6 +315,17 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
     [multiple, disabled, uploadFile, maxFiles, value]
   );
 
+  const openFileDialog = useCallback(() => {
+    if (!disabled && inputRef.current) {
+      if (hasBlurHandler) {
+        dialogWasOpenRef.current = true;
+        filesSelectedInCurrentDialogRef.current = false;
+        blurFiredRef.current = false;
+      }
+      inputRef.current.click();
+    }
+  }, [disabled, hasBlurHandler]);
+
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       // Don't trigger file selection if clicking on a file item or a non-trigger button
@@ -328,7 +339,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
         return;
       }
 
-      // For Standard variant, if we only want the trigger to work (and not the area around it)
+      // For Standard variant, only the trigger button should open the dialog
       if (
         variant === 'Standard' &&
         !target.closest('[data-file-input-trigger]')
@@ -336,17 +347,17 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
         return;
       }
 
-      if (!disabled && inputRef.current) {
-        // Track when dialog opens (for cancel detection)
-        if (hasBlurHandler) {
-          dialogWasOpenRef.current = true;
-          filesSelectedInCurrentDialogRef.current = false;
-          blurFiredRef.current = false;
-        }
-        inputRef.current.click();
-      }
+      openFileDialog();
     },
-    [disabled, hasBlurHandler, variant]
+    [variant, openFileDialog]
+  );
+
+  const handleButtonClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      handleClick(e);
+    },
+    [handleClick]
   );
 
   // Render individual file item for multiple files view
@@ -422,7 +433,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            handleClick(e as unknown as React.MouseEvent);
+            openFileDialog();
           }
         }}
       >
@@ -450,6 +461,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
                 )}
                 disabled={disabled}
                 data-file-input-trigger
+                onClick={handleButtonClick}
               >
                 <Upload className="h-4 w-4" />
                 {placeholder || 'Select files'}

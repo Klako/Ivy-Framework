@@ -11,7 +11,10 @@ public class ChordChartApp : SampleBase
             | new ChordChart2View()
             | new ChordChart3View()
             | new ChordChart4View()
-            | new ChordChart5View();
+            | new ChordChart5View()
+            | new ChordChart6View()
+            | new ChordChart7View()
+            | new ChordChart8View();
     }
 }
 
@@ -228,5 +231,76 @@ public class ChordChart5View : ViewBase
                 .Toolbox()
                 .Legend()
                 .SortSubGroups();
+    }
+}
+
+public record TradeFlow(string Exporter, string Importer, double Volume);
+
+public class ChordChart6View : ViewBase
+{
+    public override object? Build()
+    {
+        var trades = new[]
+        {
+            new TradeFlow("USA", "China", 5800),
+            new TradeFlow("USA", "Germany", 2100),
+            new TradeFlow("USA", "Japan", 3400),
+            new TradeFlow("China", "Germany", 1800),
+            new TradeFlow("China", "Japan", 3200),
+            new TradeFlow("Germany", "Japan", 800),
+            new TradeFlow("Germany", "France", 1600),
+            new TradeFlow("UK", "France", 1400),
+        };
+
+        return new Card().Title("ToChordChart - Default")
+            | trades.ToChordChart(
+                t => t.Exporter,
+                t => t.Importer,
+                t => t.Volume);
+    }
+}
+
+public class ChordChart7View : ViewBase
+{
+    public override object? Build()
+    {
+        var trades = new[]
+        {
+            new TradeFlow("USA", "China", 5800),
+            new TradeFlow("USA", "Germany", 2100),
+            new TradeFlow("China", "Germany", 1800),
+            new TradeFlow("China", "Japan", 3200),
+            new TradeFlow("Germany", "France", 1600),
+            new TradeFlow("UK", "France", 1400),
+        };
+
+        return new Card().Title("ToChordChart - Sorted")
+            | trades.ToChordChart(
+                t => t.Exporter,
+                t => t.Importer,
+                t => t.Volume,
+                ChordChartStyles.Sorted);
+    }
+}
+
+public class ChordChart8View : ViewBase
+{
+    public override object? Build()
+    {
+        var trades = new[]
+        {
+            new TradeFlow("USA", "China", 5800),
+            new TradeFlow("USA", "Germany", 2100),
+            new TradeFlow("China", "Germany", 1800),
+            new TradeFlow("China", "Japan", 3200),
+            new TradeFlow("Germany", "France", 1600),
+        };
+
+        return new Card().Title("ToChordChart - Dashboard")
+            | trades.ToChordChart(
+                t => t.Exporter,
+                t => t.Importer,
+                t => t.Volume,
+                ChordChartStyles.Dashboard);
     }
 }

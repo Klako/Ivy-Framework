@@ -470,7 +470,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
                 onClick={handleButtonClick}
               >
                 <Upload className="h-4 w-4" />
-                {placeholder || 'Select files'}
+                {placeholder || `Select ${multiple ? 'files' : 'file'}`}
               </Button>
               {invalid && (
                 <div className="pointer-events-none">

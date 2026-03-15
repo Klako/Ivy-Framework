@@ -9,7 +9,10 @@ public class SankeyChartApp : SampleBase
             | new SankeyChart0View()
             | new SankeyChart1View()
             | new SankeyChart2View()
-            | new SankeyChart3View();
+            | new SankeyChart3View()
+            | new SankeyChart4View()
+            | new SankeyChart5View()
+            | new SankeyChart6View();
     }
 }
 
@@ -119,6 +122,72 @@ public class SankeyChart2View : ViewBase
                 .NodeWidth(15)
                 .NodeGap(10)
                 .Curvature(0.6);
+    }
+}
+
+public record EnergyFlow(string Source, string Target, double Amount);
+
+public class SankeyChart4View : ViewBase
+{
+    public override object? Build()
+    {
+        var flows = new[]
+        {
+            new EnergyFlow("Coal", "Electricity", 300),
+            new EnergyFlow("Coal", "Heating", 150),
+            new EnergyFlow("Natural Gas", "Electricity", 400),
+            new EnergyFlow("Natural Gas", "Heating", 250),
+            new EnergyFlow("Solar", "Electricity", 200),
+            new EnergyFlow("Wind", "Electricity", 180),
+            new EnergyFlow("Electricity", "Residential", 450),
+            new EnergyFlow("Electricity", "Industrial", 350),
+            new EnergyFlow("Electricity", "Commercial", 280),
+            new EnergyFlow("Heating", "Residential", 250),
+            new EnergyFlow("Heating", "Industrial", 150),
+        };
+
+        return new Card().Title("Energy Flow (ToSankeyChart - Default)")
+            | flows.ToSankeyChart(f => f.Source, f => f.Target, f => f.Amount);
+    }
+}
+
+public class SankeyChart5View : ViewBase
+{
+    public override object? Build()
+    {
+        var flows = new[]
+        {
+            new EnergyFlow("Revenue", "Marketing", 450000),
+            new EnergyFlow("Revenue", "Operations", 320000),
+            new EnergyFlow("Revenue", "R&D", 280000),
+            new EnergyFlow("Revenue", "Admin", 150000),
+            new EnergyFlow("Marketing", "Digital Ads", 250000),
+            new EnergyFlow("Marketing", "Content", 200000),
+            new EnergyFlow("Operations", "Salaries", 200000),
+            new EnergyFlow("R&D", "Equipment", 150000),
+        };
+
+        return new Card().Title("Budget Flow (ToSankeyChart - LeftAligned)")
+            | flows.ToSankeyChart(f => f.Source, f => f.Target, f => f.Amount, SankeyChartStyles.LeftAligned);
+    }
+}
+
+public class SankeyChart6View : ViewBase
+{
+    public override object? Build()
+    {
+        var flows = new[]
+        {
+            new EnergyFlow("Visit", "Add to Cart", 3500),
+            new EnergyFlow("Visit", "Bounce", 1500),
+            new EnergyFlow("Add to Cart", "Checkout", 2800),
+            new EnergyFlow("Add to Cart", "Bounce", 700),
+            new EnergyFlow("Checkout", "Purchase", 2200),
+            new EnergyFlow("Checkout", "Bounce", 600),
+        };
+
+        return new Card().Title("User Funnel (ToSankeyChart - Dashboard)")
+            | flows.ToSankeyChart(f => f.Source, f => f.Target, f => f.Amount, SankeyChartStyles.Dashboard);
     }
 }
 

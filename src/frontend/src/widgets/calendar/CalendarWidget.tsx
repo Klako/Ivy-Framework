@@ -851,7 +851,6 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   defaultDate,
   enableDragDrop = false,
   showToolbar = true,
-  events: _registeredEvents = [],
   width,
   height,
   slots,

@@ -106,7 +106,7 @@ public abstract record FileInputBase : WidgetBase<FileInputBase>, IAnyFileInput
 public record FileInput<TValue> : FileInputBase, IInput<TValue>, IAnyFileInput
 {
     [OverloadResolutionPriority(1)]
-    public FileInput(IAnyState state, string? placeholder = null, bool disabled = false, FileInputVariant variant = FileInputVariant.Drop)
+    internal FileInput(IAnyState state, string? placeholder = null, bool disabled = false, FileInputVariant variant = FileInputVariant.Drop)
         : this(placeholder, disabled, variant)
     {
         var typedState = state.As<TValue>();
@@ -114,13 +114,13 @@ public record FileInput<TValue> : FileInputBase, IInput<TValue>, IAnyFileInput
     }
 
     [OverloadResolutionPriority(1)]
-    public FileInput(TValue value, string? placeholder = null, bool disabled = false, FileInputVariant variant = FileInputVariant.Drop)
+    internal FileInput(TValue value, string? placeholder = null, bool disabled = false, FileInputVariant variant = FileInputVariant.Drop)
         : this(placeholder, disabled, variant)
     {
         Value = value;
     }
 
-    public FileInput(string? placeholder = null, bool disabled = false, FileInputVariant variant = FileInputVariant.Drop) : this()
+    internal FileInput(string? placeholder = null, bool disabled = false, FileInputVariant variant = FileInputVariant.Drop) : this()
     {
         Placeholder = placeholder;
         Variant = variant;

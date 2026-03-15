@@ -91,7 +91,7 @@ public abstract record NumberInputBase : WidgetBase<NumberInputBase>, IAnyNumber
 public record NumberInput<TNumber> : NumberInputBase, IInput<TNumber>, IAnyNumberInput
 {
     [OverloadResolutionPriority(1)]
-    public NumberInput(IAnyState state, string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
+    internal NumberInput(IAnyState state, string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
         : this(placeholder, disabled, variant, formatStyle)
     {
         var typedState = state.As<TNumber>();
@@ -100,21 +100,21 @@ public record NumberInput<TNumber> : NumberInputBase, IInput<TNumber>, IAnyNumbe
     }
 
     [OverloadResolutionPriority(1)]
-    public NumberInput(TNumber value, Func<Event<IInput<TNumber>, TNumber>, ValueTask> onChange, string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
+    internal NumberInput(TNumber value, Func<Event<IInput<TNumber>, TNumber>, ValueTask> onChange, string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
         : this(placeholder, disabled, variant, formatStyle)
     {
         OnChange = new(onChange);
         Value = value;
     }
 
-    public NumberInput(TNumber value, Action<TNumber> state, string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
+    internal NumberInput(TNumber value, Action<TNumber> state, string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
         : this(placeholder, disabled, variant, formatStyle)
     {
         OnChange = new(e => { state(e.Value); return ValueTask.CompletedTask; });
         Value = value;
     }
 
-    public NumberInput(string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
+    internal NumberInput(string? placeholder = null, bool disabled = false, NumberInputVariant variant = NumberInputVariant.Number, NumberFormatStyle formatStyle = NumberFormatStyle.Decimal)
     {
         Placeholder = placeholder;
         Disabled = disabled;

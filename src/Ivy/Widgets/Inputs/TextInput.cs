@@ -78,7 +78,7 @@ public abstract record TextInputBase : WidgetBase<TextInputBase>, IAnyTextInput
 
 public record TextInput<TString> : TextInputBase, IInput<TString>
 {
-    public TextInput(IAnyState state, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(IAnyState state, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : this(placeholder, disabled, variant)
     {
         var typedState = state.As<TString>();
@@ -90,21 +90,21 @@ public record TextInput<TString> : TextInputBase, IInput<TString>
     }
 
     [OverloadResolutionPriority(1)]
-    public TextInput(TString value, Func<Event<IInput<TString>, TString>, ValueTask>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(TString value, Func<Event<IInput<TString>, TString>, ValueTask>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : this(placeholder, disabled, variant)
     {
         OnChange = onChange.ToEventHandler();
         Value = value;
     }
 
-    public TextInput(TString value, Action<Event<IInput<TString>, TString>>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(TString value, Action<Event<IInput<TString>, TString>>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : this(placeholder, disabled, variant)
     {
         OnChange = onChange.ToEventHandler();
         Value = value;
     }
 
-    public TextInput(string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
     {
         Placeholder = placeholder;
         Variant = variant;
@@ -125,23 +125,23 @@ public record TextInput<TString> : TextInputBase, IInput<TString>
 /// </summary>
 public record TextInput : TextInput<string>
 {
-    public TextInput(IAnyState state, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(IAnyState state, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : base(state, placeholder, disabled, variant)
     {
     }
 
     [OverloadResolutionPriority(1)]
-    public TextInput(string value, Func<Event<IInput<string>, string>, ValueTask>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(string value, Func<Event<IInput<string>, string>, ValueTask>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : base(value, onChange, placeholder, disabled, variant)
     {
     }
 
-    public TextInput(string value, Action<Event<IInput<string>, string>>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(string value, Action<Event<IInput<string>, string>>? onChange = null, string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : base(value, onChange?.ToValueTask(), placeholder, disabled, variant)
     {
     }
 
-    public TextInput(string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
+    internal TextInput(string? placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)
         : base(placeholder, disabled, variant)
     {
     }

@@ -1,0 +1,561 @@
+# TextInput
+
+*Capture user text input with validation, formatting, and interactive features like autocomplete and real-time feedback.*
+
+The `TextInput` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) provides a standard text entry field. It supports various text [input](../../01_Onboarding/02_Concepts/03_Widgets.md) types including single-line text, multi-line text, password fields, email, phone number, URL and offers features like placeholder text, validation, shortcut keys and text formatting.
+
+## Basic Usage
+
+Here's a simple example of a text input with a placeholder:
+
+```csharp
+public class BasicUsageDemo : ViewBase
+{
+    public override object? Build()
+    { 
+        var text = UseState("");
+        return new TextInput(text).Placeholder("Enter text here...");
+    }
+}
+```
+
+> **tip:** The TextInput class now defaults to `string` type, so you can use `new TextInput(...)` instead of `new TextInput&lt;string&gt;(...)`. The generic version is still available if you need to work with other string-compatible types.
+
+## Variants
+
+`TextInput`s come in several variants to suit different use cases:
+The following blocks shows how to use these.
+
+### Password
+
+For capturing passwords, `TextInputVariant.Password` variant needs to be used. The following code shows how to capture
+a new password.
+
+See it in action here.
+
+```csharp
+public class PasswordCaptureDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var password = UseState("");
+        return new TextInput(password)
+                     .Placeholder("Password")
+                     .Variant(TextInputVariant.Password)
+                     .WithField()
+                     .Label("Enter Password");         
+    }
+}
+```
+
+### Textarea
+
+When a multiline text is needed, `TextInputVariant.Textarea` variant should be used. A common use-case is for capturing address
+that typically spans over multiple lines. The following demo shows how to use it.
+
+See it in action here.
+
+```csharp
+public class CaptureAddressDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var address = UseState("");
+        return new TextInput(address)
+                               .Placeholder("Åkervägen 9, \n132 39 Saltsjö-Boo, \nSweden")
+                               .Variant(TextInputVariant.Textarea)
+                               .Height(Size.Units(30))
+                               .Width(Size.Units(100))
+                               .WithField()
+                               .Label("Address");         
+    }
+}
+```
+
+Please note that how the newlines (`\n`) are recognized and used to create newlines in the textarea.
+
+> **tip:** A `.Multiline()` extension method on `TextInputBase` lets you turn any TextInput into a textarea without changing the variant explicitly. `notes.ToTextInput().Multiline()` is equivalent to `notes.ToTextareaInput()`.
+
+### Search
+
+When it is necessary to find an element from a collection of items, it is better to give users a visual clue.  
+Using the `TextInputVariant.Search` variant, this visual clue (with a looking glass icon) becomes obvious.
+The following demo shows how to add such an text input.
+
+See it in action here.
+
+```csharp
+public class SearchBarDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var searchThis = UseState("");
+        return new TextInput(searchThis)
+                               .Placeholder("search for?")
+                               .Variant(TextInputVariant.Search)
+                               .WithField()
+                               .Label("Search");
+    }
+}
+```
+
+### Email
+
+To capture the emails `TextInputVariant.Email` variant should be used.  
+
+See it in action here.
+
+```csharp
+public class EmailEnterDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var email = UseState("");
+        return new TextInput(email)
+                       .Placeholder("user@domain.com")
+                       .Variant(TextInputVariant.Email)
+                       .WithField()
+                       .Label("Email");
+    }
+}
+```
+
+### Telephone
+
+To capture the phone numbers `TextInputVariant.Tel` variant needs to be used.  
+
+see it in action here.
+
+```csharp
+public class PhoneEnterDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var tel = UseState("");
+        return new TextInput(tel)
+                      .Placeholder("+1-123-3456")
+                      .Variant(TextInputVariant.Tel)
+                      .WithField()
+                      .Label("Phone");
+    }
+}
+```
+
+### URL
+
+To capture the URLs/Links  `TextInputVariant.Url` variant needs to be used.
+
+see it in action here.
+
+```csharp
+public class URLEnterDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var url = UseState("");
+        return new TextInput(url)
+                      .Placeholder("https://ivy.app/")
+                      .Variant(TextInputVariant.Url)
+                      .WithField()
+                      .Label("Website");
+    }
+}
+```
+
+## MinLength Validation
+
+The TextInput widget and all its variants (Password, Search, Textarea) support minimum length validation with the `.MinLength()` method. Combine it with `.MaxLength()` for range constraints:
+
+```csharp
+public class MinLengthValidationDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var usernameState = UseState("");
+        return usernameState.ToTextInput()
+            .Placeholder("Between 5 and 10 characters")
+            .MinLength(5)
+            .MaxLength(10)
+            .WithField()
+            .Label("Username");
+    }
+}
+```
+
+## Event Handling
+
+Use the [`OnChange`](../../01_Onboarding/02_Concepts/05_EventHandlers.md) callback to react to text input changes. The callback receives an event with the current value.
+
+```csharp
+public class EventsDemoApp : ViewBase
+{
+    public override object? Build()
+    {
+        var name = UseState("");
+        return Layout.Vertical()
+            | new TextInput(name.Value, e => name.Set(e.Value))
+                  .Placeholder("Enter your name...").WithField().Label("Name")
+            | (name.Value.Length > 0 ? $"Hello, {name.Value}!" : "");
+    }
+}
+```
+
+## Styling
+
+`TextInput` can be styled to provide visual feedback to users about the input state. Use `.Invalid()` for [validation](../../01_Onboarding/02_Concepts/08_Forms.md) error messages.
+
+```csharp
+public class TextInputStylingDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var text = UseState("");
+        return Layout.Vertical()
+            | new TextInput(text).Placeholder("Invalid input").Invalid("This field has an error")
+            | new TextInput(text).Placeholder("Disabled input").Disabled();
+    }
+}
+```
+
+Hover over the `i` icon on the invalid input to see the error message.
+
+## Prefix and Suffix
+
+In certain scenarios, it is beneficial to prepend or append static content—such as text fragments or icons—to an input field. This practice is particularly useful for displaying the protocol in a URL field, a currency symbol, or an icon that denotes the expected input.
+
+```csharp
+public class UrlInputDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var domain = UseState("example");
+        return domain.ToTextInput()
+                     .Prefix(Icons.Globe)
+                     .Suffix(".com");
+    }
+}
+```
+
+The `Prefix` and `Suffix` methods accept either a `string` or an `IWidget`, thereby providing complete flexibility for augmenting the contextual information of the input.
+
+## Shortcuts
+
+We can use associate keyboard shortcuts to text inputs the following way.
+
+```csharp
+ new TextInput(name)
+    .Placeholder("Name (Ctrl+S)")
+    .ShortcutKey("Ctrl+S")   
+```
+
+The following demo shows this in action with multiple `TextInput`s each
+with different shortcut keys.
+
+```csharp
+public class ShortCutDemo : ViewBase
+{
+    public override object? Build()
+    { 
+        var name = UseState("");
+        var email = UseState("");
+        var message = UseState("");
+        return Layout.Vertical()
+                | Text.Inline("Keyboard Shortcuts Demo")
+                | Text.Inline("Ctrl+J - Focus Name, Ctrl+E - Focus Email, Ctrl+M - Focus Message")  
+                | new TextInput(name)
+                      .Placeholder("Name (Ctrl+J)")
+                      .ShortcutKey("Ctrl+J")    
+                | new TextInput(email)
+                      .Placeholder("Email (Ctrl+E)")
+                      .ShortcutKey("Ctrl+E")
+                      .Variant(TextInputVariant.Email)    
+                | new TextInput(message)
+                      .Placeholder("Message (Ctrl+M)")
+                      .ShortcutKey("Ctrl+M")
+                      .Variant(TextInputVariant.Textarea);
+    }
+}
+```
+
+## Helper functions
+
+There are several helper functions to create `TextInput` variants from state instances. Instead of employing the constructor to create a
+`TextInput`, these functions should be used. The following is an example of how Ivy can be employed to generate [UI](../../01_Onboarding/02_Concepts/02_Views.md) idiomatically using
+these functions.
+
+```csharp
+public class DataCaptureUsingExtensionDemo: ViewBase
+{
+    public override object? Build()
+    {
+        var userName = UseState("");
+        var password = UseState("");
+        var email = UseState("");
+        var tel = UseState("");
+        var address = UseState("");
+        var website = UseState("");
+        return Layout.Vertical()
+                | userName.ToTextInput()
+                          .Placeholder("User name")
+                          .WithField()
+                          .Label("Username")
+                | password.ToPasswordInput(placeholder: "Password")
+                          .Disabled(userName.Value.Length == 0)
+                          .WithField()
+                          .Label("Password")
+                | email.ToEmailInput()
+                       .Placeholder("Email")
+                       .WithField()
+                       .Label("Email")
+                | tel.ToTelInput()
+                     .Placeholder("Mobile")
+                     .WithField()
+                     .Label("Mobile")
+                | address.ToTextareaInput()
+                         .Placeholder("Address Line1\nAddress Line2\nAddress Line 3")
+                         .Height(Size.Units(40))
+                         .Width(Size.Units(100))
+                         .WithField()
+                         .Label("Address")
+                | website.ToUrlInput()
+                         .Placeholder("https://ivy.app/")
+                         .WithField()
+                         .Label("Website");                             
+    }
+}
+```
+
+There is also another extension function to create a `TextInput.Search` variant.
+
+Here is how it can be used.
+
+```csharp
+
+public class BasicFilter : ViewBase 
+{      
+    public override object Build()
+    {         
+        var searchState = UseState("");
+        var result = UseState("");
+        var fruits = new[] { 
+            "Apple", "Banana", "Cherry", "Date", "Elderberry", 
+            "Stawberry", "Blueberry", "Watermelon", "Muskmelon",
+            "Fig", "Grape", "Kiwi", "Lemon", "Mango" 
+        };
+
+        var filtered = fruits
+            .Where(fruit => fruit.ToLower().Contains(searchState.Value.ToLower()))
+            .ToArray();
+            
+        var content = string.Join("\n", filtered);
+        
+        return Layout.Vertical()
+            | searchState.ToSearchInput().Placeholder("Which fruit you like?")
+            | result.ToTextareaInput(content);
+    }     
+}
+```
+
+
+## API
+
+[View Source: TextInput.cs](https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Inputs/TextInput.cs)
+
+### Constructors
+
+| Signature |
+|-----------|
+| `new TextInput(IAnyState state, string placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)` |
+| `new TextInput(string value, Func<Event<IInput<string>, string>, ValueTask> onChange = null, string placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)` |
+| `new TextInput(string value, Action<Event<IInput<string>, string>> onChange = null, string placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)` |
+| `new TextInput(string placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)` |
+| `ToTextInput(IAnyState state, string placeholder = null, bool disabled = false, TextInputVariant variant = TextInputVariant.Text)` |
+| `ToTextareaInput(IAnyState state, string placeholder = null, bool disabled = false)` |
+| `ToSearchInput(IAnyState state, string placeholder = null, bool disabled = false)` |
+| `ToEmailInput(IAnyState state, string placeholder = null, bool disabled = false)` |
+| `ToPasswordInput(IAnyState state, string placeholder = null, bool disabled = false)` |
+| `ToUrlInput(IAnyState state, string placeholder = null, bool disabled = false)` |
+| `ToTelInput(IAnyState state, string placeholder = null, bool disabled = false)` |
+
+
+### Properties
+
+| Name | Type | Setters |
+|------|------|---------|
+| `AspectRatio` | `float?` | - |
+| `Density` | `Density?` | - |
+| `Disabled` | `bool` | `Disabled` |
+| `Height` | `Size` | - |
+| `Invalid` | `string` | `Invalid` |
+| `MaxLength` | `int?` | `MaxLength` |
+| `MinLength` | `int?` | `MinLength` |
+| `Nullable` | `bool` | `Nullable` |
+| `Placeholder` | `string` | `Placeholder` |
+| `Prefix` | `Affix` | `Prefix` |
+| `Rows` | `int?` | `Rows` |
+| `ShortcutKey` | `string` | `ShortcutKey` |
+| `Suffix` | `Affix` | `Suffix` |
+| `Value` | `string` | - |
+| `Variant` | `TextInputVariant` | `Variant` |
+| `Visible` | `bool` | - |
+| `Width` | `Size` | - |
+
+
+### Events
+
+| Name | Type | Handlers |
+|------|------|----------|
+| `OnBlur` | `EventHandler<Event<IAnyInput>>` | `OnBlur` |
+| `OnChange` | `EventHandler<Event<IInput<string>, string>>` | - |
+| `OnSubmit` | `EventHandler<Event<IAnyInput>>` | `OnSubmit` |
+
+
+
+
+## Faq
+
+
+### Validate Email Demo
+
+In this example, if the email format is wrong, the input is invalidated and a message is shown.
+
+```csharp
+public class EmailValidationDemo : ViewBase 
+{      
+    // Email regex pattern
+    private static readonly System.Text.RegularExpressions.Regex EmailRegex = new 
+        System.Text.RegularExpressions.Regex(
+        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        System.Text.RegularExpressions.RegexOptions.Compiled | 
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase
+    );
+
+    public override object? Build()
+    {         
+        var onChangedState = UseState("");         
+        var invalidState = UseState("");         
+        
+        return new TextInput(onChangedState.Value, e =>                    
+              {                        
+                onChangedState.Set(e.Value);
+                if (string.IsNullOrWhiteSpace(e.Value))
+                {
+                    invalidState.Set("");
+                }
+                else if (!EmailRegex.IsMatch(e.Value))                        
+                {                             
+                    invalidState.Set("Invalid email address");
+                }                        
+                else                        
+                {                         
+                    invalidState.Set(""); 
+                }                    
+              })
+              .Invalid(invalidState.Value)
+              .WithField()
+              .Label("Email");
+         
+    }     
+}
+```
+
+
+
+
+### Conditional Enabling/Disabling of Text Inputs
+
+In this demo, password field is enabled only when the username field has a value.
+
+```csharp
+
+public class LoginForm : ViewBase 
+{      
+    public override object Build()
+    {         
+        var usernameState = UseState("");         
+        var passwordState = UseState("");         
+        
+        return Layout.Vertical()
+            | Text.Label("Login")
+            | Layout.Vertical()
+                | usernameState.ToTextInput()
+                    .Placeholder("Enter your username")
+                    .WithField()
+                    .Label("Username")
+                | passwordState.ToPasswordInput()
+                    .Placeholder("Enter your password")
+                     // Disabled when username is empty
+                    .Disabled(string.IsNullOrWhiteSpace(usernameState.Value))
+                    .WithField()
+                    .Label("Password")
+                | new Button("Login")
+                    .Disabled(string.IsNullOrWhiteSpace(usernameState.Value) || 
+                        string.IsNullOrWhiteSpace(passwordState.Value));
+    }
+}
+```
+
+
+
+
+### How do I create a multiline textarea TextInput in Ivy?
+
+Use the `TextInputVariant.Textarea` variant or the dedicated `ToTextareaInput` extension:
+
+```csharp
+state.ToTextareaInput(placeholder: "Enter text...")
+```
+
+
+
+
+### How do I handle enter key press on a TextInput?
+
+Single-line TextInputs automatically blur when the user presses Enter, so use `OnBlur` to react to the Enter key:
+
+```csharp
+var input = UseState("");
+input.ToTextInput()
+    .Placeholder("Type and press Enter")
+    .OnBlur(() => DoSomething(input.Value))
+```
+
+`OnBlur` takes an `Action` that is invoked when the input loses focus — which happens automatically on Enter for single-line text inputs.
+
+
+
+
+### How to create a form with a dynamic number of fields (e.g. dictionary input)?
+
+Since hooks cannot be called inside loops (IVYHOOK003), you cannot use `UseState` in a `for`/`foreach`/LINQ loop. Instead, use **one state variable** that holds all field values:
+
+```csharp
+public override object Build()
+{
+    var columns = GetColumnNames(); // e.g. ["Name", "Age", "City"]
+    var values = UseState(new Dictionary<string, string>());
+
+    var layout = Layout.Vertical();
+    foreach (var col in columns)
+    {
+        var currentValue = values.Value.GetValueOrDefault(col, "");
+        layout.Add(
+            new TextInput(currentValue, e =>
+            {
+                var updated = new Dictionary<string, string>(values.Value) { [col] = e.Value };
+                values.Set(updated);
+            })
+            .Placeholder(col)
+            .WithField()
+            .Label(col)
+        );
+    }
+    return layout;
+}
+```
+
+Key points:
+- Only one `UseState` call at the top level — no hook rule violations
+- The dictionary keys map to column names, values map to user input
+- Create a new dictionary on each update to trigger a re-render
+- This pattern works for any dynamic input scenario (forms, dialogs, etc.)

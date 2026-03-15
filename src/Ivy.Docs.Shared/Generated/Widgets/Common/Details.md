@@ -1,0 +1,141 @@
+# Details
+
+*Display structured label-value pairs from models with automatic formatting using the [ToDetails()](../../01_Onboarding/02_Concepts/07_ContentBuilders.md) extension method.*
+
+`Detail` [widgets](../../01_Onboarding/02_Concepts/03_Widgets.md) display label and value pairs. They are usually generated from a model using ToDetails().
+
+## Basic Usage
+
+The simplest way to create details is by calling ToDetails() on any object:
+
+```csharp
+new { Name = "John Doe", Email = "john@example.com", Age = 30 }
+    .ToDetails()
+```
+
+### Automatic Field Removal
+
+Remove empty or null fields using the `RemoveEmpty()` method. This removes fields that are:
+
+- `null` values
+- Empty or whitespace strings
+- `false` boolean values
+
+Use this when you want to hide fields that don't have meaningful values, keeping your details clean and focused:
+
+```csharp
+new { FirstName = "John", LastName = "Doe", Age = 30, MiddleName = "" }
+    .ToDetails()
+    .RemoveEmpty()
+```
+
+### Custom Field Removal
+
+Selectively remove specific fields using the `Remove()` method. This is useful when you want to hide sensitive information like IDs or internal fields from the [user interface](../../01_Onboarding/02_Concepts/02_Views.md):
+
+```csharp
+new { Id = 123, Name = "John Doe", Email = "john@example.com" }
+    .ToDetails()
+    .Remove(x => x.Id)
+```
+
+### Multi-Line Fields
+
+Mark specific fields as multi-line for better text display. This is perfect for long descriptions, notes, or any text content that would benefit from wrapping across multiple lines:
+
+```csharp
+new { Name = "Widget", Description = "Long description text" }
+    .ToDetails()
+    .Multiline(x => x.Description)
+```
+
+## Custom Builders
+
+Override the default rendering for specific fields using custom builders. This allows you to customize how individual fields are displayed and add interactive functionality.
+
+### Copy to Clipboard
+
+Make values copyable to clipboard. This is especially useful for IDs, email addresses, or any text that users might want to copy for use elsewhere:
+
+```csharp
+new { Id = "ABC-123", Name = "John Doe" }
+    .ToDetails()
+    .Builder(x => x.Id, b => b.CopyToClipboard())
+```
+
+### Links
+
+Convert values to clickable [links](../../01_Onboarding/02_Concepts/09_Navigation.md). Automatically transform URLs, email addresses, or any text into clickable links that users can interact with:
+
+```csharp
+new { Name = "John Doe", Website = "https://example.com" }
+    .ToDetails()
+    .Builder(x => x.Website, b => b.Link())
+```
+
+## Nested Objects
+
+Details automatically handle nested objects by converting them to their own detail views. This creates a hierarchical display that's perfect for complex data structures with parent-child relationships:
+
+```csharp
+new { 
+    Name = "John", 
+    Address = new { Street = "123 Main St", City = "Anytown" }.ToDetails() 
+}.ToDetails()
+```
+
+## Working with State
+
+Details work seamlessly with [reactive state](../../03_Hooks/02_Core/03_UseState.md). When the underlying data changes, the details automatically update to reflect the new values, making it perfect for dynamic, interactive interfaces:
+
+```csharp
+UseState(() => new { Name = "John Doe", Age = 30 })
+    .ToDetails()
+```
+
+## Faq
+
+
+### How do I customize field labels in Details.ToDetails()?
+
+By default, `ToDetails()` generates labels from property names using PascalCase splitting (e.g., `NetBurn` becomes "Net Burn"). To override a label, use the `.Label()` method:
+
+```csharp
+var data = new RunwayData(5000m, 10000m, 12, new DateTime(2027, 3, 1));
+data.ToDetails()
+    .Label(x => x.NetBurn, "Net Monthly Burn")
+    .Label(x => x.RunwayDate, "Projected Runway End")
+    .Build();
+```
+
+Alternatively, for simple cases you can use anonymous types where property names become the labels:
+
+```csharp
+new { NetBurn = "$5,000", GrossBurn = "$10,000" }.ToDetails()
+```
+
+Use `.Builder(x => x.Field, b => ...)` to customize how a value is *rendered*, not to change the label text.
+
+
+
+
+## API
+
+[View Source: DetailsBuilder.cs](https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Views/Builders/DetailsBuilder.cs)
+
+### Constructors
+
+| Signature |
+|-----------|
+| `new Details(IEnumerable<Detail> items)` |
+
+
+### Properties
+
+| Name | Type | Setters |
+|------|------|---------|
+| `AspectRatio` | `float?` | - |
+| `Density` | `Density?` | - |
+| `Height` | `Size` | - |
+| `Visible` | `bool` | - |
+| `Width` | `Size` | - |

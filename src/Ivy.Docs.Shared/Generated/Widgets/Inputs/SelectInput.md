@@ -1,0 +1,424 @@
+# SelectInput
+
+*Create dropdown [menus](../../01_Onboarding/02_Concepts/09_Navigation.md) with single or multiple selection capabilities, option grouping, and custom rendering for user choices.*
+
+The `SelectInput` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) provides a dropdown menu for selecting items from a predefined list of options. It supports single
+and multiple selections, option grouping, and custom rendering of option items.
+
+## Basic Usage
+
+Here's a simple example of a `SelectInput` with a few options. Use [Size](../../04_ApiReference/Ivy/Size.md) for `.Width(Size.Full())` to make the select fill available space:
+
+```csharp
+public class SelectVariantDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var favLang = UseState("C#");
+        return favLang.ToSelectInput(["C#", "Java", "Go", "JavaScript", "F#", "Kotlin", "VB.NET", "Rust"])
+                         .Variant(SelectInputVariant.Select)
+                         .WithField()
+                         .Label("Select your favourite programming language")
+                         .Width(Size.Full());
+    }    
+}
+```
+
+## Multiple Selection
+
+Multiple selection is automatically enabled when you use a collection type (array, List, etc.) as your state. The framework automatically detects this and enables multi-select functionality.
+
+`SelectInput` supports three variants: **Select** (dropdown), **List** (checkboxes), and **Toggle** (button toggles). Multi-select works with all variants and data types. Here's an example demonstrating different combinations:
+
+```csharp
+public class MultiSelectDemo : ViewBase
+{
+    private enum ProgrammingLanguages
+    {
+        CSharp,
+        Java,
+        Python,
+        JavaScript,
+        Go,
+        Rust
+    }
+    
+    public override object? Build()
+    {
+        var languagesSelect = UseState<ProgrammingLanguages[]>([]);
+        var stringArray = UseState<string[]>([]);
+        var intArray = UseState<int[]>([]);
+        
+        var languageOptions = typeof(ProgrammingLanguages).ToOptions();
+        var stringOptions = new[] { "Option A", "Option B", "Option C", "Option D" };
+        var intOptions = new[] { 1, 2, 3, 4, 5 }.ToOptions();
+        
+        return Layout.Vertical()
+            | Text.Monospaced("Select Variant (Enum)")
+            | languagesSelect.ToSelectInput(languageOptions)
+                .Variant(SelectInputVariant.Select)
+                .Placeholder("Choose languages...")
+            
+            | Text.Monospaced("List Variant (String Array)")
+            | stringArray.ToSelectInput(stringOptions.ToOptions())
+                .Variant(SelectInputVariant.List)
+            
+            | Text.Monospaced("Toggle Variant (Integer Array)")
+            | intArray.ToSelectInput(intOptions)
+                .Variant(SelectInputVariant.Toggle);
+    }
+}
+```
+
+## Event Handling
+
+Handle change events and create dynamic option lists that respond to user selections:
+
+```csharp
+public class EventHandlingDemo : ViewBase
+{
+    private static readonly Dictionary<string, string[]> CategoryOptions = new()
+    {
+        ["Programming"] = new[]{"C#", "Java", "Python", "JavaScript"},
+        ["Design"] = new[]{"Photoshop", "Figma", "Sketch"},
+        ["Database"] = new[]{"SQL Server", "PostgreSQL", "MongoDB"}
+    };
+    
+    public override object? Build()
+    {
+        var selectedCategory = UseState("Programming");
+        var selectedSkill = UseState("");
+        var showInfo = UseState(false);
+        
+        var categoryOptions = CategoryOptions.Keys.ToOptions();
+        var skillOptions = CategoryOptions[selectedCategory.Value].ToOptions();
+        
+        return Layout.Vertical()
+            | Layout.Grid().Columns(2)
+                | selectedCategory.ToSelectInput(categoryOptions)
+                    .Placeholder("Choose a category...")
+                    .WithField()
+                    .Label("Category:")
+                
+                | new SelectInput<string>(
+                    value: selectedSkill.Value,
+                    onChange: e =>
+                    {
+                        selectedSkill.Set(e.Value);
+                        showInfo.Set(!string.IsNullOrEmpty(e.Value));
+                    },
+                    skillOptions)
+                    .Placeholder("Select a skill...")
+                    .WithField()
+                    .Label("Skill:")
+            
+            | (showInfo.Value 
+                ? Text.Block($"Selected: {selectedCategory.Value} → {selectedSkill.Value}") 
+                : null);
+    }
+}
+```
+
+## Styling and States
+
+Customize the `SelectInput` with various styling options:
+
+```csharp
+public class SelectStylingDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var normalSelect = UseState("");
+        var invalidSelect = UseState("");
+        var ghostSelect = UseState("");
+        var loadingSelect = UseState("");
+        var disabledSelect = UseState("");
+
+        var options = new[] { "Option 1", "Option 2", "Option 3" };
+
+        var isLoading = UseState(true);
+
+        return Layout.Vertical()
+            | normalSelect.ToSelectInput(options)
+                .Placeholder("Choose an option...")
+                .WithField()
+                .Label("Normal SelectInput:")
+
+            | invalidSelect.ToSelectInput(options)
+                .Placeholder("This has an error...")
+                .Invalid("This field is required")
+                .WithField()
+                .Label("Invalid SelectInput:")
+
+            | ghostSelect.ToSelectInput(options)
+                .Placeholder("This is ghost...")
+                .Ghost()
+                .WithField()
+                .Label("Ghost SelectInput:")
+
+            | loadingSelect.ToSelectInput(options)
+                .Placeholder("This is loading...")
+                .Loading(isLoading.Value)
+                .WithField()
+                .Label("Loading SelectInput")
+
+            | disabledSelect.ToSelectInput(options)
+                .Placeholder("This is disabled...")
+                .Disabled(true)
+                .WithField()
+                .Label("Disabled SelectInput:");
+    }
+}
+```
+
+## Advanced Features
+
+SelectInput supports search, selection limits, and loading state. These work across all variants (Select, List, Toggle).
+
+### Search Support
+
+Enable search with `.Searchable(true)`, set the matching mode with `.SearchMode()`, and customize the empty state with `.EmptyMessage()`:
+
+```csharp
+public class SelectSearchDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var selected = UseState("");
+        var options = new[] { "C#", "Java", "Python", "JavaScript", "Go", "Rust", "F#", "Kotlin", "TypeScript" };
+        return selected.ToSelectInput(options.ToOptions())
+            .Searchable(true)
+            .SearchMode(SearchMode.Fuzzy)
+            .EmptyMessage("No items found")
+            .Placeholder("Search languages...")
+            .WithField()
+            .Label("Language")
+            .Width(Size.Full());;
+    }
+}
+```
+
+`SearchMode` can be `SearchMode.Fuzzy`, `SearchMode.CaseInsensitive`, or `SearchMode.CaseSensitive`.
+
+### Selection Limits
+
+For multi-select variants, use `.MinSelections()` and `.MaxSelections()` to enforce how many options can be selected:
+
+```csharp
+public class SelectionLimitsDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var colors = UseState<string[]>([]);
+        var options = new[] { "Red", "Green", "Blue", "Yellow", "Purple" }.ToOptions();
+        return colors.ToSelectInput(options)
+            .Variant(SelectInputVariant.Toggle)
+            .MinSelections(1)
+            .MaxSelections(3)
+            .Placeholder("Pick 1 to 3 colors")
+            .WithField()
+            .Label("Colors")
+            .Width(Size.Full());;
+    }
+}
+```
+
+### Disabled Options
+
+Individual options can be disabled using the fluent `.Disabled()` method on `Option<T>`. Disabled options appear greyed out and cannot be selected, but remain visible in the list:
+
+```csharp
+public class DisabledOptionsDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var fruit = UseState("apple");
+        var colors = UseState<string[]>([]);
+
+        var fruitOptions = new IAnyOption[]
+        {
+            new Option<string>("Apple", "apple"),
+            new Option<string>("Orange", "orange"),
+            new Option<string>("Grape (Out of Stock)", "grape").Disabled(),
+            new Option<string>("Banana", "banana"),
+            new Option<string>("Mango (Coming Soon)", "mango").Disabled(),
+        };
+
+        var colorOptions = new IAnyOption[]
+        {
+            new Option<string>("Red", "red"),
+            new Option<string>("Green", "green"),
+            new Option<string>("Blue (Premium)", "blue").Disabled(),
+            new Option<string>("Yellow", "yellow"),
+        };
+
+        return Layout.Vertical()
+            | Text.Monospaced("Select Variant")
+            | fruit.ToSelectInput(fruitOptions)
+                .Placeholder("Select a fruit...")
+
+            | Text.Monospaced("Toggle Variant")
+            | colors.ToSelectInput(colorOptions)
+                .Variant(SelectInputVariant.Toggle)
+
+            | Text.Monospaced("List Variant")
+            | colors.ToSelectInput(colorOptions)
+                .Variant(SelectInputVariant.List);
+    }
+}
+```
+
+> **tip:** Use Select for single choice dropdowns, List for multiple selection with checkboxes, and Toggle for visual button-based selection. The List variant is particularly useful for [forms](../../01_Onboarding/02_Concepts/13_Forms.md) where users need to select multiple options.
+
+
+## API
+
+[View Source: SelectInput.cs](https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Inputs/SelectInput.cs)
+
+### Constructors
+
+| Signature |
+|-----------|
+| `new SelectInput<TValue>(IAnyState state, IEnumerable<IAnyOption> options, string placeholder = null, bool disabled = false, SelectInputVariant variant = SelectInputVariant.Select, bool selectMany = false)` |
+| `new SelectInput<TValue>(TValue value, Func<Event<IInput<TValue>, TValue>, ValueTask> onChange, IEnumerable<IAnyOption> options, string placeholder = null, bool disabled = false, SelectInputVariant variant = SelectInputVariant.Select, bool selectMany = false)` |
+| `new SelectInput<TValue>(TValue value, Action<Event<IInput<TValue>, TValue>> onChange, IEnumerable<IAnyOption> options, string placeholder = null, bool disabled = false, SelectInputVariant variant = SelectInputVariant.Select, bool selectMany = false)` |
+| `new SelectInput<TValue>(IEnumerable<IAnyOption> options, string placeholder = null, bool disabled = false, SelectInputVariant variant = SelectInputVariant.Select, bool selectMany = false)` |
+| `ToSelectInput(IAnyState state, IEnumerable<IAnyOption> options = null, string placeholder = null, bool disabled = false, SelectInputVariant variant = SelectInputVariant.Select)` |
+
+
+### Properties
+
+| Name | Type | Setters |
+|------|------|---------|
+| `AspectRatio` | `float?` | - |
+| `Density` | `Density?` | - |
+| `Disabled` | `bool` | `Disabled` |
+| `EmptyMessage` | `string` | `EmptyMessage` |
+| `Ghost` | `bool` | `Ghost` |
+| `Height` | `Size` | - |
+| `Invalid` | `string` | `Invalid` |
+| `Loading` | `bool` | `Loading` |
+| `MaxSelections` | `int?` | `MaxSelections` |
+| `MinSelections` | `int?` | `MinSelections` |
+| `Nullable` | `bool` | `Nullable` |
+| `Options` | `IAnyOption[]` | - |
+| `Placeholder` | `string` | `Placeholder` |
+| `Searchable` | `bool` | `Searchable` |
+| `SearchMode` | `SearchMode` | `SearchMode` |
+| `SelectMany` | `bool` | - |
+| `Separator` | `char` | `Separator` |
+| `Value` | `TValue` | - |
+| `Variant` | `SelectInputVariant` | `Variant` |
+| `Visible` | `bool` | - |
+| `Width` | `Size` | - |
+
+
+### Events
+
+| Name | Type | Handlers |
+|------|------|----------|
+| `OnBlur` | `EventHandler<Event<IAnyInput>>` | `OnBlur` |
+| `OnChange` | `EventHandler<Event<IInput<TValue>, TValue>>` | - |
+
+
+
+
+## Examples
+
+
+### Ordering System
+
+A comprehensive example showing different SelectInput [variants](../../01_Onboarding/02_Concepts/17_Theming.md) in a real-world scenario:
+
+```csharp
+public class CoffeeShopDemo: ViewBase
+{
+    private static readonly Dictionary<string, List<string>> CoffeeAccompaniments = new()
+    {
+        ["Cappuccino"] = new List<string> 
+        { 
+            "Cinnamon powder", "Cocoa powder", "Sugar cubes", "Biscotti", 
+            "Cantuccini", "Amaretti", "Whipped cream" 
+        },
+        ["Espresso"] = new List<string> 
+        { 
+            "Lemon peel", "Sugar cubes", "Water", "Chocolate square", 
+            "Praline", "Biscotti" 
+        },
+        ["Latte"] = new List<string> 
+        { 
+            "Vanilla syrup", "Caramel syrup", "Hazelnut syrup", "Cocoa powder", 
+            "Cinnamon", "Croissant", "Muffin", "Steamed milk art" 
+        },
+        ["Mocha"] = new List<string> 
+        { 
+            "Whipped cream", "Chocolate shavings", "Cocoa powder", "Marshmallows", 
+            "Cinnamon stick", "Caramel drizzle", "Vanilla syrup" 
+        }
+    };
+    
+    string[] coffeeSizes = new string[]{"Short", "Tall", "Grande", "Venti"};
+    
+    public override object? Build()
+    {
+        var coffee = UseState("Cappuccino");
+        var coffeeSize = UseState("Tall");
+        var selectedCondiments = UseState(new string[]{});
+        var previousCoffee = UseState("Cappuccino");
+        
+        if (previousCoffee.Value != coffee.Value)
+        {
+            selectedCondiments.Set(new string[]{});
+            previousCoffee.Set(coffee.Value);
+        }
+        
+        var coffeeSizeMenu = coffeeSize.ToSelectInput(coffeeSizes)
+                                       .Variant(SelectInputVariant.List);
+        var availableCondiments = CoffeeAccompaniments[coffee.Value];
+        
+        var condimentMenu = selectedCondiments.ToSelectInput(availableCondiments.ToOptions())
+            .Variant(SelectInputVariant.Toggle);
+        
+        var orderSummary = BuildOrderSummary(coffee.Value, coffeeSize.Value, selectedCondiments.Value);
+        
+        return Layout.Vertical()
+                | Layout.Grid().Columns(2)
+                    | coffee.ToSelectInput(CoffeeAccompaniments.Keys.ToOptions())
+                            .WithField()
+                            .Label("Coffee Type:")
+                    
+                    | coffeeSizeMenu
+                        .WithField()
+                        .Label("Size:")
+                    
+                    | condimentMenu
+                        .WithField()
+                        .Label("Condiments:")
+                    
+                | new Icon(Icons.Coffee) 
+                | Text.Block(orderSummary);
+    }
+    
+    private string BuildOrderSummary(string coffee, string size, string[] condiments)
+    {
+        var summary = $"{size} {coffee}";
+        
+        if (condiments.Length > 0)
+        {
+            if(condiments.Length == 1)
+            {
+                summary += $" with {condiments[0]}";
+            }
+            else
+            {                  
+                 summary += " with " + condiments
+                                                 .Take(condiments.Length - 1)
+                                                 .Aggregate((a,b) =>  a + ", " + b)
+                                                 + " and " + condiments[condiments.Length - 1];
+            }
+        }
+        
+        return summary;
+    }
+}
+```

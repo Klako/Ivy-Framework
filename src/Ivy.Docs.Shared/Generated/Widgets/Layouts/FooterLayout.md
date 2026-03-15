@@ -1,0 +1,163 @@
+# FooterLayout
+
+*FooterLayout creates a layout with a fixed footer at the bottom and scrollable content above it. It's perfect for [forms](../../01_Onboarding/02_Concepts/08_Forms.md), sheets, and any [interface](../../01_Onboarding/02_Concepts/02_Views.md) where you need persistent action buttons or information while allowing the main content to scroll independently.*
+
+The `FooterLayout` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) is designed to keep important actions or information visible at the bottom of the view while allowing the main content to scroll freely above it. This pattern is commonly used in forms, modal dialogs, and sheet [interfaces](../../01_Onboarding/02_Concepts/02_Views.md) where users need constant access to primary actions.
+
+## Basic Usage
+
+Create a simple footer layout with content and footer elements:
+
+```csharp
+public class BasicFooterExample : ViewBase
+{
+    public override object? Build()
+    {
+        var client = UseService<IClientProvider>();
+        
+        return Layout.Vertical()
+            | new Card("Main Section")
+                    | Text.P("Welcome to Ivy Framework")
+            | new FooterLayout(
+                footer: new Button("Save", _ => client.Toast("Content saved!"))
+                    .Variant(ButtonVariant.Primary),
+                content: Layout.Vertical()
+                    | Text.P("This is the main content area that demonstrates how content can scroll independently above the footer.")
+        );
+    }
+}
+```
+
+## Form with Footer Actions
+
+A common use case is creating forms with persistent action buttons. Use [Align](../../04_ApiReference/Ivy/Align.md) for footer button alignment (e.g. `Align.Right`):
+
+```csharp
+public class FormWithFooterExample : ViewBase
+{
+    public override object? Build()
+    {
+        var client = UseService<IClientProvider>();
+        var firstName = UseState("John");
+        var lastName = UseState("Doe");
+        var email = UseState("john.doe@example.com");
+        var bio = UseState("Software developer with 5+ years of experience...");
+        
+        return Layout.Vertical()
+            | new Card("Form Header")
+            | new FooterLayout(
+                footer: Layout.Horizontal().Align(Align.Right)
+                    | new Button("Cancel", _ => client.Toast("Cancelled"))
+                    | new Button("Submit", _ => client.Toast("Form submitted"))
+                        .Variant(ButtonVariant.Primary),
+                content: Layout.Vertical()
+                    | new Card(Layout.Vertical()
+                        | new TextInput(firstName, "First Name")
+                        | new TextInput(lastName, "Last Name")
+                        | new TextInput(email, "Email Address")
+                    ).Title("Personal Information")
+            );
+    }
+}
+```
+
+## Sheet Interface
+
+FooterLayout is commonly used in sheet interfaces for consistent action placement:
+
+```csharp
+public class SheetWithFooterExample : ViewBase
+{
+    public override object? Build()
+    {
+        var client = UseService<IClientProvider>();
+        var title = UseState("Getting Started with Ivy Framework");
+        var content = UseState("Write your article content here...");
+        
+        return Layout.Vertical()
+            | new Card("Sheet Header")
+                    | Layout.Vertical()
+                        | Text.P("Article Editor")
+                        | Text.P("Create and edit your articles with ease").Small().Color(Colors.Gray)
+            | new FooterLayout(
+                footer: Layout.Horizontal().Align(Align.Right)
+                    | new Button("Save Draft", _ => client.Toast("Draft saved"))
+                    | new Button("Publish", _ => client.Toast("Published!"))
+                        .Variant(ButtonVariant.Primary),
+                content: Layout.Vertical()
+                    | new Card(Layout.Vertical()
+                        | new TextInput(title, "Article Title")
+                        | new TextInput(content, "Article Content").Variant(TextInputVariant.Textarea)
+                    ).Title("Article Details")
+                    | new Card("Article preview will appear here as you type...")
+                        .Title("Preview")
+                    | new Card("Meta description and keywords for search engines...")
+                        .Title("SEO Information")
+            );
+    }
+}
+```
+
+> **tip:** Use FooterLayout for multi-step forms, long questionnaires, and data entry interfaces.
+
+
+## API
+
+[View Source: FooterLayout.cs](https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Layouts/FooterLayout.cs)
+
+### Constructors
+
+| Signature |
+|-----------|
+| `new FooterLayout(object footer, object content)` |
+
+
+### Properties
+
+| Name | Type | Setters |
+|------|------|---------|
+| `AspectRatio` | `float?` | - |
+| `Density` | `Density?` | - |
+| `Height` | `Size` | - |
+| `Visible` | `bool` | - |
+| `Width` | `Size` | - |
+
+
+
+
+## Examples
+
+
+### Complex Footer with Multiple Elements
+
+Create sophisticated footers with various components:
+
+```csharp
+public class ComplexFooterExample : ViewBase
+{
+    public override object? Build()
+    {
+        var client = UseService<IClientProvider>();
+        var docTitle = UseState("Project Proposal");
+        var summary = UseState("This project aims to...");
+        
+        return Layout.Vertical()
+            | new Card("Project Header")
+                    | Layout.Vertical()
+                        | Text.P("Document Editor")
+                        | Text.P("Comprehensive project management tool").Small().Color(Colors.Gray)
+            | new FooterLayout(
+                footer: Layout.Horizontal().Align(Align.Right)
+                    | new Badge("Draft").Variant(BadgeVariant.Secondary)
+                    | new Button("Save Draft", _ => client.Toast("Draft saved"))
+                    | new Button("Submit", _ => client.Toast("Submitted for review"))
+                        .Variant(ButtonVariant.Primary),
+                content: Layout.Vertical()
+                    | new Card(Layout.Vertical()
+                        | new TextInput(docTitle, "Document Title")
+                        | new TextInput(summary, "Executive Summary").Variant(TextInputVariant.Textarea)
+                    ).Title("Document Information")
+            );
+    }
+}
+```

@@ -1,0 +1,224 @@
+# CodeInput
+
+*Edit code with syntax highlighting, line numbers, and formatting support for multiple programming languages in a specialized input [field](01_Field.md). Use [Size](../../04_ApiReference/Ivy/Size.md) for `.Width()` and `.Height()` to control dimensions.*
+
+The `CodeInput` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) provides a specialized text input field for entering and editing code with syntax highlighting.
+It supports various programming languages and offers features like line numbers and code formatting.
+
+## Supported Languages
+
+### C #
+
+```csharp
+UseState("using System;\n\npublic class Program\n{\n    static void Main()\n    {\n        Console.WriteLine(\"Hello, World!\");\n    }\n}")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Csharp)
+```
+
+### Javascript
+
+```csharp
+UseState("function greet(name) {\n  console.log(`Hello, ${name}!`);\n}\ngreet('World');")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Javascript)
+```
+
+### Python
+
+```csharp
+UseState("def greet(name):\n    print(f'Hello, {name}!')\n\ngreet('World')")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Python)
+```
+
+### SQL
+
+```csharp
+UseState("SELECT u.name, u.email, p.title\nFROM users u\nJOIN posts p ON u.id = p.user_id\nWHERE u.active = true\nORDER BY p.created_at DESC;")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Sql)
+```
+
+### HTML
+
+```csharp
+UseState("<html>\n<body>\n  <h1>Hello World!</h1>\n</body>\n</html>")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Html)
+```
+
+### CSS
+
+```csharp
+UseState("body {\n  font-family: Arial, sans-serif;\n  color: #333;\n}")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Css)
+```
+
+### Json
+
+```csharp
+UseState("{\n  \"name\": \"Ivy\",\n  \"version\": \"1.0.0\",\n  \"features\": [\"syntax highlighting\", \"auto-complete\"],\n  \"config\": {\n    \"theme\": \"dark\",\n    \"fontSize\": 14\n  }\n}")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Json)
+```
+
+### DBML
+
+```csharp
+UseState("Table users {\n  id integer [primary key]\n  username varchar\n  role varchar\n  created_at timestamp\n}")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Dbml)
+```
+
+### Typescript
+
+```csharp
+UseState("interface User {\n  name: string;\n  age: number;\n}\n\nconst user: User = { name: 'John', age: 30 };")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Typescript)
+```
+
+### YAML
+
+```csharp
+UseState("name: my-app\nversion: 1.0.0\nservices:\n  web:\n    image: nginx:latest\n    ports:\n      - \"80:80\"")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Yaml)
+```
+
+### Plain Text
+
+```csharp
+UseState("Here is some plain text, with no syntax highlighting whatsoever.\nUnlike the TextInput widget, this uses a monospaced font, which\nmakes some types of text easier to read. For example:\n\n  +----------------------------+\n  |                            |\n  |       ASCII Diagrams       |\n  |                            |\n  +----------------------------+")
+    .ToCodeInput()
+    .Width(Size.Full())
+    .Height(Size.Auto())
+    .Language(Languages.Text)
+```
+
+## Styling Options
+
+### Invalid State
+
+The `Invalid` state provides visual feedback when code contains syntax errors or validation issues. It displays an error message and typically shows a red border to indicate problems.
+
+Mark a `CodeInput` as invalid when content has syntax errors:
+
+```csharp
+UseState("function greet(name) {\n    console.log('Hello, ' + name);\n    return 'Welcome ' + name;\n}")
+    .ToCodeInput()
+    .Language(Languages.Javascript)
+    .Invalid("Missing closing parenthesis!")
+```
+
+### Disabled State
+
+The `Disabled` state prevents editing while allowing users to view the code. It's useful for displaying read-only examples or temporarily preventing modifications.
+
+Disable a `CodeInput` when needed:
+
+```csharp
+UseState("def calculate_fibonacci(n):\n    if n <= 1:\n        return n\n    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)\n\nresult = calculate_fibonacci(10)")
+    .ToCodeInput()
+    .Language(Languages.Python)
+    .Disabled()
+```
+
+## Event Handling
+
+Event handling enables you to respond to code changes and validate input in real-time. This allows for dynamic behavior like live validation and [conditional UI updates](../../01_Onboarding/02_Concepts/02_Views.md).
+
+Handle code changes and validation:
+
+```csharp
+public class CodeInputWithValidation : ViewBase 
+{
+    public override object? Build()
+    {        
+        var codeState = UseState("");
+        var isValid = !string.IsNullOrWhiteSpace(codeState.Value);
+        
+        return Layout.Vertical()
+            | codeState.ToCodeInput()
+                    .Width(Size.Auto())
+                    .Height(Size.Auto())
+                    .Placeholder("Enter your code here...")
+                    .Language(Languages.Javascript)
+                    .WithField()
+                    .Label("Enter Code:")
+            | Text.P(isValid 
+                ? "Entered code is valid ✅" 
+                : "Enter some code to validate").Small();
+    }
+}
+```
+
+
+## API
+
+[View Source: CodeInput.cs](https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Inputs/CodeInput.cs)
+
+### Constructors
+
+| Signature |
+|-----------|
+| `new CodeInput<TString>(IAnyState state, string placeholder = null, bool disabled = false, CodeInputVariant variant = CodeInputVariant.Default)` |
+| `new CodeInput<TString>(TString value, Func<Event<IInput<TString>, TString>, ValueTask> onChange = null, string placeholder = null, bool disabled = false, CodeInputVariant variant = CodeInputVariant.Default)` |
+| `new CodeInput<TString>(TString value, Action<Event<IInput<TString>, TString>> onChange = null, string placeholder = null, bool disabled = false, CodeInputVariant variant = CodeInputVariant.Default)` |
+| `new CodeInput<TString>(string placeholder = null, bool disabled = false, CodeInputVariant variant = CodeInputVariant.Default)` |
+| `ToCodeInput(IAnyState state, string placeholder = null, bool disabled = false, CodeInputVariant variant = CodeInputVariant.Default, Languages language = Languages.Json)` |
+
+
+### Supported Types
+
+| Group | Type | Nullable |
+|-------|------|----------|
+| Text | `string` | - |
+
+
+### Properties
+
+| Name | Type | Setters |
+|------|------|---------|
+| `AspectRatio` | `float?` | - |
+| `Density` | `Density?` | - |
+| `Disabled` | `bool` | `Disabled` |
+| `Height` | `Size` | - |
+| `Invalid` | `string` | `Invalid` |
+| `Language` | `Languages?` | `Language` |
+| `Nullable` | `bool` | `Nullable` |
+| `Placeholder` | `string` | `Placeholder` |
+| `ShowCopyButton` | `bool` | `ShowCopyButton` |
+| `Value` | `TString` | - |
+| `Variant` | `CodeInputVariant` | `Variant` |
+| `Visible` | `bool` | - |
+| `Width` | `Size` | - |
+
+
+### Events
+
+| Name | Type | Handlers |
+|------|------|----------|
+| `OnBlur` | `EventHandler<Event<IAnyInput>>` | `OnBlur` |
+| `OnChange` | `EventHandler<Event<IInput<TString>, TString>>` | - |

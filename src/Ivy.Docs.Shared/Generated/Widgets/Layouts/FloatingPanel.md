@@ -1,0 +1,437 @@
+# FloatingPanel
+
+*Create fixed-position [UI](../../01_Onboarding/02_Concepts/02_Views.md) elements that remain visible and accessible regardless of scroll position, perfect for [navigation](../../01_Onboarding/02_Concepts/09_Navigation.md) buttons, action panels, and floating controls.*
+
+The `FloatingPanel` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) positions its content at a fixed location on the screen, making it ideal for elements that should remain accessible while users scroll through content. It's commonly used for navigation buttons, action panels, and floating controls that need to stay visible.
+
+## Basic Usage
+
+The simplest floating panel positions content in the bottom-right corner by default:
+
+```csharp
+public class BasicFloatingPanelView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanel) = UseTrigger((IState<bool> isOpen) =>
+            isOpen.Value ? new FloatingPanel(new Button("Close", onClick: _ => isOpen.Set(false))) : null);
+
+        return Layout.Vertical()
+            | new Button("Show Panel", onClick: _ => showPanel())
+            | panelView;
+    }
+}
+```
+
+## Alignment Options
+
+The `FloatingPanel` supports nine different [Align](../../04_ApiReference/Ivy/Align.md) positions to place content exactly where you need it:
+
+### Corner Positions
+
+Position content in any of the four corners of the screen:
+
+```csharp
+public class CornerAlignmentView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanels) = UseTrigger((IState<bool> isOpen) =>
+        {
+            var floatingButton = new Button("Action")
+                .Icon(Icons.Star)
+                .Large()
+                .BorderRadius(BorderRadius.Full);
+            return Layout.Vertical()
+                | new FloatingPanel(floatingButton, Align.TopLeft)
+                | new FloatingPanel(floatingButton, Align.TopRight)
+                | new FloatingPanel(floatingButton, Align.BottomLeft)
+                | new FloatingPanel(floatingButton, Align.BottomRight)
+                | new FloatingPanel(new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(), Align.Center);
+        });
+
+        return Layout.Vertical()
+            | new Button("Show Panels", onClick: _ => showPanels())
+            | panelView;
+    }
+}
+```
+
+### Edge Center Positions
+
+Center content along the edges of the screen:
+
+```csharp
+public class EdgeCenterAlignmentView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanels) = UseTrigger((IState<bool> isOpen) =>
+        {
+            var floatingButton = new Button("Center")
+                .Icon(Icons.Move)
+                .Large()
+                .BorderRadius(BorderRadius.Full);
+            return Layout.Vertical()
+                | new FloatingPanel(floatingButton, Align.TopCenter)
+                | new FloatingPanel(floatingButton, Align.BottomCenter)
+                | new FloatingPanel(floatingButton, Align.Left)
+                | new FloatingPanel(floatingButton, Align.Right)
+                | new FloatingPanel(new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(), Align.Center);
+        });
+
+        return Layout.Vertical()
+            | new Button("Show Panels", onClick: _ => showPanels())
+            | panelView;
+    }
+}
+```
+
+### Screen Center
+
+Position content in the exact center of the screen:
+
+```csharp
+public class CenterAlignmentView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanel) = UseTrigger((IState<bool> isOpen) =>
+            isOpen.Value ? new FloatingPanel(
+                new Card(
+                    Layout.Vertical()
+                        | Text.H3("Centered Panel")
+                        | Text.Block("This panel is positioned")
+                        | Text.Block("in the center of the screen")
+                        | new Button("Close", onClick: _ => isOpen.Set(false)).Secondary()
+                ),
+                Align.Center) : null);
+
+        return Layout.Vertical()
+            | new Button("Show Panel", onClick: _ => showPanel())
+            | panelView;
+    }
+}
+```
+
+## Offset Positioning
+
+Fine-tune the position of floating panels using offset values. The `Offset` method accepts a `Thickness` object to specify precise positioning:
+
+### Basic Offset
+
+Adjust the position from the default alignment:
+
+```csharp
+public class BasicOffsetView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanels) = UseTrigger((IState<bool> isOpen) =>
+        {
+            return Layout.Vertical()
+                | new FloatingPanel(
+                    new Button("Default Position")
+                        .Icon(Icons.Circle)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.TopRight)
+                | new FloatingPanel(
+                    new Button("Offset Down & Left")
+                        .Icon(Icons.ArrowDownLeft)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.BottomLeft)
+                    .Offset(new Thickness(0, 20, 0, 0))  // 20 units up from bottom edge
+                | new FloatingPanel(
+                    new Button("Custom Offset")
+                        .Icon(Icons.Move)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.BottomRight)
+                    .Offset(new Thickness(10, 0, 0, 10)) // Thickness(left, top, right, bottom): 10 from left edge, 10 from bottom edge
+                | new FloatingPanel(new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(), Align.Center);
+        });
+
+        return Layout.Vertical()
+            | new Button("Show Panels", onClick: _ => showPanels())
+            | panelView;
+    }
+}
+```
+
+### Convenience Offset Methods
+
+Use the convenience methods for quick positioning adjustments:
+
+```csharp
+public class ConvenienceOffsetView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanels) = UseTrigger((IState<bool> isOpen) =>
+        {
+            return Layout.Vertical()
+                | new FloatingPanel(
+                    new Button("Top Offset")
+                        .Icon(Icons.ArrowUp)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.TopRight)
+                    .OffsetTop(30)
+                | new FloatingPanel(
+                    new Button("Left Offset")
+                        .Icon(Icons.ArrowLeft)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.TopRight)
+                    .OffsetLeft(30)
+                | new FloatingPanel(
+                    new Button("Right Offset")
+                        .Icon(Icons.ArrowRight)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.TopLeft)
+                    .OffsetRight(30)
+                | new FloatingPanel(
+                    new Button("Bottom Offset")
+                        .Icon(Icons.ArrowDown)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full),
+                    Align.BottomLeft)
+                    .OffsetBottom(30)
+                | new FloatingPanel(new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(), Align.Center);
+        });
+
+        return Layout.Vertical()
+            | new Button("Show Panels", onClick: _ => showPanels())
+            | panelView;
+    }
+}
+```
+
+## Complex Content
+
+Floating panels can contain complex layouts and multiple [widgets](../../01_Onboarding/02_Concepts/03_Widgets.md):
+
+### Navigation Panel
+
+Create a floating navigation panel with multiple buttons:
+
+```csharp
+public class NavigationPanelView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanel) = UseTrigger((IState<bool> isOpen) =>
+            isOpen.Value ? new FloatingPanel(
+                Layout.Vertical().Gap(2)
+                    | new Button("Home")
+                        .Icon(Icons.House)
+                        .Secondary()
+                        .Width(Size.Units(12))
+                    | new Button("Settings")
+                        .Icon(Icons.Settings)
+                        .Secondary()
+                        .Width(Size.Units(12))
+                    | new Button("Profile")
+                        .Icon(Icons.User)
+                        .Secondary()
+                        .Width(Size.Units(12))
+                    | new Button("Help")
+                        .Icon(Icons.Info)
+                        .Secondary()
+                        .Width(Size.Units(12))
+                    | new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(),
+                Align.Right)
+                .Offset(new Thickness(0, 0, 10, 0)) : null);
+
+        return Layout.Vertical()
+            | new Button("Show Panel", onClick: _ => showPanel())
+            | panelView;
+    }
+}
+```
+
+### Action Panel
+
+A floating action panel with multiple action buttons:
+
+```csharp
+public class ActionPanelView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanel) = UseTrigger((IState<bool> isOpen) =>
+            isOpen.Value ? new FloatingPanel(
+                Layout.Horizontal().Gap(2)
+                    | new Button("New")
+                        .Icon(Icons.Plus)
+                        .Primary()
+                        .BorderRadius(BorderRadius.Full)
+                    | new Button("Edit")
+                        .Icon(Icons.Pen)
+                        .Secondary()
+                        .BorderRadius(BorderRadius.Full)
+                    | new Button("Delete")
+                        .Icon(Icons.Trash)
+                        .Destructive()
+                        .BorderRadius(BorderRadius.Full)
+                    | new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(),
+                Align.BottomCenter)
+                .Offset(new Thickness(0, 0, 0, 20)) : null);
+
+        return Layout.Vertical()
+            | new Button("Show Panel", onClick: _ => showPanel())
+            | panelView;
+    }
+}
+```
+
+> **tip:** Ensure floating panels don't interfere with content readability and provide clear visual hierarchy. Use appropriate contrast and sizing for interactive elements.
+
+
+## API
+
+[View Source: FloatingPanel.cs](https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Layouts/FloatingPanel.cs)
+
+### Constructors
+
+| Signature |
+|-----------|
+| `new FloatingPanel(object child = null, Align align = Align.BottomRight)` |
+
+
+### Properties
+
+| Name | Type | Setters |
+|------|------|---------|
+| `Align` | `Align` | `Align` |
+| `AspectRatio` | `float?` | - |
+| `Density` | `Density?` | - |
+| `Height` | `Size` | - |
+| `Offset` | `Thickness?` | `Offset` |
+| `Visible` | `bool` | - |
+| `Width` | `Size` | - |
+
+
+
+
+## Examples
+
+
+### Back to Top Button
+
+A common use case for floating panels—a "back to top" button:
+
+```csharp
+public class BackToTopView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showButton) = UseTrigger((IState<bool> isOpen) =>
+            isOpen.Value ? new FloatingPanel(
+                Layout.Horizontal().Gap(2).Align(Align.Center)
+                    | new Button("Top")
+                        .Icon(Icons.ArrowUp)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full)
+                        .Secondary()
+                    | new Button("Close", onClick: _ => isOpen.Set(false)).Secondary(),
+                Align.BottomRight)
+                .Offset(new Thickness(0, 0, 20, 20)) : null);
+
+        return Layout.Vertical()
+            | new Button("Show Button", onClick: _ => showButton())
+            | panelView;
+    }
+}
+```
+
+
+
+
+### Floating Search Bar
+
+A floating search bar that stays accessible:
+
+```csharp
+public class FloatingSearchView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showSearchBar) = UseTrigger((IState<bool> isOpen) =>
+            isOpen.Value ? new FloatingPanel(
+                new Card(
+                    Layout.Horizontal().Gap(2)
+                        | new TextInput(placeholder: "Search...")
+                        | new Button("Search").Icon(Icons.Search).Primary()
+                        | new Button("Close", onClick: _ => isOpen.Set(false)).Secondary()
+                ),
+                Align.TopCenter)
+                .Offset(new Thickness(0, 10, 0, 0)) : null);
+
+        return Layout.Vertical()
+            | new Button("Show Search Bar", onClick: _ => showSearchBar())
+            | panelView;
+    }
+}
+```
+
+
+
+
+### Multi-Panel Layout
+
+Demonstrate multiple floating panels working together:
+
+```csharp
+public class MultiPanelView : ViewBase
+{
+    public override object? Build()
+    {
+        var (panelView, showPanels) = UseTrigger((IState<bool> isOpen) =>
+        {
+            return Layout.Vertical()
+                | new FloatingPanel(
+                    new Button("Menu")
+                        .Icon(Icons.Menu)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full)
+                        .Secondary(),
+                    Align.TopLeft)
+                    .Offset(new Thickness(10, 10, 0, 0))
+                | new FloatingPanel(
+                    new Button("Notifications")
+                        .Icon(Icons.Bell)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full)
+                        .Secondary(),
+                    Align.TopRight)
+                    .Offset(new Thickness(0, 10, 10, 0))
+                | new FloatingPanel(
+                    new Button("Chat")
+                        .Icon(Icons.MessageCircle)
+                        .Large()
+                        .BorderRadius(BorderRadius.Full)
+                        .Primary(),
+                    Align.BottomRight)
+                    .Offset(new Thickness(0, 0, 20, 20))
+                | new FloatingPanel(
+                    new Card(
+                        Layout.Vertical()
+                            | Text.Block("Quick Actions")
+                            | new Button("Save").Small().Primary()
+                            | new Button("Share").Small().Secondary()
+                            | new Button("Close", onClick: _ => isOpen.Set(false)).Small().Secondary()
+                    ).Width(Size.Units(40)),
+                    Align.Left)
+                    .Offset(new Thickness(10, 0, 0, 0));
+        });
+
+        return Layout.Vertical()
+            | new Button("Show Panels", onClick: _ => showPanels())
+            | panelView;
+    }
+}
+```

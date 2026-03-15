@@ -1,0 +1,246 @@
+# TextBlock
+
+The `TextBlock` [widget](../../01_Onboarding/02_Concepts/03_Widgets.md) displays text content with customizable styling. It's a fundamental building block for creating [user interfaces](../../01_Onboarding/02_Concepts/02_Views.md) with text, supporting various formatting options and layout properties.
+
+This widget is rarely used directly. Instead, we use the helper class `Text` which provides a more user-friendly API for creating text elements.
+
+## Basic Text Variants
+
+The Text helper provides various methods for different text styles and purposes:
+
+```csharp
+public class TextVariantsDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.Literal("Literal text")
+            | Text.H1("Heading 1")
+            | Text.H2("Heading 2") 
+            | Text.H3("Heading 3")
+            | Text.H4("Heading 4")
+            | Text.P("Paragraph text")
+            | Text.Block("Block text")
+            | Text.Blockquote("Blockquote text")
+            | Text.Monospaced("Monospaced")
+            | Text.Lead("Lead text for prominent display")
+            | Text.P("Large text").Large()
+            | Text.P("Small text").Small()
+            | Text.Label("Label text")
+            | Text.Strong("Strong/bold text")
+            | Text.Muted("Muted text")
+            | Text.Danger("Danger text")
+            | Text.Warning("Warning text")
+            | Text.Success("Success text");
+    }
+}
+```
+
+## Code and Markup Variants
+
+For displaying code and markup content:
+
+```csharp
+public class CodeVariantsDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.Code("public class Example { }", Languages.Csharp)
+            | Text.Json("{ \"name\": \"value\", \"number\": 42 }")
+            | Text.Xml("<root><item>value</item></root>")
+            | Text.Html("<div class='example'>HTML content</div>")
+            | Text.Markdown("# Markdown\n**Bold** and *italic* text")
+            | Text.Latex("\\frac{a}{b} = \\frac{c}{d}");
+    }
+}
+```
+
+## Text Modifiers
+
+Text elements can be customized with various modifiers. Use [Colors](../../04_ApiReference/Ivy/Colors.md) for the `Color()` modifier and [Size](../../04_ApiReference/Ivy/Size.md) for `Width()`:
+
+```csharp
+public class TextModifiersDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.P("Normal paragraph text")
+            | Text.P("Colored text").Color(Colors.Primary)
+            | Text.P("Amber colored text").Color(Colors.Amber)
+            | Text.P("Bold text").Bold()
+            | Text.P("Italic text").Italic()
+            | Text.P("Muted text").Muted()
+            | Text.P("Bold and italic text").Bold().Italic()
+            | Text.P("Strikethrough text").StrikeThrough()
+            | Text.P("No wrap text that should not wrap to multiple lines").NoWrap()
+            | Text.P("Text with custom width").Width(Size.Units(200))
+            | Text.P("Text with overflow clip").Overflow(Overflow.Clip).Width(Size.Units(100))
+            | Text.P("Text with overflow ellipsis").Overflow(Overflow.Ellipsis).Width(Size.Units(100));
+    }
+}
+```
+
+## Text Alignment
+
+Both the Text and [Markdown](14_Markdown.md) widgets support text alignment with fluent methods that control how content is aligned within its container. You can align text left (default), center, right, or justify.
+
+```csharp
+public class TextAlignmentDemo : ViewBase
+{
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.P("Left-aligned paragraph (default).").Left()
+            | Text.P("Centered title or callout").Center()
+            | Text.P("Right-aligned numbers or dates").Right()
+            | Text.P("Justified text that stretches to fill the full width of its container.").Justify();
+    }
+}
+```
+
+## Practical Examples
+
+### Article Layout
+
+```csharp
+public class ArticleDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.H1("Getting Started with Ivy")
+            | Text.Lead("Ivy is a powerful framework for building interactive web applications with C#.")
+            | Text.P("This guide will walk you through the basics of creating your first Ivy project. You'll learn about widgets, layouts, and how to structure your code effectively.")
+            | Text.H2("Prerequisites")
+            | Text.P("Before you begin, make sure you have:")
+            | Text.Block("• .NET 8.0 SDK installed")
+            | Text.Block("• A code editor (Visual Studio, VS Code, or Rider)")
+            | Text.Block("• Basic knowledge of C#")
+            | Text.H2("Installation")
+            | Text.P("Install Ivy using the .NET CLI:")
+            | Text.Monospaced("dotnet tool install -g Ivy.Console")
+            | Text.P("Create a new project:")
+            | Text.Monospaced("ivy init --namespace MyFirstProject");
+    }
+}
+```
+
+### Form Labels and Messages
+
+```csharp
+public class FormDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.Label("Email Address")
+            | Text.P("Enter your email address below")
+            | Text.P("We'll never share your email with anyone else.").Small()
+            | Layout.Horizontal()
+                | Text.Success("✓ Email sent successfully!")
+                | Text.Warning("⚠ Please check your spam folder")
+                | Text.Danger("✗ Invalid email format");
+    }
+}
+```
+
+### Code Documentation
+
+```csharp
+public class CodeDocDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.H3("TextHelper Class")
+            | Text.P("The TextHelper class provides convenient methods for creating text elements:")
+            | Text.Code("""
+                public static TextBuilder H1(string content)
+                {
+                    return new TextBuilder(content, TextVariant.H1);
+                }
+                """, Languages.Csharp)
+            | Text.Blockquote("Note: All Text helper methods return a TextBuilder that supports method chaining for modifiers.")
+            | Text.P("Common modifiers include:")
+            | Text.Block("• Color() - Set text color")
+            | Text.Block("• Width() - Set text width")
+            | Text.Block("• StrikeThrough() - Add strikethrough styling")
+            | Text.Block("• NoWrap() - Prevent text wrapping");
+    }
+}
+```
+
+### Status Messages
+
+```csharp
+public class StatusDemo : ViewBase
+{   
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | Text.H3("System Status")
+            | Layout.Horizontal()
+                | Text.Success("Database: Connected")
+                | Text.Success("API: Online")
+                | Text.Warning("Cache: Warming up...")
+                | Text.Danger("Backup: Failed")
+            | Text.P("Last updated: 2 minutes ago").Small()
+            | Text.Muted("System monitoring is active");
+    }
+}
+```
+
+## TextBuilder Modifiers
+
+The TextBuilder class provides several modifiers for customizing text appearance:
+
+| Modifier | Description | Example |
+|----------|-------------|---------|
+| `Bold()` | Apply bold styling | `Text.P("Bold text").Bold()` |
+| `Italic()` | Apply italic styling | `Text.P("Italic text").Italic()` |
+| `Muted()` | Apply muted/disabled styling | `Text.P("Muted text").Muted()` |
+| `Color()` | Set text [color](../../04_ApiReference/Ivy/Colors.md) | `Text.P("Red text").Color(Colors.Destructive)` |
+| `Width()` | Set text width with [Size](../../04_ApiReference/Ivy/Size.md) | `Text.P("Fixed width").Width(Size.Units(200))` |
+| `StrikeThrough()` | Add strikethrough | `Text.P("Crossed out").StrikeThrough()` |
+| `NoWrap()` | Prevent wrapping | `Text.P("Single line").NoWrap()` |
+| `Overflow()` | Handle overflow | `Text.P("Long text").Overflow(Overflow.Clip)` |
+| `Small()` | Apply small text size | `Text.P("Small text").Small()` |
+| `Medium()` | Apply medium text size (default) | `Text.P("Normal text").Medium()` |
+| `Large()` | Apply large text size | `Text.P("Large text").Large()` |
+| `Left()` | Align text left (default) | `Text.P("Left-aligned").Left()` |
+| `Center()` | Center text | `Text.P("Centered").Center()` |
+| `Right()` | Align text right | `Text.P("Right-aligned").Right()` |
+| `Justify()` | Justify text to fill width | `Text.P("Justified").Justify()` |
+
+## Best Practices
+
+- **Use semantic variants**: Choose the appropriate text variant for your content (H1-H4 for headings, P for paragraphs, etc.)
+- **Consistent styling**: Use the same text variants throughout your project for consistency
+- **Accessibility**: Use proper heading hierarchy (H1 → H2 → H3) for screen readers
+- **Color usage**: Use color modifiers sparingly and ensure sufficient contrast
+- **Responsive design**: Use width modifiers carefully to maintain responsive layouts
+
+## Related Components
+
+- **[Markdown](14_Markdown.md)** - For rendering markdown content
+- **[CodeBlock](10_CodeBlock.md)** - For syntax-highlighted code blocks
+- **[Json](17_Json.md)** - For JSON data display
+- **[Html](15_Html.md)** - For HTML content rendering
+
+## Faq
+
+
+### How do I change the font size of text?
+
+Use the `.Large()`, `.Medium()`, or `.Small()` modifiers on any `TextBuilder`:
+
+```csharp
+Text.P("Large text").Large()
+Text.P("Normal text").Medium()
+Text.P("Small text").Small()
+Text.P("Small muted text").Small().Muted()
+```
+
+These modifiers work with all text factory methods (`Text.P()`, `Text.H1()`, `Text.Block()`, `Text.Label()`, etc.). **Important:** There is no `.WithFontSize()` method or `FontSize` enum. **There is no `.Style()` method for arbitrary CSS styling.**

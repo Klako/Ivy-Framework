@@ -454,7 +454,13 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                size={density === Densities.Small ? 'sm' : 'default'}
+                size={
+                  density === Densities.Small
+                    ? 'sm'
+                    : density === Densities.Large
+                      ? 'lg'
+                      : 'default'
+                }
                 className={cn(
                   'flex items-center gap-2',
                   isDragging && 'border-primary ring-2 ring-primary'

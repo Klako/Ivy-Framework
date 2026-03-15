@@ -38,7 +38,7 @@ public class ListBlade : ViewBase
             .Disabled(user.Age > 80); // Example: disable elderly users (just for demo)
 
         var items = filteredProducts.Value.Take(10).Select(CreateItem).ToList();
-        
+
         // Add some manual examples of rich items
         items.Insert(0, new ListItem("Framework Updates", icon: Icons.Activity, subtitle: "Important system notifications")
             .Badge("New")

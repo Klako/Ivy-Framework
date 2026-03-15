@@ -92,11 +92,7 @@ public class AppRepository : IAppRepository
                 {
                     if (current is not IAppRepositoryGroup group)
                     {
-<<<<<<< HEAD
                         throw new InvalidOperationException("Group part is not a group.");
-=======
-                        throw new InvalidOperationException("Navigation node is not a group.");
->>>>>>> af97471cbaae2a3120472f906e2b49348d13b58d
                     }
 
                     var next = group.Children.OfType<AppRepositoryGroup>().FirstOrDefault(e => e.Title == part);
@@ -110,11 +106,7 @@ public class AppRepository : IAppRepository
 
                 if (current is not IAppRepositoryGroup group2)
                 {
-<<<<<<< HEAD
                     throw new InvalidOperationException("Group part is not a group.");
-=======
-                    throw new InvalidOperationException("Navigation node is not a group.");
->>>>>>> af97471cbaae2a3120472f906e2b49348d13b58d
                 }
 
                 if (appDescriptor.IsIndex)

@@ -6,6 +6,10 @@ searchHints:
   - api
   - database
   - iconnection
+  - test-connection
+  - register-services
+  - ihavesecrets
+  - connection-entity
 ---
 
 # Connections
@@ -27,10 +31,13 @@ Connections implement the `IConnection` interface, which provides a standardized
 - Register required services in the [DI container](./01_Program.md)
 - Expose metadata about the connection (name, type, entities)
 - Integrate with Ivy's [secrets management](./14_Secrets.md)
+- Test connectivity and configuration
 
 ## The IConnection Interface
 
 ```csharp
+namespace Ivy;
+
 public interface IConnection
 {
     string GetContext(string connectionPath);
@@ -38,7 +45,8 @@ public interface IConnection
     string GetName();
     string GetConnectionType();
     ConnectionEntity[] GetEntities();
-    void RegisterServices(IServiceCollection services);
+    void RegisterServices(Server server);
+    Task<(bool ok, string? message)> TestConnection(IConfiguration config);
 }
 
 public record ConnectionEntity(string Singular, string Plural);
@@ -53,7 +61,8 @@ public record ConnectionEntity(string Singular, string Plural);
 | `GetName` | Returns the connection's display name |
 | `GetConnectionType` | Returns the type of connection (e.g., "Database", "API") |
 | `GetEntities` | Returns available entities (tables, resources) |
-| `RegisterServices` | Registers required services in the [DI container](./01_Program.md) |
+| `RegisterServices` | Registers required services on the `Server` instance |
+| `TestConnection` | Validates connectivity and configuration using the provided `IConfiguration` |
 
 ## Connection Types
 

@@ -25,9 +25,9 @@ public class BasicStackExample : ViewBase
 {
     public override object? Build()
     {   
-        return new StackLayout([
-            Text.H2("Stack"), 
-            Text.Label("Creation of a simple Stack Layout")]);
+        return Layout.Vertical()
+            | Text.H2("Stack")
+            | Text.Label("Creation of a simple Stack Layout");
     }
 }
 ```

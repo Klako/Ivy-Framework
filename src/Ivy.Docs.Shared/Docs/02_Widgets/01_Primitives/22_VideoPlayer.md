@@ -96,6 +96,23 @@ Layout.Vertical().Gap(4)
     .Height(Size.Units(100))
 ```
 
+### Playback Rate
+
+Control video playback speed (0.25x to higher speeds, where 1.0 is normal):
+
+```csharp demo-tabs
+Layout.Vertical().Gap(4)
+| Text.P("1.5x speed (faster lectures/tutorials)").Small()
+| new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+    .PlaybackRate(1.5)
+| Text.P("0.5x speed (slow motion review)").Small()
+| new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+    .PlaybackRate(0.5)
+| Text.P("2x speed (quick scrubbing)").Small()
+| new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+    .PlaybackRate(2.0)
+```
+
 ### Large Video Files
 
 The VideoPlayer also supports streaming of large video files.

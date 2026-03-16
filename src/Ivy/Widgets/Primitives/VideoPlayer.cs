@@ -17,7 +17,8 @@ public record VideoPlayer : WidgetBase<VideoPlayer>
         string? poster = null,
         float? volume = null,
         int? startTime = null,
-        int? endTime = null) : this()
+        int? endTime = null,
+        double? playbackRate = null) : this()
     {
         Source = source;
         Autoplay = autoplay;
@@ -28,6 +29,7 @@ public record VideoPlayer : WidgetBase<VideoPlayer>
         Volume = volume.HasValue ? Math.Clamp(volume.Value, 0f, 1f) : null;
         StartTime = startTime;
         EndTime = endTime;
+        PlaybackRate = playbackRate.HasValue ? Math.Max(0.25, playbackRate.Value) : null;
     }
 
     internal VideoPlayer()
@@ -52,6 +54,8 @@ public record VideoPlayer : WidgetBase<VideoPlayer>
     [Prop] public int? StartTime { get; set; }
 
     [Prop] public int? EndTime { get; set; }
+
+    [Prop] public double? PlaybackRate { get; set; }
 
     [Event] public EventHandler<Event<VideoPlayer>>? OnPlay { get; set; }
 
@@ -82,6 +86,8 @@ public static class VideoPlayerExtensions
     public static VideoPlayer StartTime(this VideoPlayer widget, int? startTime = null) => widget with { StartTime = startTime };
 
     public static VideoPlayer EndTime(this VideoPlayer widget, int? endTime = null) => widget with { EndTime = endTime };
+
+    public static VideoPlayer PlaybackRate(this VideoPlayer widget, double rate) => widget with { PlaybackRate = Math.Max(0.25, rate) };
 
     public static VideoPlayer Id(this VideoPlayer widget, string id) => widget with { Id = id };
 

@@ -24,6 +24,7 @@ interface VideoPlayerWidgetProps {
   volume?: number; // 0.0 to 1.0
   startTime?: number; // playback start position in seconds
   endTime?: number; // playback stop position in seconds
+  playbackRate?: number; // playback speed multiplier (0.25+)
   events?: string[];
 }
 
@@ -66,6 +67,7 @@ export const VideoPlayerWidget: React.FC<VideoPlayerWidgetProps> = ({
   volume,
   startTime,
   endTime,
+  playbackRate,
   events = [],
 }) => {
   const [hasError, setHasError] = useState(false);
@@ -184,6 +186,12 @@ export const VideoPlayerWidget: React.FC<VideoPlayerWidgetProps> = ({
       video.currentTime = startTime;
     }
   }, [startTime, validatedVideoSrc]);
+
+  useEffect(() => {
+    if (videoRef.current && playbackRate != null) {
+      videoRef.current.playbackRate = Math.max(0.25, playbackRate);
+    }
+  }, [playbackRate]);
 
   // Build src with Media Fragments URI for time range
   let videoSrc = validatedVideoSrc;

@@ -163,6 +163,23 @@ public class VideoPlayerApp : SampleBase
                             .Variant(loadedState.Value ? BadgeVariant.Success : BadgeVariant.Secondary))
                 ).Title("Event Callbacks"))
 
+                // Playback Rate
+                | (new Card(
+                    Layout.Vertical().Gap(4)
+                    | Text.H4("1.5x Speed (Fast)")
+                    | Text.P("Play tutorial or lecture at increased speed.").Small()
+                    | new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+                        .PlaybackRate(1.5)
+                    | Text.H4("0.5x Speed (Slow)")
+                    | Text.P("Slow motion for detailed review.").Small()
+                    | new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+                        .PlaybackRate(0.5)
+                    | Text.H4("2x Speed (Very Fast)")
+                    | Text.P("Quickly scrub through long recordings.").Small()
+                    | new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+                        .PlaybackRate(2.0)
+                ).Title("Playback Rate"))
+
                 // YouTube
                 | (new Card(
                     Layout.Vertical().Gap(4)

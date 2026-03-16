@@ -37,9 +37,8 @@ export function mapColumnIcon(col: DataColumn): GridColumnIcon | string | undefi
       case "Zap":
         return GridColumnIcon.HeaderEmoji; // Use emoji for zap
       default:
-        // Try to use custom icon name for headerIcons lookup
-        // But for now, default to a built-in icon
-        return GridColumnIcon.HeaderString;
+        // Preserve custom icon names for headerIcons sprite-map lookup.
+        return col.icon;
     }
   }
 
@@ -143,7 +142,8 @@ export function convertToGridColumns(
     // Determine effective grow: explicit Size-based grow, or default last column to 1
     const effectiveGrow = grow !== undefined ? grow : isLastColumn ? 1 : undefined;
 
-    let columnIcon = showColumnTypeIcons ? mapColumnIcon(col) : undefined;
+    const shouldShowIcon = Boolean(col.icon) || showColumnTypeIcons;
+    let columnIcon = shouldShowIcon ? mapColumnIcon(col) : undefined;
 
     if (activeSort && activeSort.length > 0) {
       const sortForColumn = activeSort.find((sort) => sort.column === col.name);

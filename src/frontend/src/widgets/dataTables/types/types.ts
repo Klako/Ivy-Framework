@@ -1,5 +1,5 @@
-import { MenuItem } from "@/types/widgets";
-import { Align } from "@/lib/styles";
+import { MenuItem } from '@/types/widgets';
+import { Align } from '@/lib/styles';
 export type { Align };
 
 export interface DataRow {
@@ -7,20 +7,20 @@ export interface DataRow {
 }
 
 export enum ColType {
-  Number = "Number",
-  Text = "Text",
-  Boolean = "Boolean",
-  Date = "Date",
-  DateTime = "DateTime",
-  Icon = "Icon",
-  Labels = "Labels",
-  Link = "Link",
+  Number = 'Number',
+  Text = 'Text',
+  Boolean = 'Boolean',
+  Date = 'Date',
+  DateTime = 'DateTime',
+  Icon = 'Icon',
+  Labels = 'Labels',
+  Link = 'Link',
 }
 
 export enum SortDirection {
-  Ascending = "Ascending",
-  Descending = "Descending",
-  None = "None",
+  Ascending = 'Ascending',
+  Descending = 'Descending',
+  None = 'None',
 }
 
 export interface DataColumn {
@@ -33,13 +33,14 @@ export interface DataColumn {
   sortable?: boolean;
   sortDirection?: SortDirection;
   filterable?: boolean;
+  align?: Align;
   alignContent?: Align;
   order?: number;
   icon?: string | null;
-  originalWidth?: string; // Original Size string from backend, preserved for grow calculation
+  originalWidth?: string;
   help?: string | null;
+  iconSet?: 'lucide' | 'custom';
   footer?: string[] | null;
-  iconSet?: "lucide" | "custom";
   color?: string | null;
   badgeColorMapping?: Record<string, string> | null;
 }
@@ -72,13 +73,6 @@ export interface DataTableConfig {
   showSearch?: boolean;
   enableRowHover?: boolean;
   idColumnName?: string | null;
-  customHeaderIcons?: Record<string, string>;
-}
-
-export interface DataTableCellUpdate {
-  rowId: string | number;
-  columnName: string;
-  value: unknown;
 }
 
 export interface TableProps {
@@ -90,20 +84,19 @@ export interface TableProps {
   width?: string;
   height?: string;
   rowActions?: MenuItem[];
-  updateStream?: { id: string };
   onCellUpdate?: (row: number, col: number, value: unknown) => void;
-  "data-testid"?: string;
+  'data-testid'?: string;
 }
 
 export enum FilterTypes {
-  List = "List",
-  Query = "Query",
+  List = 'List',
+  Query = 'Query',
 }
 
 export enum SelectionModes {
-  Cells = "Cells",
-  Rows = "Rows",
-  Columns = "Columns",
+  Cells = 'Cells',
+  Rows = 'Rows',
+  Columns = 'Columns',
 }
 
 /**

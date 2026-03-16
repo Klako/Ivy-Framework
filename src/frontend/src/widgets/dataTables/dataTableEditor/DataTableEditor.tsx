@@ -190,9 +190,9 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
 
   // Generate header icons map for all column icons
   const headerIcons = useMemo(() => {
-    const baseIcons = generateHeaderIcons(columns, config.customHeaderIcons);
+    const baseIcons = generateHeaderIcons(columns);
     return addStandardIcons(baseIcons);
-  }, [columns, config.customHeaderIcons]);
+  }, [columns]);
 
   // Header menu handling
   const { handleHeaderMenuClick } = useHeaderMenu({

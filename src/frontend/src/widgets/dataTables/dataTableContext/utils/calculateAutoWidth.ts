@@ -27,7 +27,7 @@ const TYPE_DEFAULTS: Record<string, number> = {
  * Calculate optimal column width based on header and type
  */
 export function calculateAutoWidth(column: DataColumn): number {
-  const normalizedType = column.type.toLowerCase();
+  const normalizedType = (column.type ?? 'text').toLowerCase();
   const typeDefaultWidth = TYPE_DEFAULTS[normalizedType] || TYPE_DEFAULTS.text;
 
   const headerText = column.header || column.name;

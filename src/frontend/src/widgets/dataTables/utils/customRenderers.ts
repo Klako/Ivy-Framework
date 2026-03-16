@@ -1,16 +1,54 @@
-import { CustomRenderer, GridCellKind, CustomCell, type Theme } from "@glideapps/glide-data-grid";
-import { getIconImage, isValidIconName } from "./iconRenderer";
+import {
+  CustomRenderer,
+  GridCellKind,
+  CustomCell,
+} from '@glideapps/glide-data-grid';
+import { LUCIDE_ICONS, type IconNode } from './lucideIconNodes.generated';
 
-/** Glide passes a realized theme with computed `baseFontFull` to measure/draw. */
-type GridDrawTheme = Theme & { baseFontFull: string };
+// Cache for rendered icon images
+const iconImageCache = new Map<string, HTMLImageElement>();
+
+function isValidIconName(name: string): boolean {
+  return name in LUCIDE_ICONS;
+}
+
+function iconNodeToSvg(nodes: IconNode[], color: string): string {
+  const elements = nodes
+    .map(([tag, attrs]) => {
+      const attrStr = Object.entries(attrs)
+        .map(([k, v]) => `${k}="${v === 'currentColor' ? color : v}"`)
+        .join(' ');
+      return `<${tag} ${attrStr}/>`;
+    })
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${elements}</svg>`;
+}
+
+function getIconImage(
+  iconName: string,
+  options: { size?: number; color?: string } = {},
+): HTMLImageElement | null {
+  const { color = '#666' } = options;
+  const cacheKey = `${iconName}-${color}`;
+  if (iconImageCache.has(cacheKey)) return iconImageCache.get(cacheKey)!;
+
+  const nodes = LUCIDE_ICONS[iconName];
+  if (!nodes) return null;
+
+  const svg = iconNodeToSvg(nodes, color);
+  const img = new Image();
+  img.src = `data:image/svg+xml;base64,${btoa(svg)}`;
+  iconImageCache.set(cacheKey, img);
+  return img;
+}
 
 /**
  * Data structure for icon cells
  */
 export interface IconCellData {
-  kind: "icon-cell";
+  kind: 'icon-cell';
   iconName: string;
-  align?: "left" | "center" | "right";
+  align?: 'left' | 'center' | 'right';
 }
 
 /**
@@ -22,113 +60,15 @@ export type IconCell = CustomCell<IconCellData>;
  * Data structure for link cells
  */
 export interface LinkCellData {
-  kind: "link-cell";
+  kind: 'link-cell';
   url: string;
-  align?: "left" | "center" | "right";
+  align?: 'left' | 'center' | 'right';
 }
 
 /**
  * Type definition for link custom cells
  */
 export type LinkCell = CustomCell<LinkCellData>;
-
-/**
- * Multi-badge cell: per-label background/text (Bubble cells only support one theme per cell).
- */
-export interface LabelsBadgesCellData {
-  kind: "labels-badges-cell";
-  items: { text: string; bg?: string; fg?: string }[];
-  align?: "left" | "center" | "right";
-}
-
-export type LabelsBadgesCell = CustomCell<LabelsBadgesCellData>;
-
-function measureLabelsBadgesWidth(
-  ctx: CanvasRenderingContext2D,
-  items: LabelsBadgesCellData["items"],
-  theme: GridDrawTheme,
-): number {
-  if (items.length === 0) return theme.cellHorizontalPadding * 2;
-  ctx.font = theme.baseFontFull;
-  let w = theme.cellHorizontalPadding * 2 - theme.bubbleMargin;
-  for (const item of items) {
-    w += ctx.measureText(item.text).width + theme.bubblePadding * 2 + theme.bubbleMargin;
-  }
-  return w;
-}
-
-/**
- * Custom cell renderer for label columns with per-badge colors (badge color mapping).
- */
-export const labelsBadgesCellRenderer: CustomRenderer<LabelsBadgesCell> = {
-  kind: GridCellKind.Custom,
-
-  isMatch: (cell: CustomCell): cell is LabelsBadgesCell =>
-    cell.kind === GridCellKind.Custom &&
-    (cell.data as LabelsBadgesCellData | undefined)?.kind === "labels-badges-cell",
-
-  measure: (ctx, cell, theme) => measureLabelsBadgesWidth(ctx, cell.data.items, theme),
-
-  draw: (args, cell) => {
-    const { ctx, rect, theme } = args;
-    const { items, align = "left" } = cell.data;
-    if (items.length === 0) return true;
-
-    const { x, y, width: w, height: h } = rect;
-    ctx.font = theme.baseFontFull;
-    ctx.textBaseline = "middle";
-
-    const bubbleH = theme.bubbleHeight;
-    const pad = theme.bubblePadding;
-    const margin = theme.bubbleMargin;
-    const radius = theme.roundingRadius ?? bubbleH / 2;
-    const hPad = theme.cellHorizontalPadding;
-
-    let rowWidth = -margin;
-    for (const item of items) {
-      rowWidth += ctx.measureText(item.text).width + pad * 2 + margin;
-    }
-
-    let renderX = x + hPad;
-    if (align === "center") {
-      renderX = x + (w - rowWidth) / 2;
-    } else if (align === "right") {
-      renderX = x + w - rowWidth - hPad;
-    }
-
-    for (const item of items) {
-      if (renderX > x + w) break;
-      const textW = ctx.measureText(item.text).width;
-      const boxW = textW + pad * 2;
-      const bg = item.bg ?? theme.bgBubble;
-      const fg = item.fg ?? theme.textBubble;
-
-      ctx.fillStyle = bg;
-      const bx = renderX;
-      const by = y + (h - bubbleH) / 2;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === "function") {
-        ctx.roundRect(bx, by, boxW, bubbleH, radius);
-      } else {
-        const r = Math.min(radius, bubbleH / 2, boxW / 2);
-        ctx.moveTo(bx + r, by);
-        ctx.arcTo(bx + boxW, by, bx + boxW, by + bubbleH, r);
-        ctx.arcTo(bx + boxW, by + bubbleH, bx, by + bubbleH, r);
-        ctx.arcTo(bx, by + bubbleH, bx, by, r);
-        ctx.arcTo(bx, by, bx + boxW, by, r);
-        ctx.closePath();
-      }
-      ctx.fill();
-
-      ctx.fillStyle = fg;
-      ctx.fillText(item.text, bx + pad, y + h / 2);
-
-      renderX += boxW + margin;
-    }
-
-    return true;
-  },
-};
 
 /**
  * Custom cell renderer for displaying Lucide icons in table cells
@@ -138,12 +78,12 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
 
   isMatch: (cell: CustomCell): cell is IconCell =>
     cell.kind === GridCellKind.Custom &&
-    (cell.data as IconCellData | undefined)?.kind === "icon-cell",
+    (cell.data as IconCellData | undefined)?.kind === 'icon-cell',
 
   draw: (args, cell) => {
     const { ctx, rect, theme } = args;
     const iconName = cell.data?.iconName;
-    const align = cell.data?.align || "left";
+    const align = cell.data?.align || 'left';
 
     if (!iconName) return false;
 
@@ -151,14 +91,14 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
     if (!isValidIconName(iconName)) {
       // Draw error indicator for invalid icon
       ctx.fillStyle = theme.textDark;
-      ctx.font = "12px sans-serif";
+      ctx.font = '12px sans-serif';
       const errorX =
-        align === "center"
+        align === 'center'
           ? rect.x + rect.width / 2 - 4
-          : align === "right"
+          : align === 'right'
             ? rect.x + rect.width - 20
             : rect.x + 16;
-      ctx.fillText("?", errorX, rect.y + rect.height / 2 + 4);
+      ctx.fillText('?', errorX, rect.y + rect.height / 2 + 4);
       return true;
     }
 
@@ -166,7 +106,6 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
     const iconImage = getIconImage(iconName, {
       size: 20,
       color: theme.textDark,
-      strokeWidth: 2,
     });
 
     if (iconImage && iconImage.complete) {
@@ -176,13 +115,13 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
       let x: number;
 
       switch (align) {
-        case "center":
+        case 'center':
           x = rect.x + (rect.width - iconSize) / 2;
           break;
-        case "right":
+        case 'right':
           x = rect.x + rect.width - iconSize - padding;
           break;
-        case "left":
+        case 'left':
         default:
           x = rect.x + padding;
       }
@@ -197,13 +136,13 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
     let centerX: number;
 
     switch (align) {
-      case "center":
+      case 'center':
         centerX = rect.x + rect.width / 2;
         break;
-      case "right":
+      case 'right':
         centerX = rect.x + rect.width - padding - 10;
         break;
-      case "left":
+      case 'left':
       default:
         centerX = rect.x + padding + 10;
     }
@@ -218,7 +157,7 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
 
   // Support pasting icon names
   onPaste: (value: string, data: IconCellData) => {
-    if (typeof value === "string" && isValidIconName(value)) {
+    if (typeof value === 'string' && isValidIconName(value)) {
       return {
         ...data,
         iconName: value,
@@ -236,36 +175,36 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
 
   isMatch: (cell: CustomCell): cell is LinkCell =>
     cell.kind === GridCellKind.Custom &&
-    (cell.data as LinkCellData | undefined)?.kind === "link-cell",
+    (cell.data as LinkCellData | undefined)?.kind === 'link-cell',
 
   draw: (args, cell) => {
     const { ctx, rect, theme } = args;
     const url = cell.data?.url;
-    const align = cell.data?.align || "left";
+    const align = cell.data?.align || 'left';
 
     if (!url) return false;
 
     // Use linkColor from theme (should be blue)
-    const linkColor = theme.linkColor || theme.accentColor || "#2563eb";
+    const linkColor = theme.linkColor || theme.accentColor || '#2563eb';
     const padding = theme.cellHorizontalPadding ?? 8;
 
     ctx.save();
     ctx.font = `${theme.baseFontStyle} ${theme.fontFamily}`;
     ctx.fillStyle = linkColor;
-    ctx.textBaseline = "middle";
+    ctx.textBaseline = 'middle';
 
     // Calculate text position based on alignment
     const textMetrics = ctx.measureText(url);
     let textX: number;
 
     switch (align) {
-      case "center":
+      case 'center':
         textX = rect.x + (rect.width - textMetrics.width) / 2;
         break;
-      case "right":
+      case 'right':
         textX = rect.x + rect.width - textMetrics.width - padding;
         break;
-      case "left":
+      case 'left':
       default:
         textX = rect.x + padding;
     }

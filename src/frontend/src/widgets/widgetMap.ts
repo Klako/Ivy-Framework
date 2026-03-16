@@ -255,6 +255,7 @@ export const widgetMap = {
   'Ivy.FunnelChart': React.lazy(
     () => import('@/widgets/charts/FunnelChartWidget')
   ),
+  'Ivy.GaugeChart': React.lazy(() => import('@/widgets/charts/GaugeChartWidget')),
 
   // Effects
   'Ivy.Confetti': React.lazy(() => import('@/widgets/effects/ConfettiWidget')),

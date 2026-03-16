@@ -43,6 +43,7 @@ public class DataTableMainSample : ViewBase
             .Header(e => e.Name, "Name")
             .Header(e => e.Email, "Email")
             .Header(e => e.Notes, "Notes")
+            .Icon(e => e.Notes, "TaskList")
             .Header(e => e.IsActive, "Active")
             .Header(e => e.IsManager, "Manager")
             .Header(e => e.HireDate, "Hire Date")
@@ -151,6 +152,10 @@ public class DataTableMainSample : ViewBase
                 config.BatchSize = 50;
                 config.LoadAllRows = false;
                 config.ShowSearch = true;
+                config.CustomHeaderIcons = new Dictionary<string, string>
+                {
+                    ["TaskList"] = "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M3 6h18M3 12h18M3 18h18\" stroke=\"{fgColor}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"3\" cy=\"6\" r=\"1\" fill=\"{fgColor}\"/><circle cx=\"3\" cy=\"12\" r=\"1\" fill=\"{fgColor}\"/><circle cx=\"3\" cy=\"18\" r=\"1\" fill=\"{fgColor}\"/></svg>"
+                };
             })
             .RowActions(
                 MenuItem.Default(Icons.Pencil).Tag(RowAction.Edit).Tooltip("Edit employee").Primary(),

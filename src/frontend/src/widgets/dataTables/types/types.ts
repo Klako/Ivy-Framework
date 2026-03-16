@@ -72,6 +72,7 @@ export interface DataTableConfig {
   showSearch?: boolean;
   enableRowHover?: boolean;
   idColumnName?: string | null;
+  customHeaderIcons?: Record<string, string>;
 }
 
 export interface DataTableCellUpdate {

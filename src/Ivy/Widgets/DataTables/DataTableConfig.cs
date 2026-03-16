@@ -20,6 +20,7 @@ public record DataTableConfig
     public bool EnableCellClickEvents { get; set; } = false;
     public bool ShowSearch { get; set; } = false;
     public string? IdColumnName { get; set; } = null;
+    public Dictionary<string, string>? CustomHeaderIcons { get; set; } = null;
 }
 
 public enum SelectionModes

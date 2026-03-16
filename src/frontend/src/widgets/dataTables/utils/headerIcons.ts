@@ -75,11 +75,28 @@ function createIconGenerator(iconName: string) {
 }
 
 /**
+ * Creates an icon generator from a custom SVG template string.
+ * The template should use {fgColor} and {bgColor} placeholders.
+ */
+function createCustomIconGenerator(svgTemplate: string) {
+  return (props: SpriteProps): string => {
+    return svgTemplate
+      .replace(/\{fgColor\}/g, props.fgColor)
+      .replace(/\{bgColor\}/g, props.bgColor);
+  };
+}
+
+/**
  * Generates header icons map from column icons
  * @param columns - Array of columns with potential icon properties
+ * @param customHeaderIcons - Optional custom SVG icon templates
  * @returns SpriteMap for Glide Data Grid headerIcons prop
  */
-export function generateHeaderIcons(columns: Array<{ icon?: string | null }>): SpriteMap {
+<<<<<<< HEAD
+export function generateHeaderIcons(
+  columns: Array<{ icon?: string | null }>,
+  customHeaderIcons?: Record<string, string>
+): SpriteMap {
   const icons: SpriteMap = {};
   const processedIcons = new Set<string>();
 
@@ -90,6 +107,14 @@ export function generateHeaderIcons(columns: Array<{ icon?: string | null }>): S
       icons[col.icon] = createIconGenerator(col.icon);
     }
   });
+
+  // Merge custom icons, giving them precedence over column-based icons
+  if (customHeaderIcons) {
+    for (const [name, svgTemplate] of Object.entries(customHeaderIcons)) {
+      icons[name] = createCustomIconGenerator(svgTemplate);
+    }
+  }
+
   return icons;
 }
 

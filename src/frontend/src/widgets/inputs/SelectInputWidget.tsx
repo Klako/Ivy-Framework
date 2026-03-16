@@ -829,7 +829,6 @@ const SliderVariant: React.FC<
   options = EMPTY_ARRAY,
   eventHandler,
   selectMany = false,
-  nullable = false,
   ghost = false,
   density = Densities.Medium,
   'data-testid': dataTestId,

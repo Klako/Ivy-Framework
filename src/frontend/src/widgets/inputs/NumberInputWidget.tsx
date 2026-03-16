@@ -37,6 +37,11 @@ const formatStyleMap = {
   Decimal: 'decimal',
   Currency: 'currency',
   Percent: 'percent',
+  Compact: 'compact',
+  Scientific: 'scientific',
+  Engineering: 'engineering',
+  Accounting: 'accounting',
+  Bytes: 'bytes',
 } as const;
 
 type FormatStyle = keyof typeof formatStyleMap;
@@ -235,17 +240,38 @@ const NumberVariant = memo(
     noGrouping,
     'data-testid': dataTestId,
   }: NumberInputBaseProps) => {
-    const formatConfig = useMemo(
-      () => ({
-        style: formatStyleMap[formatStyle],
+    const isBytesFormat = formatStyle === 'Bytes';
+
+    const formatConfig = useMemo(() => {
+      const config: Intl.NumberFormatOptions = {
         minimumFractionDigits: 0,
         maximumFractionDigits: precision,
         useGrouping: !(noGrouping ?? false),
-        notation: 'standard' as const,
-        currency: currency || undefined,
-      }),
-      [currency, formatStyle, precision, noGrouping]
-    );
+      };
+
+      if (formatStyle === 'Compact') {
+        config.notation = 'compact';
+        config.compactDisplay = 'short';
+      } else if (formatStyle === 'Scientific') {
+        config.notation = 'scientific';
+      } else if (formatStyle === 'Engineering') {
+        config.notation = 'engineering';
+      } else if (formatStyle === 'Accounting') {
+        config.style = 'currency';
+        config.currencySign = 'accounting';
+        config.currency = currency || 'USD';
+      } else if (formatStyle === 'Bytes') {
+        config.style = 'decimal';
+      } else {
+        config.style = formatStyleMap[formatStyle] as string;
+        config.notation = 'standard';
+        if (formatStyle === 'Currency') {
+          config.currency = currency || 'USD';
+        }
+      }
+
+      return config;
+    }, [currency, formatStyle, precision, noGrouping]);
 
     const handleNumberChange = useCallback(
       (newValue: number | null) => {
@@ -282,6 +308,7 @@ const NumberVariant = memo(
             max={max}
             step={step}
             format={formatConfig}
+            isBytesFormat={isBytesFormat}
             placeholder={placeholder}
             value={value ?? (nullable ? null : 0)}
             disabled={disabled}

@@ -21,6 +21,7 @@ interface NumberInputProps {
   onChange?: (value: number | null) => void;
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   format?: Intl.NumberFormatOptions;
+  isBytesFormat?: boolean;
   allowNegative?: boolean;
   className?: string;
   density?: Densities;
@@ -33,6 +34,18 @@ interface DragState {
   startValue: number;
   lastValue: number;
 }
+
+const formatBytes = (bytes: number, precision: number): string => {
+  if (bytes === 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const base = 1024;
+  const exponent = Math.floor(Math.log(Math.abs(bytes)) / Math.log(base));
+  const unitIndex = Math.min(Math.max(exponent, 0), units.length - 1);
+  const value = bytes / Math.pow(base, unitIndex);
+
+  return `${value.toFixed(precision)} ${units[unitIndex]}`;
+};
 
 const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
   (
@@ -52,6 +65,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         useGrouping: true,
         notation: 'standard',
       },
+      isBytesFormat = false,
       allowNegative = true,
       className = '',
       density = Densities.Medium,
@@ -75,12 +89,14 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       (num: number | null): string => {
         if (num === null) return '';
         try {
-          return isFocused ? num.toString() : formatter.format(num);
+          if (isFocused) return num.toString();
+          if (isBytesFormat) return formatBytes(num, format.maximumFractionDigits ?? 2);
+          return formatter.format(num);
         } catch {
           return num.toString();
         }
       },
-      [formatter, isFocused]
+      [formatter, isFocused, isBytesFormat, format.maximumFractionDigits]
     );
 
     const parseValue = useCallback(

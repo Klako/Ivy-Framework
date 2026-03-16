@@ -19,7 +19,40 @@ public class NumberInputApp : SampleBase
         var jpyValue = UseState(12345m);
         var nullCurrencyValue = UseState<decimal?>(() => null);
         var nullIntInvalid = UseState<int?>();
+
+        // New format style examples
+        var compactValue = UseState(1_234_567.0);
+        var scientificValue = UseState(1_234_567.0);
+        var engineeringValue = UseState(1_234_567.0);
+        var accountingValue = UseState(-1234.56m);
+        var bytesValue = UseState(5_242_880.0);
+
+        // Create a currency value for size examples
         var sizeExampleCurrency = UseState(1234.56m);
+
+        // Moved from CreateNumericTypeTests
+        var numericTypes = new (string TypeName, object NonNullableState, object NullableState)[]
+        {
+            // Signed integer types
+            ("short", UseState((short)0), UseState((short?)null)),
+            ("int", UseState(0), UseState((int?)null)),
+            ("long", UseState((long)0), UseState((long?)null)),
+
+            // Unsigned integer types
+            ("byte", UseState((byte)0), UseState((byte?)null)),
+
+            // Floating-point types
+            ("float", UseState(0.0f), UseState((float?)null)),
+            ("double", UseState(0.0), UseState((double?)null)),
+            ("decimal", UseState((decimal)0), UseState((decimal?)null))
+        };
+
+        var dataBinding = CreateNumericTypeTests(numericTypes);
+
+        var currencyExamples = CreateCurrencyExamples((IState<decimal>)usdValue, (IState<decimal>)eurValue, (IState<decimal>)gbpValue, (IState<decimal>)jpyValue, (IState<decimal?>)nullCurrencyValue,
+            compactValue, scientificValue, engineeringValue, (IState<decimal>)accountingValue, bytesValue);
+
+        // Prefix and Suffix examples
         var priceValue = UseState(99.99m);
         var weightValue = UseState(5.5);
         var temperatureValue = UseState(22);
@@ -220,7 +253,12 @@ public class NumberInputApp : SampleBase
         IState<decimal> eurValue,
         IState<decimal> gbpValue,
         IState<decimal> jpyValue,
-        IState<decimal?> nullCurrencyValue)
+        IState<decimal?> nullCurrencyValue,
+        IState<double> compactValue,
+        IState<double> scientificValue,
+        IState<double> engineeringValue,
+        IState<decimal> accountingValue,
+        IState<double> bytesValue)
     {
 
         return Layout.Vertical()
@@ -311,6 +349,59 @@ public class NumberInputApp : SampleBase
                   | usdValue
                     .ToSliderInput()
                     .FormatStyle(NumberFormatStyle.Percent)
+
+                  | Text.Block("Compact")
+                  | Text.Block("1.2M")
+                  | compactValue
+                    .ToNumberInput()
+                    .FormatStyle(NumberFormatStyle.Compact)
+                    .Precision(1)
+                  | compactValue
+                    .ToSliderInput()
+                    .FormatStyle(NumberFormatStyle.Compact)
+                    .Precision(1)
+
+                  | Text.Block("Scientific")
+                  | Text.Block("1.23E6")
+                  | scientificValue
+                    .ToNumberInput()
+                    .FormatStyle(NumberFormatStyle.Scientific)
+                    .Precision(2)
+                  | scientificValue
+                    .ToSliderInput()
+                    .FormatStyle(NumberFormatStyle.Scientific)
+                    .Precision(2)
+
+                  | Text.Block("Engineering")
+                  | Text.Block("1.23E6")
+                  | engineeringValue
+                    .ToNumberInput()
+                    .FormatStyle(NumberFormatStyle.Engineering)
+                    .Precision(2)
+                  | engineeringValue
+                    .ToSliderInput()
+                    .FormatStyle(NumberFormatStyle.Engineering)
+                    .Precision(2)
+
+                  | Text.Block("Accounting")
+                  | Text.Block("($1,234.56)")
+                  | accountingValue
+                    .ToNumberInput()
+                    .FormatStyle(NumberFormatStyle.Accounting)
+                    .Currency("USD")
+                  | accountingValue
+                    .ToSliderInput()
+                    .FormatStyle(NumberFormatStyle.Accounting)
+                    .Currency("USD")
+
+                  | Text.Block("Bytes")
+                  | Text.Block("5 MB")
+                  | bytesValue
+                    .ToNumberInput()
+                    .FormatStyle(NumberFormatStyle.Bytes)
+                  | bytesValue
+                    .ToSliderInput()
+                    .FormatStyle(NumberFormatStyle.Bytes)
                )
 
                | Text.H3("Currency with Constraints")

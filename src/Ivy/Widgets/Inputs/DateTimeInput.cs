@@ -55,7 +55,7 @@ public abstract record DateTimeInputBase : WidgetBase<DateTimeInputBase>, IAnyDa
 public record DateTimeInput<TDate> : DateTimeInputBase, IInput<TDate>
 {
     [OverloadResolutionPriority(1)]
-    public DateTimeInput(IAnyState state, string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date) : this(placeholder, disabled, variant)
+    internal DateTimeInput(IAnyState state, string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date) : this(placeholder, disabled, variant)
     {
         var typedState = state.As<TDate>();
         Value = typedState.Value;
@@ -63,19 +63,19 @@ public record DateTimeInput<TDate> : DateTimeInputBase, IInput<TDate>
     }
 
     [OverloadResolutionPriority(1)]
-    public DateTimeInput(TDate value, Func<Event<IInput<TDate>, TDate>, ValueTask> onChange, string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date) : this(placeholder, disabled, variant)
+    internal DateTimeInput(TDate value, Func<Event<IInput<TDate>, TDate>, ValueTask> onChange, string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date) : this(placeholder, disabled, variant)
     {
         OnChange = onChange.ToEventHandler();
         Value = value;
     }
 
-    public DateTimeInput(TDate value, Action<Event<IInput<TDate>, TDate>> onChange, string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date) : this(placeholder, disabled, variant)
+    internal DateTimeInput(TDate value, Action<Event<IInput<TDate>, TDate>> onChange, string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date) : this(placeholder, disabled, variant)
     {
         OnChange = new(e => { onChange(e); return ValueTask.CompletedTask; });
         Value = value;
     }
 
-    public DateTimeInput(string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date)
+    internal DateTimeInput(string? placeholder = null, bool disabled = false, DateTimeInputVariant variant = DateTimeInputVariant.Date)
     {
         Variant = variant;
         Placeholder = placeholder;

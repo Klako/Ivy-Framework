@@ -1,0 +1,47 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Ivy.Agent.Filter -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Agent.Filter\bin\Debug\net10.0\Ivy.Agent.Filter.dll
+  Ivy -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy\bin\Debug\net10.0\Ivy.dll
+  Ivy.XamlBuilder -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.XamlBuilder\bin\Debug\net10.0\Ivy.XamlBuilder.dll
+  Ivy.Auth.Sliplane -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.Sliplane\bin\Debug\net10.0\Ivy.Auth.Sliplane.dll
+  Ivy.Desktop -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Desktop\bin\Debug\net10.0\Ivy.Desktop.dll
+  Ivy.Analyser -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Analyser\bin\Debug\netstandard2.0\Ivy.Analyser.dll
+  Ivy.Auth.Auth0 -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.Auth0\bin\Debug\net10.0\Ivy.Auth.Auth0.dll
+  Ivy.Auth.Supabase -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.Supabase\bin\Debug\net10.0\Ivy.Auth.Supabase.dll
+  Ivy.Auth.Clerk -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.Clerk\bin\Debug\net10.0\Ivy.Auth.Clerk.dll
+  Ivy.Auth.GitHub -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.GitHub\bin\Debug\net10.0\Ivy.Auth.GitHub.dll
+  Ivy.Docs.Tools -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Tools\bin\Debug\net10.0\Ivy.Docs.Tools.dll
+  Ivy.Agent.EfQuery -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Agent.EfQuery\bin\Debug\net10.0\Ivy.Agent.EfQuery.dll
+  Ivy.Auth.MicrosoftEntra -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.MicrosoftEntra\bin\Debug\net10.0\Ivy.Auth.MicrosoftEntra.dll
+  BasicAuthExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\BasicAuthExample\bin\Debug\net10.0\BasicAuthExample.dll
+  Ivy.Test -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Test\bin\Debug\net10.0\Ivy.Test.dll
+  Ivy.Auth.Authelia -> D:\git\ivy-bot3\Ivy-Framework\src\auth\Ivy.Auth.Authelia\bin\Debug\net10.0\Ivy.Auth.Authelia.dll
+  Auth0Example -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\Auth0Example\bin\Debug\net10.0\Auth0Example.dll
+  SliplaneExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\SliplaneExample\bin\Debug\net10.0\SliplaneExample.dll
+  Ivy.XamlBuilder.Test -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.XamlBuilder.Test\bin\Debug\net10.0\Ivy.XamlBuilder.Test.dll
+  ClerkExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\ClerkExample\bin\Debug\net10.0\ClerkExample.dll
+  GitHubExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\GitHubExample\bin\Debug\net10.0\GitHubExample.dll
+  SupabaseExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\SupabaseExample\bin\Debug\net10.0\SupabaseExample.dll
+  MicrosoftEntraExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\MicrosoftEntraExample\bin\Debug\net10.0\MicrosoftEntraExample.dll
+  Ivy.Docs.Tools.Test -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Tools.Test\bin\Debug\net10.0\Ivy.Docs.Tools.Test.dll
+  AutheliaExample -> D:\git\ivy-bot3\Ivy-Framework\src\auth\examples\AutheliaExample\bin\Debug\net10.0\AutheliaExample.dll
+  Ivy.Samples.Shared -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Samples.Shared\bin\Debug\net10.0\Ivy.Samples.Shared.dll
+  Ivy.Samples -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Samples\bin\Debug\net10.0\Ivy.Samples.dll
+  Ivy.Agent.EfQuery.Test -> D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Agent.EfQuery.Test\bin\Debug\net10.0\Ivy.Agent.EfQuery.Test.dll
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(241,19): error CS0246: The type or namespace name 'RadialBarChart' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(243,32): error CS0246: The type or namespace name 'RadialBar' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(216,19): error CS0246: The type or namespace name 'RadialBarChart' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(218,32): error CS0246: The type or namespace name 'RadialBar' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(195,19): error CS0246: The type or namespace name 'RadialBarChart' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+
+Build FAILED.
+
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(241,19): error CS0246: The type or namespace name 'RadialBarChart' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(243,32): error CS0246: The type or namespace name 'RadialBar' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(216,19): error CS0246: The type or namespace name 'RadialBarChart' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(218,32): error CS0246: The type or namespace name 'RadialBar' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Generated\Widgets\Charts\RadialBarChart.g.cs(195,19): error CS0246: The type or namespace name 'RadialBarChart' could not be found (are you missing a using directive or an assembly reference?) [D:\git\ivy-bot3\Ivy-Framework\src\Ivy.Docs.Shared\Ivy.Docs.Shared.csproj]
+    0 Warning(s)
+    5 Error(s)
+
+Time Elapsed 00:00:04.64

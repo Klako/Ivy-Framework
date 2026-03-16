@@ -41,6 +41,7 @@ import {
   AsyncSelectInputWidget,
   DateRangeInputWidget,
   FileInputWidget,
+  SignatureInputWidget,
 } from '@/widgets/inputs';
 import {
   StackLayoutWidget,
@@ -193,6 +194,7 @@ export const widgetMap = {
   'Ivy.AsyncSelectInput': AsyncSelectInputWidget,
   'Ivy.DateRangeInput': DateRangeInputWidget,
   'Ivy.FileInput': FileInputWidget,
+  'Ivy.SignatureInput': SignatureInputWidget,
   'Ivy.CodeInput': React.lazy(
     () => import('@/widgets/inputs/code/CodeInputWidget')
   ),

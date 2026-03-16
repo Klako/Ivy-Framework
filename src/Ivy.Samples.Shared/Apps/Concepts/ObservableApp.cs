@@ -9,7 +9,8 @@ public class ObservableApp : SampleBase
     {
         var progress = UseState(0);
 
-        var timeObservable = UseRef(() => Observable.Interval(TimeSpan.FromSeconds(1)).Select(_ => DateTime.Now.ToString("HH:mm:ss"))).Value;
+        var timeObservableRef = UseRef(() => Observable.Interval(TimeSpan.FromSeconds(1)).Select(_ => DateTime.Now.ToString("HH:mm:ss")));
+        var timeObservable = timeObservableRef.Value;
 
         UseEffect(() =>
         {

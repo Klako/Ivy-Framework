@@ -8,6 +8,7 @@ import {
   normalizeRelativePath,
   validateEmbedUrl,
 } from '@/lib/url';
+import { useEventHandler } from '@/components/event-handler';
 
 interface VideoPlayerWidgetProps {
   id: string;
@@ -23,6 +24,7 @@ interface VideoPlayerWidgetProps {
   volume?: number; // 0.0 to 1.0
   startTime?: number; // playback start position in seconds
   endTime?: number; // playback stop position in seconds
+  events?: string[];
 }
 
 const getVideoUrl = (url: string | undefined | null): string | null => {
@@ -64,9 +66,31 @@ export const VideoPlayerWidget: React.FC<VideoPlayerWidgetProps> = ({
   volume,
   startTime,
   endTime,
+  events = [],
 }) => {
   const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const handleEvent = useEventHandler();
+  const hasOnPlay = Array.isArray(events) && events.includes('OnPlay');
+  const hasOnPause = Array.isArray(events) && events.includes('OnPause');
+  const hasOnEnded = Array.isArray(events) && events.includes('OnEnded');
+  const hasOnLoaded = Array.isArray(events) && events.includes('OnLoaded');
+
+  const handlePlayEvent = useCallback(() => {
+    if (hasOnPlay) handleEvent('OnPlay', id, []);
+  }, [hasOnPlay, handleEvent, id]);
+
+  const handlePauseEvent = useCallback(() => {
+    if (hasOnPause) handleEvent('OnPause', id, []);
+  }, [hasOnPause, handleEvent, id]);
+
+  const handleEndedEvent = useCallback(() => {
+    if (hasOnEnded) handleEvent('OnEnded', id, []);
+  }, [hasOnEnded, handleEvent, id]);
+
+  const handleLoadedEvent = useCallback(() => {
+    if (hasOnLoaded) handleEvent('OnLoaded', id, []);
+  }, [hasOnLoaded, handleEvent, id]);
 
   useEffect(() => {
     if (videoRef.current && volume != null) {
@@ -186,6 +210,10 @@ export const VideoPlayerWidget: React.FC<VideoPlayerWidgetProps> = ({
       className="w-full rounded"
       onError={() => setHasError(true)}
       onTimeUpdate={endTime != null ? handleTimeUpdate : undefined}
+      onPlay={handlePlayEvent}
+      onPause={handlePauseEvent}
+      onEnded={handleEndedEvent}
+      onLoadedData={handleLoadedEvent}
       aria-label="Video player"
     >
       Your browser does not support the video element.

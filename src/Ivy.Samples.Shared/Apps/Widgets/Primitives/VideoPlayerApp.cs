@@ -8,6 +8,19 @@ public class VideoPlayerApp : SampleBase
     {
         var client = UseService<IClientProvider>();
 
+        // Event callbacks
+        var playCount = UseState(0);
+        var pauseCount = UseState(0);
+        var completedState = UseState(false);
+        var loadedState = UseState(false);
+
+        var eventVideo = new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
+            .HandlePlay(_ => playCount.Set(playCount.Value + 1))
+            .HandlePause(_ => pauseCount.Set(pauseCount.Value + 1))
+            .HandleEnded(_ => completedState.Set(true))
+            .HandleLoaded(_ => loadedState.Set(true))
+            .Height(Size.Units(50));
+
         // Basic video player
         var basicVideo = new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4");
 
@@ -134,6 +147,21 @@ public class VideoPlayerApp : SampleBase
                     | Text.P("YouTube video plays from 30s to 60s.").Small()
                     | youtubeSegment
                 ).Title("Time Range Control"))
+
+                // Event Callbacks
+                | (new Card(
+                    Layout.Vertical().Gap(4)
+                    | Text.H4("Event Callbacks")
+                    | Text.P("Track video playback events for analytics, sequential content, or coordinated UI.").Small()
+                    | eventVideo
+                    | (Layout.Horizontal().Gap(4)
+                        | new Badge($"Play: {playCount.Value}").Variant(BadgeVariant.Secondary)
+                        | new Badge($"Pause: {pauseCount.Value}").Variant(BadgeVariant.Secondary)
+                        | new Badge(completedState.Value ? "Completed" : "Not completed")
+                            .Variant(completedState.Value ? BadgeVariant.Success : BadgeVariant.Secondary)
+                        | new Badge(loadedState.Value ? "Loaded" : "Loading")
+                            .Variant(loadedState.Value ? BadgeVariant.Success : BadgeVariant.Secondary))
+                ).Title("Event Callbacks"))
 
                 // YouTube
                 | (new Card(

@@ -31,7 +31,7 @@ import {
 import { SelectMultiVariant } from './SelectMultiVariant';
 import { SelectSingleVariant } from './SelectSingleVariant';
 
-const EMPTY_ARRAY: never[] = [];
+import { EMPTY_ARRAY } from '@/lib/constants';
 // variants for SelectInputWidget container
 const selectContainerVariant = cva(
   'relative border border-input bg-transparent rounded-box shadow-sm focus-within:ring-1 focus-within:ring-ring dark:border-white/10',
@@ -809,7 +809,7 @@ const SelectVariant: React.FC<
   return props.selectMany ? (
     <SelectMultiVariant {...props} />
   ) : (
-    <SelectSingleVariant {...props} />
+    <SelectSingleVariant key={props.value?.toString() ?? 'null'} {...props} />
   );
 };
 
@@ -852,13 +852,6 @@ const SliderVariant: React.FC<
   }, [value, validOptions]);
 
   const [localIndex, setLocalIndex] = useState(currentIndex);
-  const [prevIndex, setPrevIndex] = useState(currentIndex);
-
-  // Reset local state if prop-derived index changes
-  if (currentIndex !== prevIndex) {
-    setPrevIndex(currentIndex);
-    setLocalIndex(currentIndex);
-  }
 
   const handleSliderChange = useCallback((values: number[]) => {
     const newIndex = values[0];
@@ -999,7 +992,13 @@ export const SelectInputWidget: React.FC<SelectInputWidgetProps> = props => {
     case 'Toggle':
       return <ToggleVariant {...normalizedProps} eventHandler={eventHandler} />;
     case 'Slider':
-      return <SliderVariant {...normalizedProps} eventHandler={eventHandler} />;
+      return (
+        <SliderVariant
+          key={normalizedProps.value?.toString() ?? 'null'}
+          {...normalizedProps}
+          eventHandler={eventHandler}
+        />
+      );
     default:
       return <SelectVariant {...normalizedProps} eventHandler={eventHandler} />;
   }

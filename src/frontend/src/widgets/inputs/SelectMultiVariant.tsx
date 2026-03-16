@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import {
   MultipleSelector,
@@ -84,24 +84,35 @@ export const SelectMultiVariant: React.FC<SelectInputWidgetProps> = ({
     [selectedValues, optionsLookup]
   );
 
-  const handleMultiSelectChange = (newSelectedOptions: MultiSelectOption[]) => {
-    if (
-      minSelections != null &&
-      newSelectedOptions.length < minSelections &&
-      newSelectedOptions.length < selectedValues.length
-    ) {
-      return;
-    }
+  const handleMultiSelectChange = useCallback(
+    (newSelectedOptions: MultiSelectOption[]) => {
+      if (
+        minSelections != null &&
+        newSelectedOptions.length < minSelections &&
+        newSelectedOptions.length < selectedValues.length
+      ) {
+        return;
+      }
 
-    const newValues = newSelectedOptions.map(opt => opt.value);
-    const convertedValue = convertValuesToOriginalType(
-      newValues,
+      const newValues = newSelectedOptions.map(opt => opt.value);
+      const convertedValue = convertValuesToOriginalType(
+        newValues,
+        value,
+        validOptions,
+        selectMany
+      );
+      eventHandler('OnChange', id, [convertedValue]);
+    },
+    [
+      minSelections,
+      selectedValues.length,
       value,
       validOptions,
-      selectMany
-    );
-    eventHandler('OnChange', id, [convertedValue]);
-  };
+      selectMany,
+      eventHandler,
+      id,
+    ]
+  );
 
   const styles = getWidth(width);
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { validateImageUrl } from '@/lib/url';
 
 interface ImageOverlayProps {
@@ -12,12 +12,52 @@ export const ImageOverlay: React.FC<ImageOverlayProps> = ({
   alt,
   onClose,
 }) => {
-  // Handle click on the overlay background to close it
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
+    // Find all focusable elements
+    const focusableElements = overlay.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
+
+    // Focus the first element (close button)
+    firstElement?.focus();
+
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      handleTabKey(e);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   // Validate and sanitize image URL to prevent open redirect vulnerabilities
   const validatedSrc = src ? validateImageUrl(src) : null;
@@ -28,10 +68,14 @@ export const ImageOverlay: React.FC<ImageOverlayProps> = ({
 
   return (
     <div
+      ref={overlayRef}
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 cursor-zoom-out"
-      onClick={handleBackdropClick}
-      role="presentation"
-      onKeyDown={e => e.key === 'Escape' && onClose()}
+      onClick={e => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image Overlay"
     >
       <div className="relative max-w-[90vw] max-h-[90vh]">
         <img

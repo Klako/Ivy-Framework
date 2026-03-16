@@ -68,12 +68,6 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
   const selectedLabel = selectedOption?.label;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [isEllipsed, setIsEllipsed] = useState(false);
-  const [prevLabel, setPrevLabel] = useState(selectedLabel);
-
-  if (selectedLabel !== prevLabel) {
-    setPrevLabel(selectedLabel);
-    setIsEllipsed(false);
-  }
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

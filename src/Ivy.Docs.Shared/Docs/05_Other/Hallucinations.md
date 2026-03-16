@@ -142,6 +142,25 @@ input.OnBlur(() => Validate())
 
 All `Handle*` event handler extension methods were renamed to `On*` in v1.2.17 (Ivy-Framework#2459, #2510): `HandleClick` → `OnClick`, `HandleSubmit` → `OnSubmit`, `HandleChange` → `OnChange`, `HandleSelect` → `OnSelect`, `HandleClose` → `OnClose`, `HandleBlur` → `OnBlur`, `HandleRowAction` → `OnRowAction`, `HandleCardMove` → `OnCardMove`, `HandleExpand` → `OnExpand`, `HandleCollapse` → `OnCollapse`, `HandlePageChange` → `OnPageChange`, `HandleUpload` → `OnUpload`, `HandleDownload` → `OnDownload`. **Auto-fixed:** The refactoring service automatically rewrites all `Handle*` calls to `On*`.
 
+## AppAttribute.path — renamed to group
+
+**Hallucinated API:**
+```csharp
+[App(path: ["Tests"])]
+```
+
+**Error:** `'AppAttribute' does not contain a definition for 'path'`
+
+**Correct API:**
+```csharp
+[App(group: ["Tests"])]
+```
+
+The `path` parameter was renamed to `group` in v1.2.18 to better reflect that it defines the organizational group/folder in the sidebar, not a URL path. This applies to both the `[App]` attribute and the `AppDescriptor` class (`Path` property → `Group` property).
+
+**Found In:**
+Ivy-Framework#2612
+
 **Found In:**
 (multiple sessions — agent uses old API names from training data)
 

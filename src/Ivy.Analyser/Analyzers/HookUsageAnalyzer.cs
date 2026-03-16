@@ -503,12 +503,12 @@ namespace Ivy.Analyser.Analyzers
         {
             if (statement is LocalDeclarationStatementSyntax localDecl)
             {
-                // Use LINQ for cleaner filtering
+                // Use LINQ for cleaner filtering — unwrap null-forgiving operator (!)
                 if (localDecl.Declaration.Variables
-                    .Where(v => v.Initializer?.Value is InvocationExpressionSyntax)
+                    .Where(v => v.Initializer != null && UnwrapSuppression(v.Initializer.Value) is InvocationExpressionSyntax)
                     .Any(v =>
                     {
-                        var invocation = (InvocationExpressionSyntax)v.Initializer!.Value;
+                        var invocation = (InvocationExpressionSyntax)UnwrapSuppression(v.Initializer!.Value);
                         var methodName = GetMethodName(invocation);
                         return methodName != null && IsHookName(methodName);
                     }))
@@ -578,6 +578,16 @@ namespace Ivy.Analyser.Analyzers
             return false;
         }
 
+        private static ExpressionSyntax UnwrapSuppression(ExpressionSyntax expression)
+        {
+            // Unwrap null-forgiving operator: UseHook()! → UseHook()
+            while (expression is PostfixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.SuppressNullableWarningExpression } postfix)
+            {
+                expression = postfix.Operand;
+            }
+            return expression;
+        }
+
         private static bool IsInlineExpression(InvocationExpressionSyntax invocation)
         {
             // Walk up from the invocation to find the containing statement
@@ -589,12 +599,18 @@ namespace Ivy.Analyser.Analyzers
                 {
                     // Check if the hook invocation is the direct initializer of the variable
                     // e.g., var x = UseState(0); → OK
+                    // e.g., var x = UseArgs<T>()!; → OK (null-forgiving wrapper)
                     // but var x = UseState(0).Value; → inline
                     foreach (var variable in localDecl.Declaration.Variables)
                     {
                         if (variable.Initializer?.Value == invocation)
                         {
                             return false; // Direct initializer — allowed
+                        }
+                        // Handle null-forgiving operator: var x = UseHook()!;
+                        if (variable.Initializer != null && UnwrapSuppression(variable.Initializer.Value) == invocation)
+                        {
+                            return false; // Direct initializer with ! — allowed
                         }
                     }
                     return true; // Hook is nested inside the initializer expression

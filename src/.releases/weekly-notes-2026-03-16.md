@@ -6,31 +6,23 @@
 
 Manage events and schedules with the new `Calendar` widget! Display events in four different views—month, week, day, and agenda—with full interactive capabilities including drag-and-drop, event clicks, and time slot selection.
 
-**Basic calendar with events:**
-
 ```csharp
-public class EventScheduler : ViewBase
-{
-    public override object? Build()
-    {
-        return new Calendar(
-            new CalendarEvent()
-                .EventId("meeting-1")
-                .Title("Team Standup")
-                .Start(new DateTime(2026, 3, 17, 9, 0, 0))
-                .End(new DateTime(2026, 3, 17, 9, 30, 0))
-                .Color("primary"),
+return new Calendar(
+    new CalendarEvent()
+        .EventId("meeting-1")
+        .Title("Team Standup")
+        .Start(new DateTime(2026, 3, 17, 9, 0, 0))
+        .End(new DateTime(2026, 3, 17, 9, 30, 0))
+        .Color("primary"),
 
-            new CalendarEvent()
-                .EventId("deadline-1")
-                .Title("Project Deadline")
-                .Start(new DateTime(2026, 3, 20, 0, 0, 0))
-                .End(new DateTime(2026, 3, 20, 23, 59, 59))
-                .AllDay(true)
-                .Color("destructive")
-        );
-    }
-}
+    new CalendarEvent()
+        .EventId("deadline-1")
+        .Title("Project Deadline")
+        .Start(new DateTime(2026, 3, 20, 0, 0, 0))
+        .End(new DateTime(2026, 3, 20, 23, 59, 59))
+        .AllDay(true)
+        .Color("destructive")
+);
 ```
 
 **Configure view mode and date range:**
@@ -72,41 +64,34 @@ new Calendar()
 Similar to `.ToKanban()`, you can create calendars from any collection using the builder pattern:
 
 ```csharp
-public class MeetingSchedule : ViewBase
+record Meeting(string Id, string Title, DateTime Start, DateTime End, string Category);
+
+var meetings = UseState(new[]
 {
-    record Meeting(string Id, string Title, DateTime Start, DateTime End, string Category);
+    new Meeting("1", "Team Sync", DateTime.Today.AddHours(9), DateTime.Today.AddHours(10), "Work"),
+    new Meeting("2", "Design Review", DateTime.Today.AddHours(14), DateTime.Today.AddHours(15), "Work"),
+    new Meeting("3", "Gym", DateTime.Today.AddDays(1).AddHours(7), DateTime.Today.AddDays(1).AddHours(8), "Personal")
+});
 
-    public override object? Build()
+return meetings.Value
+    .ToCalendar(
+        startSelector: m => m.Start,
+        endSelector: m => m.End,
+        eventIdSelector: m => m.Id)
+    .Title(m => m.Title)
+    .Color(m => m.Category == "Work" ? "Blue" : "Green")
+    .DefaultView(CalendarDisplayMode.Week)
+    .EnableDragDrop()
+    .OnMove(move =>
     {
-        var meetings = UseState(new[]
+        var updated = meetings.Value.Select(m =>
         {
-            new Meeting("1", "Team Sync", DateTime.Today.AddHours(9), DateTime.Today.AddHours(10), "Work"),
-            new Meeting("2", "Design Review", DateTime.Today.AddHours(14), DateTime.Today.AddHours(15), "Work"),
-            new Meeting("3", "Gym", DateTime.Today.AddDays(1).AddHours(7), DateTime.Today.AddDays(1).AddHours(8), "Personal")
-        });
-
-        return meetings.Value
-            .ToCalendar(
-                startSelector: m => m.Start,
-                endSelector: m => m.End,
-                eventIdSelector: m => m.Id)
-            .Title(m => m.Title)
-            .Color(m => m.Category == "Work" ? "Blue" : "Green")
-            .DefaultView(CalendarDisplayMode.Week)
-            .EnableDragDrop()
-            .OnMove(move =>
-            {
-                // Update meeting times when dragged
-                var updated = meetings.Value.Select(m =>
-                {
-                    if (m.Id == move.EventId?.ToString())
-                        return m with { Start = move.Start, End = move.End };
-                    return m;
-                }).ToArray();
-                meetings.Set(updated);
-            });
-    }
-}
+            if (m.Id == move.EventId?.ToString())
+                return m with { Start = move.Start, End = move.End };
+            return m;
+        }).ToArray();
+        meetings.Set(updated);
+    });
 ```
 
 The builder pattern makes it easy to map your domain objects to calendar events while maintaining type safety and enabling drag-and-drop updates.
@@ -142,7 +127,7 @@ The Calendar widget follows the same pattern as Kanban, where `CalendarEvent` ch
 
 ### New XAML Renderer Widget
 
-**This is a new feature.** Ivy now includes a **XAML renderer** that turns Ivy XAML markup (XML) into live UI. You can define layouts, badges, buttons, cards, charts, and more in XML and have them rendered as normal widgets—ideal for dynamic UIs, generated content, or the Advanced → Xaml Builder sample.
+**This is a new feature.** Ivy now includes a **XAML renderer** that turns Ivy XAML markup (XML) into live UI. You can define layouts, badges, buttons, cards, charts, and more in XML and have them rendered as normal widgets—ideal for dynamic UIs, generated content, or the Advanced to Xaml Builder sample.
 
 **Reference the package:**
 
@@ -166,27 +151,9 @@ return Layout.Vertical()
     | widget;
 ```
 
-**Example XAML:**
-
-```xml
-<StackLayout Orientation="Vertical">
-  <Badge Title="Hello" />
-  <Badge Title="World" Variant="Success" />
-</StackLayout>
-```
-
-**What the renderer does:**
-
-- Parses Ivy XAML (XML) and maps element names to widget types (e.g. `StackLayout`, `Badge`, `Button`, `Card`, `LineChart`).
-- Sets properties from attributes (e.g. `Title="Hello"`, `Variant="Success"`).
-- Handles nested layout and property elements (e.g. `LineChart.Lines`, `XAxis`, `Data` with CDATA for chart data).
-- Returns an `AbstractWidget` tree that the framework renders like any other view content.
-
-Use this for tooling, agents (e.g. EfQuery generating visualizations), or anywhere you need to build UI from markup instead of C#.
-
 ### Build Desktop Apps with Ivy
 
-You can now run Ivy applications as **native desktop apps** on Windows, macOS, and Linux using the **Ivy.Desktop** package. The same C# and Ivy UI you use for web run in a native window—no Electron, no Chromium; the stack uses [Photino](https://tryphotino.io) for a lightweight, cross-platform desktop host.
+You can now run Ivy applications as **native desktop apps** on Windows, macOS, and Linux using the **Ivy.Desktop** package. The stack uses [Photino](https://tryphotino.io) for a lightweight, cross-platform desktop host.
 
 **Install the package:**
 
@@ -202,20 +169,14 @@ Create your Ivy app (views, widgets, hooks) as usual, then host it with a deskto
 using Ivy;
 using Ivy.Desktop;
 
-public class MyDesktopApp : ViewBase
-{
-    public override object? Build()
-    {
-        return Layout.Vertical()
-            | Text.H2("Hello from Ivy.Desktop!")
-            | Text.P("Native desktop UI powered by C#.");
-    }
-}
+return Layout.Vertical()
+    | Text.H2("Hello from Ivy.Desktop!")
+    | Text.P("Native desktop UI powered by C#.");
 
-// Program.cs: run as desktop app
+// Program.cs: run as desktop app (use your view type for RootComponent)
 var appDescriptor = new AppDescriptor()
 {
-    RootComponent = typeof(MyDesktopApp),
+    RootComponent = typeof(YourView),  // the view that returns the Layout.Vertical above
     InitialTitle = "My Desktop App",
 };
 DesktopWindow.Run(appDescriptor, args);
@@ -224,104 +185,33 @@ DesktopWindow.Run(appDescriptor, args);
 **What you get:**
 
 - **Cross-platform:** One codebase for Windows, macOS, and Linux.
-- **Lightweight:** Photino-based window; no bundled Chromium/Electron.
-- **Same Ivy stack:** Your existing views, widgets, and C# logic run unchanged; only the host (desktop window instead of browser) changes.
+- **Lightweight:** Photino-based window.
 - **Window options:** Set title, size, resizable, top-most, DPI scaling, center on screen, dev tools, and custom window icon from an embedded resource.
-
-Use **Ivy.Desktop** when you want a native desktop experience (installable app, window on the taskbar) while keeping 100% C# and the same Ivy UI.
 
 ### AudioInput Sample Rate Control
 
-The `AudioInput` widget now supports configurable sample rates, giving you precise control over audio recording quality and file size. Set the target sample rate in Hz to optimize for your use case—lower rates for speech recognition efficiency, higher rates for music and high-fidelity recordings.
-
-**Basic usage:**
+`AudioInput` now supports configurable sample rates via `.SampleRate(hz)`. Supported values: 8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000 Hz. Omit for browser default (typically 48000). Use lower rates (e.g. 16000 for speech) for smaller files; higher for music. The framework resamples via the Web Audio API so the requested rate is applied regardless of the microphone’s native rate.
 
 ```csharp
-var upload = new UploadContext("/api/upload");
-
-// Default browser sample rate (typically 48000 Hz)
-new AudioInput(upload)
-
-// Speech recognition (16kHz is optimal for most speech models)
-new AudioInput(upload)
-    .SampleRate(16000)
-
-// High-fidelity audio recording
-new AudioInput(upload)
-    .SampleRate(48000)
+new AudioInput(upload).SampleRate(16000)   // speech / voice notes
+new AudioInput(upload).SampleRate(48000)   // high-fidelity
 ```
-
-**Supported sample rates:**
-
-The widget supports standard audio sample rates: 8000, 11025, 16000, 22050, 24000, 32000, 44100, and 48000 Hz. When `SampleRate` is null or not specified, the browser uses its default (typically 48000 Hz).
-
-**Common use cases:**
-
-```csharp
-// Voice notes and speech-to-text (smaller files, faster processing)
-new AudioInput(upload, label: "Record Voice Note")
-    .SampleRate(16000)
-
-// Podcasts and interviews (balanced quality and size)
-new AudioInput(upload, label: "Record Podcast")
-    .SampleRate(32000)
-
-// Music and high-quality recording
-new AudioInput(upload, label: "Record Audio")
-    .SampleRate(48000)
-```
-
-Lower sample rates produce smaller audio files and are more efficient for bandwidth-constrained scenarios, while higher sample rates preserve more audio detail for music and high-fidelity applications.
-
-**Guaranteed sample rate accuracy:** The framework now uses Web Audio API resampling to ensure your specified sample rate is always applied, regardless of the microphone's native sample rate. Previously, browsers could ignore sample rate requests—now the audio is automatically resampled to match your exact specification.
 
 ### New NumberRangeInput Widget
 
 Select numeric ranges with an intuitive dual-handle slider! The new `NumberRangeInput` widget provides a sleek interface for selecting minimum and maximum numeric values, perfect for filtering by price ranges, thresholds, or any min/max bounds.
 
-**Basic usage:**
-
 ```csharp
-public class PriceFilterDemo : ViewBase
-{
-    public override object? Build()
-    {
-        var priceRange = UseState<(int, int)>(() => (25, 75));
-
-        return Layout.Vertical()
-            | priceRange.ToNumberRangeInput()
-                .Min(0)
-                .Max(100)
-            | Text.P($"Price: ${priceRange.Value.Item1} - ${priceRange.Value.Item2}");
-    }
-}
-```
-
-The widget uses a tuple `(min, max)` to represent the range, following the same pattern as `DateRangeInput`. Access values with `.Item1` (lower bound) and `.Item2` (upper bound).
-
-**Currency and formatting:**
-
-Like `NumberInput`, the `NumberRangeInput` supports all the same formatting options including currency, percentages, and custom precision:
-
-```csharp
-// Currency formatting
-priceRange.ToNumberRangeInput()
-    .Min(0)
-    .Max(10000)
-    .Currency("USD")
-    .Precision(2)
-
-// Percentage range
-percentRange.ToNumberRangeInput()
-    .Min(0)
-    .Max(100)
-    .Percent(true)
-
-// Custom step intervals
-quantityRange.ToNumberRangeInput()
-    .Min(0)
-    .Max(1000)
-    .Step(50)
+// State: (min, max); use .Item1 and .Item2 for bounds (same pattern as DateRangeInput)
+var priceRange = UseState<(int, int)>(() => (25, 75));
+return Layout.Vertical()
+    | priceRange.ToNumberRangeInput()
+        .Min(0)
+        .Max(100)
+        .Currency("USD")   // or .Percent(true), etc.
+        .Precision(2)
+        .Step(2)          // slider step interval
+    | Text.P($"Price: ${priceRange.Value.Item1} - ${priceRange.Value.Item2}");
 ```
 
 **Supported types:**
@@ -332,20 +222,9 @@ The widget supports all numeric tuple types including `(int, int)`, `(decimal, d
 
 The date input widgets now support custom placeholder text for date ranges and configurable calendar week start days, making them more flexible for international use and domain-specific scenarios.
 
-**Custom placeholders for DateRangeInput:**
-
 Set separate placeholders for the start and end date fields to provide context-specific hints to users:
 
 ```csharp
-// Hotel booking with check-in/check-out placeholders
-var bookingDates = UseState<(DateOnly?, DateOnly?)>(() => (null, null));
-
-bookingDates.ToDateRangeInput()
-    .StartPlaceholder("Check-in")
-    .EndPlaceholder("Check-out")
-    .Format("MM/dd/yyyy")
-
-// Event planning with start/end labels
 var eventDates = UseState<(DateOnly?, DateOnly?)>(() => (null, null));
 
 eventDates.ToDateRangeInput()
@@ -360,20 +239,7 @@ When both placeholders are set, they replace the generic "Pick a date range" pla
 Customize which day the calendar week starts on for both `DateTimeInput` and `DateRangeInput` to match regional conventions or business requirements:
 
 ```csharp
-// Monday-first calendar (common in Europe, ISO 8601)
 var appointmentDate = UseState(DateOnly.FromDateTime(DateTime.Now));
-
-appointmentDate.ToDateInput()
-    .FirstDayOfWeek(DayOfWeek.Monday)
-
-// Monday-first date range
-var dateRange = UseState<(DateOnly, DateOnly)>((
-    DateOnly.FromDateTime(DateTime.Now.AddDays(-7)),
-    DateOnly.FromDateTime(DateTime.Now)
-));
-
-dateRange.ToDateRangeInput()
-    .FirstDayOfWeek(DayOfWeek.Monday)
 
 // Sunday-first calendar (default in US)
 appointmentDate.ToDateInput()
@@ -386,20 +252,14 @@ The `FirstDayOfWeek` property accepts any `DayOfWeek` enum value (Sunday through
 
 The `FileInput` widget now supports two display variants: the existing `Drop` variant (default) with its large drag-and-drop zone, and a new `Default` variant that provides a more compact, button-based interface. Both variants fully support drag-and-drop functionality.
 
-**Using the Default variant:**
-
 ```csharp
-public class FileUploadDemo : ViewBase
-{
-    public override object? Build()
-    {
-        var file = UseState<FileUpload<byte[]>?>();
-        var upload = UseUpload(MemoryStreamUploadHandler.Create(file));
+var file = UseState<FileUpload<byte[]>?>();
+var upload = UseUpload(MemoryStreamUploadHandler.Create(file));
 
-        return Layout.Vertical()
-            | file.ToFileInput(upload)
-                .Variant(FileInputVariant.Default)
-                .Placeholder("Select file");
+return Layout.Vertical()
+        | file.ToFileInput(upload)
+            .Variant(FileInputVariant.Default)
+            .Placeholder("Select file");
     }
 }
 ```
@@ -410,23 +270,15 @@ The Default variant maintains all the same features as the Drop variant includin
 
 Capture photos directly from the user's webcam or device camera with the new `CameraInput` widget! It provides a live video preview, one-click capture, and automatic upload—all using the same familiar upload pattern as `FileInput`.
 
-**Basic usage:**
-
 ```csharp
-public class BasicCameraDemo : ViewBase
-{
-    public override object? Build()
-    {
-        var photo = UseState<FileUpload<byte[]>?>();
-        var upload = UseUpload(MemoryStreamUploadHandler.Create(photo));
+var photo = UseState<FileUpload<byte[]>?>();
+var upload = UseUpload(MemoryStreamUploadHandler.Create(photo));
 
-        return Layout.Vertical()
-            | new CameraInput(upload.Value, "Take a photo")
-            | (photo.Value != null
-                ? Text.P($"Captured: {photo.Value.FileName} ({StringHelper.FormatBytes(photo.Value.Length)})")
-                : Text.P("No photo captured yet."));
-    }
-}
+    return Layout.Vertical()
+        | new CameraInput(upload.Value, "Take a photo")
+        | (photo.Value != null
+            ? Text.P($"Captured: {photo.Value.FileName} ({StringHelper.FormatBytes(photo.Value.Length)})")
+            : Text.P("No photo captured yet."));
 ```
 
 **Camera selection:**
@@ -464,23 +316,10 @@ The CameraInput widget is perfect for profile photos, document scanning, ID veri
 
 The `TextInput` widget now supports regex pattern validation with the new `Pattern` property. Validate input formats like email addresses, phone numbers, URLs, postal codes, and custom patterns—all with built-in client-side validation and user-friendly error messages.
 
-**Basic usage:**
-
 ```csharp
-// Email validation
 new TextInput()
     .Pattern(@"^[^\s@]+@[^\s@]+\.[^\s@]+$")
     .Placeholder("Enter your email")
-
-// Phone number (US format)
-new TextInput()
-    .Pattern(@"^\d{3}-\d{3}-\d{4}$")
-    .Placeholder("xxx-xxx-xxxx")
-
-// Postal code (US ZIP)
-new TextInput()
-    .Pattern(@"^\d{5}(-\d{4})?$")
-    .Placeholder("12345 or 12345-6789")
 ```
 
 The error message shown to users is "Please match the requested format". Pattern validation is applied **after** server-provided errors and `MinLength` validation, ensuring the most relevant error is always displayed first.
@@ -688,8 +527,6 @@ new ScreenshotFeedback()
 
 The widget now features an Ivy dark green theme with drop shadows, SVG toolbar icons, and CSS tooltips for a polished user experience. Callout numbers automatically increment, and all annotations support customizable colors and line widths.
 
-The annotation system uses `JsonPolymorphic` attributes for clean deserialization, making it easy to process different annotation types in your C# code.
-
 ### Scroll Support for Layout and StackLayout
 
 Layouts now support scrollable content! Add scroll behavior to any `Layout` or `StackLayout` with height or width constraints using the new `.Scroll()` method.
@@ -728,13 +565,9 @@ new StackLayout([
 - `Scroll.Auto` - Browser determines scroll behavior
 - `Scroll.None` - No scrolling (default)
 
-Perfect for creating fixed-height containers with scrollable content like sidebar navigation, chat message lists, or data tables.
-
 ### Independent Row and Column Gap Control
 
 Fine-tune spacing in your layouts with independent control over vertical (row) and horizontal (column) gaps. The `.Gap()` method now accepts two parameters for precise spacing control.
-
-**Basic usage:**
 
 ```csharp
 // Gap applies to both directions
@@ -835,19 +668,13 @@ The `SelectInput` widget now supports two powerful new variants: **Radio** for t
 The Radio variant renders familiar radio buttons, perfect for settings, configuration UIs, and forms where all options should be visible:
 
 ```csharp
-public class NotificationSettings : ViewBase
-{
-    public override object? Build()
-    {
-        var frequency = UseState("Daily");
+var frequency = UseState("Daily");
 
-        return frequency.ToSelectInput(["Immediately", "Daily", "Weekly", "Never"])
-            .Radio()
-            .WithField()
-            .Label("Notification frequency")
-            .Width(Size.Full());
-    }
-}
+return frequency.ToSelectInput(["Immediately", "Daily", "Weekly", "Never"])
+    .Radio()
+    .WithField()
+    .Label("Notification frequency")
+    .Width(Size.Full());
 ```
 
 **Slider variant for ordered options:**
@@ -855,26 +682,20 @@ public class NotificationSettings : ViewBase
 The Slider variant is ideal for selecting from an ordered list like sizes, priority levels, or quality settings. It renders a range slider that snaps to each option:
 
 ```csharp
-public class ProductSelector : ViewBase
-{
-    private enum Priority { Low, Medium, High, Critical }
+enum Priority { Low, Medium, High, Critical }
 
-    public override object? Build()
-    {
-        var size = UseState("M");
-        var priority = UseState(Priority.Medium);
+var size = UseState("M");
+var priority = UseState(Priority.Medium);
 
-        return Layout.Vertical()
-            | size.ToSelectInput(new[] { "XS", "S", "M", "L", "XL", "XXL" }.ToOptions())
-                .Slider()
-                .WithField()
-                .Label("T-Shirt Size")
-            | priority.ToSelectInput()
-                .Slider()
-                .WithField()
-                .Label("Priority");
-    }
-}
+return Layout.Vertical()
+    | size.ToSelectInput(new[] { "XS", "S", "M", "L", "XL", "XXL" }.ToOptions())
+        .Slider()
+        .WithField()
+        .Label("T-Shirt Size")
+    | priority.ToSelectInput()
+        .Slider()
+        .WithField()
+        .Label("Priority");
 ```
 
 The Slider variant shows option labels in a tooltip as you slide, displays dot indicators for each value, and provides intuitive feedback for ordered discrete selections. Both variants support all standard SelectInput features including validation, disabled state, and density controls.
@@ -883,32 +704,12 @@ The Slider variant shows option labels in a tooltip as you slide, displays dot i
 
 Options in `SelectInput` widgets can now include descriptions that display as caption text below the label. This feature works with Toggle, Radio (List), and Checkbox (List) variants, making it easy to provide helpful context for each option.
 
-**Add descriptions to options:**
-
 ```csharp
 var genreOptions = new IAnyOption[]
 {
-    new Option<string>("Comedy", "Comedy")
-        { Description = "Laugh out loud." },
-    new Option<string>("Drama", "Drama")
-        { Description = "Get the popcorn." },
     new Option<string>("Documentary", "Documentary")
-        { Description = "Never stop learning." },
-    new Option<string>("Action", "Action")
-        { Description = "Edge of your seat thrills." }
+        { Description = "Never stop learning." }
 };
-
-// Works with Toggle variant
-genreToggle.ToSelectInput(genreOptions)
-    .Variant(SelectInputVariant.Toggle)
-
-// Works with Radio variant (List, single-select)
-genreRadio.ToSelectInput(genreOptions)
-    .Variant(SelectInputVariant.List)
-
-// Works with Checkbox variant (List, multi-select)
-genreCheckbox.ToSelectInput(genreOptions)
-    .Variant(SelectInputVariant.List)
 ```
 
 Descriptions appear as smaller, muted text below the option label, providing a clean way to add explanatory text without cluttering the interface.
@@ -942,34 +743,25 @@ The `--host` CLI argument takes precedence over the `HOST` environment variable,
 
 Load external JavaScript files or execute inline JavaScript code with the new `Script` widget! This widget doesn't render any visible output—it simply injects `<script>` elements into the page head, making it perfect for adding analytics, third-party libraries, or custom JavaScript behavior to your apps.
 
-**Load an external JavaScript library:**
+**Script examples:**
 
 ```csharp
-new Script("https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js")
-```
+// Load an external JavaScript library
+new Script("https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js");
 
-**Execute inline JavaScript:**
+// Execute inline JavaScript
+new Script().InlineCode("console.log('Hello from Ivy!');");
 
-```csharp
-new Script().InlineCode("console.log('Hello from Ivy!');")
-```
-
-**Control script loading behavior:**
-
-```csharp
 // Load asynchronously (doesn't block page rendering)
-new Script("https://example.com/analytics.js").Async()
+new Script("https://example.com/analytics.js").Async();
 
 // Defer execution until page is parsed
-new Script("https://example.com/widget.js").Defer()
-```
+new Script("https://example.com/widget.js").Defer();
 
-**Add security with Subresource Integrity:**
-
-```csharp
+// Add Subresource Integrity + CORS
 new Script("https://cdn.example.com/lib.js")
     .Integrity("sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8w")
-    .CrossOrigin("anonymous")
+    .CrossOrigin("anonymous");
 ```
 
 **Security considerations:**
@@ -984,34 +776,13 @@ The Script widget is ideal for integrating analytics platforms, loading visualiz
 
 Headings in `TextBlock` (H1-H6) now support anchor IDs for URL hash navigation! Add explicit anchor IDs or auto-generate them from heading text to enable deep linking and table-of-contents style navigation.
 
-**Auto-generate anchor from heading text:**
-
 ```csharp
-Text.H2("Getting Started").Anchor()
-// Creates anchor: #getting-started
+//Auto-generate anchor from heading text:
+Text.H2("Getting Started").Anchor() // Creates anchor: #getting-started
+
+//Set explicit anchor ID:
+Text.H2("API Reference").Anchor("api-docs") // Creates anchor: #api-docs
 ```
-
-**Set explicit anchor ID:**
-
-```csharp
-Text.H2("API Reference").Anchor("api-docs")
-// Creates anchor: #api-docs
-```
-
-**Build a navigation structure:**
-
-```csharp
-Layout.Vertical()
-    | Text.H1("Documentation").Anchor("top")
-    | Text.H2("Installation").Anchor()
-    | Text.P("Follow these steps to install...")
-    | Text.H2("Configuration").Anchor()
-    | Text.P("Configure your app settings...")
-    | Text.H2("Advanced Topics").Anchor("advanced")
-    | Text.P("Deep dive into advanced features...")
-```
-
-When using `.Anchor()` without parameters, the framework automatically generates a URL-safe slug by converting to lowercase, replacing spaces with hyphens, and stripping special characters. For example, "Getting Started!" becomes "getting-started".
 
 Anchors render as HTML `id` attributes on heading elements, allowing users to link directly to specific sections with URLs like `yourapp.com#getting-started`.
 
@@ -1019,15 +790,10 @@ Anchors render as HTML `id` attributes on heading elements, allowing users to li
 
 The `VideoPlayer` widget now supports fine-grained volume control! Set the playback volume from 0.0 (muted) to 1.0 (full volume) for precise audio level management.
 
-**Set volume levels:**
-
 ```csharp
-// Half volume
 new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
     .Volume(0.5f)
 ```
-
-Volume values are automatically clamped between 0.0 and 1.0, so you don't need to worry about out-of-range values. The volume setting is applied when the video element loads in the browser.
 
 This is especially useful for background videos, ambient soundscapes, tutorials with voiceover, or any scenario where you want to control the default audio level programmatically.
 
@@ -1073,11 +839,7 @@ Icon-only buttons now support the `.Small()` density option for a more compact a
 
 ```csharp
 // Small icon buttons
-Layout.Horizontal(
-    Icons.MessageSquareX.ToButton(eventHandler).Small(),
-    Icons.Heart.ToButton(eventHandler, ButtonVariant.Destructive).Small(),
-    Icons.Star.ToButton(eventHandler, ButtonVariant.Outline).Small()
-)
+return Icons.Heart.ToButton(eventHandler, ButtonVariant.Destructive).Small();
 ```
 
 This is particularly useful in toolbars, action panels, and other UI areas where space is at a premium.
@@ -1090,26 +852,17 @@ A new analyzer rule **IVYHOOK007** helps you write cleaner, more maintainable co
 
 ```csharp
 // Hooks called inline in a pipe chain
-public override object? Build()
-{
-    return new Card(
-        Layout.Vertical().Gap(3)
-            | UseState(true).ToBoolInput().Label("Email notifications")
-            | UseState(false).ToBoolInput().Label("SMS notifications")
-    );
-}
+return new Card(
+    Layout.Vertical().Gap(3)
+        | UseState(true).ToBoolInput().Label("Email notifications")
+        | UseState(false).ToBoolInput().Label("SMS notifications")
+);
 
 // Hook inline in return statement
-public override object? Build()
-{
-    return UseState(true).ToBoolInput();
-}
+return UseState(true).ToBoolInput();
 
 // Hook inline as constructor argument
-public override object? Build()
-{
-    return new Card(UseState(0).Value);
-}
+return new Card(UseState(0).Value);
 ```
 
 **How to fix it:**
@@ -1118,17 +871,14 @@ Extract each hook call to a local variable at the top of your `Build()` method:
 
 ```csharp
 // Hooks assigned to variables first
-public override object? Build()
-{
-    var emailNotifications = UseState(true);
-    var smsNotifications = UseState(false);
+var emailNotifications = UseState(true);
+var smsNotifications = UseState(false);
 
-    return new Card(
-        Layout.Vertical().Gap(3)
-            | emailNotifications.ToBoolInput().Label("Email notifications")
-            | smsNotifications.ToBoolInput().Label("SMS notifications")
-    );
-}
+return new Card(
+    Layout.Vertical().Gap(3)
+        | emailNotifications.ToBoolInput().Label("Email notifications")
+        | smsNotifications.ToBoolInput().Label("SMS notifications")
+);
 ```
 
 This pattern makes your state management explicit and easier to track, especially when building complex UIs with multiple hooks.
@@ -1231,98 +981,65 @@ var select = "value".ToSelectInput(onSelectChange, options);
 
 This change ensures all Input widgets are created consistently through extension methods, making the API more predictable and easier to learn.
 
-### Widget Event Handlers Renamed from Handle*to On*
+### Widget Event Handlers Renamed from Handle* to On*
 
-Event handler extension methods in external widget packages have been renamed from `Handle*` to `On*` to align with the naming convention established throughout the framework. This affects the Leaflet, ScreenshotFeedback, Tiptap, and Xterm widget packages.
+Event handler extension methods in external widget packages have been renamed from `Handle*` to `On*` to match the rest of the framework. This affects the Iframe, Leaflet, ScreenshotFeedback, TiptapInput, and Xterm widgets.
 
-**Affected widgets and methods:**
+**API mapping (no behavior change):**
 
-**Iframe widget:**
+- **Iframe**: `HandleMessageReceived` to `OnMessageReceived`
+- **Leaflet Map**: `HandleMapClick` to `OnMapClick`, `HandleMarkerClick` to `OnMarkerClick`, `HandleMarkerDrag` to `OnMarkerDrag`, `HandleZoomChange` to `OnZoomChange`, `HandleCenterChange` to `OnCenterChange`, `HandleBoundsChange` to `OnBoundsChange`
+- **ScreenshotFeedback**: `HandleSave` to `OnSave`, `HandleCancel` to `OnCancel`
+- **TiptapInput**: `HandleFocus` to `OnFocus`, `HandleBlur` to `OnBlur`
+- **Xterm Terminal**: `HandleInput` to `OnInput`, `HandleResize` to `OnResize`, `HandleLinkClick` to `OnLinkClick`
 
-- `HandleMessageReceived` → `OnMessageReceived`
-
-**Leaflet Map widget:**
-
-- `HandleMapClick` → `OnMapClick`
-- `HandleMarkerClick` → `OnMarkerClick`
-- `HandleMarkerDrag` → `OnMarkerDrag`
-- `HandleZoomChange` → `OnZoomChange`
-- `HandleCenterChange` → `OnCenterChange`
-- `HandleBoundsChange` → `OnBoundsChange`
-
-**ScreenshotFeedback widget:**
-
-- `HandleSave` → `OnSave`
-- `HandleCancel` → `OnCancel`
-
-**TiptapInput widget:**
-
-- `HandleFocus` → `OnFocus`
-- `HandleBlur` → `OnBlur`
-
-**Xterm Terminal widget:**
-
-- `HandleInput` → `OnInput`
-- `HandleResize` → `OnResize`
-- `HandleLinkClick` → `OnLinkClick`
-
-**Migration examples:**
+**Migration pattern (before/after):**
 
 ```csharp
-// Iframe - Before
+// Iframe
 new Iframe()
-    .HandleMessageReceived(e => ProcessMessage(e.Value))
-
-// Iframe - After
+    .HandleMessageReceived(e => ProcessMessage(e.Value));  // before
 new Iframe()
-    .OnMessageReceived(e => ProcessMessage(e.Value))
+    .OnMessageReceived(e => ProcessMessage(e.Value));      // after
 
-// Leaflet Map - Before
+// Leaflet Map
 new Map()
     .HandleMapClick(latLng => Console.WriteLine($"Clicked: {latLng}"))
     .HandleMarkerClick(markerId => Console.WriteLine($"Marker: {markerId}"))
-    .HandleZoomChange(zoom => Console.WriteLine($"Zoom: {zoom}"))
-
-// Leaflet Map - After
+    .HandleZoomChange(zoom => Console.WriteLine($"Zoom: {zoom}"));   // before
 new Map()
     .OnMapClick(latLng => Console.WriteLine($"Clicked: {latLng}"))
     .OnMarkerClick(markerId => Console.WriteLine($"Marker: {markerId}"))
-    .OnZoomChange(zoom => Console.WriteLine($"Zoom: {zoom}"))
+    .OnZoomChange(zoom => Console.WriteLine($"Zoom: {zoom}"));       // after
 
-// ScreenshotFeedback - Before
+// ScreenshotFeedback
 new ScreenshotFeedback()
-    .HandleSave(() => SaveScreenshot())
-    .HandleCancel(() => CloseDialog())
-
-// ScreenshotFeedback - After
+    .HandleSave(SaveScreenshot)
+    .HandleCancel(CloseDialog);   // before
 new ScreenshotFeedback()
-    .OnSave(() => SaveScreenshot())
-    .OnCancel(() => CloseDialog())
+    .OnSave(SaveScreenshot)
+    .OnCancel(CloseDialog);       // after
 
-// Xterm Terminal - Before
+// Xterm Terminal
 new Terminal()
     .HandleInput(pty.HandleInput)
     .HandleResize(pty.HandleResize)
-    .HandleLinkClick(url => OpenLink(url))
-
-// Xterm Terminal - After
+    .HandleLinkClick(OpenLink);   // before
 new Terminal()
     .OnInput(pty.HandleInput)
     .OnResize(pty.HandleResize)
-    .OnLinkClick(url => OpenLink(url))
+    .OnLinkClick(OpenLink);       // after
 
-// TiptapInput - Before
+// TiptapInput
 new TiptapInput()
     .HandleFocus(() => Console.WriteLine("Focused"))
-    .HandleBlur(() => Console.WriteLine("Blurred"))
-
-// TiptapInput - After
+    .HandleBlur(() => Console.WriteLine("Blurred"));   // before
 new TiptapInput()
     .OnFocus(() => Console.WriteLine("Focused"))
-    .OnBlur(() => Console.WriteLine("Blurred"))
+    .OnBlur(() => Console.WriteLine("Blurred"));       // after
 ```
 
-This change makes event handling consistent across all Ivy widgets, making the API more predictable and easier to learn. Simply find and replace `Handle` with `On` in your widget event handler calls.
+Functionality is unchanged; this is a naming cleanup. You can safely update existing code by replacing `.HandleX` calls with `.OnX` equivalents.
 
 ### CLI: Prefer `ivy ask` over `ivy question`
 
@@ -1336,7 +1053,7 @@ ivy ask "How do I implement a new Application Shell in Ivy?"
 ivy question "How do I implement a new Application Shell in Ivy?"
 ```
 
-All documentation examples now use `ivy ask` for consistency and brevity. This command queries the local context dynamically using integrated Local RAG features specifically tailored to your semantic `ivyVersion`.
+This command queries the local context dynamically using integrated Local RAG features specifically tailored to your semantic `ivyVersion`.
 
 ## Security Enhancements
 
@@ -1344,11 +1061,7 @@ All documentation examples now use `ivy ask` for consistency and brevity. This c
 
 File uploads are now protected against MIME type spoofing attacks! Ivy now validates that uploaded file content actually matches the declared Content-Type by checking magic bytes (file signatures).
 
-**What this means for you:**
-
 Previously, malicious users could potentially upload dangerous files (like executables or scripts) disguised as images by simply changing the Content-Type header. Now Ivy verifies the actual file content to ensure it matches the claimed type.
-
-**Automatic protection:**
 
 If you're using `FileInput` widgets with file type restrictions, this security enhancement is automatically applied. No code changes needed:
 
@@ -1377,34 +1090,11 @@ if (!result.IsValid)
 }
 ```
 
-**Validate multiple files:**
-
-```csharp
-var result = FileInputValidation.ValidateFileTypesWithMagicBytes(
-    files,
-    ".pdf,.docx",
-    file => file.OpenReadStream()
-);
-```
-
-**Supported file types:**
-
-Magic byte validation is implemented for all common file types including:
-
-- **Images**: JPEG, PNG, GIF, BMP, WebP, TIFF, ICO
-- **Documents**: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), PowerPoint (.pptx)
-- **Archives**: ZIP, RAR, 7z, gzip, tar
-- **Audio**: MP3, WAV, OGG
-- **Video**: MP4, WebM, AVI, QuickTime
-- **Text formats**: Plain text, CSV, JSON, XML, SVG (allowed without magic byte checks)
-
 This enhancement provides defense-in-depth security for your file upload features without any breaking changes.
 
 ### Stricter App ID Validation
 
 App ID validation has been strengthened to prevent potential security issues. The framework now blocks additional characters that could be exploited in URL manipulation or path traversal attacks.
-
-**Blocked characters:**
 
 App IDs can no longer contain:
 
@@ -1415,23 +1105,7 @@ App IDs can no longer contain:
 - `%` (percent) - URL encoding character **[NEW]**
 - `\` (backslash) - Path separator on Windows **[NEW]**
 
-**What this means:**
-
 If your app creates or validates app IDs, ensure they don't contain these characters. App IDs should use alphanumeric characters, hyphens, and underscores for best compatibility:
-
-```csharp
-// Valid app IDs
-"my-app"
-"user_dashboard"
-"app123"
-
-// Invalid app IDs (will fail validation)
-"my%20app"      // Contains %
-"app\\name"     // Contains \
-"app:version"   // Contains :
-```
-
-The validation is performed automatically by `ValidationHelper.IsValidAppId()` to protect against injection attacks and ensure app IDs work correctly across all platforms and URL contexts.
 
 ## Bug Fixes
 

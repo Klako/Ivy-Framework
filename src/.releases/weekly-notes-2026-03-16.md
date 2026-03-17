@@ -123,7 +123,7 @@ calendar = calendar
 - **Event interactions**: Click events, drag to move, resize handles, and click empty slots to create
 - **Theme-aware**: Automatically adapts to your app's theme with proper contrast
 
-The Calendar widget follows the same pattern as Kanban, where `CalendarEvent` children define the data while the parent `Calendar` manages the display and interactions.
+The [Calendar](https://docs.ivy.app/widgets/advanced/calendar) widget follows the same pattern as Kanban, where `CalendarEvent` children define the data while the parent `Calendar` manages the display and interactions.
 
 ### New XAML Renderer Widget
 
@@ -190,7 +190,7 @@ DesktopWindow.Run(appDescriptor, args);
 
 ### AudioInput Sample Rate Control
 
-`AudioInput` now supports configurable sample rates via `.SampleRate(hz)`. Supported values: 8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000 Hz. Omit for browser default (typically 48000). Use lower rates (e.g. 16000 for speech) for smaller files; higher for music. The framework resamples via the Web Audio API so the requested rate is applied regardless of the microphone’s native rate.
+The [`AudioInput`](https://docs.ivy.app/widgets/inputs/audio-input) widget now supports configurable sample rates via `.SampleRate(hz)`. Supported values: 8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000 Hz. Omit for browser default (typically 48000). Use lower rates (e.g. 16000 for speech) for smaller files; higher for music. The framework resamples via the Web Audio API so the requested rate is applied regardless of the microphone’s native rate.
 
 ```csharp
 new AudioInput(upload).SampleRate(16000)   // speech / voice notes
@@ -199,7 +199,7 @@ new AudioInput(upload).SampleRate(48000)   // high-fidelity
 
 ### New NumberRangeInput Widget
 
-Select numeric ranges with an intuitive dual-handle slider! The new `NumberRangeInput` widget provides a sleek interface for selecting minimum and maximum numeric values, perfect for filtering by price ranges, thresholds, or any min/max bounds.
+Select numeric ranges with an intuitive dual-handle slider! The new [`NumberRangeInput`](https://docs.ivy.app/widgets/inputs/number-range-input) widget provides a sleek interface for selecting minimum and maximum numeric values, perfect for filtering by price ranges, thresholds, or any min/max bounds.
 
 ```csharp
 // State: (min, max); use .Item1 and .Item2 for bounds (same pattern as DateRangeInput)
@@ -220,7 +220,7 @@ The widget supports all numeric tuple types including `(int, int)`, `(decimal, d
 
 ### DateTimeInput and DateRangeInput Enhancements
 
-The date input widgets now support custom placeholder text for date ranges and configurable calendar week start days, making them more flexible for international use and domain-specific scenarios.
+The date input widgets ([`DateRangeInput`](https://docs.ivy.app/widgets/inputs/date-range-input) and [`DateTimeInput`](https://docs.ivy.app/widgets/inputs/date-time-input)) now support custom placeholder text for date ranges and configurable calendar week start days, making them more flexible for international use and domain-specific scenarios.
 
 Set separate placeholders for the start and end date fields to provide context-specific hints to users:
 
@@ -246,11 +246,11 @@ appointmentDate.ToDateInput()
     .FirstDayOfWeek(DayOfWeek.Sunday)
 ```
 
-The `FirstDayOfWeek` property accepts any `DayOfWeek` enum value (Sunday through Saturday) and automatically adjusts the calendar display to start weeks on your specified day. This is particularly useful for:
+The `FirstDayOfWeek` property accepts any `DayOfWeek` enum value (Sunday through Saturday) and automatically adjusts the calendar display to start weeks on your specified day.
 
 ### FileInput Default Variant
 
-The `FileInput` widget now supports two display variants: the existing `Drop` variant (default) with its large drag-and-drop zone, and a new `Default` variant that provides a more compact, button-based interface. Both variants fully support drag-and-drop functionality.
+The [`FileInput`](https://docs.ivy.app/widgets/inputs/file-input) widget now supports two display variants: the existing `Drop` variant (default) with its large drag-and-drop zone, and a new `Default` variant that provides a more compact, button-based interface. Both variants fully support drag-and-drop functionality.
 
 ```csharp
 var file = UseState<FileUpload<byte[]>?>();
@@ -260,23 +260,21 @@ return Layout.Vertical()
         | file.ToFileInput(upload)
             .Variant(FileInputVariant.Default)
             .Placeholder("Select file");
-    }
-}
 ```
 
 The Default variant maintains all the same features as the Drop variant including validation, progress tracking, multiple file support, and file type restrictions—just in a more compact form factor.
 
 ### CameraInput Widget
 
-Capture photos directly from the user's webcam or device camera with the new `CameraInput` widget! It provides a live video preview, one-click capture, and automatic upload—all using the same familiar upload pattern as `FileInput`.
+Capture photos directly from the user's webcam or device camera with the new [`CameraInput`](https://docs.ivy.app/widgets/inputs/camera-input) widget! It provides a live video preview, one-click capture, and automatic upload—all using the same familiar upload pattern as `FileInput`.
 
 ```csharp
 var photo = UseState<FileUpload<byte[]>?>();
 var upload = UseUpload(MemoryStreamUploadHandler.Create(photo));
 
-    return Layout.Vertical()
-        | new CameraInput(upload.Value, "Take a photo")
-        | (photo.Value != null
+return Layout.Vertical()
+    | new CameraInput(upload.Value, "Take a photo")
+    | (photo.Value != null
             ? Text.P($"Captured: {photo.Value.FileName} ({StringHelper.FormatBytes(photo.Value.Length)})")
             : Text.P("No photo captured yet."));
 ```
@@ -310,7 +308,7 @@ if (photo.Value != null)
 }
 ```
 
-The CameraInput widget is perfect for profile photos, document scanning, ID verification, or any scenario where you need to capture images directly from the user's camera.
+The [`CameraInput`](https://docs.ivy.app/widgets/inputs/camera-input) widget is perfect for profile photos, document scanning, ID verification, or any scenario where you need to capture images directly from the user's camera.
 
 ### TextInput Pattern Validation
 
@@ -326,7 +324,7 @@ The error message shown to users is "Please match the requested format". Pattern
 
 ### New ScatterChart Widget
 
-Scatter charts support scatter plots, bubble charts (size encoding), connected scatter lines, 7 point shapes (Circle, Square, Cross, Diamond, Star, Triangle, Wye), tooltips, legends, toolbox, and grid. [ScatterChart docs](https://docs.ivy.app/widgets/charts/scatter-chart).
+Scatter charts support scatter plots, bubble charts (size encoding), connected scatter lines, 7 point shapes (Circle, Square, Cross, Diamond, Star, Triangle, Wye), tooltips, legends, toolbox, and grid.
 
 ```csharp
 var data = new[]
@@ -351,7 +349,7 @@ return new ScatterChart(data)
 
 ### New RadarChart Widget
 
-Radar charts visualize multi-dimensional data with indicators, filled areas, polygon or circle shape, multiple series, tooltips, legends, and toolbox. [RadarChart docs](https://docs.ivy.app/widgets/charts/radar-chart).
+Radar charts visualize multi-dimensional data with indicators, filled areas, polygon or circle shape, multiple series, tooltips, legends, and toolbox.
 
 ```csharp
 var data = new[]
@@ -372,7 +370,7 @@ return new RadarChart(data)
 
 ### New SankeyChart Widget
 
-Sankey charts show flows between nodes (link width = magnitude). Options include node width/gap, curvature, left/justify alignment, color schemes, tooltips, and toolbox. [SankeyChart docs](https://docs.ivy.app/widgets/charts/sankey-chart).
+Sankey charts show flows between nodes (link width = magnitude). Options include node width/gap, curvature, left/justify alignment, color schemes, tooltips, and toolbox.
 
 ```csharp
 var data = new SankeyData(
@@ -407,7 +405,7 @@ return new SankeyChart(data)
 
 ### New ChordChart Widget
 
-Chord charts visualize relationships between entities in a circular layout. Options include sort, pad angle, color schemes, tooltips, toolbox, and legend. [ChordChart docs](https://docs.ivy.app/widgets/charts/chord-chart).
+Chord charts visualize relationships between entities in a circular layout. Options include sort, pad angle, color schemes, tooltips, toolbox, and legend.
 
 ```csharp
 var data = new ChordData(
@@ -441,7 +439,7 @@ return new ChordChart(data)
 
 ### New FunnelChart Widget
 
-Funnel charts show conversion or stage data (uses `PieChartData`). Options include sort (Descending/Ascending/None), vertical/horizontal orientation, gap, tooltips, toolbox, and legend. [FunnelChart docs](https://docs.ivy.app/widgets/charts/funnel-chart).
+Funnel charts show conversion or stage data (uses `PieChartData`). Options include sort (Descending/Ascending/None), vertical/horizontal orientation, gap, tooltips, toolbox, and legend.
 
 ```csharp
 var data = new[]
@@ -529,7 +527,7 @@ The widget now features an Ivy dark green theme with drop shadows, SVG toolbar i
 
 ### Scroll Support for Layout and StackLayout
 
-Layouts now support scrollable content! Add scroll behavior to any `Layout` or `StackLayout` with height or width constraints using the new `.Scroll()` method.
+Layouts now support scrollable content! Add scroll behavior to any [`Layout`](https://docs.ivy.app/onboarding/concepts/layout) or `StackLayout` with height or width constraints using the new `.Scroll()` method.
 
 **Vertical scrolling:**
 
@@ -661,7 +659,7 @@ The `AspectRatio` property is available on `WidgetBase`, so it works with all wi
 
 ### SelectInput Radio and Slider Variants
 
-The `SelectInput` widget now supports two powerful new variants: **Radio** for traditional radio button selection and **Slider** for selecting from ordered discrete options.
+The [`SelectInput`](https://docs.ivy.app/widgets/inputs/select-input) widget now supports two powerful new variants: **Radio** for traditional radio button selection and **Slider** for selecting from ordered discrete options.
 
 **Radio variant for single-select forms:**
 
@@ -981,7 +979,7 @@ var select = "value".ToSelectInput(onSelectChange, options);
 
 This change ensures all Input widgets are created consistently through extension methods, making the API more predictable and easier to learn.
 
-### Widget Event Handlers Renamed from Handle* to On*
+### Widget Event Handlers Renamed from Handle*to On*
 
 Event handler extension methods in external widget packages have been renamed from `Handle*` to `On*` to match the rest of the framework. This affects the Iframe, Leaflet, ScreenshotFeedback, TiptapInput, and Xterm widgets.
 

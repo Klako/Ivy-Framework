@@ -382,10 +382,6 @@ appointmentDate.ToDateInput()
 
 The `FirstDayOfWeek` property accepts any `DayOfWeek` enum value (Sunday through Saturday) and automatically adjusts the calendar display to start weeks on your specified day. This is particularly useful for:
 
-- **International applications**: Match regional conventions (Monday-first for ISO 8601 / most of world, Sunday-first for US/Canada)
-- **Business scheduling**: Align with your organization's workweek (e.g., Monday-Sunday for standard business weeks)
-- **Domain-specific needs**: Custom week definitions for retail, healthcare, or other industries
-
 ### FileInput Default Variant
 
 The `FileInput` widget now supports two display variants: the existing `Drop` variant (default) with its large drag-and-drop zone, and a new `Default` variant that provides a more compact, button-based interface. Both variants fully support drag-and-drop functionality.
@@ -404,33 +400,6 @@ public class FileUploadDemo : ViewBase
             | file.ToFileInput(upload)
                 .Variant(FileInputVariant.Default)
                 .Placeholder("Select file");
-    }
-}
-```
-
-**When to use each variant:**
-
-- **`FileInputVariant.Drop`** (default): Best for dedicated upload pages, large cards, or when you want to emphasize the file upload action with a prominent drag-and-drop zone.
-- **`FileInputVariant.Default`**: Best for forms, sidebars, toolbars, or dense layouts where space is at a premium. The button-based interface is more compact while still supporting drag-and-drop directly onto the button.
-
-**Comparing both variants:**
-
-```csharp
-public class VariantComparison : ViewBase
-{
-    public override object? Build()
-    {
-        var file1 = UseState<FileUpload<byte[]>?>();
-        var upload1 = UseUpload(MemoryStreamUploadHandler.Create(file1));
-
-        var file2 = UseState<FileUpload<byte[]>?>();
-        var upload2 = UseUpload(MemoryStreamUploadHandler.Create(file2));
-
-        return Layout.Vertical()
-            | Text.H3("Drop Variant")
-            | file1.ToFileInput(upload1)
-            | Text.H3("Default Variant")
-            | file2.ToFileInput(upload2).Variant(FileInputVariant.Default);
     }
 }
 ```
@@ -459,13 +428,6 @@ public class BasicCameraDemo : ViewBase
     }
 }
 ```
-
-**How it works:**
-
-1. User clicks the widget to start the camera (browser prompts for permission)
-2. Live video preview displays from the device camera
-3. Clicking **Capture** takes a snapshot and uploads it as a PNG image
-4. The captured image is shown with a **Retake** button to restart the camera
 
 **Camera selection:**
 
@@ -521,236 +483,57 @@ new TextInput()
     .Placeholder("12345 or 12345-6789")
 ```
 
-**How validation works:**
-
-- Validation triggers on **blur** (when the user leaves the input field)
-- Error message displays if the input doesn't match the pattern
-- Error clears automatically as soon as the input matches during typing
-- Works alongside other validation like `MinLength` and server-side validation
-
-**With fluent API:**
-
-```csharp
-var email = UseState<string>("");
-
-email.ToTextInput()
-    .Pattern(@"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-    .Placeholder("Email address")
-    .Label("Email")
-```
-
-**Common patterns:**
-
-```csharp
-// URL validation
-.Pattern(@"^https?://[^\s]+$")
-
-// Alphanumeric only
-.Pattern(@"^[a-zA-Z0-9]+$")
-
-// Username (letters, numbers, underscore, 3-16 chars)
-.Pattern(@"^[a-zA-Z0-9_]{3,16}$")
-
-// Hexadecimal color code
-.Pattern(@"^#[0-9A-Fa-f]{6}$")
-```
-
 The error message shown to users is "Please match the requested format". Pattern validation is applied **after** server-provided errors and `MinLength` validation, ensuring the most relevant error is always displayed first.
 
 ### New ScatterChart Widget
 
-Scatter charts are now available in Ivy! This new widget supports standard scatter plots, bubble charts, and connected scatter plots with extensive customization options.
-
-**Basic scatter plot:**
+Scatter charts support scatter plots, bubble charts (size encoding), connected scatter lines, 7 point shapes (Circle, Square, Cross, Diamond, Star, Triangle, Wye), tooltips, legends, toolbox, and grid. [ScatterChart docs](https://docs.ivy.app/widgets/charts/scatter-chart).
 
 ```csharp
-ScatterChartView.Create(myData)
-    .Dimension("temperature", d => d.Temperature)
-    .Measure("pressure", d => d.Pressure)
-    .Build()
+var data = new[]
+{
+    new { Height = 165, Weight = 65, Age = 25 },
+    new { Height = 170, Weight = 72, Age = 45 },
+    new { Height = 158, Weight = 58, Age = 22 },
+    new { Height = 175, Weight = 78, Age = 50 },
+    new { Height = 162, Weight = 60, Age = 20 },
+};
+
+return new ScatterChart(data)
+    .Scatter(new Scatter("Value").Name("People").Shape(ScatterShape.Diamond).ShowLine(true).LineType(ScatterLineType.Smooth))
+    .XAxis(new XAxis("Height").Type(AxisTypes.Number))
+    .YAxis(new YAxis("Weight").Type(AxisTypes.Number))
+    .ZAxis(new ZAxis("Age").Range(40, 200))
+    .Tooltip(new ChartTooltip().Animated(true))
+    .Legend()
+    .CartesianGrid(new CartesianGrid().Horizontal().Vertical())
+    .Toolbox();
 ```
-
-**Bubble chart with size encoding:**
-
-```csharp
-ScatterChartView.Create(myData)
-    .Dimension("x", d => d.XValue)
-    .Measure("y", d => d.YValue)
-    .Size("population", d => d.Population)
-    .ZAxis(zAxis => zAxis
-        .Min(0)
-        .Max(1000000))
-    .Build()
-```
-
-**Color-encoded scatter plot:**
-
-```csharp
-ScatterChartView.Create(myData)
-    .Dimension("height", d => d.Height)
-    .Measure("weight", d => d.Weight)
-    .Color("category", d => d.Category)
-    .Build()
-```
-
-**Customize point shapes:**
-
-The widget supports 7 different point shapes: Circle (default), Square, Cross, Diamond, Star, Triangle, and Wye. Configure shapes through the Scatter series:
-
-```csharp
-new ScatterChart()
-    .Series(new Scatter()
-        .Shape(ScatterShape.Diamond)
-        .Name("Data Points"))
-```
-
-**Connected scatter plots:**
-
-Create connected scatter plots to show progression or relationships:
-
-```csharp
-new ScatterChart()
-    .Series(new Scatter()
-        .ShowLine(true)
-        .LineType(ScatterLineType.Smooth))
-```
-
-Like all Ivy charts, ScatterChart supports tooltips, legends, toolbox controls, grid customization, and reference lines.
 
 ### New RadarChart Widget
 
-Visualize multi-dimensional data across multiple quantitative variables with the new `RadarChart` widget! Display data on axes radiating from a center point to create spider web patterns—perfect for comparing profiles, skill assessments, and performance metrics.
-
-**Basic radar chart:**
+Radar charts visualize multi-dimensional data with indicators, filled areas, polygon or circle shape, multiple series, tooltips, legends, and toolbox. [RadarChart docs](https://docs.ivy.app/widgets/charts/radar-chart).
 
 ```csharp
 var data = new[]
 {
-    new { name = "Product A", Sales = 85, Marketing = 72, Development = 90, Support = 78, Quality = 88 }
+    new { name = "Product A", Sales = 85, Marketing = 72, Development = 90, Support = 78, Quality = 88 },
+    new { name = "Product B", Sales = 70, Marketing = 88, Development = 75, Support = 92, Quality = 80 },
 };
 
-new RadarChart(data)
+return new RadarChart(data)
     .ColorScheme(ColorScheme.Default)
-    .Indicator("Sales", 100)
-    .Indicator("Marketing", 100)
-    .Indicator("Development", 100)
-    .Indicator("Support", 100)
-    .Indicator("Quality", 100)
-    .Tooltip()
-    .Legend()
-```
-
-**Skill assessment with filled areas:**
-
-```csharp
-var data = new[]
-{
-    new { name = "Candidate A", Technical = 90, Communication = 75, Leadership = 80, ProblemSolving = 85, Teamwork = 88 }
-};
-
-new RadarChart(data)
-    .ColorScheme(ColorScheme.Default)
-    .Indicator("Technical", 100)
-    .Indicator("Communication", 100)
-    .Indicator("Leadership", 100)
-    .Indicator("ProblemSolving", 100)
-    .Indicator("Teamwork", 100)
-    .Radar(new Radar("values").Filled())
+    .Indicator("Sales", 100).Indicator("Marketing", 100).Indicator("Development", 100).Indicator("Support", 100).Indicator("Quality", 100)
+    .Radar(new Radar("values").Filled().Fill(Colors.Primary).Stroke(Colors.Primary))
     .Shape(RadarShape.Circle)
     .Tooltip()
+    .Legend()
+    .Toolbox();
 ```
-
-**Key features:**
-
-- **Two shape modes**: Polygon (angular spider web) or Circle (smooth circular pattern)
-- **Indicators**: Define each axis with custom min/max values for each dimension
-- **Filled areas**: Enable `.Filled()` on Radar series to highlight overall capability patterns
-- **Visual customization**: Control split lines, split areas, axis lines, and start angle
-- **Symbol markers**: Show or hide data point symbols with `.ShowSymbol()`
-- **Multiple series**: Compare multiple datasets on the same radar chart
-
-Each indicator represents an axis dimension. Configure them with custom ranges:
-
-```csharp
-new RadarChart(data)
-    .Indicator("Performance", max: 100)
-    .Indicator("Scalability", max: 100)
-    .Indicator("Security", max: 100)
-    .Radar(new Radar("values")
-        .Fill(Colors.Primary)
-        .Stroke(Colors.Primary)
-        .Filled())
-    .Shape(RadarShape.Polygon)
-```
-
-Like all Ivy charts, RadarChart supports tooltips, legends, and toolbox controls for a complete interactive experience.
-
-**Ergonomic .ToRadarChart() extension methods:**
-
-Create radar charts quickly using the `.ToRadarChart()` extension method, which follows the same ergonomic pattern as `.ToBarChart()`, `.ToPieChart()`, and `.ToScatterChart()`:
-
-```csharp
-var data = new[]
-{
-    new { Department = "Engineering", Speed = 85, Quality = 92, Innovation = 78, Collaboration = 88, Delivery = 80 },
-    new { Department = "Marketing", Speed = 70, Quality = 75, Innovation = 90, Collaboration = 85, Delivery = 72 },
-    new { Department = "Sales", Speed = 90, Quality = 68, Innovation = 65, Collaboration = 92, Delivery = 95 },
-};
-
-// Default style
-data.ToRadarChart(
-    x => x.Department,
-    [
-        q => q.Sum(x => x.Speed),
-        q => q.Sum(x => x.Quality),
-        q => q.Sum(x => x.Innovation),
-        q => q.Sum(x => x.Collaboration),
-        q => q.Sum(x => x.Delivery),
-    ]
-)
-
-// Circle style with filled areas
-data.ToRadarChart(
-    x => x.Department,
-    [
-        q => q.Sum(x => x.Speed),
-        q => q.Sum(x => x.Quality),
-        q => q.Sum(x => x.Innovation),
-        q => q.Sum(x => x.Collaboration),
-        q => q.Sum(x => x.Delivery),
-    ],
-    RadarChartStyles.Circle
-)
-
-// Dashboard style with custom polish
-data.ToRadarChart(
-    x => x.Department,
-    [
-        q => q.Sum(x => x.Speed),
-        q => q.Sum(x => x.Quality),
-        q => q.Sum(x => x.Innovation),
-        q => q.Sum(x => x.Collaboration),
-        q => q.Sum(x => x.Delivery),
-    ],
-    RadarChartStyles.Dashboard,
-    polish: chart => chart.Toolbox()
-)
-```
-
-The extension method takes:
-
-- **Category expression**: Groups your data (e.g., department names)
-- **Measure expressions**: Array of aggregations for each radar axis
-- **Style** (optional): Choose from `Default`, `Circle`, or `Dashboard`
-- **Polish function** (optional): Further customize the generated chart
-
-This pattern makes it easy to generate radar charts from collections without manually configuring indicators and series.
 
 ### New SankeyChart Widget
 
-Visualize flows and transfers between nodes with the new `SankeyChart` widget! This diagram style shows relationships where the width of each connecting arrow represents the magnitude of flow—perfect for analyzing user funnels, budget allocation, energy flows, and supply chains.
-
-**Basic Sankey chart:**
+Sankey charts show flows between nodes (link width = magnitude). Options include node width/gap, curvature, left/justify alignment, color schemes, tooltips, and toolbox. [SankeyChart docs](https://docs.ivy.app/widgets/charts/sankey-chart).
 
 ```csharp
 var data = new SankeyData(
@@ -764,103 +547,28 @@ var data = new SankeyData(
     },
     Links: new[]
     {
-        new SankeyLink(0, 1, 3500),   // Visit -> Add to Cart
-        new SankeyLink(0, 4, 1500),   // Visit -> Bounce
-        new SankeyLink(1, 2, 2800),   // Cart -> Checkout
-        new SankeyLink(1, 4, 700),    // Cart -> Bounce
-        new SankeyLink(2, 3, 2200),   // Checkout -> Purchase
-        new SankeyLink(2, 4, 600),    // Checkout -> Bounce
+        new SankeyLink(0, 1, 3500),
+        new SankeyLink(0, 4, 1500),
+        new SankeyLink(1, 2, 2800),
+        new SankeyLink(1, 4, 700),
+        new SankeyLink(2, 3, 2200),
+        new SankeyLink(2, 4, 600),
     }
 );
 
-new SankeyChart(data)
-    .Tooltip()
-    .Toolbox()
-```
-
-Links reference nodes by their index in the Nodes array, with a value representing flow magnitude.
-
-**Customize appearance:**
-
-```csharp
-new SankeyChart(data)
-    .NodeWidth(25)                    // Width of node rectangles
-    .NodeGap(15)                      // Vertical spacing between nodes
-    .Curvature(0.7)                   // Link curve amount (0-1)
-    .NodeAlign(SankeyAlign.Left)      // Align nodes to left
+return new SankeyChart(data)
+    .NodeWidth(25)
+    .NodeGap(15)
+    .Curvature(0.7)
+    .NodeAlign(SankeyAlign.Left)
     .ColorScheme(ColorScheme.Rainbow)
     .Tooltip()
-    .Toolbox()
+    .Toolbox();
 ```
-
-**Key features:**
-
-- **Flow visualization**: Arrow widths scale proportionally to flow quantities
-- **Node alignment**: Use `SankeyAlign.Justify` (default) or `SankeyAlign.Left` for layout control
-- **Visual customization**: Configure node dimensions, spacing, and link curvature
-- **Color schemes**: Apply any ColorScheme to differentiate nodes and links
-- **Interactive**: Full support for tooltips, legends, and toolbox controls
-
-The SankeyChart is ideal for conversion funnels, budget breakdowns, energy distribution, user journey flows, and any scenario where you need to visualize both relationships and their relative magnitudes.
-
-**Ergonomic .ToSankeyChart() extension methods:**
-
-Create Sankey charts quickly using the `.ToSankeyChart()` extension method, which follows the same ergonomic pattern as other chart builders:
-
-```csharp
-public record EnergyFlow(string Source, string Target, double Amount);
-
-var flows = new[]
-{
-    new EnergyFlow("Coal", "Electricity", 300),
-    new EnergyFlow("Coal", "Heating", 150),
-    new EnergyFlow("Natural Gas", "Electricity", 400),
-    new EnergyFlow("Natural Gas", "Heating", 250),
-    new EnergyFlow("Solar", "Electricity", 200),
-    new EnergyFlow("Wind", "Electricity", 180),
-    new EnergyFlow("Electricity", "Residential", 450),
-    new EnergyFlow("Electricity", "Industrial", 350),
-};
-
-// Default style
-flows.ToSankeyChart(
-    f => f.Source,
-    f => f.Target,
-    f => f.Amount
-)
-
-// Left-aligned style
-flows.ToSankeyChart(
-    f => f.Source,
-    f => f.Target,
-    f => f.Amount,
-    SankeyChartStyles.LeftAligned
-)
-
-// Dashboard style
-flows.ToSankeyChart(
-    f => f.Source,
-    f => f.Target,
-    f => f.Amount,
-    SankeyChartStyles.Dashboard
-)
-```
-
-The extension method takes:
-
-- **Source expression**: The origin node for each flow
-- **Target expression**: The destination node for each flow
-- **Value expression**: The magnitude of the flow
-- **Style** (optional): Choose from `Default`, `LeftAligned`, or `Dashboard`
-- **Polish function** (optional): Further customize the generated chart
-
-This pattern makes it easy to generate Sankey charts from collections without manually creating `SankeyData`, `SankeyNode`, and `SankeyLink` instances.
 
 ### New ChordChart Widget
 
-Visualize relationships and flows between entities with the new `ChordChart` widget! This circular diagram displays inter-relationships between nodes using connecting arcs—perfect for analyzing migration flows, trade relationships, network traffic, department collaboration, and any data where connections between entities matter.
-
-**Basic chord chart:**
+Chord charts visualize relationships between entities in a circular layout. Options include sort, pad angle, color schemes, tooltips, toolbox, and legend. [ChordChart docs](https://docs.ivy.app/widgets/charts/chord-chart).
 
 ```csharp
 var data = new ChordData(
@@ -874,125 +582,27 @@ var data = new ChordData(
     },
     Links: new[]
     {
-        new ChordLink(0, 1, 1200),  // North America → Europe: 1200
-        new ChordLink(0, 2, 900),   // North America → Asia: 900
-        new ChordLink(1, 2, 800),   // Europe → Asia: 800
-        new ChordLink(2, 3, 300),   // Asia → South America: 300
-        new ChordLink(3, 4, 150),   // South America → Africa: 150
+        new ChordLink(0, 1, 1200),
+        new ChordLink(0, 2, 900),
+        new ChordLink(1, 2, 800),
+        new ChordLink(2, 3, 300),
+        new ChordLink(3, 4, 150),
     }
 );
 
-new ChordChart(data)
-    .Tooltip()
-    .Toolbox()
-```
-
-Links reference nodes by their index in the Nodes array, with a value representing the relationship strength or flow magnitude.
-
-**Trade relationships with color schemes:**
-
-```csharp
-var data = new ChordData(
-    Nodes: new[]
-    {
-        new ChordNode("USA"),
-        new ChordNode("China"),
-        new ChordNode("Germany"),
-        new ChordNode("Japan"),
-        new ChordNode("UK"),
-    },
-    Links: new[]
-    {
-        new ChordLink(0, 1, 5800),
-        new ChordLink(0, 3, 3400),
-        new ChordLink(1, 3, 3200),
-        new ChordLink(2, 4, 1200),
-    }
-);
-
-new ChordChart(data)
+return new ChordChart(data)
+    .Sort(true)
+    .SortSubGroups(true)
+    .PadAngle(5)
     .ColorScheme(ColorScheme.Rainbow)
     .Tooltip()
     .Toolbox()
-    .Legend()
+    .Legend();
 ```
-
-**Key features:**
-
-- **Circular layout**: Nodes arranged in a circle with arcs connecting related entities
-- **Visual flow magnitude**: Connection widths represent relationship strength
-- **Sorting**: Use `.Sort()` to arrange nodes by total connection value
-- **Visual customization**: Configure padding angles, color schemes, and sub-group sorting
-- **Interactive**: Full support for tooltips, legends, and toolbox controls
-
-Customize the chart appearance with configuration options:
-
-```csharp
-new ChordChart(data)
-    .Sort(true)              // Sort nodes by connection totals
-    .SortSubGroups(true)     // Sort sub-groups within nodes
-    .PadAngle(5)             // Spacing between nodes in degrees
-    .ColorScheme(ColorScheme.Rainbow)
-    .Tooltip()
-    .Legend()
-```
-
-The ChordChart is ideal for visualizing any bidirectional or unidirectional relationships where both the connections and their magnitudes are important to understand.
-
-**Ergonomic .ToChordChart() extension methods:**
-
-Create chord charts quickly using the `.ToChordChart()` extension method, which follows the same ergonomic pattern as other chart builders:
-
-```csharp
-var trades = new[]
-{
-    new TradeFlow("USA", "China", 5800),
-    new TradeFlow("USA", "Germany", 2100),
-    new TradeFlow("USA", "Japan", 3400),
-    new TradeFlow("China", "Germany", 1800),
-    new TradeFlow("China", "Japan", 3200),
-    new TradeFlow("Germany", "Japan", 800),
-};
-
-// Default style
-trades.ToChordChart(
-    t => t.Exporter,
-    t => t.Importer,
-    t => t.Volume
-)
-
-// Sorted style (sorts by connection totals)
-trades.ToChordChart(
-    t => t.Exporter,
-    t => t.Importer,
-    t => t.Volume,
-    ChordChartStyles.Sorted
-)
-
-// Dashboard style with toolbox
-trades.ToChordChart(
-    t => t.Exporter,
-    t => t.Importer,
-    t => t.Volume,
-    ChordChartStyles.Dashboard
-)
-```
-
-The extension method takes:
-
-- **Source expression**: The origin node for each connection
-- **Target expression**: The destination node for each connection
-- **Value expression**: The magnitude of the flow/relationship
-- **Style** (optional): Choose from `Default`, `Sorted`, or `Dashboard`
-- **Polish function** (optional): Further customize the generated chart
-
-This pattern makes it easy to generate chord charts from any collection without manually creating `ChordData`, `ChordNode`, and `ChordLink` instances.
 
 ### New FunnelChart Widget
 
-Visualize conversion rates and multi-stage processes with the new `FunnelChart` widget! Display data as progressively narrowing stages—perfect for sales pipelines, user onboarding flows, recruitment processes, and any workflow where values move through sequential steps.
-
-**Basic funnel chart:**
+Funnel charts show conversion or stage data (uses `PieChartData`). Options include sort (Descending/Ascending/None), vertical/horizontal orientation, gap, tooltips, toolbox, and legend. [FunnelChart docs](https://docs.ivy.app/widgets/charts/funnel-chart).
 
 ```csharp
 var data = new[]
@@ -1003,93 +613,15 @@ var data = new[]
     new PieChartData("Action", 1200),
 };
 
-new FunnelChart(data)
+return new FunnelChart(data)
     .Funnel("Measure", "Dimension")
+    .Sort(FunnelSort.Descending)
+    .Orientation(FunnelOrientation.Vertical)
+    .Gap(5)
     .Tooltip()
     .Toolbox()
+    .Legend();
 ```
-
-**Control sort order:**
-
-By default, stages sort in descending order (largest at top). Change this with `.Sort()`:
-
-```csharp
-// Ascending order (smallest at top)
-new FunnelChart(data)
-    .Funnel("Measure", "Dimension")
-    .Sort(FunnelSort.Ascending)
-
-// No sorting (preserves data order)
-new FunnelChart(data)
-    .Funnel("Measure", "Dimension")
-    .Sort(FunnelSort.None)
-```
-
-**Horizontal orientation:**
-
-Display funnels horizontally instead of vertically:
-
-```csharp
-new FunnelChart(data)
-    .Funnel("Measure", "Dimension")
-    .Orientation(FunnelOrientation.Horizontal)
-    .Tooltip()
-```
-
-**Key features:**
-
-- **Stage visualization**: Width proportional to stage values shows drop-off at each step
-- **Sort options**: Choose `Descending`, `Ascending`, or `None` to control stage ordering
-- **Orientation**: Display as `Vertical` (default) or `Horizontal` funnels
-- **Gap control**: Add spacing between stages with `.Gap(pixels)`
-- **Color schemes**: Apply any ColorScheme to differentiate stages
-- **Interactive**: Full support for tooltips, legends, and toolbox controls
-
-The FunnelChart uses the same `PieChartData` record format (dimension/measure pairs) and supports the standard chart customization options. Ideal for analyzing conversion funnels, sales pipelines, recruitment workflows, and any process where understanding drop-off between stages is important.
-
-**Ergonomic .ToFunnelChart() extension methods:**
-
-Create funnel charts quickly using the `.ToFunnelChart()` extension method, which follows the same ergonomic pattern as `.ToBarChart()`, `.ToPieChart()`, and `.ToRadarChart()`:
-
-```csharp
-var data = new[]
-{
-    new SalesFunnelStage("Prospects", 8000),
-    new SalesFunnelStage("Qualified", 5200),
-    new SalesFunnelStage("Proposals", 3100),
-    new SalesFunnelStage("Negotiations", 1800),
-    new SalesFunnelStage("Closed", 950),
-};
-
-// Default style
-data.ToFunnelChart(
-    x => x.Stage,
-    x => x.Sum(s => s.Count)
-)
-
-// Horizontal style
-data.ToFunnelChart(
-    x => x.Stage,
-    x => x.Sum(s => s.Count),
-    FunnelChartStyles.Horizontal
-)
-
-// Dashboard style with custom polish
-data.ToFunnelChart(
-    x => x.Stage,
-    x => x.Sum(s => s.Count),
-    FunnelChartStyles.Dashboard
-)
-```
-
-The extension method takes:
-
-- **Stage expression**: Labels for each funnel stage (e.g., stage names)
-- **Value expression**: Aggregation for the value at each stage
-- **Style** (optional): Choose from `Default`, `Horizontal`, or `Dashboard`
-- **Polish function** (optional): Further customize the generated chart
-
-This pattern makes it easy to generate funnel charts from collections without manually creating `FunnelChart` and `PieChartData` instances.
 
 ### Enhanced ScreenshotFeedback Widget with Annotation Tools
 
@@ -1493,27 +1025,6 @@ The `VideoPlayer` widget now supports fine-grained volume control! Set the playb
 // Half volume
 new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
     .Volume(0.5f)
-
-// Quiet background video
-new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
-    .Volume(0.2f)
-    .Autoplay(true)
-    .Loop(true)
-
-// Full volume (same as browser default)
-new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
-    .Volume(1.0f)
-```
-
-**Combine with other controls:**
-
-```csharp
-new VideoPlayer("https://www.w3schools.com/html/mov_bbb.mp4")
-    .Volume(0.3f)
-    .Autoplay(false)
-    .Controls(true)
-    .Loop(true)
-    .Muted(false)
 ```
 
 Volume values are automatically clamped between 0.0 and 1.0, so you don't need to worry about out-of-range values. The volume setting is applied when the video element loads in the browser.

@@ -64,10 +64,10 @@ sampleUsers.ToDataTable()
     .Width(u => u.Email, Size.Units(60))
     .Width(u => u.Salary, Size.Units(80))
     .AlignContent(u => u.Salary, Align.Right)
-    .Icon(u => u.Name, Icons.User.ToString())
-    .Icon(u => u.Email, Icons.Mail.ToString())
-    .Icon(u => u.Salary, Icons.DollarSign.ToString())
-    .Icon(u => u.Status, Icons.Activity.ToString())
+    .Icon(u => u.Name, Icons.User)
+    .Icon(u => u.Email, Icons.Mail)
+    .Icon(u => u.Salary, Icons.DollarSign)
+    .Icon(u => u.Status, Icons.Activity)
     .Sortable(u => u.Email, false)
     .SortDirection(u => u.Salary, SortDirection.Descending)
     .Help(u => u.Name, "Employee full name")
@@ -416,39 +416,7 @@ public class DateFilterDemo : ViewBase
 
 Try filtering the _Order Date_ column with a range such as [OrderDate] >= "2025-11-01" AND [OrderDate] <= "2025-11-31" to see the results update in real time.
 
-## Custom Header Icons
 
-You can provide custom SVG icons for column headers beyond the built-in Lucide icon set. Define SVG templates in the `CustomHeaderIcons` dictionary on the config, using `{fgColor}` and `{bgColor}` placeholders that will be replaced with the current theme colors at render time.
-
-```csharp demo-tabs
-public class CustomHeaderIconsDemo : ViewBase
-{
-    public record Task(int Id, string Title, string Status, int Priority);
-
-    public override object? Build()
-    {
-        var tasks = Enumerable.Range(1, 50)
-            .Select(i => new Task(i, $"Task {i}", i % 3 == 0 ? "Done" : "Open", i % 5))
-            .AsQueryable();
-
-        return tasks.ToDataTable()
-            .Header(t => t.Title, "Title")
-            .Header(t => t.Status, "Status")
-            .Header(t => t.Priority, "Priority")
-            .Icon(t => t.Status, "CustomCheck")
-            .Config(config =>
-            {
-                config.CustomHeaderIcons = new Dictionary<string, string>
-                {
-                    ["CustomCheck"] = "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M9 11l3 3L22 4\" stroke=\"{fgColor}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\" stroke=\"{fgColor}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
-                };
-            })
-            .Height(Size.Units(100));
-    }
-}
-```
-
-The SVG template must be a complete `<svg>` element. Use `{fgColor}` for strokes and foreground fills, and `{bgColor}` for background fills. Custom icons take precedence over built-in icons with the same name.
 
 ## Performance with Large Datasets
 

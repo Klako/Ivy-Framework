@@ -26,7 +26,7 @@ function iconNodeToSvg(nodes: IconNode[], color: string): string {
 
 function getIconImage(
   iconName: string,
-  options: { size?: number; color?: string } = {},
+  options: { size?: number; color?: string } = {}
 ): HTMLImageElement | null {
   const { color = '#666' } = options;
   const cacheKey = `${iconName}-${color}`;

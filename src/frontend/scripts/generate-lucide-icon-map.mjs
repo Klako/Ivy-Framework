@@ -12,11 +12,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ICONS_DIR = join(
   __dirname,
-  '../node_modules/lucide-react/dist/esm/icons',
+  '../node_modules/lucide-react/dist/esm/icons'
 );
 const OUTPUT_FILE = join(
   __dirname,
-  '../src/widgets/dataTables/utils/lucideIconNodes.generated.ts',
+  '../src/widgets/dataTables/utils/lucideIconNodes.generated.ts'
 );
 
 // Matches: const __iconNode = [ ... ];
@@ -51,7 +51,7 @@ function parseIconNode(raw) {
 
 async function main() {
   const files = (await readdir(ICONS_DIR)).filter(
-    f => f.endsWith('.js') && !f.endsWith('.map'),
+    f => f.endsWith('.js') && !f.endsWith('.map')
   );
 
   const icons = {};
@@ -98,7 +98,7 @@ ${entries}
 
   await writeFile(OUTPUT_FILE, output, 'utf-8');
   console.log(
-    `Generated ${Object.keys(icons).length} icons (${skipped} skipped) → ${OUTPUT_FILE}`,
+    `Generated ${Object.keys(icons).length} icons (${skipped} skipped) → ${OUTPUT_FILE}`
   );
 
   // Report file size

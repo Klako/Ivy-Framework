@@ -96,30 +96,6 @@ export const SignatureInputWidget: React.FC<SignatureInputWidgetProps> = ({
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, [bgColor]);
 
-  const redrawCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    clearCanvas();
-
-    ctx.strokeStyle = penColor;
-    ctx.lineWidth = penThickness;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    for (const path of pathsRef.current) {
-      if (path.length < 2) continue;
-      ctx.beginPath();
-      ctx.moveTo(path[0].x, path[0].y);
-      for (let i = 1; i < path.length; i++) {
-        ctx.lineTo(path[i].x, path[i].y);
-      }
-      ctx.stroke();
-    }
-  }, [clearCanvas, penColor, penThickness]);
-
   // Initialize canvas and load existing value
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -140,10 +116,12 @@ export const SignatureInputWidget: React.FC<SignatureInputWidgetProps> = ({
         setHasDrawn(true);
       };
       // Value from C# is raw base64 (byte[] serialized); add data URL prefix for img.src
-      img.src = value.startsWith('data:') ? value : `data:image/png;base64,${value}`;
+      img.src = value.startsWith('data:')
+        ? value
+        : `data:image/png;base64,${value}`;
     } else {
       clearCanvas();
-      setHasDrawn(false);
+      setTimeout(() => setHasDrawn(false), 0);
       pathsRef.current = [];
     }
   }, [value, bgColor, clearCanvas]);

@@ -44,9 +44,9 @@ public class SignatureInputStyling : ViewBase
         var sig3 = UseState<byte[]?>(() => null);
 
         return Layout.Grid().Columns(3)
-               | Text.InlineCode("Blue pen, thick")
-               | Text.InlineCode("Red pen, thin")
-               | Text.InlineCode("Default")
+               | Text.Monospaced("Blue pen, thick")
+               | Text.Monospaced("Red pen, thin")
+               | Text.Monospaced("Default")
 
                | sig1.ToSignatureInput()
                    .Pen(Colors.Blue)
@@ -69,8 +69,8 @@ public class SignatureInputStates : ViewBase
         var invalidSig = UseState<byte[]?>(() => null);
 
         return Layout.Grid().Columns(2)
-               | Text.InlineCode("Disabled")
-               | Text.InlineCode("Invalid")
+               | Text.Monospaced("Disabled")
+               | Text.Monospaced("Invalid")
 
                | disabledSig.ToSignatureInput()
                    .Disabled()

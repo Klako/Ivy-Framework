@@ -171,9 +171,10 @@ const GaugeChartWidget: React.FC<GaugeChartWidgetProps> = ({
             size: 20,
             itemStyle: {
               borderWidth: 6,
-              borderColor: axisLineColors.length > 0
-                ? axisLineColors[axisLineColors.length - 1][1]
-                : chartColors[0],
+              borderColor:
+                axisLineColors.length > 0
+                  ? axisLineColors[axisLineColors.length - 1][1]
+                  : chartColors[0],
             },
           },
           title: {

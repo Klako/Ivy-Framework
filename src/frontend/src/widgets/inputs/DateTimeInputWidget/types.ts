@@ -36,6 +36,7 @@ export interface BaseVariantProps {
   firstDayOfWeek?: WeekDay;
   density?: Densities;
   'data-testid'?: string;
+  onFocusChange?: (open: boolean) => void;
 }
 
 export interface DateChangeProp {

@@ -22,6 +22,7 @@ export const TimeVariant: React.FC<TimeVariantProps> = ({
   onTimeChange,
   density = Densities.Medium,
   'data-testid': dataTestId,
+  onFocusChange,
 }) => {
   // Use local state for the input value to make it uncontrolled
   const [localTimeValue, setLocalTimeValue] = useState(() => {
@@ -90,7 +91,8 @@ export const TimeVariant: React.FC<TimeVariantProps> = ({
   const handleTimeBlur = useCallback(() => {
     // When input loses focus, update the parent
     onTimeChange(localTimeValue);
-  }, [localTimeValue, onTimeChange]);
+    onFocusChange?.(false);
+  }, [localTimeValue, onTimeChange, onFocusChange]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -123,6 +125,7 @@ export const TimeVariant: React.FC<TimeVariantProps> = ({
           density={density}
           value={localTimeValue}
           onChange={handleTimeChange}
+          onFocus={() => onFocusChange?.(true)}
           onBlur={handleTimeBlur}
           onKeyDown={handleKeyDown}
           disabled={disabled}

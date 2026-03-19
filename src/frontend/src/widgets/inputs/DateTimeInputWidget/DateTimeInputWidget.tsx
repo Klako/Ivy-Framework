@@ -105,20 +105,19 @@ export const DateTimeInputWidget: React.FC<DateTimeInputWidgetProps> = ({
 
   const VariantComponent = useMemo(() => VariantComponents[variant], [variant]);
 
+  const handleFocusChange = useCallback(
+    (focused: boolean) => {
+      if (focused) {
+        if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
+      } else {
+        if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
+      }
+    },
+    [events, eventHandler, id]
+  );
+
   return (
-    <div
-      className="relative w-full"
-      onBlur={e => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-          if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
-        }
-      }}
-      onFocus={e => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-          if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
-        }
-      }}
-    >
+    <div className="relative w-full">
       <VariantComponent
         id={id}
         value={localValue}
@@ -131,6 +130,7 @@ export const DateTimeInputWidget: React.FC<DateTimeInputWidgetProps> = ({
         density={density}
         onDateChange={handleDateChange}
         onTimeChange={handleTimeChange}
+        onFocusChange={handleFocusChange}
         data-testid={dataTestId}
       />
     </div>

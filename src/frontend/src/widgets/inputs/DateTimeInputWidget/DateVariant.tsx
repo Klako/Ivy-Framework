@@ -31,10 +31,19 @@ export const DateVariant: React.FC<DateVariantProps> = ({
   firstDayOfWeek,
   density = Densities.Medium,
   'data-testid': dataTestId,
+  onFocusChange,
 }) => {
   const [open, setOpen] = useState(false);
   const date = value ? new Date(value) : undefined;
   const showClear = nullable && !disabled && value != null && value !== '';
+
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      setOpen(newOpen);
+      onFocusChange?.(newOpen);
+    },
+    [onFocusChange]
+  );
 
   const handleClear = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -52,7 +61,7 @@ export const DateVariant: React.FC<DateVariantProps> = ({
 
   return (
     <div className="relative w-full select-none">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             disabled={disabled}
@@ -71,6 +80,8 @@ export const DateVariant: React.FC<DateVariantProps> = ({
                   : ''
             )}
             data-testid={dataTestId}
+            onFocus={() => { if (!open) onFocusChange?.(true); }}
+            onBlur={() => { if (!open) onFocusChange?.(false); }}
           >
             <CalendarIcon
               className={cn(

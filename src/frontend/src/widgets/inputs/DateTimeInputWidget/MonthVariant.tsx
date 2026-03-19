@@ -48,9 +48,18 @@ export const MonthVariant: React.FC<MonthVariantProps> = ({
   format: formatProp,
   density = Densities.Medium,
   'data-testid': dataTestId,
+  onFocusChange,
 }) => {
   const [open, setOpen] = useState(false);
   const date = useMemo(() => (value ? new Date(value) : undefined), [value]);
+
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      setOpen(newOpen);
+      onFocusChange?.(newOpen);
+    },
+    [onFocusChange]
+  );
 
   const [viewYear, setViewYear] = useState(() =>
     date ? date.getFullYear() : new Date().getFullYear()
@@ -88,7 +97,7 @@ export const MonthVariant: React.FC<MonthVariantProps> = ({
 
   return (
     <div className="relative w-full select-none">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             disabled={disabled}
@@ -107,6 +116,8 @@ export const MonthVariant: React.FC<MonthVariantProps> = ({
                   : ''
             )}
             data-testid={dataTestId}
+            onFocus={() => { if (!open) onFocusChange?.(true); }}
+            onBlur={() => { if (!open) onFocusChange?.(false); }}
           >
             <CalendarIcon
               className={cn(

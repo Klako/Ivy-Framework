@@ -37,9 +37,18 @@ export const WeekVariant: React.FC<WeekVariantProps> = ({
   format: formatProp,
   density = Densities.Medium,
   'data-testid': dataTestId,
+  onFocusChange,
 }) => {
   const [open, setOpen] = useState(false);
   const date = useMemo(() => (value ? new Date(value) : undefined), [value]);
+
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      setOpen(newOpen);
+      onFocusChange?.(newOpen);
+    },
+    [onFocusChange]
+  );
 
   const selectedMonday = useMemo(
     () => (date ? startOfISOWeek(date) : undefined),
@@ -87,7 +96,7 @@ export const WeekVariant: React.FC<WeekVariantProps> = ({
 
   return (
     <div className="relative w-full select-none">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             disabled={disabled}
@@ -106,6 +115,8 @@ export const WeekVariant: React.FC<WeekVariantProps> = ({
                   : ''
             )}
             data-testid={dataTestId}
+            onFocus={() => { if (!open) onFocusChange?.(true); }}
+            onBlur={() => { if (!open) onFocusChange?.(false); }}
           >
             <CalendarIcon
               className={cn(

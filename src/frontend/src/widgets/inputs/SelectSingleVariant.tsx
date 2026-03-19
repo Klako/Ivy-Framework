@@ -125,12 +125,21 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
   const hasValue = stringValue !== undefined;
   const styles = getWidth(width);
 
-  const handleBlur = () => {
-    if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
+  const handleOpenChange = (newOpen: boolean) => {
+    setIsOpen(newOpen);
+    if (newOpen) {
+      if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
+    } else {
+      if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
+    }
   };
 
-  const handleFocus = () => {
-    if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
+  const handleTriggerFocus = () => {
+    if (!isOpen && events.includes('OnFocus')) eventHandler('OnFocus', id, []);
+  };
+
+  const handleTriggerBlur = () => {
+    if (!isOpen && events.includes('OnBlur')) eventHandler('OnBlur', id, []);
   };
 
   const selectTriggerElement = (
@@ -144,8 +153,8 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
           'border-transparent shadow-none bg-transparent hover:bg-accent hover:text-accent-foreground dark:border-transparent dark:bg-transparent dark:hover:bg-accent dark:hover:text-accent-foreground'
       )}
       density={density}
-      onBlur={handleBlur}
-      onFocus={handleFocus}
+      onBlur={handleTriggerBlur}
+      onFocus={handleTriggerFocus}
     >
       <SelectValue placeholder={placeholder} />
     </SelectTrigger>
@@ -160,7 +169,7 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
           value={stringValue}
           onValueChange={handleValueChange}
           open={isOpen}
-          onOpenChange={setIsOpen}
+          onOpenChange={handleOpenChange}
           data-testid={dataTestId}
         >
           {isEllipsed && selectedLabel ? (

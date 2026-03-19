@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Ivy.Core;
 
 // ReSharper disable once CheckNamespace
@@ -34,6 +35,9 @@ public record AudioInput : WidgetBase<AudioInput>
     [Prop] public int? SampleRate { get; set; }
 
     [Prop] public string? UploadUrl { get; set; }
+    
+    [Event] public EventHandler<Event<IAnyInput>>? OnBlur { get; set; }
+    [Event] public EventHandler<Event<IAnyInput>>? OnFocus { get; set; }
 }
 
 public static class AudioInputExtensions
@@ -71,5 +75,37 @@ public static class AudioInputExtensions
     public static AudioInput UploadUrl(this AudioInput widget, string? uploadUrl)
     {
         return widget with { UploadUrl = uploadUrl };
+    }
+
+    [OverloadResolutionPriority(1)]
+    public static AudioInput OnBlur(this AudioInput widget, Func<Event<IAnyInput>, ValueTask> onBlur)
+    {
+        return widget with { OnBlur = new(onBlur) };
+    }
+
+    public static AudioInput OnBlur(this AudioInput widget, Action<Event<IAnyInput>> onBlur)
+    {
+        return widget with { OnBlur = new(onBlur.ToValueTask()) };
+    }
+
+    public static AudioInput OnBlur(this AudioInput widget, Action onBlur)
+    {
+        return widget with { OnBlur = new(_ => { onBlur(); return ValueTask.CompletedTask; }) };
+    }
+
+    [OverloadResolutionPriority(1)]
+    public static AudioInput OnFocus(this AudioInput widget, Func<Event<IAnyInput>, ValueTask> onFocus)
+    {
+        return widget with { OnFocus = new(onFocus) };
+    }
+
+    public static AudioInput OnFocus(this AudioInput widget, Action<Event<IAnyInput>> onFocus)
+    {
+        return widget with { OnFocus = new(onFocus.ToValueTask()) };
+    }
+
+    public static AudioInput OnFocus(this AudioInput widget, Action onFocus)
+    {
+        return widget with { OnFocus = new(_ => { onFocus(); return ValueTask.CompletedTask; }) };
     }
 }

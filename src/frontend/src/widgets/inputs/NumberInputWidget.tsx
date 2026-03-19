@@ -263,7 +263,7 @@ const NumberVariant = memo(
       } else if (formatStyle === 'Bytes') {
         config.style = 'decimal';
       } else {
-        config.style = formatStyleMap[formatStyle] as string;
+        config.style = formatStyleMap[formatStyle] as Intl.NumberFormatOptions['style'];
         config.notation = 'standard';
         if (formatStyle === 'Currency') {
           config.currency = currency || 'USD';

@@ -27,6 +27,7 @@ export const ExternalWidgetWrapper: React.FC<ExternalWidgetWrapperProps> = ({
   React.useEffect(() => {
     if (props.events && (props.events as string[]).length > 0) {
       logger.debug("[ExternalWidgetWrapper] Rendering with events:", {
+      logger.debug("[ExternalWidgetWrapper] Rendering with events:", {
         events: props.events,
         eventHandlerPresent: !!eventHandler,
       });

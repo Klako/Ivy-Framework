@@ -173,7 +173,7 @@ export const DateRangeInputWidget: React.FC<DateRangeInputWidgetProps> = ({
         if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
       }
     },
-    [eventHandler, id, events]
+    [eventHandler, id, events, setIsOpen]
   );
 
   // Use custom format if provided, otherwise use default

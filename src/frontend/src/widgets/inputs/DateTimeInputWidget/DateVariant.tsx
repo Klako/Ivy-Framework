@@ -80,8 +80,12 @@ export const DateVariant: React.FC<DateVariantProps> = ({
                   : ''
             )}
             data-testid={dataTestId}
-            onFocus={() => { if (!open) onFocusChange?.(true); }}
-            onBlur={() => { if (!open) onFocusChange?.(false); }}
+            onFocus={() => {
+              if (!open) onFocusChange?.(true);
+            }}
+            onBlur={() => {
+              if (!open) onFocusChange?.(false);
+            }}
           >
             <CalendarIcon
               className={cn(

@@ -257,11 +257,14 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       [parseValue, onChange]
     );
 
-    const handleFocus = useCallback((e: FocusEvent<HTMLInputElement>) => {
-      setIsFocused(true);
-      setDisplayValue(value?.toString() ?? '');
-      onFocus?.(e);
-    }, [value, onFocus]);
+    const handleFocus = useCallback(
+      (e: FocusEvent<HTMLInputElement>) => {
+        setIsFocused(true);
+        setDisplayValue(value?.toString() ?? '');
+        onFocus?.(e);
+      },
+      [value, onFocus]
+    );
 
     const handleBlur = useCallback(
       (e: FocusEvent<HTMLInputElement>) => {

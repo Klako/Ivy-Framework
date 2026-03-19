@@ -115,8 +115,12 @@ export const WeekVariant: React.FC<WeekVariantProps> = ({
                   : ''
             )}
             data-testid={dataTestId}
-            onFocus={() => { if (!open) onFocusChange?.(true); }}
-            onBlur={() => { if (!open) onFocusChange?.(false); }}
+            onFocus={() => {
+              if (!open) onFocusChange?.(true);
+            }}
+            onBlur={() => {
+              if (!open) onFocusChange?.(false);
+            }}
           >
             <CalendarIcon
               className={cn(

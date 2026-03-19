@@ -35,7 +35,7 @@ public record AudioInput : WidgetBase<AudioInput>, IAnyInput
     [Prop] public int? SampleRate { get; set; }
 
     [Prop] public string? UploadUrl { get; set; }
-    
+
     [Prop] public string? Placeholder { get; set; }
     [Prop] public string? Invalid { get; set; }
     [Prop] public bool Nullable { get; set; }

@@ -342,14 +342,14 @@ const MultipleSelector = React.forwardRef<
                 ref={inputRef}
                 value={inputValue}
                 onValueChange={setInputValue}
-                onBlur={(e) => {
+                onBlur={e => {
                   setOpen(false);
                   if (containerRef.current) {
                     containerRef.current.scrollLeft = 0;
                   }
                   onBlur?.(e);
                 }}
-                onFocus={(e) => {
+                onFocus={e => {
                   setOpen(true);
                   onFocus?.(e);
                 }}

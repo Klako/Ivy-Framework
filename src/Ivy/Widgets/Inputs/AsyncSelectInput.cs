@@ -117,11 +117,14 @@ public class AsyncSelectInputView<TValue> : ViewBase, IAnyAsyncSelectInputBase, 
                 Placeholder = Placeholder,
                 Disabled = Disabled,
                 Invalid = Invalid,
+                Nullable = Nullable,
                 DisplayValue = displayValue,
                 OnSelect = HandleSelect,
                 Loading = loading,
                 Density = Density,
-                Ghost = Ghost
+                Ghost = Ghost,
+                OnBlur = OnBlur,
+                OnFocus = OnFocus
             },
             open.Value ? new Sheet(
                 OnClose,
@@ -350,19 +353,26 @@ public static class AsyncSelectInputViewExtensions
 }
 
 
-internal record AsyncSelectInput : WidgetBase<AsyncSelectInput>
+internal record AsyncSelectInput : WidgetBase<AsyncSelectInput>, IAnyInput
 {
-    [Prop] public string? Placeholder { get; init; }
+    [Prop] public bool Disabled { get; set; }
 
-    [Prop] public bool Disabled { get; init; }
+    [Prop] public string? Placeholder { get; set; }
 
-    [Prop] public string? Invalid { get; init; }
+    [Prop] public string? Invalid { get; set; }
 
-    [Prop] public string? DisplayValue { get; init; }
+    [Prop] public bool Nullable { get; set; }
 
-    [Prop] public bool Loading { get; init; }
+    [Prop] public string? DisplayValue { get; set; }
 
-    [Prop] public bool Ghost { get; init; }
+    [Prop] public bool Loading { get; set; }
 
-    [Event] public Func<Event<AsyncSelectInput>, ValueTask>? OnSelect { get; init; }
+    [Prop] public bool Ghost { get; set; }
+
+    [Event] public Func<Event<AsyncSelectInput>, ValueTask>? OnSelect { get; set; }
+
+    [Event] public EventHandler<Event<IAnyInput>>? OnBlur { get; set; }
+    [Event] public EventHandler<Event<IAnyInput>>? OnFocus { get; set; }
+
+    public Type[] SupportedStateTypes() => [];
 }

@@ -16,7 +16,7 @@
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.7.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vite-plus": "latest",
+    "vite-plus": "0.1.13",
     "@vitejs/plugin-react": "6.0.1"
   },
   "peerDependencies": {

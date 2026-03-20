@@ -98,10 +98,15 @@ public class StripeConnection : IConnection, IHaveSecrets
         new("Subscription", "Subscriptions")
     ];
     
-    public void RegisterServices(IServiceCollection services)
+    public void RegisterServices(Server server)
     {
-        services.AddSingleton<IStripeClient, StripeClient>();
-        services.AddScoped<IPaymentService, StripePaymentService>();
+        server.Services.AddSingleton<IStripeClient, StripeClient>();
+        server.Services.AddScoped<IPaymentService, StripePaymentService>();
+    }
+
+    public Task<(bool ok, string? message)> TestConnection(IConfiguration config)
+    {
+        return Task.FromResult((true, "Connection successful"));
     }
     
     public Secret[] GetSecrets() =>
@@ -153,7 +158,7 @@ For more control, register connections manually with your [Server](./01_Program.
 var server = new Server();
 
 var stripeConnection = new StripeConnection();
-stripeConnection.RegisterServices(server.Services);
+stripeConnection.RegisterServices(server);
 
 await server.RunAsync();
 ```

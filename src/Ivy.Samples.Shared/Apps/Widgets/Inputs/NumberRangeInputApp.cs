@@ -64,8 +64,7 @@ public class NumberRangeInputApp : SampleBase
         const string loremIpsumString = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec purus nec eros";
 
         return Layout.Vertical()
-            | Text.H1("NumberRangeInput")
-
+            | Text.H1("Number RangeInput")
             // Basic Variants
             | Text.H2("Variants")
             | (Layout.Grid().Columns(5)

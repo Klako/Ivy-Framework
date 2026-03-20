@@ -12,9 +12,9 @@ public class ColorInputApp : SampleBase
         var onFocusLabel = UseState("");
 
         return Layout.Vertical()
+               | Text.H1("Color Input")
                | Text.H2("Size Variants")
                | new ColorInputSizeVariants()
-               | Text.H1("ColorInput")
                | Text.H2("Non-Generic Constructor")
                | new ColorInputConstructorTests()
                | Text.H2("Variants")

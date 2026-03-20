@@ -87,6 +87,7 @@ public class AsyncSelectInputApp : SampleBase
         }
 
         return Layout.Vertical().Gap(6)
+            | Text.H1("AsyncSelect Input")
             | Text.H3("Basic")
             | guidState.ToAsyncSelectInput(QueryCategories, LookupCategory, placeholder: "Select Category")
             | Text.H3("Ghost")

@@ -152,7 +152,7 @@ public class FeedbackInputApp : SampleBase
         ;
 
         return Layout.Vertical()
-               | Text.H1("Feedback Inputs")
+               | Text.H1("Feedback Input")
                | Text.H2("Variants")
                | variants
                | Text.H2("Size Examples")

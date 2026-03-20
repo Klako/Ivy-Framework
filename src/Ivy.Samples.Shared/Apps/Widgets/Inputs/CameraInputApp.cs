@@ -13,7 +13,7 @@ public class CameraInputApp() : SampleBase
         );
 
         return Layout.Vertical()
-               | Text.H1("Camera Input Widget Examples")
+               | Text.H1("Camera Input")
                | Text.P("Demonstrates the CameraInput widget for capturing photos from the user's webcam/camera.")
                | Text.H2("Examples")
                | (Layout.Horizontal().Gap(4)

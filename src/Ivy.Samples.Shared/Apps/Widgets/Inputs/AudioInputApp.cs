@@ -15,7 +15,7 @@ public class AudioInputApp() : SampleBase
         );
 
         return Layout.Vertical()
-               | Text.H1("Audio Input Widget Examples")
+               | Text.H1("Audio Input")
                | Text.P("Demonstrates the AudioInput widget for capturing audio input. This widget is for recording audio, not playing it. The recorder interface is theme-aware and adapts to light/dark themes.")
                | Text.H2("Upload Examples")
                | (Layout.Horizontal().Gap(4)

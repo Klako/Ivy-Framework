@@ -25,6 +25,7 @@ public class FieldApp : SampleBase
         var options = new List<string>() { "I read the terms and conditions and I agree" };
 
         return Layout.Vertical().Center()
+            | Text.H1("Field")
             | (new Card(
                 Layout.Vertical().Gap(6).Padding(2)
                 | Text.H2("Field")

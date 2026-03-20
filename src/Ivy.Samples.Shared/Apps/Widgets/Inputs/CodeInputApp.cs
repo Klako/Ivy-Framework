@@ -234,9 +234,9 @@ public class CodeInputApp : SampleBase
         );
 
         return Layout.Vertical()
+               | Text.H1("Code Input")
                | Text.H2("Sizes")
                | sizeGrid
-               | Text.H1("CodeInput")
                | Text.H2("Variants")
                | firstGrid
                | secondGrid

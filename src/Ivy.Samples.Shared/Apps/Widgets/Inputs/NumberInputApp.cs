@@ -69,7 +69,7 @@ public class NumberInputApp : SampleBase
         return Layout.Vertical()
 
                // Main grid with variants
-               | Text.H1("Number Inputs")
+               | Text.H1("Number Input")
                | Text.H2("Variants")
                | (Layout.Grid().Columns(6)
 

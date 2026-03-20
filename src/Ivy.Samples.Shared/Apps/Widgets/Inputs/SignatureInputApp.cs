@@ -7,6 +7,7 @@ public class SignatureInputApp : SampleBase
     protected override object? BuildSample()
     {
         return Layout.Vertical()
+               | Text.H1("Signature Input")
                | Text.H2("Basic Signature")
                | new SignatureInputBasic()
                | Text.H2("Custom Styling")

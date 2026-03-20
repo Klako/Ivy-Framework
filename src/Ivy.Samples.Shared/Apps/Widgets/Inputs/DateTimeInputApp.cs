@@ -561,7 +561,7 @@ public class DateTimeInputApp : SampleBase
             | Text.Block($"Nullable DateTimeOffset: {nullableDateTimeOffsetState.Value?.ToString("yyyy-MM-dd HH:mm:ss zzz") ?? "null"}");
 
         return Layout.Vertical()
-            | Text.H1("DateTimeInput")
+            | Text.H1("DateTime Input")
             | Text.H2("Size Examples")
             | sizeExamplesGrid
             | Text.H2("Variants")

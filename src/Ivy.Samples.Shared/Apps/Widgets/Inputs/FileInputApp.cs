@@ -8,7 +8,7 @@ public class FileInputApp : SampleBase
     protected override object? BuildSample()
     {
         return Layout.Vertical()
-               | Text.H1("File Inputs")
+               | Text.H1("File Input")
                | Layout.Tabs(
                    new Tab("Variants", new FileInputVariantTests()),
                    new Tab("Size Variants", new FileInputSizeVariants()),

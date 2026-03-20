@@ -9,7 +9,9 @@ public class SelectInputApp : SampleBase
 {
     protected override object? BuildSample()
     {
-        return Layout.Tabs(
+        return Layout.Vertical()
+            | Text.H1("Select Input")
+            | Layout.Tabs(
             new Tab("Basic", new SelectInputBasicExample()),
             new Tab("Events", new SelectInputEventsExample()),
             new Tab("Sizes", new SelectInputSizesExample()),
@@ -21,7 +23,8 @@ public class SelectInputApp : SampleBase
             new Tab("Advanced Props", new SelectInputAdvancedPropsExample()),
             new Tab("Ghost", new SelectInputGhostExample()),
             new Tab("Descriptions", new SelectInputDescriptionsExample())
-        ).Variant(TabsVariant.Content);
+        ).Variant(TabsVariant.Content)
+        ;
     }
 }
 

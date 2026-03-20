@@ -43,7 +43,7 @@ public class TextInputApp : SampleBase
             ;
 
         return Layout.Vertical()
-               | Text.H1("Text Inputs")
+               | Text.H1("Text Input")
                | Text.H2("Sizes")
                | new TextInputSizes()
                | Text.H2("Variants")

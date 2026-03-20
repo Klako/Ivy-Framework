@@ -197,7 +197,7 @@ public class BoolInputApp : SampleBase
             ;
 
         return Layout.Vertical()
-               | Text.H1("BoolInput")
+               | Text.H1("Bool Input")
                | Text.H2("Sizes")
                | new BoolInputSizes()
                | Text.H2("Icons")

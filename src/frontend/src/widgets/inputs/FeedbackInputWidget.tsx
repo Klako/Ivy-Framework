@@ -156,23 +156,12 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
           value={numericValue}
           onRate={handleChange}
           invalid={invalid}
+          allowHalf={allowHalf}
+          totalEmojis={max}
           density={density}
         />
       );
     }
-  if (variant === 'Emojis') {
-    return (
-      <EmojiRating
-        disabled={disabled}
-        value={numericValue}
-        onRate={handleChange}
-        invalid={invalid}
-        allowHalf={allowHalf}
-        totalEmojis={max}
-        density={density}
-      />
-    );
-  }
 
     return (
       <StarRating
@@ -185,12 +174,29 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
         density={density}
       />
     );
-  }, [variant, disabled, numericValue, handleChange, invalid, density]);
+  }, [
+    variant,
+    disabled,
+    numericValue,
+    handleChange,
+    invalid,
+    allowHalf,
+    max,
+    density,
+  ]);
 
   return (
     <div
-      onBlur={handleBlur}
-      onFocus={handleFocus}
+      onBlur={e => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          handleBlur();
+        }
+      }}
+      onFocus={e => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          handleFocus();
+        }
+      }}
       tabIndex={disabled ? -1 : 0}
       className="outline-none focus:outline-none focus:ring-1 focus:ring-ring rounded-md p-1"
     >

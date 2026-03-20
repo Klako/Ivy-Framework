@@ -1,4 +1,4 @@
-import { defineConfig } from "vite-plus";;
+import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
@@ -11,11 +11,7 @@ const __dirname = dirname(__filename);
 export default defineConfig({
   lint: { options: { typeCheck: false } },
   plugins: [
-    react({
-      // Use classic JSX transform (React.createElement) instead of automatic (jsx-runtime)
-      // This allows external widgets to use the global React without needing jsx-runtime
-      ,
-    }),
+    react(),
   ],
   define: {
     // Define process.env.NODE_ENV for libraries that check it

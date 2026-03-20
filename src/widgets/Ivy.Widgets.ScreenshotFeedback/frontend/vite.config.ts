@@ -1,4 +1,4 @@
-import { defineConfig } from "vite-plus";;
+import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
@@ -10,9 +10,7 @@ const __dirname = dirname(__filename);
 export default defineConfig({
   lint: { options: { typeCheck: false } },
   plugins: [
-    react({
-      ,
-    }),
+    react(),
   ],
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),

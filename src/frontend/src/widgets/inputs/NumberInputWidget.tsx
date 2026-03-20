@@ -158,12 +158,15 @@ const SliderVariant = memo(
     const [localValue, setLocalValue] = useOptimisticValue(value, false);
 
     // Only update local state on drag
-    const handleSliderChange = useCallback((values: number[]) => {
-      const newValue = values[0];
-      if (typeof newValue === 'number') {
-        setLocalValue(newValue);
-      }
-    }, [setLocalValue]);
+    const handleSliderChange = useCallback(
+      (values: number[]) => {
+        const newValue = values[0];
+        if (typeof newValue === 'number') {
+          setLocalValue(newValue);
+        }
+      },
+      [setLocalValue]
+    );
 
     // Only call onValueChange (eventHandler) when drag ends
     const handleSliderCommit = useCallback(
@@ -426,7 +429,7 @@ export const NumberInputWidget = memo(
     );
 
     return (
-      <div style={{ ...getWidth(width) }}>
+      <div className="w-full flex-1" style={{ ...getWidth(width) }}>
         {variant === 'Slider' ? (
           <SliderVariant
             id={id}

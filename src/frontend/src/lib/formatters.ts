@@ -1,4 +1,3 @@
-
 export const formatBytes = (bytes: number, precision: number): string => {
   if (bytes === 0) return '0 B';
 

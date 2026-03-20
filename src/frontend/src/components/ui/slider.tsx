@@ -92,7 +92,7 @@ const Slider = React.forwardRef<
         >
           <div
             className={cn(
-              'absolute left-1/2 transform -translate-x-1/2 bg-popover text-foreground p-1 rounded shadow',
+              'absolute left-1/2 transform -translate-x-1/2 bg-popover text-foreground p-1 rounded shadow whitespace-nowrap',
               variant.tooltip
             )}
           >

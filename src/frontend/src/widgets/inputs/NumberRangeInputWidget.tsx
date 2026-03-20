@@ -232,17 +232,26 @@ export const NumberRangeInputWidget = memo(
     );
 
     // Maintains local state for lower/upper for instant feedback
-    const [localLower, setLocalLower] = useOptimisticValue(localRange.lower, false);
-    const [localUpper, setLocalUpper] = useOptimisticValue(localRange.upper, false);
+    const [localLower, setLocalLower] = useOptimisticValue(
+      localRange.lower,
+      false
+    );
+    const [localUpper, setLocalUpper] = useOptimisticValue(
+      localRange.upper,
+      false
+    );
 
     // Only update local state on drag
-    const handleSliderChange = useCallback((values: number[]) => {
-      const [newLower, newUpper] = values;
-      if (typeof newLower === 'number' && typeof newUpper === 'number') {
-        setLocalLower(newLower);
-        setLocalUpper(newUpper);
-      }
-    }, [setLocalLower, setLocalUpper]);
+    const handleSliderChange = useCallback(
+      (values: number[]) => {
+        const [newLower, newUpper] = values;
+        if (typeof newLower === 'number' && typeof newUpper === 'number') {
+          setLocalLower(newLower);
+          setLocalUpper(newUpper);
+        }
+      },
+      [setLocalLower, setLocalUpper]
+    );
 
     // Only call eventHandler when drag ends
     const handleSliderCommit = useCallback(
@@ -317,7 +326,7 @@ export const NumberRangeInputWidget = memo(
     const suffixContent = renderAffix(suffix);
 
     return (
-      <div className="relative w-full">
+      <div className="relative w-full flex-1">
         {/* Prefix/Suffix labels */}
         {(prefixContent || suffixContent) && (
           <div className="flex items-center justify-between mb-2">

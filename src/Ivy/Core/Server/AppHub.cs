@@ -513,10 +513,10 @@ public class AppHub(
 
     public Task Event(string eventName, string widgetId, JsonArray? args)
     {
-        logger.LogWarning("Event RECEIVED: {EventName} {WidgetId} ConnectionId={ConnectionId}", eventName, widgetId, Context.ConnectionId);
+        logger.LogDebug("Event: {EventName} {WidgetId} ConnectionId={ConnectionId}", eventName, widgetId, Context.ConnectionId);
         if (!sessionStore.Sessions.TryGetValue(Context.ConnectionId, out var appSession))
         {
-            logger.LogWarning("Event: {EventName} {WidgetId} [AppSession Not Found]", eventName, widgetId);
+            logger.LogDebug("Event: {EventName} {WidgetId} [AppSession Not Found] ConnectionId={ConnectionId}", eventName, widgetId, Context.ConnectionId);
             return Task.CompletedTask;
         }
 

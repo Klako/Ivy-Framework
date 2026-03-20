@@ -92,6 +92,19 @@ Buttons with URLs support [right-click actions](../../01_Onboarding/02_Concepts/
             .Icon(Icons.ExternalLink, Align.Right)
         | new Button("Link Style").Link()
             .Url("https://github.com/Ivy-Interactive/Ivy-Framework")
+
+## Keyboard Shortcuts
+
+Buttons can be triggered using keyboard shortcuts. This is particularly useful for common actions like Search (`Ctrl+K`), Save (`Ctrl+S`), or Submit (`Ctrl+Enter`). When a shortcut is defined, a small badge is automatically rendered on the button to inform the user.
+
+```csharp demo
+Layout.Horizontal().Gap(8)
+    | new Button("Search", _ => client.Toast("Searching...")).Primary().ShortcutKey("Ctrl+K")
+    | new Button("Save", _ => client.Toast("Saved!")).Secondary().ShortcutKey("Ctrl+S")
+```
+
+The shortcut listener is registered globally on the window, so the button doesn't need to be focused to trigger the action.
+
 ```
 
 ## Faq

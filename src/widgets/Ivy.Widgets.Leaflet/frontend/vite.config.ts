@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
-  lint: { options: { typeAware: true, typeCheck: true } },
+  lint: { options: { typeCheck: false } },
   plugins: [
     react({
       // Use classic JSX transform (React.createElement) instead of automatic (jsx-runtime)

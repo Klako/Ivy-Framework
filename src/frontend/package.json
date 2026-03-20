@@ -1,7 +1,7 @@
 {
   "name": "frontend",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vp dev",
@@ -119,8 +119,20 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "8.46.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@latest",
-    "vite-plus": "latest"
+    "vite-plus": "latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  },
+  "overrides": {
+    "@swc/helpers": "0.5.17",
+    "dompurify": "3.3.2",
+    "lodash-es": "4.17.23",
+    "minimatch": "9.0.7",
+    "remark-mermaid-plugin": {
+      "mermaid": "11.12.1"
+    },
+    "rollup": ">=4.59.0",
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -133,18 +145,6 @@
     "*.cs": [
       "dotnet format"
     ]
-  },
-  "overrides": {
-    "@swc/helpers": "0.5.17",
-    "dompurify": "3.3.2",
-    "lodash-es": "4.17.23",
-    "minimatch": "9.0.7",
-    "rollup": ">=4.59.0",
-    "remark-mermaid-plugin": {
-      "mermaid": "11.12.1"
-    },
-    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
   },
   "packageManager": "npm@11.12.0"
 }

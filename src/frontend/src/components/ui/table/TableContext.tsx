@@ -1,7 +1,7 @@
-import React, { createContext } from 'react';
-import type { VariantProps } from 'class-variance-authority';
-import { tableCellSizeVariant } from './table-variant';
-import { Densities } from '@/types/density';
+import React, { createContext } from "react";
+import type { VariantProps } from "class-variance-authority";
+import { tableCellSizeVariant } from "./table-variant";
+import { Densities } from "@/types/density";
 
 type TableContextValue = VariantProps<typeof tableCellSizeVariant>;
 
@@ -14,9 +14,5 @@ export const TableProvider: React.FC<{
   density?: Densities;
   children: React.ReactNode;
 }> = ({ density = Densities.Medium, children }) => {
-  return (
-    <TableContext.Provider value={{ density }}>
-      {children}
-    </TableContext.Provider>
-  );
+  return <TableContext.Provider value={{ density }}>{children}</TableContext.Provider>;
 };

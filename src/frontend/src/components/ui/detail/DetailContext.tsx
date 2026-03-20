@@ -1,7 +1,7 @@
-import React, { createContext } from 'react';
-import type { VariantProps } from 'class-variance-authority';
-import { detailValueSizeVariant } from './detail-variant';
-import { Densities } from '@/types/density';
+import React, { createContext } from "react";
+import type { VariantProps } from "class-variance-authority";
+import { detailValueSizeVariant } from "./detail-variant";
+import { Densities } from "@/types/density";
 
 type DetailContextValue = VariantProps<typeof detailValueSizeVariant>;
 
@@ -14,9 +14,5 @@ export const DetailProvider: React.FC<{
   density?: Densities;
   children: React.ReactNode;
 }> = ({ density = Densities.Medium, children }) => {
-  return (
-    <DetailContext.Provider value={{ density }}>
-      {children}
-    </DetailContext.Provider>
-  );
+  return <DetailContext.Provider value={{ density }}>{children}</DetailContext.Provider>;
 };

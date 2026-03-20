@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { useEventHandler, EventHandler } from '@/components/event-handler';
 import { useOptimisticValue } from './shared/useOptimisticValue';
 import * as SliderPrimitive from '@radix-ui/react-slider';

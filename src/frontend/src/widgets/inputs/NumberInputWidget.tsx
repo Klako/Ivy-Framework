@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState, useEffect } from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { useOptimisticValue } from './shared/useOptimisticValue';
 import { useEventHandler, EventHandler } from '@/components/event-handler';
 import NumberInput from '@/components/NumberInput';

@@ -1,5 +1,6 @@
 import path from "path";
-import { defineConfig, type Plugin } from "vite";
+import { type Plugin } from "vite";
+import { defineConfig } from "vite-plus";;
 import react from "@vitejs/plugin-react-oxc";
 import tailwindcss from "@tailwindcss/vite";
 

@@ -70,17 +70,7 @@ export const MemoizedWidget = React.memo(
     const scaleForChildren = (props.density as Densities) || inheritedScale;
     const slots = processSlots(children, scaleForChildren);
 
-    if (node.type === "Ivy.Kanban") {
-      props.widgetNodeChildren = children.filter(
-        (child: WidgetNode) => child.type === "Ivy.KanbanCard",
-      );
-    }
-
-    if (node.type === "Ivy.Calendar") {
-      props.widgetNodeChildren = children.filter(
-        (child: WidgetNode) => child.type === "Ivy.CalendarEvent",
-      );
-    }
+    props.widgetNodeChildren = children;
 
     registerCallSite(node);
 
@@ -192,17 +182,7 @@ const renderExternalWidget = (node: WidgetNode, inheritedScale?: Densities): Rea
   const scaleForChildren = (props.density as Densities) || inheritedScale;
   const slots = processSlots(children, scaleForChildren);
 
-  if (node.type === "Ivy.Kanban") {
-    props.widgetNodeChildren = children.filter(
-      (child: WidgetNode) => child.type === "Ivy.KanbanCard",
-    );
-  }
-
-  if (node.type === "Ivy.Calendar") {
-    props.widgetNodeChildren = children.filter(
-      (child: WidgetNode) => child.type === "Ivy.CalendarEvent",
-    );
-  }
+  props.widgetNodeChildren = children;
 
   registerCallSite(node);
 

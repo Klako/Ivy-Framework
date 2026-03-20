@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Ivy;
 
 namespace Ivy.Samples.Shared.Apps.Concepts;

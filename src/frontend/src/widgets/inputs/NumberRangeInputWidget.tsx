@@ -303,13 +303,19 @@ export const NumberRangeInputWidget = memo(
 
     return (
       <div
-        className="relative w-full"
+        className={cn(
+          'relative w-full px-3 py-2',
+          disabled && 'opacity-50 cursor-not-allowed',
+          invalid && inputStyles.invalidInput
+        )}
         onBlur={e => {
+          if (disabled) return;
           if (!e.currentTarget.contains(e.relatedTarget)) {
             if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
           }
         }}
         onFocus={e => {
+          if (disabled) return;
           if (!e.currentTarget.contains(e.relatedTarget)) {
             if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
           }
@@ -334,10 +340,7 @@ export const NumberRangeInputWidget = memo(
         {/* Range slider */}
         <div className="relative w-full flex flex-col gap-1 pt-6 pb-2">
           <SliderPrimitive.Root
-            className={cn(
-              'relative flex w-full touch-none select-none items-center',
-              invalid && inputStyles.invalidInput
-            )}
+            className="relative flex w-full touch-none select-none items-center"
             value={[localLower, localUpper]}
             onValueChange={handleSliderChange}
             onValueCommit={handleSliderCommit}
@@ -359,7 +362,8 @@ export const NumberRangeInputWidget = memo(
             {/* Lower thumb */}
             <SliderPrimitive.Thumb
               className={cn(
-                'relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
+                'relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+                disabled ? 'cursor-not-allowed' : 'cursor-pointer',
                 variant.thumb
               )}
             >
@@ -376,7 +380,8 @@ export const NumberRangeInputWidget = memo(
             {/* Upper thumb */}
             <SliderPrimitive.Thumb
               className={cn(
-                'relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
+                'relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+                disabled ? 'cursor-not-allowed' : 'cursor-pointer',
                 variant.thumb
               )}
             >

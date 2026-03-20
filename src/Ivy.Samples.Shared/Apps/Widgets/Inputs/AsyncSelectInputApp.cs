@@ -11,6 +11,7 @@ public class AsyncSelectInputApp : SampleBase
         var guidState = UseState(default(Guid?));
         var guidStateGhost = UseState(default(Guid?));
         var guidStateNullableMismatch = UseState(default(Guid?));
+        var guidStateInvalid = UseState(default(Guid?));
         var onBlurState = UseState(default(Guid?));
         var onBlurLabel = UseState("");
         var onFocusState = UseState(default(Guid?));
@@ -94,6 +95,9 @@ public class AsyncSelectInputApp : SampleBase
             | Text.H3("Nullable State Mapping")
             | Text.P("Testing the nullable mapping fix where the state is Guid? but delegates return Option<Guid>.")
             | guidStateNullableMismatch.ToAsyncSelectInput(QueryCategoriesNonNullable, LookupCategoryNonNullable, placeholder: "Select Category (Nullable Mismatch)")
+            | Text.H3("Invalid")
+            | guidStateInvalid.ToAsyncSelectInput(QueryCategories, LookupCategory, placeholder: "Select Category (Invalid)")
+                .Invalid("Category selection is invalid")
             | Text.H2("Events")
             | (Layout.Vertical().Gap(4)
                 | new Card(

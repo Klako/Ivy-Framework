@@ -3,6 +3,8 @@ import { useEventHandler } from '@/components/event-handler';
 import { StarRating } from '@/components/StarRating';
 import { ThumbsEnum, ThumbsRating } from '@/components/ui/thumbs-rating';
 import React, { useCallback, useMemo } from 'react';
+import { inputStyles } from '@/lib/styles';
+import { cn } from '@/lib/utils';
 import { useOptimisticValue } from './shared/useOptimisticValue';
 import { Densities } from '@/types/density';
 
@@ -200,9 +202,11 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
         }
       }}
       tabIndex={disabled ? -1 : 0}
-      className={`outline-none focus:outline-none focus:ring-1 focus:ring-ring rounded-md p-1 ${
-        disabled ? 'opacity-50 cursor-not-allowed' : ''
-      }`}
+      className={cn(
+        'outline-none focus:outline-none focus:ring-1 focus:ring-ring rounded-md p-1',
+        disabled && 'opacity-50 cursor-not-allowed',
+        invalid && inputStyles.invalidInput
+      )}
     >
       {ratingComponent}
     </div>

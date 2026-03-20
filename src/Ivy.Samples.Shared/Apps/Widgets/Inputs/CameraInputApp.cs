@@ -20,6 +20,9 @@ public class CameraInputApp() : SampleBase
                     | new Card(new CameraInputBasic()).Title("Basic")
                     | new Card(new CameraInputEvents()).Title("OnFocus / OnBlur")
                     | new Card(new CameraInputDisabledState()).Title("Disabled State"))
+               | Text.H2("Validation")
+               | new CameraInput(dummyUpload.Value, "Take a photo")
+                   .Invalid("Camera input is invalid")
                | Text.H2("Sizes")
                | CreateSizesSection(dummyUpload.Value);
     }

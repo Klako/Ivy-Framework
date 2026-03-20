@@ -8,7 +8,7 @@ import React, {
 import { Mic, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getWidth } from '@/lib/styles';
+import { getWidth, inputStyles } from '@/lib/styles';
 import { useEventHandler } from '@/components/event-handler';
 import { logger } from '@/lib/logger';
 import { Densities } from '@/types/density';
@@ -31,6 +31,7 @@ interface AudioInputWidgetProps {
   chunkInterval: number;
   sampleRate?: number | null;
   density?: Densities;
+  invalid?: string;
 }
 
 const supportedMimeTypes = [
@@ -55,6 +56,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
   sampleRate,
   density = Densities.Medium,
   events = [],
+  invalid,
 }) => {
   const eventHandler = useEventHandler();
   const normalizedMimeTypes = useMemo(() => {
@@ -265,6 +267,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
       <div
         className={cn(
           audioInputVariant({ density }),
+          invalid && inputStyles.invalidInput,
           disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
         )}
         onClick={

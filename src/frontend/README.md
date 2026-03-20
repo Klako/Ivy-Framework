@@ -4,8 +4,15 @@
 
 ## Development
 
+The frontend uses **Vite+** (`vp`). For daily development, you can use the Vite+ CLI directly:
+
 ```bash
-pnpm run dev
+vp dev
+```
+
+To build for production (which runs `tsc` for type-checking before bundling):
+
+```bash
 pnpm run build
 ```
 
@@ -71,30 +78,30 @@ git commit --no-verify -m "Commit message"
 
 ### Code Formatting
 
-Format all files with Oxfmt (via Vite+):
+Format all files with Oxfmt using the Vite+ CLI:
 
 ```bash
-pnpm run format
+vp fmt .
 ```
 
 Check if files are properly formatted:
 
 ```bash
-pnpm run format:check
+vp fmt --check .
 ```
 
 ### Linting
 
-Check for linting issues with Oxlint (via Vite+):
+Check for linting issues with Oxlint using the Vite+ CLI:
 
 ```bash
-pnpm run lint
+vp lint .
 ```
 
 Automatically fix linting issues:
 
 ```bash
-pnpm run lint:fix
+vp lint --fix .
 ```
 
 ### Configuration Files
@@ -108,10 +115,10 @@ This project uses Vitest (via Vite+) for unit testing and Playwright for end-to-
 
 ### Unit Testing with Vitest
 
-Run unit tests:
+Run unit tests interactively using Vite+:
 
 ```bash
-pnpm run test
+vp test
 ```
 
 Unit tests are configured to run only on files ending with `.test.ts`. Place your unit test files alongside your source code with the `.test.ts` extension.
@@ -202,23 +209,23 @@ pnpm exec playwright show-report
 
 Tests are automatically run in GitHub Actions on push to main/master branches and pull requests. The CI pipeline includes:
 
-1. Code formatting checks (`pnpm run format:check`)
-2. Linting checks (`pnpm run lint`)
-3. Unit tests (`pnpm run test`)
+1. Code formatting checks (`vp fmt --check .`)
+2. Linting checks (`vp lint .`)
+3. Unit tests (`vp test`)
 4. Playwright end-to-end tests
 
-## Available Scripts
+## Available Commands and Scripts
 
-| Script                 | Description                           |
+| Command/Script         | Description                           |
 | ---------------------- | ------------------------------------- |
-| `pnpm run dev`         | Start development server              |
-| `pnpm run build`       | Build for production                  |
-| `pnpm run preview`     | Preview production build              |
-| `pnpm run test`        | Run unit tests with Vitest            |
+| `vp dev`               | Start development server              |
+| `pnpm run build`       | Build for production (typecheck + vp) |
+| `vp preview`           | Preview production build              |
+| `vp test`              | Run unit tests with Vitest            |
 | `pnpm run e2e`         | Run all end-to-end tests              |
 | `pnpm run e2e:docs`    | Run Ivy.Docs end-to-end tests         |
 | `pnpm run e2e:samples` | Run Ivy.Samples end-to-end tests      |
-| `pnpm run lint`        | Check for linting issues              |
-| `pnpm run lint:fix`    | Fix linting issues automatically      |
-| `pnpm run format`      | Format all files with Oxfmt           |
-| `pnpm run format:check`| Check if files are properly formatted |
+| `vp lint .`            | Check for linting issues              |
+| `vp lint --fix .`      | Fix linting issues automatically      |
+| `vp fmt .`             | Format all files with Oxfmt           |
+| `vp fmt --check .`     | Check if files are properly formatted |

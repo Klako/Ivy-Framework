@@ -2,10 +2,12 @@ import * as React from 'react';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { cn } from '@/lib/utils';
 import { Densities } from '@/types/density';
+import { formatBytes } from '@/lib/formatters';
 
 interface SliderWithCurrencyProps
   extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> {
   currency?: string;
+  isBytesFormat?: boolean;
   density?: Densities;
   tooltipValue?: string | number;
 }
@@ -14,12 +16,20 @@ const Slider = React.forwardRef<
   SliderWithCurrencyProps
 >(
   (
-    { className, currency, density = Densities.Medium, tooltipValue, ...props },
+    {
+      className,
+      currency,
+      isBytesFormat = false,
+      density = Densities.Medium,
+      tooltipValue,
+      ...props
+    },
     ref
   ) => {
     const currentValue = props.value?.[0] ?? props.defaultValue?.[0] ?? 0;
 
     const formattedValue = React.useMemo(() => {
+      if (isBytesFormat) return formatBytes(currentValue, 2);
       if (!currency) return currentValue;
       try {
         return new Intl.NumberFormat('en-US', {
@@ -31,7 +41,7 @@ const Slider = React.forwardRef<
       } catch {
         return currentValue;
       }
-    }, [currentValue, currency]);
+    }, [currentValue, currency, isBytesFormat]);
 
     // Size variants for track and thumb
     const sizeVariant: Record<

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { useOptimisticValue } from './shared/useOptimisticValue';
 import { useEventHandler, EventHandler } from '@/components/event-handler';
 import NumberInput from '@/components/NumberInput';
@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils';
 import { inputStyles, getWidth } from '@/lib/styles';
 import { InvalidIcon } from '@/components/InvalidIcon';
 import { X } from 'lucide-react';
-import React from 'react';
 import { Densities } from '@/types/density';
 import { xIconVariant } from '@/components/ui/input/text-input-variant';
 import Icon from '@/components/Icon';
+import { formatBytes } from '@/lib/formatters';
 
 interface Affix {
   icon?: string;
@@ -147,16 +147,15 @@ const SliderVariant = memo(
     disabled = false,
     invalid,
     currency,
+    formatStyle,
     density = Densities.Medium,
     onValueChange,
     'data-testid': dataTestId,
   }: NumberInputBaseProps) => {
-    // Local state for live feedback (optional, fallback to prop value)
-    const [localValue, setLocalValue] = React.useState<number | null>(value);
+    const isBytesFormat = formatStyle === 'Bytes';
 
-    React.useEffect(() => {
-      setLocalValue(value);
-    }, [value]);
+    // Maintains local state for quick slider updates, syncs when value changes from outside
+    const [localValue, setLocalValue] = useOptimisticValue(value, false);
 
     // Only update local state on drag
     const handleSliderChange = useCallback((values: number[]) => {
@@ -164,7 +163,7 @@ const SliderVariant = memo(
       if (typeof newValue === 'number') {
         setLocalValue(newValue);
       }
-    }, []);
+    }, [setLocalValue]);
 
     // Only call onValueChange (eventHandler) when drag ends
     const handleSliderCommit = useCallback(
@@ -180,6 +179,15 @@ const SliderVariant = memo(
     // For slider, we need a numeric value - use 0 as fallback for null
     const sliderValue = localValue ?? 0;
 
+    const formattedMin = useMemo(
+      () => (isBytesFormat ? formatBytes(min, 0) : min),
+      [min, isBytesFormat]
+    );
+    const formattedMax = useMemo(
+      () => (isBytesFormat ? formatBytes(max, 0) : max),
+      [max, isBytesFormat]
+    );
+
     return (
       <div className="relative w-full flex-1 flex flex-col gap-1 pt-6 pb-2 my-auto justify-center">
         <Slider
@@ -189,6 +197,7 @@ const SliderVariant = memo(
           value={[sliderValue]}
           disabled={disabled}
           currency={currency}
+          isBytesFormat={isBytesFormat}
           density={density}
           onValueChange={handleSliderChange}
           onValueCommit={handleSliderCommit}
@@ -204,8 +213,8 @@ const SliderVariant = memo(
         >
           {min !== undefined && max !== undefined && (
             <>
-              <span>{min}</span>
-              <span>{max}</span>
+              <span>{formattedMin}</span>
+              <span>{formattedMax}</span>
             </>
           )}
         </span>
@@ -422,6 +431,7 @@ export const NumberInputWidget = memo(
           <SliderVariant
             id={id}
             {...props}
+            formatStyle={formatStyle}
             value={localValue}
             onValueChange={handleChange}
           />

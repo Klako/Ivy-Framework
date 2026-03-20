@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils';
 import { inputStyles } from '@/lib/styles';
 import { InvalidIcon } from '@/components/InvalidIcon';
 import { X } from 'lucide-react';
-import React from 'react';
 import { Densities } from '@/types/density';
 import Icon from '@/components/Icon';
+import { formatBytes } from '@/lib/formatters';
 
 interface Affix {
   icon?: string;
@@ -36,6 +36,11 @@ const formatStyleMap = {
   Decimal: 'decimal',
   Currency: 'currency',
   Percent: 'percent',
+  Compact: 'compact',
+  Scientific: 'scientific',
+  Engineering: 'engineering',
+  Accounting: 'accounting',
+  Bytes: 'bytes',
 } as const;
 
 type FormatStyle = keyof typeof formatStyleMap;
@@ -120,17 +125,36 @@ const formatNumber = (
 ): string => {
   if (value === null) return '';
 
+  if (formatStyle === 'Bytes') {
+    return formatBytes(value, precision);
+  }
+
   try {
     const config: Intl.NumberFormatOptions = {
-      style: formatStyleMap[formatStyle],
       minimumFractionDigits: 0,
       maximumFractionDigits: precision,
       useGrouping: !(noGrouping ?? false),
       notation: 'standard',
     };
 
-    if (formatStyle === 'Currency' && currency) {
-      config.currency = currency;
+    if (formatStyle === 'Compact') {
+      config.notation = 'compact';
+      config.compactDisplay = 'short';
+    } else if (formatStyle === 'Scientific') {
+      config.notation = 'scientific';
+    } else if (formatStyle === 'Engineering') {
+      config.notation = 'engineering';
+    } else if (formatStyle === 'Accounting') {
+      config.style = 'currency';
+      config.currencySign = 'accounting';
+      config.currency = currency || 'USD';
+    } else {
+      config.style = formatStyleMap[
+        formatStyle
+      ] as Intl.NumberFormatOptions['style'];
+      if (formatStyle === 'Currency' && currency) {
+        config.currency = currency;
+      }
     }
 
     return new Intl.NumberFormat('en-US', config).format(value);
@@ -207,18 +231,9 @@ export const NumberRangeInputWidget = memo(
       rangeEqual
     );
 
-    // Local state for live feedback during drag
-    const [localLower, setLocalLower] = React.useState<number>(
-      localRange.lower
-    );
-    const [localUpper, setLocalUpper] = React.useState<number>(
-      localRange.upper
-    );
-
-    React.useEffect(() => {
-      setLocalLower(localRange.lower);
-      setLocalUpper(localRange.upper);
-    }, [localRange.lower, localRange.upper]);
+    // Maintains local state for lower/upper for instant feedback
+    const [localLower, setLocalLower] = useOptimisticValue(localRange.lower, false);
+    const [localUpper, setLocalUpper] = useOptimisticValue(localRange.upper, false);
 
     // Only update local state on drag
     const handleSliderChange = useCallback((values: number[]) => {
@@ -227,7 +242,7 @@ export const NumberRangeInputWidget = memo(
         setLocalLower(newLower);
         setLocalUpper(newUpper);
       }
-    }, []);
+    }, [setLocalLower, setLocalUpper]);
 
     // Only call eventHandler when drag ends
     const handleSliderCommit = useCallback(

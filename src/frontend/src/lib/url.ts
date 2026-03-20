@@ -68,11 +68,11 @@ export function isExternalUrl(url: string): boolean {
 }
 
 export function isAnchorLink(url: string): boolean {
-  return /^#/.test(url);
+  return url.startsWith('#');
 }
 
 export function isAppProtocol(url: string): boolean {
-  return /^app:\/\//.test(url);
+  return url.startsWith('app://');
 }
 
 export function isMailtoUrl(url: string): boolean {
@@ -215,7 +215,7 @@ export function validateLinkUrl(url: string | null | undefined): string {
   }
 
   // Allow app:// URLs (Ivy internal navigation)
-  if (/^app:\/\//.test(url)) {
+  if (url.startsWith('app://')) {
     // Validate app:// URLs don't contain dangerous characters
     // Pattern: app://[app-id][?query-params] where app-id has no colons/hashes, query-params have no #
     if (!/^app:\/\/[^:#]*(\?[^#]*)?$/.test(url)) {
@@ -232,7 +232,7 @@ export function validateLinkUrl(url: string | null | undefined): string {
 
   // Allow anchor links (starting with #)
   // Use inline regex pattern matching
-  if (/^#/.test(url)) {
+  if (url.startsWith('#')) {
     // Validate anchor links are safe
     // Allow colons in anchor IDs (HTML5 allows this), but prevent query params and fragments
     // Pattern: #[anchor-id] where anchor-id can contain colons but not ? or &
@@ -396,7 +396,7 @@ export function validateMediaUrl(
   }
 
   // Allow app:// URLs (Ivy internal navigation)
-  if (/^app:\/\//.test(url)) {
+  if (url.startsWith('app://')) {
     // Validate app:// URLs don't contain dangerous characters
     // Pattern: app://[app-id][?query-params] where app-id has no colons/hashes, query-params have no #
     if (!/^app:\/\/[^:#]*(\?[^#]*)?$/.test(url)) {

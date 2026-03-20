@@ -258,7 +258,9 @@ export const createLazyExternalWidget = (
   let lazy = lazyComponents.get(typeName);
   if (!lazy) {
     lazy = React.lazy(() =>
-      loadExternalWidget(typeName).then(Component => ({ default: Component }))
+      loadExternalWidget(typeName).then(Component => ({
+        default: Component,
+      }))
     );
     lazyComponents.set(typeName, lazy);
   }

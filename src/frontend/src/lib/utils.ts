@@ -89,7 +89,7 @@ function extractAppProtocolContent(url: string): string {
 
 export function convertAppUrlToPath(appUrl: string): string {
   // Use inline regex pattern matching
-  if (!/^app:\/\//.test(appUrl)) {
+  if (!appUrl.startsWith('app://')) {
     return appUrl;
   }
 

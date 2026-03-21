@@ -13,6 +13,12 @@ If you are simply cloning the repository and running `dotnet build` (or opening 
 If you want to explicitly work on the frontend in isolation (using HMR for widgets), you must manually run:
 
 ```bash
+vp i
+```
+
+or
+
+```bash
 pnpm i
 ```
 

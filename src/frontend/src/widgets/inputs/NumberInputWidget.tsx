@@ -1,16 +1,16 @@
-import React, { memo, useCallback, useMemo } from 'react';
-import { useOptimisticValue } from './shared/useOptimisticValue';
-import { useEventHandler, EventHandler } from '@/components/event-handler';
-import NumberInput from '@/components/NumberInput';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
-import { inputStyles, getWidth } from '@/lib/styles';
-import { InvalidIcon } from '@/components/InvalidIcon';
-import { X } from 'lucide-react';
-import { Densities } from '@/types/density';
-import { xIconVariant } from '@/components/ui/input/text-input-variant';
-import Icon from '@/components/Icon';
-import { formatBytes } from '@/lib/formatters';
+import React, { memo, useCallback, useMemo } from "react";
+import { useOptimisticValue } from "./shared/useOptimisticValue";
+import { useEventHandler, EventHandler } from "@/components/event-handler";
+import NumberInput from "@/components/NumberInput";
+import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
+import { inputStyles, getWidth } from "@/lib/styles";
+import { InvalidIcon } from "@/components/InvalidIcon";
+import { X } from "lucide-react";
+import { Densities } from "@/types/density";
+import { xIconVariant } from "@/components/ui/input/text-input-variant";
+import Icon from "@/components/Icon";
+import { formatBytes } from "@/lib/formatters";
 
 interface Affix {
   icon?: string;
@@ -23,26 +23,26 @@ const renderAffix = (affix?: Affix): React.ReactNode => {
   if (affix.icon) {
     return React.createElement(Icon, {
       name: affix.icon,
-      className: 'w-4 h-4',
+      className: "w-4 h-4",
     });
   }
 
   if (affix.text) {
-    return React.createElement('span', { className: 'text-sm' }, affix.text);
+    return React.createElement("span", { className: "text-sm" }, affix.text);
   }
 
   return null;
 };
 
 const formatStyleMap = {
-  Decimal: 'decimal',
-  Currency: 'currency',
-  Percent: 'percent',
-  Compact: 'compact',
-  Scientific: 'scientific',
-  Engineering: 'engineering',
-  Accounting: 'accounting',
-  Bytes: 'bytes',
+  Decimal: "decimal",
+  Currency: "currency",
+  Percent: "percent",
+  Compact: "compact",
+  Scientific: "scientific",
+  Engineering: "engineering",
+  Accounting: "accounting",
+  Bytes: "bytes",
 } as const;
 
 type FormatStyle = keyof typeof formatStyleMap;
@@ -76,7 +76,7 @@ interface NumberInputBaseProps {
   nullable?: boolean;
   onValueChange: (value: number | null) => void;
   currency?: string | undefined;
-  'data-testid'?: string;
+  "data-testid"?: string;
   // Add type information for validation
   targetType?: string;
   density?: Densities;
@@ -85,18 +85,14 @@ interface NumberInputBaseProps {
   noGrouping?: boolean;
 }
 
-interface NumberInputWidgetProps
-  extends Omit<NumberInputBaseProps, 'onValueChange'> {
-  variant?: 'Number' | 'Slider';
+interface NumberInputWidgetProps extends Omit<NumberInputBaseProps, "onValueChange"> {
+  variant?: "Number" | "Slider";
   targetType?: string;
   width?: string;
 }
 
 // Function to validate and cap values based on target type
-const validateAndCapValue = (
-  value: number | null,
-  targetType?: string
-): number | null => {
+const validateAndCapValue = (value: number | null, targetType?: string): number | null => {
   if (value === null) return null;
   if (!targetType) return value;
 
@@ -107,18 +103,7 @@ const validateAndCapValue = (
   const cappedValue = Math.min(Math.max(value, limits.min), limits.max);
 
   // For integer types, ensure we don't send fractional values
-  if (
-    [
-      'byte',
-      'sbyte',
-      'short',
-      'ushort',
-      'int',
-      'uint',
-      'long',
-      'ulong',
-    ].includes(targetType)
-  ) {
+  if (["byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong"].includes(targetType)) {
     return Math.floor(cappedValue);
   }
 
@@ -128,13 +113,13 @@ const validateAndCapValue = (
 // Size variants for text styling
 const sizeVariant: Record<string, { text: string }> = {
   Small: {
-    text: 'text-xs',
+    text: "text-xs",
   },
   Medium: {
-    text: 'text-sm font-normal',
+    text: "text-sm font-normal",
   },
   Large: {
-    text: 'text-ml font-medium',
+    text: "text-ml font-medium",
   },
 };
 
@@ -150,9 +135,9 @@ const SliderVariant = memo(
     formatStyle,
     density = Densities.Medium,
     onValueChange,
-    'data-testid': dataTestId,
+    "data-testid": dataTestId,
   }: NumberInputBaseProps) => {
-    const isBytesFormat = formatStyle === 'Bytes';
+    const isBytesFormat = formatStyle === "Bytes";
 
     // Maintains local state for quick slider updates, syncs when value changes from outside
     const [localValue, setLocalValue] = useOptimisticValue(value, false);
@@ -161,22 +146,22 @@ const SliderVariant = memo(
     const handleSliderChange = useCallback(
       (values: number[]) => {
         const newValue = values[0];
-        if (typeof newValue === 'number') {
+        if (typeof newValue === "number") {
           setLocalValue(newValue);
         }
       },
-      [setLocalValue]
+      [setLocalValue],
     );
 
     // Only call onValueChange (eventHandler) when drag ends
     const handleSliderCommit = useCallback(
       (values: number[]) => {
         const newValue = values[0];
-        if (typeof newValue === 'number') {
+        if (typeof newValue === "number") {
           onValueChange(newValue);
         }
       },
-      [onValueChange]
+      [onValueChange],
     );
 
     // For slider, we need a numeric value - use 0 as fallback for null
@@ -184,11 +169,11 @@ const SliderVariant = memo(
 
     const formattedMin = useMemo(
       () => (isBytesFormat ? formatBytes(min, 0) : min),
-      [min, isBytesFormat]
+      [min, isBytesFormat],
     );
     const formattedMax = useMemo(
       () => (isBytesFormat ? formatBytes(max, 0) : max),
-      [max, isBytesFormat]
+      [max, isBytesFormat],
     );
 
     return (
@@ -209,8 +194,8 @@ const SliderVariant = memo(
         />
         <span
           className={cn(
-            'flex w-full items-center justify-between gap-1',
-            sizeVariant[String(density)].text
+            "flex w-full items-center justify-between gap-1",
+            sizeVariant[String(density)].text,
           )}
           aria-hidden="true"
         >
@@ -228,19 +213,19 @@ const SliderVariant = memo(
         )}
       </div>
     );
-  }
+  },
 );
 
-SliderVariant.displayName = 'SliderVariant';
+SliderVariant.displayName = "SliderVariant";
 
 const NumberVariant = memo(
   ({
-    placeholder = '',
+    placeholder = "",
     value,
     min,
     max,
     step = 1,
-    formatStyle = 'Decimal',
+    formatStyle = "Decimal",
     precision = 2,
     disabled = false,
     invalid,
@@ -251,9 +236,9 @@ const NumberVariant = memo(
     prefix,
     suffix,
     noGrouping,
-    'data-testid': dataTestId,
+    "data-testid": dataTestId,
   }: NumberInputBaseProps) => {
-    const isBytesFormat = formatStyle === 'Bytes';
+    const isBytesFormat = formatStyle === "Bytes";
 
     const formatConfig = useMemo(() => {
       const config: Intl.NumberFormatOptions = {
@@ -262,26 +247,24 @@ const NumberVariant = memo(
         useGrouping: !(noGrouping ?? false),
       };
 
-      if (formatStyle === 'Compact') {
-        config.notation = 'compact';
-        config.compactDisplay = 'short';
-      } else if (formatStyle === 'Scientific') {
-        config.notation = 'scientific';
-      } else if (formatStyle === 'Engineering') {
-        config.notation = 'engineering';
-      } else if (formatStyle === 'Accounting') {
-        config.style = 'currency';
-        config.currencySign = 'accounting';
-        config.currency = currency || 'USD';
-      } else if (formatStyle === 'Bytes') {
-        config.style = 'decimal';
+      if (formatStyle === "Compact") {
+        config.notation = "compact";
+        config.compactDisplay = "short";
+      } else if (formatStyle === "Scientific") {
+        config.notation = "scientific";
+      } else if (formatStyle === "Engineering") {
+        config.notation = "engineering";
+      } else if (formatStyle === "Accounting") {
+        config.style = "currency";
+        config.currencySign = "accounting";
+        config.currency = currency || "USD";
+      } else if (formatStyle === "Bytes") {
+        config.style = "decimal";
       } else {
-        config.style = formatStyleMap[
-          formatStyle
-        ] as Intl.NumberFormatOptions['style'];
-        config.notation = 'standard';
-        if (formatStyle === 'Currency') {
-          config.currency = currency || 'USD';
+        config.style = formatStyleMap[formatStyle] as Intl.NumberFormatOptions["style"];
+        config.notation = "standard";
+        if (formatStyle === "Currency") {
+          config.currency = currency || "USD";
         }
       }
 
@@ -297,7 +280,7 @@ const NumberVariant = memo(
           onValueChange(newValue);
         }
       },
-      [onValueChange, nullable]
+      [onValueChange, nullable],
     );
 
     const prefixContent = renderAffix(prefix);
@@ -306,8 +289,8 @@ const NumberVariant = memo(
     return (
       <div
         className={cn(
-          'relative flex items-stretch w-full flex-1 rounded-field border border-input bg-transparent shadow-sm dark:bg-white/5 dark:border-white/10',
-          disabled && 'cursor-not-allowed opacity-50'
+          "relative flex items-stretch w-full flex-1 rounded-field border border-input bg-transparent shadow-sm dark:bg-white/5 dark:border-white/10",
+          disabled && "cursor-not-allowed opacity-50",
         )}
       >
         {/* Prefix with background and separator */}
@@ -330,12 +313,12 @@ const NumberVariant = memo(
             density={density}
             onChange={handleNumberChange}
             className={cn(
-              'border-0 shadow-none',
+              "border-0 shadow-none",
               invalid && inputStyles.invalidInput,
-              (invalid || (nullable && value !== null && !disabled)) && 'pr-8',
-              nullable && value !== null && !disabled && invalid && 'pr-16',
-              prefixContent && 'rounded-l-none',
-              suffixContent && 'rounded-r-none'
+              (invalid || (nullable && value !== null && !disabled)) && "pr-8",
+              nullable && value !== null && !disabled && invalid && "pr-16",
+              prefixContent && "rounded-l-none",
+              suffixContent && "rounded-r-none",
             )}
             data-testid={dataTestId}
           />
@@ -355,12 +338,7 @@ const NumberVariant = memo(
                 </button>
               )}
               {/* Invalid icon - rightmost */}
-              {invalid && (
-                <InvalidIcon
-                  message={invalid}
-                  className="pointer-events-auto"
-                />
-              )}
+              {invalid && <InvalidIcon message={invalid} className="pointer-events-auto" />}
             </div>
           )}
         </div>
@@ -373,16 +351,16 @@ const NumberVariant = memo(
         )}
       </div>
     );
-  }
+  },
 );
 
-NumberVariant.displayName = 'NumberVariant';
+NumberVariant.displayName = "NumberVariant";
 
 export const NumberInputWidget = memo(
   ({
     id,
-    variant = 'Number',
-    formatStyle = 'Decimal',
+    variant = "Number",
+    formatStyle = "Decimal",
     nullable = false,
     width,
     ...props
@@ -390,13 +368,9 @@ export const NumberInputWidget = memo(
     const eventHandler = useEventHandler() as EventHandler;
 
     // Normalize undefined to null when nullable
-    const normalizedValue =
-      nullable && props.value === undefined ? null : props.value;
+    const normalizedValue = nullable && props.value === undefined ? null : props.value;
 
-    const [localValue, setLocalValue] = useOptimisticValue(
-      normalizedValue,
-      false
-    );
+    const [localValue, setLocalValue] = useOptimisticValue(normalizedValue, false);
 
     const handleChange = useCallback(
       (newValue: number | null) => {
@@ -412,25 +386,22 @@ export const NumberInputWidget = memo(
           }
 
           // Then apply type-level validation to prevent overflow
-          const validatedValue = validateAndCapValue(
-            boundedValue,
-            props.targetType
-          );
+          const validatedValue = validateAndCapValue(boundedValue, props.targetType);
 
           setLocalValue(validatedValue);
-          eventHandler('OnChange', id, [validatedValue]);
+          eventHandler("OnChange", id, [validatedValue]);
         } else {
           // Pass null directly for nullable inputs
           setLocalValue(newValue);
-          eventHandler('OnChange', id, [newValue]);
+          eventHandler("OnChange", id, [newValue]);
         }
       },
-      [eventHandler, id, props.min, props.max, props.targetType, setLocalValue]
+      [eventHandler, id, props.min, props.max, props.targetType, setLocalValue],
     );
 
     return (
       <div className="w-full flex-1" style={{ ...getWidth(width) }}>
-        {variant === 'Slider' ? (
+        {variant === "Slider" ? (
           <SliderVariant
             id={id}
             {...props}
@@ -450,7 +421,7 @@ export const NumberInputWidget = memo(
         )}
       </div>
     );
-  }
+  },
 );
 
-NumberInputWidget.displayName = 'NumberInputWidget';
+NumberInputWidget.displayName = "NumberInputWidget";

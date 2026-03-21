@@ -1,14 +1,14 @@
-import React, { memo, useCallback, useMemo } from 'react';
-import { useEventHandler, EventHandler } from '@/components/event-handler';
-import { useOptimisticValue } from './shared/useOptimisticValue';
-import * as SliderPrimitive from '@radix-ui/react-slider';
-import { cn } from '@/lib/utils';
-import { inputStyles } from '@/lib/styles';
-import { InvalidIcon } from '@/components/InvalidIcon';
-import { X } from 'lucide-react';
-import { Densities } from '@/types/density';
-import Icon from '@/components/Icon';
-import { formatBytes } from '@/lib/formatters';
+import React, { memo, useCallback, useMemo } from "react";
+import { useEventHandler, EventHandler } from "@/components/event-handler";
+import { useOptimisticValue } from "./shared/useOptimisticValue";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { cn } from "@/lib/utils";
+import { inputStyles } from "@/lib/styles";
+import { InvalidIcon } from "@/components/InvalidIcon";
+import { X } from "lucide-react";
+import { Densities } from "@/types/density";
+import Icon from "@/components/Icon";
+import { formatBytes } from "@/lib/formatters";
 
 interface Affix {
   icon?: string;
@@ -21,26 +21,26 @@ const renderAffix = (affix?: Affix): React.ReactNode => {
   if (affix.icon) {
     return React.createElement(Icon, {
       name: affix.icon,
-      className: 'w-4 h-4',
+      className: "w-4 h-4",
     });
   }
 
   if (affix.text) {
-    return React.createElement('span', { className: 'text-sm' }, affix.text);
+    return React.createElement("span", { className: "text-sm" }, affix.text);
   }
 
   return null;
 };
 
 const formatStyleMap = {
-  Decimal: 'decimal',
-  Currency: 'currency',
-  Percent: 'percent',
-  Compact: 'compact',
-  Scientific: 'scientific',
-  Engineering: 'engineering',
-  Accounting: 'accounting',
-  Bytes: 'bytes',
+  Decimal: "decimal",
+  Currency: "currency",
+  Percent: "percent",
+  Compact: "compact",
+  Scientific: "scientific",
+  Engineering: "engineering",
+  Accounting: "accounting",
+  Bytes: "bytes",
 } as const;
 
 type FormatStyle = keyof typeof formatStyleMap;
@@ -79,14 +79,11 @@ interface NumberRangeInputWidgetProps {
   targetType?: string;
   density?: Densities;
   events: string[];
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 // Function to validate and cap values based on target type
-const validateAndCapValue = (
-  value: number | null,
-  targetType?: string
-): number | null => {
+const validateAndCapValue = (value: number | null, targetType?: string): number | null => {
   if (value === null) return null;
   if (!targetType) return value;
 
@@ -97,18 +94,7 @@ const validateAndCapValue = (
   const cappedValue = Math.min(Math.max(value, limits.min), limits.max);
 
   // For integer types, ensure we don't send fractional values
-  if (
-    [
-      'byte',
-      'sbyte',
-      'short',
-      'ushort',
-      'int',
-      'uint',
-      'long',
-      'ulong',
-    ].includes(targetType)
-  ) {
+  if (["byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong"].includes(targetType)) {
     return Math.floor(cappedValue);
   }
 
@@ -121,11 +107,11 @@ const formatNumber = (
   formatStyle: FormatStyle,
   precision: number,
   currency?: string,
-  noGrouping?: boolean
+  noGrouping?: boolean,
 ): string => {
-  if (value === null) return '';
+  if (value === null) return "";
 
-  if (formatStyle === 'Bytes') {
+  if (formatStyle === "Bytes") {
     return formatBytes(value, precision);
   }
 
@@ -134,59 +120,55 @@ const formatNumber = (
       minimumFractionDigits: 0,
       maximumFractionDigits: precision,
       useGrouping: !(noGrouping ?? false),
-      notation: 'standard',
+      notation: "standard",
     };
 
-    if (formatStyle === 'Compact') {
-      config.notation = 'compact';
-      config.compactDisplay = 'short';
-    } else if (formatStyle === 'Scientific') {
-      config.notation = 'scientific';
-    } else if (formatStyle === 'Engineering') {
-      config.notation = 'engineering';
-    } else if (formatStyle === 'Accounting') {
-      config.style = 'currency';
-      config.currencySign = 'accounting';
-      config.currency = currency || 'USD';
+    if (formatStyle === "Compact") {
+      config.notation = "compact";
+      config.compactDisplay = "short";
+    } else if (formatStyle === "Scientific") {
+      config.notation = "scientific";
+    } else if (formatStyle === "Engineering") {
+      config.notation = "engineering";
+    } else if (formatStyle === "Accounting") {
+      config.style = "currency";
+      config.currencySign = "accounting";
+      config.currency = currency || "USD";
     } else {
-      config.style = formatStyleMap[
-        formatStyle
-      ] as Intl.NumberFormatOptions['style'];
-      if (formatStyle === 'Currency' && currency) {
+      config.style = formatStyleMap[formatStyle] as Intl.NumberFormatOptions["style"];
+      if (formatStyle === "Currency" && currency) {
         config.currency = currency;
       }
     }
 
-    return new Intl.NumberFormat('en-US', config).format(value);
+    return new Intl.NumberFormat("en-US", config).format(value);
   } catch {
     return String(value);
   }
 };
 
 // Size variants
-const sizeVariant: Record<
-  string,
-  { track: string; thumb: string; tooltip: string; text: string }
-> = {
-  Small: {
-    track: 'h-1',
-    thumb: 'h-3 w-3',
-    tooltip: 'text-xs -top-6',
-    text: 'text-xs',
-  },
-  Medium: {
-    track: 'h-1.5',
-    thumb: 'h-4 w-4',
-    tooltip: 'text-sm -top-7',
-    text: 'text-sm font-normal',
-  },
-  Large: {
-    track: 'h-2',
-    thumb: 'h-5 w-5',
-    tooltip: 'text-ml -top-8',
-    text: 'text-ml font-medium',
-  },
-};
+const sizeVariant: Record<string, { track: string; thumb: string; tooltip: string; text: string }> =
+  {
+    Small: {
+      track: "h-1",
+      thumb: "h-3 w-3",
+      tooltip: "text-xs -top-6",
+      text: "text-xs",
+    },
+    Medium: {
+      track: "h-1.5",
+      thumb: "h-4 w-4",
+      tooltip: "text-sm -top-7",
+      text: "text-sm font-normal",
+    },
+    Large: {
+      track: "h-2",
+      thumb: "h-5 w-5",
+      tooltip: "text-ml -top-8",
+      text: "text-ml font-medium",
+    },
+  };
 
 export const NumberRangeInputWidget = memo(
   ({
@@ -197,7 +179,7 @@ export const NumberRangeInputWidget = memo(
     max = 100,
     step = 1,
     precision = 2,
-    formatStyle = 'Decimal',
+    formatStyle = "Decimal",
     currency,
     disabled = false,
     invalid,
@@ -208,7 +190,7 @@ export const NumberRangeInputWidget = memo(
     targetType,
     density = Densities.Medium,
     events,
-    'data-testid': dataTestId,
+    "data-testid": dataTestId,
   }: NumberRangeInputWidgetProps) => {
     const eventHandler = useEventHandler() as EventHandler;
 
@@ -225,38 +207,28 @@ export const NumberRangeInputWidget = memo(
     const rangeEqual = (a: RangeTuple, b: RangeTuple): boolean =>
       a.lower === b.lower && a.upper === b.upper;
 
-    const [localRange, setLocalRange] = useOptimisticValue(
-      serverRange,
-      false,
-      rangeEqual
-    );
+    const [localRange, setLocalRange] = useOptimisticValue(serverRange, false, rangeEqual);
 
     // Maintains local state for lower/upper for instant feedback
-    const [localLower, setLocalLower] = useOptimisticValue(
-      localRange.lower,
-      false
-    );
-    const [localUpper, setLocalUpper] = useOptimisticValue(
-      localRange.upper,
-      false
-    );
+    const [localLower, setLocalLower] = useOptimisticValue(localRange.lower, false);
+    const [localUpper, setLocalUpper] = useOptimisticValue(localRange.upper, false);
 
     // Only update local state on drag
     const handleSliderChange = useCallback(
       (values: number[]) => {
         const [newLower, newUpper] = values;
-        if (typeof newLower === 'number' && typeof newUpper === 'number') {
+        if (typeof newLower === "number" && typeof newUpper === "number") {
           setLocalLower(newLower);
           setLocalUpper(newUpper);
         }
       },
-      [setLocalLower, setLocalUpper]
+      [setLocalLower, setLocalUpper],
     );
 
     // Only call eventHandler when drag ends
     const handleSliderCommit = useCallback(
       (values: number[]) => {
-        if (!events.includes('OnChange') || disabled) return;
+        if (!events.includes("OnChange") || disabled) return;
 
         let [newLower, newUpper] = values;
 
@@ -287,40 +259,35 @@ export const NumberRangeInputWidget = memo(
         setLocalRange(newRange);
 
         // Send as tuple
-        eventHandler('OnChange', id, [
-          { item1: validatedLower, item2: validatedUpper },
-        ]);
+        eventHandler("OnChange", id, [{ item1: validatedLower, item2: validatedUpper }]);
       },
-      [eventHandler, id, min, max, targetType, disabled, events, setLocalRange]
+      [eventHandler, id, min, max, targetType, disabled, events, setLocalRange],
     );
 
     const handleClear = useCallback(
       (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!events.includes('OnChange') || disabled) return;
+        if (!events.includes("OnChange") || disabled) return;
 
-        eventHandler('OnChange', id, [{ item1: null, item2: null }]);
+        eventHandler("OnChange", id, [{ item1: null, item2: null }]);
       },
-      [eventHandler, id, disabled, events]
+      [eventHandler, id, disabled, events],
     );
 
     const variant = sizeVariant[String(density)];
 
     const formattedLower = useMemo(
-      () =>
-        formatNumber(localLower, formatStyle, precision, currency, noGrouping),
-      [localLower, formatStyle, precision, currency, noGrouping]
+      () => formatNumber(localLower, formatStyle, precision, currency, noGrouping),
+      [localLower, formatStyle, precision, currency, noGrouping],
     );
 
     const formattedUpper = useMemo(
-      () =>
-        formatNumber(localUpper, formatStyle, precision, currency, noGrouping),
-      [localUpper, formatStyle, precision, currency, noGrouping]
+      () => formatNumber(localUpper, formatStyle, precision, currency, noGrouping),
+      [localUpper, formatStyle, precision, currency, noGrouping],
     );
 
-    const showClear =
-      nullable && !disabled && (lowerValue !== null || upperValue !== null);
+    const showClear = nullable && !disabled && (lowerValue !== null || upperValue !== null);
 
     const prefixContent = renderAffix(prefix);
     const suffixContent = renderAffix(suffix);
@@ -331,14 +298,10 @@ export const NumberRangeInputWidget = memo(
         {(prefixContent || suffixContent) && (
           <div className="flex items-center justify-between mb-2">
             {prefixContent && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                {prefixContent}
-              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">{prefixContent}</div>
             )}
             {suffixContent && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                {suffixContent}
-              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">{suffixContent}</div>
             )}
           </div>
         )}
@@ -347,8 +310,8 @@ export const NumberRangeInputWidget = memo(
         <div className="relative w-full flex flex-col gap-1 pt-6 pb-2">
           <SliderPrimitive.Root
             className={cn(
-              'relative flex w-full touch-none select-none items-center',
-              invalid && inputStyles.invalidInput
+              "relative flex w-full touch-none select-none items-center",
+              invalid && inputStyles.invalidInput,
             )}
             value={[localLower, localUpper]}
             onValueChange={handleSliderChange}
@@ -361,8 +324,8 @@ export const NumberRangeInputWidget = memo(
           >
             <SliderPrimitive.Track
               className={cn(
-                'relative w-full grow overflow-hidden rounded-full bg-muted',
-                variant.track
+                "relative w-full grow overflow-hidden rounded-full bg-muted",
+                variant.track,
               )}
             >
               <SliderPrimitive.Range className="absolute h-full bg-primary" />
@@ -371,14 +334,14 @@ export const NumberRangeInputWidget = memo(
             {/* Lower thumb */}
             <SliderPrimitive.Thumb
               className={cn(
-                'relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
-                variant.thumb
+                "relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+                variant.thumb,
               )}
             >
               <div
                 className={cn(
-                  'absolute left-1/2 transform -translate-x-1/2 bg-popover text-foreground p-1 rounded shadow whitespace-nowrap',
-                  variant.tooltip
+                  "absolute left-1/2 transform -translate-x-1/2 bg-popover text-foreground p-1 rounded shadow whitespace-nowrap",
+                  variant.tooltip,
                 )}
               >
                 {formattedLower}
@@ -388,14 +351,14 @@ export const NumberRangeInputWidget = memo(
             {/* Upper thumb */}
             <SliderPrimitive.Thumb
               className={cn(
-                'relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
-                variant.thumb
+                "relative block rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+                variant.thumb,
               )}
             >
               <div
                 className={cn(
-                  'absolute left-1/2 transform -translate-x-1/2 bg-popover text-foreground p-1 rounded shadow whitespace-nowrap',
-                  variant.tooltip
+                  "absolute left-1/2 transform -translate-x-1/2 bg-popover text-foreground p-1 rounded shadow whitespace-nowrap",
+                  variant.tooltip,
                 )}
               >
                 {formattedUpper}
@@ -405,32 +368,13 @@ export const NumberRangeInputWidget = memo(
 
           {/* Min/Max labels */}
           <span
-            className={cn(
-              'flex w-full items-center justify-between gap-1',
-              variant.text
-            )}
+            className={cn("flex w-full items-center justify-between gap-1", variant.text)}
             aria-hidden="true"
           >
             {min !== undefined && max !== undefined && (
               <>
-                <span>
-                  {formatNumber(
-                    min,
-                    formatStyle,
-                    precision,
-                    currency,
-                    noGrouping
-                  )}
-                </span>
-                <span>
-                  {formatNumber(
-                    max,
-                    formatStyle,
-                    precision,
-                    currency,
-                    noGrouping
-                  )}
-                </span>
+                <span>{formatNumber(min, formatStyle, precision, currency, noGrouping)}</span>
+                <span>{formatNumber(max, formatStyle, precision, currency, noGrouping)}</span>
               </>
             )}
           </span>
@@ -455,7 +399,7 @@ export const NumberRangeInputWidget = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
-NumberRangeInputWidget.displayName = 'NumberRangeInputWidget';
+NumberRangeInputWidget.displayName = "NumberRangeInputWidget";

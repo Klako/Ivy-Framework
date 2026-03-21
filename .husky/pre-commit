@@ -1,5 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 echo "Formatting staged C# files..."
 STAGED_CS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.cs$')

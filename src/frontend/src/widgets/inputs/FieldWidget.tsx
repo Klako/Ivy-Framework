@@ -33,6 +33,14 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({
   height,
   labelPosition,
 }) => {
+  const childrenRef = React.useRef<HTMLDivElement>(null);
+  const [inputId, setInputId] = React.useState<string | undefined>(undefined);
+
+  React.useEffect(() => {
+    const el = childrenRef.current?.querySelector('input, select, textarea');
+    if (el?.id) setInputId(el.id);
+  }, [children]);
+
   const labelSizeClass =
     density === Densities.Small
       ? 'text-xs'
@@ -71,6 +79,7 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({
         {label && (
           <div className="flex items-center gap-1.5 min-w-[120px] w-1/4 sm:w-1/3 pt-2 sm:pt-0 sm:mt-2.5 self-start">
             <label
+              htmlFor={inputId}
               className={`${labelSizeClass} font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70`}
             >
               {label}{' '}
@@ -100,7 +109,7 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({
             )}
           </div>
         )}
-        <div className="flex-1 flex flex-col gap-2 min-w-0">
+        <div ref={childrenRef} className="flex-1 flex flex-col gap-2 min-w-0">
           {children}
           {description && (
             <p className={`${descriptionSizeClass} text-muted-foreground`}>
@@ -120,6 +129,7 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({
       {label && (
         <div className="flex items-center gap-1.5">
           <label
+            htmlFor={inputId}
             className={`${labelSizeClass} font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70`}
           >
             {label}{' '}
@@ -149,7 +159,7 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({
           )}
         </div>
       )}
-      {children}
+      <div ref={childrenRef}>{children}</div>
       {description && (
         <p className={`${descriptionSizeClass} text-muted-foreground`}>
           {description}

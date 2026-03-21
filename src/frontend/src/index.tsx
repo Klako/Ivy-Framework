@@ -12,6 +12,13 @@ import { App } from "./components/App";
   ...ReactDOMClient,
 };
 
+// Polyfill require for Vite-Plus Rolldown CJS externals bug in IIFE widget bundles
+(window as any).require = (moduleName: string) => {
+  if (moduleName === "react") return React;
+  if (moduleName === "react-dom") return { ...ReactDOM, ...ReactDOMClient };
+  throw new Error(`Module '${moduleName}' not found in Ivy browser require polyfill`);
+};
+
 const container = document.getElementById("root");
 if (!container) throw new Error("Failed to find root element");
 

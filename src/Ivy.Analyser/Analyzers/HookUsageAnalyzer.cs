@@ -11,6 +11,8 @@ namespace Ivy.Analyser.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class HookUsageAnalyzer : DiagnosticAnalyzer
     {
+
+
         public const string DiagnosticId = "IVYHOOK001";
         private const string Title = "Invalid Ivy Hook Usage";
         private const string MessageFormat = "Ivy hook '{0}' must be called at the top level of the Build() method — not inside lambdas, local functions, or helper methods. Hooks must always execute in the same order on every render. See: https://docs.ivy.app/other/ivy/analyser/ivyhook001.";

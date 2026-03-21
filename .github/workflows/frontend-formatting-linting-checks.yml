@@ -28,11 +28,11 @@ jobs:
       # Frontend code quality checks
       - name: Check code formatting
         working-directory: ./src/frontend
-        run: vp check
+        run: vp fmt --check .
 
       - name: Check linting
         working-directory: ./src/frontend
-        run: vp check
+        run: vp lint .
 
       - name: Check frontend build
         working-directory: ./src/frontend

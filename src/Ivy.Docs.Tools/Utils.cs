@@ -305,21 +305,14 @@ public static class Utils
                         // Get the directory containing the file
                         string directory = Path.GetDirectoryName(localFilePath)!;
 
-                        // Change to the directory
-                        string currentDirectory = Directory.GetCurrentDirectory();
-                        Directory.SetCurrentDirectory(directory);
-
                         // Get the repository remote URL
-                        string remoteUrl = RunGitCommand("config --get remote.origin.url");
+                        string remoteUrl = RunGitCommand("config --get remote.origin.url", directory);
                         if (string.IsNullOrEmpty(remoteUrl))
                             throw new Exception("No remote origin found for this Git repository.");
 
                         _cachedRemoteUrl = ConvertToHttpsUrl(remoteUrl.Trim());
-                        _cachedRepoRoot = RunGitCommand("rev-parse --show-toplevel").Trim();
-                        _cachedBranch = RunGitCommand("rev-parse --abbrev-ref HEAD").Trim();
-
-                        // Restore the original directory
-                        Directory.SetCurrentDirectory(currentDirectory);
+                        _cachedRepoRoot = RunGitCommand("rev-parse --show-toplevel", directory).Trim();
+                        _cachedBranch = RunGitCommand("rev-parse --abbrev-ref HEAD", directory).Trim();
 
                         _gitInfoCached = true;
                     }
@@ -350,7 +343,7 @@ public static class Utils
         }
     }
 
-    private static string RunGitCommand(string arguments)
+    private static string RunGitCommand(string arguments, string? workingDirectory = null)
     {
         using Process process = new Process();
         process.StartInfo.FileName = "git";
@@ -359,6 +352,9 @@ public static class Utils
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.CreateNoWindow = true;
+
+        if (workingDirectory != null)
+            process.StartInfo.WorkingDirectory = workingDirectory;
 
         process.Start();
         string output = process.StandardOutput.ReadToEnd();

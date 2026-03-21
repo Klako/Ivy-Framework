@@ -1,6 +1,6 @@
 import path from "path";
 import { type Plugin } from "vite";
-import { defineConfig } from "vite-plus";;
+import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -16,14 +16,21 @@ function transferMeta(htmlServer: string, htmlLocal: string): string {
   let result = htmlLocal;
 
   if (serverTitle) {
-    result = result.replace(/<title[^>]*>.*?<\/title>/i, `<title>${serverTitle}</title>`);
+    result = result.replace(
+      /<title[^>]*>.*?<\/title>/i,
+      `<title>${serverTitle}</title>`,
+    );
   }
 
   // Transfer ivy-* meta tags
-  const ivyMetaMatches = htmlServer.match(/<meta[^>]*name\s*=\s*["']ivy-[^"']*["'][^>]*>/gi);
+  const ivyMetaMatches = htmlServer.match(
+    /<meta[^>]*name\s*=\s*["']ivy-[^"']*["'][^>]*>/gi,
+  );
 
   // Transfer ivy-custom-theme style tag
-  const themeStyleMatch = htmlServer.match(/<style id="ivy-custom-theme">[\s\S]*?<\/style>/i);
+  const themeStyleMatch = htmlServer.match(
+    /<style id="ivy-custom-theme">[\s\S]*?<\/style>/i,
+  );
 
   if (ivyMetaMatches || themeStyleMatch) {
     const headEndIndex = result.indexOf("</head>");
@@ -39,7 +46,11 @@ function transferMeta(htmlServer: string, htmlLocal: string): string {
         toInsert += ` ${themeStyleMatch[0]}`;
       }
 
-      result = result.slice(0, headEndIndex) + toInsert + "\n " + result.slice(headEndIndex);
+      result =
+        result.slice(0, headEndIndex) +
+        toInsert +
+        "\n " +
+        result.slice(headEndIndex);
     }
   }
 
@@ -87,9 +98,6 @@ export default defineConfig({
     cssCodeSplit: true,
     sourcemap: false,
     rolldownOptions: {
-      input: {
-        main: path.resolve(__dirname, "index.html"),
-      },
       output: {
         entryFileNames: "assets/[name].[hash].js",
         chunkFileNames: "assets/[name].[hash].js",

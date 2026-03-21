@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "vp dev",
     "build": "tsc -b && vp build",
     "lint": "vp lint .",

@@ -95,7 +95,9 @@ Buttons with URLs support [right-click actions](../../01_Onboarding/02_Concepts/
 ```
 
 
-## Faq
+<WidgetDocs Type="Ivy.Button" ExtensionTypes="Ivy.ButtonExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Button.cs"/>
+
+## Examples
 
 <Details>
 <Summary>
@@ -167,5 +169,3 @@ The shortcut listener is registered globally on the window, so the button doesn'
 
 </Body>
 </Details>
-
-<WidgetDocs Type="Ivy.Button" ExtensionTypes="Ivy.ButtonExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Button.cs"/>

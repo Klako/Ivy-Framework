@@ -94,6 +94,61 @@ Buttons with URLs support [right-click actions](../../01_Onboarding/02_Concepts/
             .Url("https://github.com/Ivy-Interactive/Ivy-Framework")
 ```
 
+
+## Faq
+
+<Details>
+<Summary>
+What are the available ButtonVariant values in Ivy?
+</Summary>
+<Body>
+
+`ButtonVariant` has these values: `Primary`, `Destructive`, `Outline`, `Secondary`, `Success`, `Warning`, `Info`, `Ghost`, `Link`, `Inline`, `Ai`.
+
+Set via the `.Variant()` method or shortcut methods:
+
+```csharp
+new Button("Save", handler).Variant(ButtonVariant.Primary)
+// or use shortcut:
+new Button("Save", handler).Primary()
+
+// Other shortcuts: .Secondary(), .Outline(), .Destructive(), .Ghost(), .Link(), .Inline(), .Ai()
+```
+
+**Important:** There is no `ButtonVariant.Default`. Use `ButtonVariant.Primary` instead.
+
+</Body>
+</Details>
+
+<Details>
+<Summary>
+How do I run an async operation when a button is clicked?
+</Summary>
+<Body>
+
+Button accepts `Func<ValueTask>` and `Func<Event<Button>, ValueTask>` handlers natively — just use `async`:
+
+```csharp
+var result = UseState<string?>(null);
+var loading = UseState(false);
+
+if (loading.Value) return new Text("Loading...");
+
+new Button("Run", async () => {
+    loading.Value = true;
+    result.Value = await myService.DoWorkAsync();
+    loading.Value = false;
+});
+
+if (result.Value != null)
+    new Callout(result.Value).Success();
+```
+
+There is no `UseAsync` hook. For data fetching with automatic loading/error state, use `UseQuery()` instead. `UseMutation` is for cache invalidation, not general async operations.
+
+</Body>
+</Details>
+
 <Details>
 <Summary>
 How do I associate keyboard shortcuts with a button?

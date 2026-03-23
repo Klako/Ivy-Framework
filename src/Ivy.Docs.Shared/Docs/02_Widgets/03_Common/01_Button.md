@@ -94,9 +94,13 @@ Buttons with URLs support [right-click actions](../../01_Onboarding/02_Concepts/
             .Url("https://github.com/Ivy-Interactive/Ivy-Framework")
 ```
 
-## Keyboard Shortcuts
+<Details>
+<Summary>
+How do I associate keyboard shortcuts with a button?
+</Summary>
+<Body>
 
-Buttons can be triggered using keyboard shortcuts. This is particularly useful for common actions like Search (`Ctrl+K`), Save (`Ctrl+S`), or Submit (`Ctrl+Enter`). When a shortcut is defined, a small badge is automatically rendered on the button to inform the user.
+The `ShortcutKey` method allows you to associate a keyboard shortcut (like `Ctrl+K`, `Ctrl+S`, or `Ctrl+Enter`) with a button. The action will be triggered whenever the shortcut is pressed, regardless of whether the button is focused.
 
 ```csharp demo
 Layout.Horizontal().Gap(8)
@@ -106,72 +110,7 @@ Layout.Horizontal().Gap(8)
 
 The shortcut listener is registered globally on the window, so the button doesn't need to be focused to trigger the action.
 
-```
-
-## Faq
-
-<Details>
-<Summary>
-What are the available ButtonVariant values in Ivy?
-</Summary>
-<Body>
-
-`ButtonVariant` has these values: `Primary`, `Destructive`, `Outline`, `Secondary`, `Success`, `Warning`, `Info`, `Ghost`, `Link`, `Inline`, `Ai`.
-
-Set via the `.Variant()` method or shortcut methods:
-
-```csharp
-new Button("Save", handler).Variant(ButtonVariant.Primary)
-// or use shortcut:
-new Button("Save", handler).Primary()
-
-// Other shortcuts: .Secondary(), .Outline(), .Destructive(), .Ghost(), .Link(), .Inline(), .Ai()
-```
-
-**Important:** There is no `ButtonVariant.Default`. Use `ButtonVariant.Primary` instead.
-
 </Body>
 </Details>
-
-<Details>
-<Summary>
-How do I run an async operation when a button is clicked?
-</Summary>
-<Body>
-
-Button accepts `Func<ValueTask>` and `Func<Event<Button>, ValueTask>` handlers natively — just use `async`:
-
-```csharp
-var result = UseState<string?>(null);
-var loading = UseState(false);
-
-if (loading.Value) return new Text("Loading...");
-
-new Button("Run", async () => {
-    loading.Value = true;
-    result.Value = await myService.DoWorkAsync();
-    loading.Value = false;
-});
-
-if (result.Value != null)
-    new Callout(result.Value).Success();
-```
-
-There is no `UseAsync` hook. For data fetching with automatic loading/error state, use `UseQuery()` instead. `UseMutation` is for cache invalidation, not general async operations.
-
-</Body>
-</Details>
-
-## Keyboard Shortcuts
-
-The `ShortcutKey` method allows you to associate a keyboard shortcut with a button. The action will be triggered whenever the shortcut is pressed, regardless of whether the button is focused.
-
-```csharp demo
-Layout.Horizontal().Gap(8)
-    | new Button("Search", _ => client.Toast("Searching...")).Primary().ShortcutKey("Ctrl+K")
-    | new Button("Save", _ => client.Toast("Saved!")).Secondary().ShortcutKey("Ctrl+S")
-```
-
-The shortcut listener is registered globally on the window, so the button doesn't need to be focused to trigger the action.
 
 <WidgetDocs Type="Ivy.Button" ExtensionTypes="Ivy.ButtonExtensions" SourceUrl="https://github.com/Ivy-Interactive/Ivy-Framework/blob/main/src/Ivy/Widgets/Button.cs"/>

@@ -1,80 +1,5 @@
 # Ivy Framework Weekly Notes - Week of 2026-03-23
 
-## Breaking Changes
-
-### Server Metadata Property Reorganization
-
-Server metadata properties have been reorganized into a dedicated `ServerMetadata` record for better structure. The flat properties on `ServerArgs` have been moved into a nested `Metadata` property.
-
-**Migration:**
-
-```csharp
-// Old (no longer works)
-var server = new Server(new ServerArgs
-{
-    MetaTitle = "My App",
-    MetaDescription = "A cool app",
-    MetaGitHubUrl = "https://github.com/user/repo"
-});
-
-// New
-var server = new Server(new ServerArgs
-{
-    Metadata = new ServerMetadata
-    {
-        Title = "My App",
-        Description = "A cool app",
-        GitHubUrl = "https://github.com/user/repo"
-    }
-});
-
-// Or use the fluent API (unchanged)
-server
-    .SetMetaTitle("My App")
-    .SetMetaDescription("A cool app")
-    .SetMetaGitHubUrl("https://github.com/user/repo");
-```
-
-**Property mappings:**
-
-- `ServerArgs.MetaTitle` to `ServerArgs.Metadata.Title`
-- `ServerArgs.MetaDescription` to `ServerArgs.Metadata.Description`
-- `ServerArgs.MetaGitHubUrl` to `ServerArgs.Metadata.GitHubUrl`
-
-The fluent methods (`SetMetaTitle()`, `SetMetaDescription()`, `SetMetaGitHubUrl()`) continue to work unchanged, so if you're using those, no migration is needed.
-
-### Chrome Renamed to AppShell
-
-The `Chrome` API has been renamed to `AppShell` throughout the framework for better clarity and to avoid confusion with the Chrome browser. This affects all Chrome-related classes, interfaces, and methods.
-
-**Migration Guide:**
-
-```csharp
-// Old (no longer works)
-app.UseChrome<DefaultSidebarChrome>();
-IChrome chrome = ...;
-
-// New
-app.UseAppShell<DefaultSidebarAppShell>();
-IAppShell appShell = ...;
-```
-
-**What to update in your code:**
-
-- `UseChrome()` to `UseAppShell()`
-- `IChrome` to `IAppShell`
-- `DefaultSidebarChrome` to `DefaultSidebarAppShell`
-- Any custom Chrome classes should be renamed to AppShell
-- Documentation and comments referencing "Chrome"
-
-The term "AppShell" better describes the purpose of this component: providing the outer shell/layout for your application (sidebars, headers, navigation, etc.).
-
-### UseService<T> Now Throws on Missing Registrations
-
-`UseService<T>()` now throws an `InvalidOperationException` when a service is not registered in dependency injection, instead of silently returning `null`. This change helps catch configuration errors early rather than causing `NullReferenceException` errors later in your code.
-
-**Migration**: If you have code that relies on `UseService<T>()` returning null for optional services, use the new `TryUseService<T>()` method instead (see below).
-
 ## New Features
 
 ### DateTimeInput Min, Max, and Step Constraints
@@ -496,35 +421,100 @@ var kanban = tasks.ToKanban()
 
 The Kanban widget internally maintains separate `Column` (the grouping key for drag-and-drop) and `ColumnName` (the display label) properties, ensuring drag-and-drop functionality works correctly while displaying user-friendly headers.
 
-## Testing Improvements
+## Breaking Changes
 
-### Chart Widgets Playwright Readiness
+### Server Metadata Property Reorganization
 
-All chart widgets now set a `data-chart-rendered="true"` attribute on their container when the chart finishes rendering. This allows Playwright and other E2E testing tools to wait for charts to fully render before taking screenshots or making assertions, preventing empty gray areas caused by canvas render timing issues.
+Server metadata properties have been reorganized into a dedicated `ServerMetadata` record for better structure. The flat properties on `ServerArgs` have been moved into a nested `Metadata` property.
+
+**Migration:**
 
 ```csharp
-// In your Playwright tests, wait for charts to render before screenshotting
-await page.WaitForSelectorAsync("[data-chart-rendered='true']");
-await page.ScreenshotAsync(new() { Path = "dashboard.png" });
+// Old (no longer works)
+var server = new Server(new ServerArgs
+{
+    MetaTitle = "My App",
+    MetaDescription = "A cool app",
+    MetaGitHubUrl = "https://github.com/user/repo"
+});
+
+// New
+var server = new Server(new ServerArgs
+{
+    Metadata = new ServerMetadata
+    {
+        Title = "My App",
+        Description = "A cool app",
+        GitHubUrl = "https://github.com/user/repo"
+    }
+});
+
+// Or use the fluent API (unchanged)
+server
+    .SetMetaTitle("My App")
+    .SetMetaDescription("A cool app")
+    .SetMetaGitHubUrl("https://github.com/user/repo");
 ```
 
-This affects all 10 chart widgets: `AreaChart`, `BarChart`, `ChordChart`, `FunnelChart`, `GaugeChart`, `LineChart`, `PieChart`, `RadarChart`, `SankeyChart`, and `ScatterChart`. The attribute is set automatically when charts complete their initial render via the ECharts `onChartReady` callback, ensuring reliable test automation without manual delays or retry logic.
+**Property mappings:**
 
-## Accessibility Improvements
+- `ServerArgs.MetaTitle` to `ServerArgs.Metadata.Title`
+- `ServerArgs.MetaDescription` to `ServerArgs.Metadata.Description`
+- `ServerArgs.MetaGitHubUrl` to `ServerArgs.Metadata.GitHubUrl`
 
-### FieldWidget Label Associations
+The fluent methods (`SetMetaTitle()`, `SetMetaDescription()`, `SetMetaGitHubUrl()`) continue to work unchanged, so if you're using those, no migration is needed.
 
-Enhanced accessibility in the `FieldWidget` component by adding proper `htmlFor` attribute associations between labels and input fields. The component now automatically detects input, select, and textarea elements within its children and establishes the correct label-to-input relationship. This improvement benefits users with screen readers and assistive technologies, making forms more navigable and improving overall accessibility compliance.
+### Chrome Renamed to AppShell
 
-### Sheet Widget Screen Reader Support
+The `Chrome` API has been renamed to `AppShell` throughout the framework for better clarity and to avoid confusion with the Chrome browser. This affects all Chrome-related classes, interfaces, and methods.
 
-Improved accessibility in the `Sheet` widget by ensuring a DialogTitle is always present for screen readers, even when no visible title is provided. Previously, the SheetHeader and SheetTitle were only rendered if explicitly set, which could cause accessibility issues. Now the widget always renders these elements, using visually hidden (`sr-only`) styling when no title is provided, with a default "Sheet" label for screen reader users. This ensures proper ARIA dialog semantics and better screen reader navigation without affecting visual presentation.
+**Migration Guide:**
 
-## Performance Improvements
+```csharp
+// Old (no longer works)
+app.UseChrome<DefaultSidebarChrome>();
+IChrome chrome = ...;
 
-### DataTable Query Processing
+// New
+app.UseAppShell<DefaultSidebarAppShell>();
+IAppShell appShell = ...;
+```
 
-Improved DataTable query performance by caching reflection calls in the QueryProcessor. Previously, each query execution performed ~8 expensive `GetMethods()` scans on the `Queryable` type to find LINQ methods. These reflection calls are now cached using static fields and a concurrent dictionary, resulting in faster query execution especially when processing multiple DataTable queries.
+**What to update in your code:**
+
+- `UseChrome()` to `UseAppShell()`
+- `IChrome` to `IAppShell`
+- `DefaultSidebarChrome` to `DefaultSidebarAppShell`
+- Any custom Chrome classes should be renamed to AppShell
+- Documentation and comments referencing "Chrome"
+
+The term "AppShell" better describes the purpose of this component: providing the outer shell/layout for your application (sidebars, headers, navigation, etc.).
+
+### UseService<T> Now Throws on Missing Registrations
+
+`UseService<T>()` now throws an `InvalidOperationException` when a service is not registered in dependency injection, instead of silently returning `null`. This change helps catch configuration errors early rather than causing `NullReferenceException` errors later in your code.
+
+**Migration**: If you have code that relies on `UseService<T>()` returning null for optional services, use the new `TryUseService<T>()` method instead (see below).
+
+### MetricView `useMetricData` Parameter Renamed
+
+The `MetricView` primary constructor parameter `useMetricData` has been renamed to `UseMetricData` (PascalCase) for C# naming consistency.
+
+**Migration:**
+
+```csharp
+// Old (named parameter)
+new MetricView(
+    title: "Revenue",
+    icon: Icons.DollarSign,
+    useMetricData: ctx => ctx.UseQuery(...))
+
+// New
+new MetricView(
+    title: "Revenue",
+    icon: Icons.DollarSign,
+    UseMetricData: ctx => ctx.UseQuery(...))
+```
 
 ## Developer Experience Improvements
 
@@ -540,7 +530,29 @@ Query fetch failures are now logged at Warning level instead of Debug, making th
 
 Previously, these errors were only visible when debug logging was enabled. Now you'll see them immediately, making debugging much faster.
 
-**Note**: The `MetricView` constructor parameter `useMetricData` has been renamed to `UseMetricData` (PascalCase) for C# naming consistency. Update your code if using named parameters: `useMetricData:` to `UseMetricData:`.
+### DataTable Query Processing
+
+Improved DataTable query performance by caching reflection calls in the QueryProcessor. Previously, each query execution performed ~8 expensive `GetMethods()` scans on the `Queryable` type to find LINQ methods. These reflection calls are now cached using static fields and a concurrent dictionary, resulting in faster query execution especially when processing multiple DataTable queries.
+
+### FieldWidget Label Associations
+
+Enhanced accessibility in the `FieldWidget` component by adding proper `htmlFor` attribute associations between labels and input fields. The component now automatically detects input, select, and textarea elements within its children and establishes the correct label-to-input relationship. This improvement benefits users with screen readers and assistive technologies, making forms more navigable and improving overall accessibility compliance.
+
+### Sheet Widget Screen Reader Support
+
+Improved accessibility in the `Sheet` widget by ensuring a DialogTitle is always present for screen readers, even when no visible title is provided. Previously, the SheetHeader and SheetTitle were only rendered if explicitly set, which could cause accessibility issues. Now the widget always renders these elements, using visually hidden (`sr-only`) styling when no title is provided, with a default "Sheet" label for screen reader users. This ensures proper ARIA dialog semantics and better screen reader navigation without affecting visual presentation.
+
+### Chart Widgets Playwright Readiness
+
+All chart widgets now set a `data-chart-rendered="true"` attribute on their container when the chart finishes rendering. This allows Playwright and other E2E testing tools to wait for charts to fully render before taking screenshots or making assertions, preventing empty gray areas caused by canvas render timing issues.
+
+```csharp
+// In your Playwright tests, wait for charts to render before screenshotting
+await page.WaitForSelectorAsync("[data-chart-rendered='true']");
+await page.ScreenshotAsync(new() { Path = "dashboard.png" });
+```
+
+This affects all 10 chart widgets: `AreaChart`, `BarChart`, `ChordChart`, `FunnelChart`, `GaugeChart`, `LineChart`, `PieChart`, `RadarChart`, `SankeyChart`, and `ScatterChart`. The attribute is set automatically when charts complete their initial render via the ECharts `onChartReady` callback, ensuring reliable test automation without manual delays or retry logic.
 
 ## Bug Fixes
 

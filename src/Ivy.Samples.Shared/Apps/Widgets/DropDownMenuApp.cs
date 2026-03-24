@@ -29,6 +29,7 @@ public class DropDownMenuApp : SampleBase
                        MenuItem.Checkbox("Light").Icon(Icons.Sun),
                        MenuItem.Checkbox("System").Icon(Icons.SunMoon)
                    )
+               | MenuItem.Default("Delete").Icon(Icons.Trash).Destructive()
                | MenuItem.Default("Logout").Icon(Icons.LogOut);
     }
 }

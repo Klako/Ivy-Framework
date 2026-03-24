@@ -28,6 +28,7 @@ export interface MenuItem {
   variant: "Default" | "Separator" | "Checkbox" | "Radio" | "Group";
   checked: boolean;
   disabled: boolean;
+  color?: "Default" | "Destructive";
   shortcut?: string;
   expanded: boolean;
   path?: string;

@@ -61,12 +61,13 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
 
     // Handle checkbox variant
     if (item.variant === "Checkbox") {
+      const isDestructive = item.color === "Destructive";
       return (
         <DropdownMenuItem
           key={item.label}
           onClick={() => onItemClick(item)}
           disabled={item.disabled}
-          className={item.checked ? "bg-accent" : ""}
+          className={`${item.checked ? "bg-accent" : ""}${isDestructive ? " text-destructive focus:text-destructive" : ""}`}
         >
           {item.icon && <Icon name={item.icon} size={14} />}
           {item.label}
@@ -78,12 +79,13 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
 
     // Handle radio variant
     if (item.variant === "Radio") {
+      const isDestructive = item.color === "Destructive";
       return (
         <DropdownMenuItem
           key={item.label}
           onClick={() => onItemClick(item)}
           disabled={item.disabled}
-          className={item.checked ? "bg-accent" : ""}
+          className={`${item.checked ? "bg-accent" : ""}${isDestructive ? " text-destructive focus:text-destructive" : ""}`}
         >
           {item.icon && <Icon name={item.icon} size={14} />}
           {item.label}
@@ -97,7 +99,10 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
     if (item.children && item.children.length > 0) {
       return (
         <DropdownMenuSub key={item.label}>
-          <DropdownMenuSubTrigger disabled={item.disabled}>
+          <DropdownMenuSubTrigger
+            disabled={item.disabled}
+            className={item.color === "Destructive" ? "text-destructive focus:text-destructive" : ""}
+          >
             {item.icon && <Icon name={item.icon} size={14} />}
             {item.label}
             {item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>}
@@ -113,7 +118,12 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
 
     // Default menu item
     return (
-      <DropdownMenuItem key={item.label} onClick={() => onItemClick(item)} disabled={item.disabled}>
+      <DropdownMenuItem
+        key={item.label}
+        onClick={() => onItemClick(item)}
+        disabled={item.disabled}
+        className={item.color === "Destructive" ? "text-destructive focus:text-destructive" : ""}
+      >
         {item.icon && <Icon name={item.icon} size={14} />}
         {item.label}
         {item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>}

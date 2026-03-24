@@ -669,6 +669,33 @@ UseMutation(Func<Task> mutation, QueryOptions? options = null)
 
 <Details>
 <Summary>
+How does UseRefreshToken work with DataTable?
+</Summary>
+<Body>
+
+To programmatically refresh a `DataTable`, use the `UseRefreshToken` hook to create a token and pass it to the `DataTable` using the `.RefreshToken()` method. When you call `token.Refresh()`, the table will reload its data from the source.
+
+```csharp
+public override object? Build()
+{
+    var refreshToken = UseRefreshToken();
+    var data = GetData().AsQueryable();
+
+    return Layout.Vertical()
+        | new Button("Refresh Data", _ => refreshToken.Refresh())
+        | data.ToDataTable()
+            .RefreshToken(refreshToken)
+            .Height(Size.Units(100));
+}
+```
+
+This is particularly useful after performing CRUD operations in dialogs or blades to ensure the table shows the most recent data.
+
+</Body>
+</Details>
+
+<Details>
+<Summary>
 What options are available for QueryOptions?
 </Summary>
 <Body>

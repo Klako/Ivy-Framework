@@ -1100,7 +1100,7 @@ public static class WebApplicationExtensions
             }
             if (!Directory.Exists(physicalPath))
             {
-                 physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "frontend", "dist");
+                physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "frontend", "dist");
             }
 
             if (Directory.Exists(physicalPath))

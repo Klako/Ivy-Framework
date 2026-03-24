@@ -1,10 +1,13 @@
 # Ivy Framework Weekly Notes - Week of 2026-03-23
 
+> [!NOTE]
+> We usually release on Fridays every week. Sign up on [https://ivy.app/](https://ivy.app/auth/sign-up) to get release notes directly to your inbox.
+
 ## New Features
 
 ### DateTimeInput Min, Max, and Step Constraints
 
-Added `Min()`, `Max()`, and `Step()` constraint methods to `DateTimeInput` widgets, following the same pattern as `NumberInput`. You can now restrict date/time selections to specific ranges and enforce step intervals for time-based inputs.
+Added `Min()`, `Max()`, and `Step()` constraint methods to the [**DateTimeInput**](https://docs.ivy.app/widgets/inputs/date-time-input) widget, following the same pattern as [**NumberInput**](https://docs.ivy.app/widgets/inputs/number-input). You can now restrict date/time selections to specific ranges and enforce step intervals for time-based inputs.
 
 ```csharp
 // Restrict date selection to a specific range
@@ -33,7 +36,7 @@ The constraints are enforced both in the calendar/picker UI and in manual input,
 
 ### Box Widget Opacity Methods
 
-Added `Opacity()` and `BorderOpacity()` fluent extension methods to the `Box` widget, allowing you to set opacity independently without needing to also specify a color.
+Added `Opacity()` and `BorderOpacity()` fluent extension methods to the [**Box**](https://docs.ivy.app/widgets/primitives/box) widget, allowing you to set opacity independently without needing to also specify a color.
 
 ```csharp
 // Set background opacity and border opacity independently
@@ -48,7 +51,7 @@ Previously, you had to use `Background(color, opacity)` or `BorderColor(color, o
 
 ### Card and Box Shadow Hover Effect
 
-Added a new `CardHoverVariant.Shadow` hover variant for Card and Box widgets, providing a subtle shadow elevation effect on hover. This creates a Material Design-inspired lifting animation without position translation.
+Added a new `CardHoverVariant.Shadow` hover variant for [**Card**](https://docs.ivy.app/widgets/common/card) and [**Box**](https://docs.ivy.app/widgets/primitives/box) widgets, providing a subtle shadow elevation effect on hover. This creates a Material Design-inspired lifting animation without position translation.
 
 ```csharp
 // Apply shadow hover effect to a Card
@@ -71,7 +74,7 @@ The shadow hover variant applies `hover:shadow-lg` on hover and `active:shadow-m
 
 ### Button Keyboard Shortcuts
 
-Added `ShortcutKey()` method to the Button widget, allowing you to associate keyboard shortcuts with button actions. The shortcut listener is registered globally on the window, so buttons don't need to be focused to trigger their actions.
+Added `ShortcutKey()` method to the [**Button**](https://docs.ivy.app/widgets/common/button) widget, allowing you to associate keyboard shortcuts with button actions. The shortcut listener is registered globally on the window, so buttons don't need to be focused to trigger their actions.
 
 ```csharp
 var button = new Button("Save", _ => client.Toast("Saved!"))
@@ -83,7 +86,7 @@ This is particularly useful for creating keyboard-driven interfaces and improvin
 
 ### Open Graph and Twitter Card Meta Tags
 
-Ivy now automatically adds Open Graph and Twitter Card meta tags to your application's HTML for rich social media previews when your app is shared on platforms like Twitter, LinkedIn, Slack, Discord, and more. The new `OpenGraphFilter` is automatically included in the HTML pipeline and intelligently derives metadata from your server configuration.
+Ivy now automatically adds Open Graph and Twitter Card meta tags to your application's HTML for rich social media previews when your app is shared on platforms like Twitter, LinkedIn, Slack, Discord, and more. The new `OpenGraphFilter` is automatically included in the HTML pipeline and intelligently derives metadata from your [server configuration](https://docs.ivy.app/onboarding/concepts/program) (`ServerArgs.Metadata`, `ServerMetadata`).
 
 **Automatic features:**
 
@@ -140,7 +143,7 @@ The generated meta tags include proper image dimensions (`og:image:width: 1200`,
 
 ### Server Metadata: GitHub URL Support
 
-Added `SetMetaGitHubUrl()` method to the Server API, allowing you to add GitHub repository metadata to your application's HTML for SEO and social sharing purposes.
+Added `SetMetaGitHubUrl()` method to the [Server API](https://docs.ivy.app/onboarding/concepts/program), allowing you to add GitHub repository metadata to your application's HTML for SEO and social sharing purposes.
 
 ```csharp
 var server = new Server(new ServerArgs
@@ -170,7 +173,7 @@ The "Made with Ivy" badge in the bottom-right corner has been simplified to alwa
 
 ### Badge Color Property
 
-Added `Color` property to the `Badge` widget, allowing you to customize badge colors using the full `Colors` enum. This provides direct color control matching the pattern used by `Icon`, `TextBlock`, and `Progress` widgets.
+Added `Color` property to the [**Badge**](https://docs.ivy.app/widgets/common/badge) widget, allowing you to customize badge colors using the full `Colors` enum. This provides direct color control matching the pattern used by `Icon`, `TextBlock`, and `Progress` widgets.
 
 ```csharp
 // Use the fluent Color() method
@@ -182,7 +185,7 @@ The Color property works alongside the existing `BadgeVariant` options, giving y
 
 ### UseMemo Auto-Unwraps IState Dependencies
 
-`UseMemo()` now automatically unwraps `IState` dependencies, allowing you to pass state objects directly instead of manually extracting `.Value`. Both approaches work identically:
+[**UseMemo**](https://docs.ivy.app/hooks/core/use-memo) now automatically unwraps `IState` dependencies, allowing you to pass state objects directly instead of manually extracting `.Value`. Both approaches work identically:
 
 ```csharp
 var count = UseState(0);
@@ -201,7 +204,7 @@ The factory function always needs `.Value` to read the current value, but the de
 
 ### TryUseService<T> for Optional Service Lookups
 
-Added `TryUseService<T>()` method for scenarios where a service might not be registered. This method returns a boolean indicating success and uses proper null-safety attributes.
+The [**UseService**](https://docs.ivy.app/hooks/core/use-service) hook now includes **`TryUseService<T>()`** for scenarios where a service might not be registered. This method returns a boolean indicating success and uses proper null-safety attributes.
 
 ```csharp
 // Old approach (no longer works for optional services)
@@ -222,7 +225,7 @@ else
 
 ### Form-Level LabelPosition API
 
-Added the ability to set a default `LabelPosition` for all fields in a form via `FormBuilder.LabelPosition()`, with support for per-field overrides. This follows the same pattern as the existing `Density` property, making it easy to configure label positioning across your entire form.
+Added the ability to set a default `LabelPosition` for all fields in a form via [**FormBuilder**](https://docs.ivy.app/onboarding/concepts/forms) `.LabelPosition()`, with support for per-field overrides. This follows the same pattern as the existing `Density` property, making it easy to configure label positioning across your entire form.
 
 ```csharp
 // Set default label position for all fields in the form
@@ -238,7 +241,7 @@ This is particularly useful for creating consistent form layouts while maintaini
 
 ### Dictionary Support in TableBuilder
 
-The `ToTable()` method now supports Dictionary objects as data sources with indexer expressions in the `Header()` method. Previously, using dictionary indexers like `r => r["key"]` would throw an `ArgumentException`. Now you can create tables from dynamic dictionary data:
+The [**Table**](https://docs.ivy.app/widgets/common/table) builder’s `ToTable()` method now supports Dictionary objects as data sources with indexer expressions in the `Header()` method. Previously, using dictionary indexers like `r => r["key"]` would throw an `ArgumentException`. Now you can create tables from dynamic dictionary data:
 
 ```csharp
 var data = new List<Dictionary<string, string>>
@@ -270,7 +273,7 @@ This works with `IDictionary<string, object>`, `IDictionary<string, string>`, an
 
 ### RichTextMarkdownParser for Streaming AI Chat
 
-Added `RichTextMarkdownParser` for parsing markdown incrementally during LLM streaming, enabling real-time rich text formatting in AI chat interfaces. The parser handles all common markdown syntax including bold, italic, code blocks, headings, lists, tables, blockquotes, and more - all while streaming token by token.
+Added `RichTextMarkdownParser` for parsing markdown incrementally during LLM streaming, enabling real-time rich text formatting in AI chat interfaces (output is composed with [**RichTextBlock**](https://docs.ivy.app/widgets/primitives/rich-text-block) / `Text.Rich()`). The parser handles all common markdown syntax including bold, italic, code blocks, headings, lists, tables, blockquotes, and more—all while streaming token by token.
 
 ```csharp
 // Example: Stream AI response with live markdown rendering
@@ -299,7 +302,7 @@ foreach (var run in finalRuns)
 }
 ```
 
-The parser maintains state across token boundaries, so you can safely stream character-by-character or word-by-word without worrying about breaking markdown syntax. The `RichTextBlock` widget now renders all block-level elements (headings, lists, code blocks, tables, etc.) automatically.
+The parser maintains state across token boundaries, so you can safely stream character-by-character or word-by-word without worrying about breaking markdown syntax. [**RichTextBlock**](https://docs.ivy.app/widgets/primitives/rich-text-block) now renders all block-level elements (headings, lists, code blocks, tables, etc.) automatically.
 
 **Supported Markdown Features:**
 
@@ -311,7 +314,7 @@ This is particularly powerful for building chat UIs with AI assistants - your ma
 
 ### VideoPlayer Subtitle Support
 
-Added subtitle/caption track support to the `VideoPlayer` widget. You can now serve `.srt` or `.vtt` subtitle files alongside your videos using the new `Subtitles()` fluent API method. The player supports multiple subtitle tracks for different languages, allowing users to choose their preferred language from the video controls.
+Added subtitle/caption track support to the [**VideoPlayer**](https://docs.ivy.app/widgets/primitives/video-player) widget. You can now serve `.srt` or `.vtt` subtitle files alongside your videos using the new `Subtitles()` fluent API method. The player supports multiple subtitle tracks for different languages, allowing users to choose their preferred language from the video controls.
 
 ```csharp
 // Multiple subtitle tracks for different languages
@@ -324,7 +327,7 @@ The frontend automatically renders HTML5 `<track>` elements with proper CORS con
 
 ### Kanban Column Header Humanization
 
-Kanban widgets now automatically humanize enum-based column headers for better readability. Column headers like `TaskStatus.InProgress` now display as "In Progress" instead of "InProgress". The feature uses `EnumHelper.GetDescription()`, which respects `[Description]` attributes and falls back to smart PascalCase splitting.
+[**Kanban**](https://docs.ivy.app/widgets/advanced/kanban) widgets now automatically humanize enum-based column headers for better readability. Column headers like `TaskStatus.InProgress` now display as "In Progress" instead of "InProgress". The feature uses `EnumHelper.GetDescription()`, which respects `[Description]` attributes and falls back to smart PascalCase splitting.
 
 ```csharp
 public enum TaskStatus
@@ -357,7 +360,7 @@ The Kanban widget internally maintains separate `Column` (the grouping key for d
 
 ### Server Metadata Property Reorganization
 
-Server metadata properties have been reorganized into a dedicated `ServerMetadata` record for better structure. The flat properties on `ServerArgs` have been moved into a nested `Metadata` property.
+Server metadata properties have been reorganized into a dedicated `ServerMetadata` record for better structure. The flat properties on `ServerArgs` have been moved into a nested `Metadata` property. See [Program / server setup](https://docs.ivy.app/onboarding/concepts/program).
 
 **Migration:**
 
@@ -398,7 +401,7 @@ The fluent methods (`SetMetaTitle()`, `SetMetaDescription()`, `SetMetaGitHubUrl(
 
 ### Chrome Renamed to AppShell
 
-The `Chrome` API has been renamed to `AppShell` throughout the framework for better clarity and to avoid confusion with the Chrome browser. This affects all Chrome-related classes, interfaces, and methods.
+The `Chrome` API has been renamed to [**AppShell**](https://docs.ivy.app/onboarding/concepts/app-shell) throughout the framework for better clarity and to avoid confusion with the Chrome browser. This affects all Chrome-related classes, interfaces, and methods.
 
 **Migration Guide:**
 
@@ -424,13 +427,13 @@ The term "AppShell" better describes the purpose of this component: providing th
 
 ### UseService<T> Now Throws on Missing Registrations
 
-`UseService<T>()` now throws an `InvalidOperationException` when a service is not registered in dependency injection, instead of silently returning `null`. This change helps catch configuration errors early rather than causing `NullReferenceException` errors later in your code.
+The [**UseService**](https://docs.ivy.app/hooks/core/use-service) hook's `UseService<T>()` method now throws an `InvalidOperationException` when a service is not registered in dependency injection, instead of silently returning `null`. This change helps catch configuration errors early rather than causing `NullReferenceException` errors later in your code.
 
-**Migration**: If you have code that relies on `UseService<T>()` returning null for optional services, use the new `TryUseService<T>()` method instead (see below).
+**Migration**: If you have code that relies on `UseService<T>()` returning null for optional services, use the new `TryUseService<T>()` method instead (see above).
 
 ### MetricView `useMetricData` Parameter Renamed
 
-The `MetricView` primary constructor parameter `useMetricData` has been renamed to `UseMetricData` (PascalCase) for C# naming consistency.
+The [**MetricView**](https://docs.ivy.app/widgets/common/metric-view) primary constructor parameter `useMetricData` has been renamed to `UseMetricData` (PascalCase) for C# naming consistency.
 
 **Migration:**
 
@@ -452,7 +455,7 @@ new MetricView(
 
 ### Query Failures Now Visible in Console
 
-Query fetch failures are now logged at Warning level instead of Debug, making them visible in console output by default. This helps quickly identify issues with queries in `MetricView`, `DataTable`, and custom components using `UseQuery()`.
+Query fetch failures are now logged at Warning level instead of Debug, making them visible in console output by default. This helps quickly identify issues with queries in [**MetricView**](https://docs.ivy.app/widgets/common/metric-view), [**DataTable**](https://docs.ivy.app/widgets/advanced/data-table), and custom components using [**UseQuery**](https://docs.ivy.app/hooks/core/use-query).
 
 ```csharp
 // Query failures now appear automatically in your console:
@@ -464,19 +467,19 @@ Previously, these errors were only visible when debug logging was enabled. Now y
 
 ### DataTable Query Processing
 
-Improved DataTable query performance by caching reflection calls in the QueryProcessor. Previously, each query execution performed ~8 expensive `GetMethods()` scans on the `Queryable` type to find LINQ methods. These reflection calls are now cached using static fields and a concurrent dictionary, resulting in faster query execution especially when processing multiple DataTable queries.
+Improved [**DataTable**](https://docs.ivy.app/widgets/advanced/data-table) query performance by caching reflection calls in the QueryProcessor. Previously, each query execution performed ~8 expensive `GetMethods()` scans on the `Queryable` type to find LINQ methods. These reflection calls are now cached using static fields and a concurrent dictionary, resulting in faster query execution especially when processing multiple DataTable queries.
 
 ### FieldWidget Label Associations
 
-Enhanced accessibility in the `FieldWidget` component by adding proper `htmlFor` attribute associations between labels and input fields. The component now automatically detects input, select, and textarea elements within its children and establishes the correct label-to-input relationship. This improvement benefits users with screen readers and assistive technologies, making forms more navigable and improving overall accessibility compliance.
+Enhanced accessibility in the `FieldWidget` component (used with [forms](https://docs.ivy.app/onboarding/concepts/forms)) by adding proper `htmlFor` attribute associations between labels and input fields. The component now automatically detects input, select, and textarea elements within its children and establishes the correct label-to-input relationship. This improvement benefits users with screen readers and assistive technologies, making forms more navigable and improving overall accessibility compliance.
 
 ### Sheet Widget Screen Reader Support
 
-Improved accessibility in the `Sheet` widget by ensuring a DialogTitle is always present for screen readers, even when no visible title is provided. Previously, the SheetHeader and SheetTitle were only rendered if explicitly set, which could cause accessibility issues. Now the widget always renders these elements, using visually hidden (`sr-only`) styling when no title is provided, with a default "Sheet" label for screen reader users. This ensures proper ARIA dialog semantics and better screen reader navigation without affecting visual presentation.
+Improved accessibility in the [**Sheet**](https://docs.ivy.app/widgets/advanced/sheet) widget by ensuring a DialogTitle is always present for screen readers, even when no visible title is provided. Previously, the SheetHeader and SheetTitle were only rendered if explicitly set, which could cause accessibility issues. Now the widget always renders these elements, using visually hidden (`sr-only`) styling when no title is provided, with a default "Sheet" label for screen reader users. This ensures proper ARIA dialog semantics and better screen reader navigation without affecting visual presentation.
 
 ### Chart Widgets Playwright Readiness
 
-All chart widgets now set a `data-chart-rendered="true"` attribute on their container when the chart finishes rendering. This allows Playwright and other E2E testing tools to wait for charts to fully render before taking screenshots or making assertions, preventing empty gray areas caused by canvas render timing issues.
+All [chart widgets](https://docs.ivy.app/widgets/charts/bar-chart) now set a `data-chart-rendered="true"` attribute on their container when the chart finishes rendering. This allows Playwright and other E2E testing tools to wait for charts to fully render before taking screenshots or making assertions, preventing empty gray areas caused by canvas render timing issues.
 
 ```csharp
 // In your Playwright tests, wait for charts to render before screenshotting
@@ -484,7 +487,7 @@ await page.WaitForSelectorAsync("[data-chart-rendered='true']");
 await page.ScreenshotAsync(new() { Path = "dashboard.png" });
 ```
 
-This affects all 10 chart widgets: `AreaChart`, `BarChart`, `ChordChart`, `FunnelChart`, `GaugeChart`, `LineChart`, `PieChart`, `RadarChart`, `SankeyChart`, and `ScatterChart`. The attribute is set automatically when charts complete their initial render via the ECharts `onChartReady` callback, ensuring reliable test automation without manual delays or retry logic.
+This affects all 10 chart widgets (`AreaChart`, `BarChart`, `ChordChart`, `FunnelChart`, `GaugeChart`, `LineChart`, `PieChart`, `RadarChart`, `SankeyChart`, `ScatterChart`—see [charts](https://docs.ivy.app/widgets/charts/bar-chart)). The attribute is set automatically when charts complete their initial render via the ECharts `onChartReady` callback, ensuring reliable test automation without manual delays or retry logic.
 
 ## Bug Fixes
 

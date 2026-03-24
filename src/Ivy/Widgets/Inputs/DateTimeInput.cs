@@ -291,7 +291,6 @@ public static class DateTimeInputExtensions
     {
         return widget.OnBlur(_ => { onBlur(); return ValueTask.CompletedTask; });
     }
-<<<<<<< HEAD
 
     [OverloadResolutionPriority(1)]
     public static DateTimeInputBase OnFocus(this DateTimeInputBase widget, Func<Event<IAnyInput>, ValueTask> onFocus)
@@ -308,8 +307,4 @@ public static class DateTimeInputExtensions
     {
         return widget.OnFocus(_ => { onFocus(); return ValueTask.CompletedTask; });
     }
-
-
-=======
->>>>>>> main
 }

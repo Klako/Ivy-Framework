@@ -184,36 +184,6 @@ Valid `BorderRadius` values: `None`, `Rounded`, `Full`. The agent hallucinates T
 8a776329-6dc7-474f-aa4d-c8b4da753a25 (BorderRadius.Large)
 4e59e443-3579-4df9-af4b-765b7b7d61c8 (BorderRadius.Small — via IvyMcp hallucination)
 
-## Details() — empty constructor instead of passing items
-
-**Hallucinated API:**
-
-```csharp
-new Details()
-    | new Detail("Country Code", result.CountryCode, false)
-    | new Detail("VAT Number", result.VatNumber, false)
-```
-
-**Error:** `CS7036: There is no argument given that corresponds to the required parameter 'items' of 'Details.Details(IEnumerable<Detail>)'`
-
-**Correct API:**
-
-```csharp
-new Details(new[] {
-    new Detail("Country Code", result.CountryCode, false),
-    new Detail("VAT Number", result.VatNumber, false)
-})
-// or use the builder pattern:
-result.ToDetails()
-```
-
-`Details` requires an `IEnumerable<Detail>` in its constructor. There is no parameterless public constructor, and the pipe operator `|` does not work on `Details` to add children. Use the collection constructor or the `.ToDetails()` builder pattern on a model.
-
-**Found In:**
-857de09c-ab87-49a5-aac4-394f7d0aa207
-b6beb60d-478d-409e-b10d-7913ae911e85
-fd5baba6-72aa-4d28-ac10-72e1be86e494
-
 ## AppAttribute.path old parameter name
 
 **Hallucinated API:**

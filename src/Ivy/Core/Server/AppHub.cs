@@ -24,12 +24,42 @@ public class AppHub(
     IQueryableRegistry queryableRegistry
     ) : Hub
 {
+    private static readonly HashSet<string> ReservedQueryParams = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "appId", "machineId", "parentId", "shell", "appArgs", "oauthLogin"
+    };
+
     private AppContext GetAppArgs(string connectionId, string machineId, string appId, string? navigationAppId, HttpContext httpContext, string requestScheme)
     {
         string? appArgs = null;
+
+        // First check for explicit appArgs parameter (takes precedence)
         if (httpContext.Request.Query.TryGetValue("appArgs", out var appArgsParam))
         {
             appArgs = appArgsParam.ToString().NullIfEmpty();
+        }
+
+        // If no explicit appArgs, build JSON from individual query parameters
+        if (appArgs == null && httpContext.Request.Query.Count > 0)
+        {
+            var argsDict = new Dictionary<string, string>();
+
+            foreach (var kvp in httpContext.Request.Query)
+            {
+                if (ReservedQueryParams.Contains(kvp.Key))
+                    continue;
+
+                var value = kvp.Value.FirstOrDefault();
+                if (value != null)
+                {
+                    argsDict[kvp.Key] = value;
+                }
+            }
+
+            if (argsDict.Count > 0)
+            {
+                appArgs = System.Text.Json.JsonSerializer.Serialize(argsDict, JsonHelper.DefaultOptions);
+            }
         }
 
         return new AppContext(connectionId, machineId, appId, navigationAppId, appArgs ?? server.Args?.Args, requestScheme, httpContext.Request.Host.Value!);

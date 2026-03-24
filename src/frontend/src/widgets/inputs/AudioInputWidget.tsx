@@ -1,23 +1,17 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { Mic, Square } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { getWidth, inputStyles } from '@/lib/styles';
-import { useEventHandler } from '@/components/event-handler';
-import { logger } from '@/lib/logger';
-import { Densities } from '@/types/density';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Mic, Square } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { getWidth, inputStyles } from "@/lib/styles";
+import { useEventHandler } from "@/components/event-handler";
+import { logger } from "@/lib/logger";
+import { Densities } from "@/types/density";
 import {
   audioInputVariant,
   textSizeVariant,
   timerSizeVariant,
   iconSizeVariant,
-} from '@/components/ui/input/audio-input-variant';
+} from "@/components/ui/input/audio-input-variant";
 
 interface AudioInputWidgetProps {
   id: string;
@@ -35,20 +29,20 @@ interface AudioInputWidgetProps {
 }
 
 const supportedMimeTypes = [
-  'audio/webm', // Chromium/Firefox
-  'audio/mp4', // Safari/iOS
-  'audio/ogg', // Older Firefox/desktop
-  'audio/aac', // Safari/iOS
-  'audio/webm;codecs=opus',
-  'audio/ogg;codecs=opus',
-  'audio/wav', // uncompressed fallback (always supported, large files)
+  "audio/webm", // Chromium/Firefox
+  "audio/mp4", // Safari/iOS
+  "audio/ogg", // Older Firefox/desktop
+  "audio/aac", // Safari/iOS
+  "audio/webm;codecs=opus",
+  "audio/ogg;codecs=opus",
+  "audio/wav", // uncompressed fallback (always supported, large files)
 ];
 
 export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
   id,
   label,
   recordingLabel,
-  mimeType = 'audio/webm',
+  mimeType = "audio/webm",
   disabled = false,
   width,
   uploadUrl,
@@ -84,7 +78,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
       const getUploadUrl = () => {
         const ivyHostMeta = document.querySelector('meta[name="ivy-host"]');
         if (ivyHostMeta) {
-          const host = ivyHostMeta.getAttribute('content');
+          const host = ivyHostMeta.getAttribute("content");
           return host + uploadUrl;
         }
         // If no meta tag, use relative URL (should work in production)
@@ -92,17 +86,15 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
       };
 
       const selectedMime =
-        selectedMimeTypeRef.current ??
-        normalizedMimeTypes[0] ??
-        supportedMimeTypes[0];
+        selectedMimeTypeRef.current ?? normalizedMimeTypes[0] ?? supportedMimeTypes[0];
 
       const formData = new FormData();
-      formData.append('file', chunk);
-      formData.append('mimeType', selectedMime);
+      formData.append("file", chunk);
+      formData.append("mimeType", selectedMime);
 
       try {
         const response = await fetch(getUploadUrl(), {
-          method: 'POST',
+          method: "POST",
           body: formData,
         });
 
@@ -110,22 +102,18 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
           throw new Error(`Upload failed: ${response.statusText}`);
         }
       } catch (error) {
-        logger.error('File upload error:', error);
+        logger.error("File upload error:", error);
       }
     },
-    [uploadUrl, normalizedMimeTypes]
+    [uploadUrl, normalizedMimeTypes],
   );
 
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState(false);
   const [mimeSupportError, setMimeSupportError] = useState(false);
 
-  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(
-    null
-  );
-  const [recordingStoppedAt, setRecordingStoppedAt] = useState<number | null>(
-    null
-  );
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [recordingStoppedAt, setRecordingStoppedAt] = useState<number | null>(null);
 
   const [volume, setVolume] = useState(0);
 
@@ -148,10 +136,9 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
           return;
         }
 
-        const mediaRecorderAvailable = typeof MediaRecorder !== 'undefined';
+        const mediaRecorderAvailable = typeof MediaRecorder !== "undefined";
         const canProbeTypeSupport =
-          mediaRecorderAvailable &&
-          typeof MediaRecorder.isTypeSupported === 'function';
+          mediaRecorderAvailable && typeof MediaRecorder.isTypeSupported === "function";
 
         const supportChecks: Array<{ type: string; supported: boolean }> = [];
         let supportedMimeType: string | null = null;
@@ -170,7 +157,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
         }
 
         if (!supportedMimeType) {
-          logger.error('No supported MIME type found for AudioInput', {
+          logger.error("No supported MIME type found for AudioInput", {
             requestedTypes: normalizedMimeTypes,
             checks: supportChecks,
             mediaRecorderAvailable,
@@ -185,10 +172,8 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
         selectedMimeTypeRef.current = supportedMimeType;
 
         const audioContext =
-          sampleRate != null
-            ? new AudioContext({ sampleRate })
-            : new AudioContext();
-        if (audioContext.state === 'suspended') {
+          sampleRate != null ? new AudioContext({ sampleRate }) : new AudioContext();
+        if (audioContext.state === "suspended") {
           await audioContext.resume();
         }
         if (cancelled) return;
@@ -199,19 +184,15 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
           const destination = audioContext.createMediaStreamDestination();
           source.connect(destination);
           streamToRecord = destination.stream;
-          const micRate = stream
-            .getAudioTracks()[0]
-            ?.getSettings?.()?.sampleRate;
+          const micRate = stream.getAudioTracks()[0]?.getSettings?.()?.sampleRate;
           logger.warn(
-            `AudioInput: requested ${sampleRate} Hz, mic ${micRate ?? '?'} Hz - recording at ${audioContext.sampleRate} Hz (resampled)`
+            `AudioInput: requested ${sampleRate} Hz, mic ${micRate ?? "?"} Hz - recording at ${audioContext.sampleRate} Hz (resampled)`,
           );
         } else {
           streamToRecord = stream;
-          const micRate = stream
-            .getAudioTracks()[0]
-            ?.getSettings?.()?.sampleRate;
+          const micRate = stream.getAudioTracks()[0]?.getSettings?.()?.sampleRate;
           logger.warn(
-            `AudioInput: no sample rate set, recording at ${micRate ?? audioContext.sampleRate} Hz (mic default)`
+            `AudioInput: no sample rate set, recording at ${micRate ?? audioContext.sampleRate} Hz (mic default)`,
           );
         }
 
@@ -219,7 +200,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
           mimeType: supportedMimeType,
         });
 
-        mediaRecorder.ondataavailable = async event => {
+        mediaRecorder.ondataavailable = async (event) => {
           if (event.data.size > 0) {
             await uploadChunk(event.data);
           }
@@ -243,11 +224,11 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
 
         onCancel = () => {
           mediaRecorder.stop();
-          stream.getTracks().forEach(track => track.stop());
+          stream.getTracks().forEach((track) => track.stop());
           audioContext.close();
         };
       } catch (err) {
-        logger.error('Error accessing microphone:', err);
+        logger.error("Error accessing microphone:", err);
         setError(true);
         setRecording(false);
       }
@@ -268,12 +249,12 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
         className={cn(
           audioInputVariant({ density }),
           invalid && inputStyles.invalidInput,
-          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
         )}
         onClick={
           disabled
             ? undefined
-            : e => {
+            : (e) => {
                 e.stopPropagation();
                 if (recording) {
                   setRecording(false);
@@ -285,21 +266,21 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
         }
         role="button"
         tabIndex={disabled ? -1 : 0}
-        onBlur={e => {
+        onBlur={(e) => {
           if (disabled) return;
           if (!e.currentTarget.contains(e.relatedTarget)) {
-            if (events?.includes('OnBlur')) eventHandler('OnBlur', id, []);
+            if (events?.includes("OnBlur")) eventHandler("OnBlur", id, []);
           }
         }}
-        onFocus={e => {
+        onFocus={(e) => {
           if (disabled) return;
           if (!e.currentTarget.contains(e.relatedTarget)) {
-            if (events?.includes('OnFocus')) eventHandler('OnFocus', id, []);
+            if (events?.includes("OnFocus")) eventHandler("OnFocus", id, []);
           }
         }}
-        onKeyDown={e => {
+        onKeyDown={(e) => {
           if (disabled) return;
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             e.stopPropagation();
             if (recording) {
@@ -314,17 +295,17 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
         <div
           className="absolute bottom-0 left-0 w-full transition-all duration-100 ease-linear"
           style={{
-            backgroundColor: 'rgba(255,0,0,0.075)',
+            backgroundColor: "rgba(255,0,0,0.075)",
             height: `${volumePercent}%`,
-            pointerEvents: 'none',
-            transition: 'height 50ms',
+            pointerEvents: "none",
+            transition: "height 50ms",
           }}
         />
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className={'mt-2 h-6 w-fit z-10 mx-auto block'}
+          className={"mt-2 h-6 w-fit z-10 mx-auto block"}
         >
           {recording ? (
             <Square className={iconSizeVariant({ density })} />
@@ -332,31 +313,17 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
             <Mic className={iconSizeVariant({ density })} />
           )}
         </Button>
-        <SecondsCounter
-          start={recordingStartedAt}
-          stopped={recordingStoppedAt}
-          density={density}
-        />
+        <SecondsCounter start={recordingStartedAt} stopped={recordingStoppedAt} density={density} />
         {(label || recordingLabel) && (
-          <p
-            className={cn(
-              'text-center mt-1 text-muted-foreground',
-              textSizeVariant({ density })
-            )}
-          >
+          <p className={cn("text-center mt-1 text-muted-foreground", textSizeVariant({ density }))}>
             {recording ? recordingLabel : label}
           </p>
         )}
         {error && (
-          <p
-            className={cn(
-              'text-muted-foreground text-center',
-              textSizeVariant({ density })
-            )}
-          >
+          <p className={cn("text-muted-foreground text-center", textSizeVariant({ density }))}>
             {mimeSupportError
-              ? 'Recording format not supported in this browser.'
-              : 'Failed to record. Check your settings.'}
+              ? "Recording format not supported in this browser."
+              : "Failed to record. Check your settings."}
           </p>
         )}
       </div>
@@ -371,11 +338,11 @@ function SecondsCounter(props: {
 }) {
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
-    if (typeof props.start !== 'number') {
+    if (typeof props.start !== "number") {
       queueMicrotask(() => setSeconds(0));
       return;
     }
-    if (typeof props.stopped === 'number' && typeof props.start === 'number') {
+    if (typeof props.stopped === "number" && typeof props.start === "number") {
       const stopped = props.stopped;
       const start = props.start;
       queueMicrotask(() => {
@@ -392,16 +359,11 @@ function SecondsCounter(props: {
     };
   }, [props.start, props.stopped]);
   return (
-    <p
-      className={cn(
-        'text-center',
-        timerSizeVariant({ density: props.density })
-      )}
-    >
+    <p className={cn("text-center", timerSizeVariant({ density: props.density }))}>
       {Math.floor(seconds / 60)
         .toString()
-        .padStart(2, '0')}
-      :{(seconds % 60).toString().padStart(2, '0')}
+        .padStart(2, "0")}
+      :{(seconds % 60).toString().padStart(2, "0")}
     </p>
   );
 }

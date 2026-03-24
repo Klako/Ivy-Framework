@@ -1,6 +1,6 @@
-import CopyToClipboardButton from '@/components/CopyToClipboardButton';
-import React from 'react';
-import { useEventHandler } from '@/components/event-handler';
+import CopyToClipboardButton from "@/components/CopyToClipboardButton";
+import React from "react";
+import { useEventHandler } from "@/components/event-handler";
 
 interface ReadOnlyInputWidgetProps {
   id: string;
@@ -21,20 +21,15 @@ export const ReadOnlyInputWidget: React.FC<ReadOnlyInputWidgetProps> = ({
       key={id}
       className="text-body text-muted-foreground flex flex-row items-center w-full focus:outline-none"
       onBlur={() => {
-        if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
+        if (events.includes("OnBlur")) eventHandler("OnBlur", id, []);
       }}
       onFocus={() => {
-        if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
+        if (events.includes("OnFocus")) eventHandler("OnFocus", id, []);
       }}
       tabIndex={0}
     >
-      <div className="flex-1">
-        {value && value}
-        {!value && '-'}
-      </div>
-      {showCopyButton && (
-        <CopyToClipboardButton textToCopy={String(value || '')} label="" />
-      )}
+      <div className="flex-1">{value != null && value !== "" ? String(value) : "-"}</div>
+      {showCopyButton && <CopyToClipboardButton textToCopy={String(value || "")} label="" />}
     </div>
   );
 };

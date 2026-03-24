@@ -1,19 +1,19 @@
-import { EmojiRating } from '@/components/EmojiRating';
-import { useEventHandler } from '@/components/event-handler';
-import { StarRating } from '@/components/StarRating';
-import { ThumbsEnum, ThumbsRating } from '@/components/ui/thumbs-rating';
-import React, { useCallback, useMemo } from 'react';
-import { inputStyles } from '@/lib/styles';
-import { cn } from '@/lib/utils';
-import { useOptimisticValue } from './shared/useOptimisticValue';
-import { Densities } from '@/types/density';
+import { EmojiRating } from "@/components/EmojiRating";
+import { useEventHandler } from "@/components/event-handler";
+import { StarRating } from "@/components/StarRating";
+import { ThumbsEnum, ThumbsRating } from "@/components/ui/thumbs-rating";
+import React, { useCallback, useMemo } from "react";
+import { inputStyles } from "@/lib/styles";
+import { cn } from "@/lib/utils";
+import { useOptimisticValue } from "./shared/useOptimisticValue";
+import { Densities } from "@/types/density";
 
 const EMPTY_ARRAY: never[] = [];
 
 interface FeedbackInputWidgetProps {
   id: string;
   value: number | boolean | null;
-  variant: 'Thumbs' | 'Emojis' | 'Stars';
+  variant: "Thumbs" | "Emojis" | "Stars";
   disabled: boolean;
   invalid?: string;
   events: string[];
@@ -26,7 +26,7 @@ interface FeedbackInputWidgetProps {
 export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
   id,
   value = null,
-  variant = 'Stars',
+  variant = "Stars",
   disabled = false,
   invalid,
   events = EMPTY_ARRAY,
@@ -39,22 +39,19 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
 
   type FeedbackValue = number | boolean | null;
 
-  const [localValue, setLocalValue] = useOptimisticValue<FeedbackValue>(
-    value,
-    false
-  );
+  const [localValue, setLocalValue] = useOptimisticValue<FeedbackValue>(value, false);
 
   const isBooleanType = useMemo(() => {
     // If variant is Thumbs and nullable is true, treat as bool?
-    if (variant === 'Thumbs' && nullable) return true;
-    return typeof value === 'boolean';
+    if (variant === "Thumbs" && nullable) return true;
+    return typeof value === "boolean";
   }, [value, variant, nullable]);
 
   // Convert value to number for rating components
   const numericValue = useMemo(() => {
     if (localValue === null || localValue === undefined) return ThumbsEnum.None;
     if (isBooleanType) {
-      if (variant === 'Thumbs') {
+      if (variant === "Thumbs") {
         if (nullable) {
           // For nullable boolean types: null -> None(0), false -> Down(1), true -> Up(2)
           return localValue ? ThumbsEnum.Up : ThumbsEnum.Down;
@@ -70,13 +67,13 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
 
   const handleChange = useCallback(
     (e: number) => {
-      if (!events.includes('OnChange')) return;
+      if (!events.includes("OnChange")) return;
       if (disabled) return;
 
       // Convert number back to original type
       let convertedValue: number | boolean | null;
       if (isBooleanType) {
-        if (variant === 'Thumbs') {
+        if (variant === "Thumbs") {
           if (nullable) {
             // For nullable boolean types
             if (e === ThumbsEnum.None) {
@@ -114,7 +111,7 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
         }
       }
       setLocalValue(convertedValue);
-      eventHandler('OnChange', id, [convertedValue]);
+      eventHandler("OnChange", id, [convertedValue]);
     },
     [
       id,
@@ -127,21 +124,21 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
       nullable,
       isBooleanType,
       setLocalValue,
-    ]
+    ],
   );
 
   const handleBlur = useCallback(() => {
     if (disabled) return;
-    if (events.includes('OnBlur')) eventHandler('OnBlur', id, []);
+    if (events.includes("OnBlur")) eventHandler("OnBlur", id, []);
   }, [disabled, eventHandler, id, events]);
 
   const handleFocus = useCallback(() => {
     if (disabled) return;
-    if (events.includes('OnFocus')) eventHandler('OnFocus', id, []);
+    if (events.includes("OnFocus")) eventHandler("OnFocus", id, []);
   }, [disabled, eventHandler, id, events]);
 
   const ratingComponent = useMemo(() => {
-    if (variant === 'Thumbs') {
+    if (variant === "Thumbs") {
       return (
         <ThumbsRating
           disabled={disabled}
@@ -153,7 +150,7 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
       );
     }
 
-    if (variant === 'Emojis') {
+    if (variant === "Emojis") {
       return (
         <EmojiRating
           disabled={disabled}
@@ -167,45 +164,39 @@ export const FeedbackInputWidget: React.FC<FeedbackInputWidgetProps> = ({
       );
     }
 
-    return (
-      <StarRating
-        disabled={disabled}
-        value={numericValue}
-        onRate={handleChange}
-        invalid={invalid}
-        allowHalf={allowHalf}
-        totalStars={max}
-        density={density}
-      />
-    );
-  }, [
-    variant,
-    disabled,
-    numericValue,
-    handleChange,
-    invalid,
-    allowHalf,
-    max,
-    density,
-  ]);
+    if (variant === "Stars") {
+      return (
+        <StarRating
+          disabled={disabled}
+          value={numericValue}
+          onRate={handleChange}
+          invalid={invalid}
+          allowHalf={allowHalf}
+          totalStars={max}
+          density={density}
+        />
+      );
+    }
+    return null;
+  }, [variant, disabled, numericValue, handleChange, invalid, allowHalf, max, density]);
 
   return (
     <div
-      onBlur={e => {
+      onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
           handleBlur();
         }
       }}
-      onFocus={e => {
+      onFocus={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
           handleFocus();
         }
       }}
       tabIndex={disabled ? -1 : 0}
       className={cn(
-        'outline-none focus:outline-none focus:ring-1 focus:ring-ring rounded-md p-1',
-        disabled && 'opacity-50 cursor-not-allowed',
-        invalid && inputStyles.invalidInput
+        "outline-none focus:outline-none focus:ring-1 focus:ring-ring rounded-md p-1",
+        disabled && "opacity-50 cursor-not-allowed",
+        invalid && inputStyles.invalidInput,
       )}
     >
       {ratingComponent}

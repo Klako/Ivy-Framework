@@ -113,6 +113,17 @@ const MultipleSelector = React.forwardRef<
     }, [open]);
 
     React.useEffect(() => {
+      if (open && dropdownRef.current) {
+        requestAnimationFrame(() => {
+          const scrollableElement = dropdownRef.current?.querySelector("[cmdk-group]");
+          if (scrollableElement) {
+            scrollableElement.scrollTop = 0;
+          }
+        });
+      }
+    }, [open]);
+
+    React.useEffect(() => {
       if (maxVisibleBadges !== undefined) {
         setVisibleCount(maxVisibleBadges);
         return;

@@ -507,3 +507,54 @@ This affects all 10 chart widgets (`AreaChart`, `BarChart`, `ChordChart`, `Funne
 - **useAutoScroll**: Observes the scroll container and content wrapper so streaming markdown/AI content keeps the view pinned to the bottom.
 - **Button shortcuts**: Ignored while focus is in inputs/contentEditable; URL/download/mailto buttons support shortcuts and respect link `target`.
 - **External widget discovery**: Exact assembly name comparison replaces substring matching—e.g. `PDF.Viewer.dll` is no longer skipped when the host is `PDF.Viewer.Samples.dll`.
+
+## What's Changed
+
+* feat: document 'ivy cli explain' as preferred for command discovery by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2715>
+- (docs) - Update documentation for IConnection and IHaveSecrets by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2618>
+- feat: treat analyzer warnings as errors by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2716>
+- FeedbackInput: AllowHalf ratings and configurable Max value by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2657>
+- Refactor sample apps: rename DefaultContentBuilderApp and remove ConnectionsApp by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2719>
+- (auth): brokered auth sessions by @zachwolfe in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2296>
+- chore: migrate frontend to Vite+ by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2722>
+- Revert "chore: migrate frontend to Vite+" by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2723>
+- Feat/migrate vite plus by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2724>
+- Optimize Ivy.Docs generation performance by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2725>
+- Revert "Optimize Ivy.Docs generation performance" by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2727>
+- Fix docs generation perf by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2728>
+- docs: update external widget docs by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2729>
+- [Multiselect]: fix opened dropdown shift when overflow badge is visible by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2733>
+- [SmartSearch]: fix result list scroll overflow and pin search input by @defymecobra in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2735>
+- Cache reflection lookups on hot paths by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2736>
+- Add label associations for accessibility by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2737>
+- Improve service registration safety by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2738>
+- Add widget features and improve code quality by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2742>
+- Update documentation by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2743>
+- Fix runtime stability issues by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2739>
+- Refactor widget rendering pipeline by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2740>
+- Improve MadeWithIvy component and add metadata API by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2741>
+- patch notes week of Mar 20 by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2718>
+- Fix ToDataTable and ToTable data conversion issues by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2744>
+- Add RichTextMarkdownParser and RichText tests by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2745>
+- Fix and improve frontend widgets by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2746>
+- Add VideoPlayer captions, docs, and misc fixes by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2747>
+- chore: add log files to .gitignore by @artem-ivy-ai in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2750>
+- Refactor: Rename Chrome to AppShell by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2756>
+- Add Min, Max, and Step Constraints to DateTimeInput by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2674>
+- fix: add visually hidden DialogTitle to Sheet for accessibility #2755 by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2757>
+- Add ShortcutKey Support to Button by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2672>
+- fix: resolve button keyboard shortcut issues and enable for URLs #2757 by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2758>
+- feat(docs): provide frontmatter hidden option by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2753>
+- Add form-level LabelPosition API to FormBuilder by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2759>
+- Fix Radix accessibility warnings on dialogs by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2760>
+- Add data-chart-rendered attribute to chart widgets by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2761>
+- Add Open Graph and Twitter Card meta tags by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2763>
+- Auto-scaffold table columns and fix infrastructure bugs by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2764>
+- Add new widget API features (Badge Color, Card hover shadow) by @nielsbosma in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2762>
+- fix: resolve NU5104 by upgrading Microsoft.Extensions.AI to 10.4.1 stable by @rorychatt in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2765>
+
+## New Contributors
+
+* @artem-ivy-ai made their first contribution in <https://github.com/Ivy-Interactive/Ivy-Framework/pull/2750>
+
+**Full Changelog**: <https://github.com/Ivy-Interactive/Ivy-Framework/compare/v1.2.23...v1.2.25>

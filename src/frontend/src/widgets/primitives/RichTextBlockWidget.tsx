@@ -140,7 +140,7 @@ function renderInlineContent(
           dangerouslySetInnerHTML={{ __html: html }}
         />
       );
-    } catch (e) {
+    } catch {
       // If KaTeX rendering fails, display raw content
       return (
         <span key={`run-${index}`} className={className} style={runStyles}>
@@ -337,7 +337,7 @@ export const RichTextBlockWidget: React.FC<RichTextBlockWidgetProps> = ({
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
               );
-            } catch (e) {
+            } catch {
               // If KaTeX rendering fails, display raw content
               return (
                 <div key={`run-${index}`} className="my-4">

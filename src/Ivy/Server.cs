@@ -1053,52 +1053,52 @@ public static class WebApplicationExtensions
             context.Response.Headers["ivy-version"] = version;
         }
 
-            // Determine HTTP status code based on app routing
-            var server = app.Services.GetRequiredService<Server>();
-            var httpStatusCode = GetHttpStatusCodeForRequest(server, context);
+        // Determine HTTP status code based on app routing
+        var server = app.Services.GetRequiredService<Server>();
+        var httpStatusCode = GetHttpStatusCodeForRequest(server, context);
 
-            await using var stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream != null)
+        await using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream != null)
+        {
+            using var reader = new StreamReader(stream);
+            var html = await reader.ReadToEndAsync();
+
+            var pipeline = new HtmlPipeline()
+                .Use<LicenseFilter>()
+                .Use<DevToolsFilter>()
+                .Use<MetaDescriptionFilter>()
+                .Use<MetaGitHubUrlFilter>()
+                .Use<TitleFilter>()
+                .Use<ThemeFilter>()
+                .Use<ManifestFilter>()
+                .Use<OpenGraphFilter>()
+                .Use<PathBaseFilter>();
+
+            foreach (var filter in server.GetCustomFilters())
+                pipeline.Use(filter);
+
+            server.GetPipelineConfigurator()?.Invoke(pipeline);
+
+            var pipelineContext = new HtmlPipelineContext
             {
-                using var reader = new StreamReader(stream);
-                var html = await reader.ReadToEndAsync();
-
-                var pipeline = new HtmlPipeline()
-                    .Use<LicenseFilter>()
-                    .Use<DevToolsFilter>()
-                    .Use<MetaDescriptionFilter>()
-                    .Use<MetaGitHubUrlFilter>()
-                    .Use<TitleFilter>()
-                    .Use<ThemeFilter>()
-                    .Use<ManifestFilter>()
-                    .Use<OpenGraphFilter>()
-                    .Use<PathBaseFilter>();
-
-                foreach (var filter in server.GetCustomFilters())
-                    pipeline.Use(filter);
-
-                server.GetPipelineConfigurator()?.Invoke(pipeline);
-
-                var pipelineContext = new HtmlPipelineContext
-                {
-                    Services = app.Services,
-                    ServerArgs = serverArgs
-                };
+                Services = app.Services,
+                ServerArgs = serverArgs
+            };
 
 
-                html = pipeline.Process(pipelineContext, html);
+            html = pipeline.Process(pipelineContext, html);
 
-                context.Response.ContentType = "text/html";
-                context.Response.StatusCode = httpStatusCode;
-                var bytes = Encoding.UTF8.GetBytes(html);
-                await context.Response.Body.WriteAsync(bytes);
-            }
-            else
-            {
-                context.Response.StatusCode = 500;
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync($"Error: {resourceName} not found.");
-            }
+            context.Response.ContentType = "text/html";
+            context.Response.StatusCode = httpStatusCode;
+            var bytes = Encoding.UTF8.GetBytes(html);
+            await context.Response.Body.WriteAsync(bytes);
+        }
+        else
+        {
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "text/plain";
+            await context.Response.WriteAsync($"Error: {resourceName} not found.");
+        }
     }
 
     public static WebApplication UseAssets(this WebApplication app, ServerArgs args, ILogger<Server> logger,

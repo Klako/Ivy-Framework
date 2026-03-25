@@ -23,6 +23,8 @@ import {
   dateRangeInputIconVariant,
   dateRangeInputTextVariant,
 } from "@/components/ui/input/date-range-input-variant";
+import { EMPTY_ARRAY } from "@/lib/constants";
+import { DateRangePresets } from "./DateRangePresets";
 
 interface DateRangeInputWidgetProps {
   id: string;
@@ -47,8 +49,6 @@ interface DateRangeInputWidgetProps {
 
 type WeekDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-const EMPTY_EVENTS: string[] = [];
-
 const dayOfWeekMap: Record<string, WeekDay> = {
   Sunday: 0,
   Monday: 1,
@@ -65,8 +65,6 @@ function resolveDayOfWeek(value?: WeekDay | string): WeekDay | undefined {
   return dayOfWeekMap[value];
 }
 
-import { DateRangePresets } from "./DateRangePresets";
-
 export const DateRangeInputWidget: React.FC<DateRangeInputWidgetProps> = ({
   id,
   value,
@@ -81,7 +79,7 @@ export const DateRangeInputWidget: React.FC<DateRangeInputWidgetProps> = ({
   min,
   max,
   density = Densities.Medium,
-  events = EMPTY_EVENTS,
+  events = EMPTY_ARRAY,
   "data-testid": dataTestId,
 }) => {
   const firstDayOfWeek = resolveDayOfWeek(firstDayOfWeekRaw);

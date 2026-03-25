@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/input/color-input-variant";
 import { Densities } from "@/types/density";
 import { xIconVariant } from "@/components/ui/input/text-input-variant";
-
-const EMPTY_ARRAY: never[] = [];
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface ColorInputWidgetProps {
   id: string;

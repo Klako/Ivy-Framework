@@ -14,8 +14,7 @@ import {
   textVariant,
 } from "@/components/ui/input/file-input-variant";
 import { validateSingleFile, validateFileCount } from "./file-input-validation";
-
-const EMPTY_ARRAY: never[] = [];
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 enum FileInputStatus {
   Pending = "Pending",

@@ -12,6 +12,7 @@ import {
   timerSizeVariant,
   iconSizeVariant,
 } from "@/components/ui/input/audio-input-variant";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface AudioInputWidgetProps {
   id: string;
@@ -49,7 +50,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
   chunkInterval = 1000,
   sampleRate,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
   invalid,
 }) => {
   const eventHandler = useEventHandler();

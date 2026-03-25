@@ -26,8 +26,7 @@ import {
   iconInputSearchInputVariant,
   iconInputEmptyStateVariant,
 } from "@/components/ui/input/icon-input-variant";
-
-const EMPTY_ARRAY: never[] = [];
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 // Lucide icon names (PascalCase) - React components are typeof 'object', not 'function'
 const LUCIDE_ICON_NAMES = (Object.keys(icons) as string[]).filter(

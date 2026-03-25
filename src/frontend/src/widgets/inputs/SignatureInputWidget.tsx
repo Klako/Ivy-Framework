@@ -4,6 +4,7 @@ import { inputStyles } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import { Eraser } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface Point {
   x: number;
@@ -68,7 +69,7 @@ export const SignatureInputWidget: React.FC<SignatureInputWidgetProps> = ({
   value,
   disabled = false,
   invalid,
-  events = [],
+  events = EMPTY_ARRAY,
   pen,
   background,
   penThickness = 2,

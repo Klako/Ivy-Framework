@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { Densities } from "@/types/density";
 import { cva } from "class-variance-authority";
 import { useEventHandler } from "@/components/event-handler";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 const containerVariant = cva(
   "relative rounded-field border-dashed transition-colors border-muted-foreground/25 overflow-hidden flex flex-col items-center justify-center",
@@ -66,7 +67,7 @@ const CameraInputWidget: React.FC<CameraInputWidgetProps> = ({
   facingMode = "user",
   width,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
 }) => {
   const eventHandler = useEventHandler();
   const containerRef = useRef<HTMLDivElement>(null);

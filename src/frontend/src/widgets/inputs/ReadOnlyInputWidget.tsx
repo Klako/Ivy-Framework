@@ -1,6 +1,7 @@
 import CopyToClipboardButton from "@/components/CopyToClipboardButton";
 import React from "react";
 import { useEventHandler } from "@/components/event-handler";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface ReadOnlyInputWidgetProps {
   id: string;
@@ -13,7 +14,7 @@ export const ReadOnlyInputWidget: React.FC<ReadOnlyInputWidgetProps> = ({
   id,
   value,
   showCopyButton = true,
-  events = [],
+  events = EMPTY_ARRAY,
 }) => {
   const eventHandler = useEventHandler();
   return (

@@ -23,8 +23,7 @@ import { keymap, EditorView, lineNumbers, highlightActiveLine } from "@codemirro
 import { history } from "@codemirror/commands";
 
 import { useDebouncedCallback } from "use-debounce";
-
-const EMPTY_ARRAY: never[] = [];
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface CodeInputWidgetProps {
   id: string;

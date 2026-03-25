@@ -153,7 +153,7 @@ const ToggleVariant: React.FC<SelectInputWidgetProps> = ({
   loading = false,
   ghost = false,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
   "data-testid": dataTestId,
   width,
 }) => {
@@ -369,7 +369,7 @@ const RadioVariant: React.FC<SelectInputWidgetProps> = ({
   nullable = false,
   ghost = false,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
   "data-testid": dataTestId,
   width,
 }) => {
@@ -547,7 +547,7 @@ const CheckboxVariant: React.FC<SelectInputWidgetProps> = ({
   loading = false,
   ghost = false,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
   "data-testid": dataTestId,
   width,
 }) => {
@@ -869,7 +869,7 @@ const SliderVariant: React.FC<SelectInputWidgetProps & { eventHandler: EventHand
   density = Densities.Medium,
   "data-testid": dataTestId,
   width,
-  events = [],
+  events = EMPTY_ARRAY,
 }) => {
   if (selectMany) {
     logger.warn(

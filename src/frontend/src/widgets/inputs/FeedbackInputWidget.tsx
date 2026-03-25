@@ -7,8 +7,7 @@ import { inputStyles } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import { useOptimisticValue } from "./shared/useOptimisticValue";
 import { Densities } from "@/types/density";
-
-const EMPTY_ARRAY: never[] = [];
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface FeedbackInputWidgetProps {
   id: string;

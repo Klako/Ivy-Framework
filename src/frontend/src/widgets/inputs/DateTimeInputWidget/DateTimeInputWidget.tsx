@@ -17,6 +17,7 @@ import { TimeVariant } from "./TimeVariant";
 import { MonthVariant } from "./MonthVariant";
 import { WeekVariant } from "./WeekVariant";
 import { YearVariant } from "./YearVariant";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 const VariantComponents: Record<
   VariantType,
@@ -60,7 +61,7 @@ export const DateTimeInputWidget: React.FC<DateTimeInputWidgetProps> = ({
   max,
   step,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
   "data-testid": dataTestId,
 }) => {
   const eventHandler = useEventHandler();

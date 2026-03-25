@@ -11,6 +11,7 @@ import { Densities } from "@/types/density";
 import { xIconVariant } from "@/components/ui/input/text-input-variant";
 import Icon from "@/components/Icon";
 import { formatBytes } from "@/lib/formatters";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface Affix {
   icon?: string;
@@ -374,7 +375,7 @@ export const NumberInputWidget = memo(
     formatStyle = "Decimal",
     nullable = false,
     width,
-    events = [],
+    events = EMPTY_ARRAY,
     ...props
   }: NumberInputWidgetProps) => {
     const eventHandler = useEventHandler() as EventHandler;

@@ -9,6 +9,7 @@ import { xIconVariant } from "@/components/ui/input/text-input-variant";
 import { SelectInputWidgetProps, Option } from "./select-types";
 import { convertValuesToOriginalType } from "./select-utils";
 import { getWidth } from "@/lib/styles";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 export const SelectMultiVariant: React.FC<SelectInputWidgetProps> = ({
   id,
@@ -16,7 +17,7 @@ export const SelectMultiVariant: React.FC<SelectInputWidgetProps> = ({
   value,
   disabled = false,
   invalid,
-  options = [],
+  options = EMPTY_ARRAY,
   eventHandler,
   selectMany = true,
   maxSelections,
@@ -26,7 +27,7 @@ export const SelectMultiVariant: React.FC<SelectInputWidgetProps> = ({
   density,
   "data-testid": dataTestId,
   width,
-  events = [],
+  events = EMPTY_ARRAY,
 }) => {
   const validOptions = options.filter(
     (option) => option.value != null && option.value.toString().trim() !== "",

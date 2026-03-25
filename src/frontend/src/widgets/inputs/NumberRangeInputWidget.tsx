@@ -9,6 +9,7 @@ import { X } from "lucide-react";
 import { Densities } from "@/types/density";
 import Icon from "@/components/Icon";
 import { formatBytes } from "@/lib/formatters";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface Affix {
   icon?: string;
@@ -189,7 +190,7 @@ export const NumberRangeInputWidget = memo(
     noGrouping,
     targetType,
     density = Densities.Medium,
-    events = [],
+    events = EMPTY_ARRAY,
     "data-testid": dataTestId,
   }: NumberRangeInputWidgetProps) => {
     const eventHandler = useEventHandler() as EventHandler;

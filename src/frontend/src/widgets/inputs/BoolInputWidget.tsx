@@ -16,6 +16,7 @@ import {
   descriptionSizeVariant,
   boolInputRowMinHeightVariant,
 } from "@/components/ui/input/bool-input-variant";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 type VariantType = "Checkbox" | "Switch" | "Toggle";
 
@@ -280,7 +281,7 @@ export const BoolInputWidget: React.FC<BoolInputWidgetProps> = ({
   variant = "Checkbox",
   icon,
   density = Densities.Medium,
-  events = [],
+  events = EMPTY_ARRAY,
   "data-testid": dataTestId,
 }) => {
   const eventHandler = useEventHandler();

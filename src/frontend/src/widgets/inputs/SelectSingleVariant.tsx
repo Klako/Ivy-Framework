@@ -20,6 +20,7 @@ import { xIconVariant } from "@/components/ui/input/text-input-variant";
 import { getWidth, inputStyles } from "@/lib/styles";
 import { SelectInputWidgetProps } from "./select-types";
 import { useSelectValueHandler } from "./select-utils";
+import { EMPTY_ARRAY } from "@/lib/constants";
 
 export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
   id,
@@ -27,7 +28,7 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
   value,
   disabled = false,
   invalid,
-  options = [],
+  options = EMPTY_ARRAY,
   eventHandler,
   nullable = false,
   searchable = false,
@@ -38,7 +39,7 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
   density,
   "data-testid": dataTestId,
   width,
-  events = [],
+  events = EMPTY_ARRAY,
 }) => {
   const validOptions = options.filter(
     (option) => option.value != null && option.value.toString().trim() !== "",

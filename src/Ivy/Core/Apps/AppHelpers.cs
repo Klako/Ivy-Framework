@@ -2,8 +2,6 @@ using System.Reflection;
 
 namespace Ivy.Core.Apps;
 
-using Ivy;
-
 public static class AppHelpers
 {
     public static AppDescriptor[] GetApps(Assembly? assembly = null)
@@ -85,33 +83,5 @@ public static class AppHelpers
             return null;
 
         return parts[(index + 1)..].Select(global::Ivy.StringHelper.TitleCaseToReadable).ToArray();
-    }
-
-    public static void RegisterBeacons(Assembly assembly, NavigationBeaconRegistry registry)
-    {
-        foreach (var type in assembly.GetLoadableTypes())
-        {
-            var appAttr = type.GetCustomAttribute<AppAttribute>();
-            if (appAttr == null) continue;
-
-            var beaconAttrs = type.GetCustomAttributes<NavigationBeaconAttribute>();
-            foreach (var attr in beaconAttrs)
-            {
-                var method = type.GetMethod(attr.FactoryMethodName,
-                    BindingFlags.Public | BindingFlags.Static);
-                if (method == null)
-                    throw new InvalidOperationException(
-                        $"Static method '{attr.FactoryMethodName}' not found on '{type.FullName}'.");
-
-                var beacon = method.Invoke(null, null)
-                    ?? throw new InvalidOperationException(
-                        $"Beacon factory '{attr.FactoryMethodName}' on '{type.FullName}' returned null.");
-
-                var registerMethod = typeof(NavigationBeaconRegistry)
-                    .GetMethod(nameof(NavigationBeaconRegistry.Register))!
-                    .MakeGenericMethod(attr.EntityType);
-                registerMethod.Invoke(registry, [beacon]);
-            }
-        }
     }
 }

@@ -1077,7 +1077,7 @@ public static class WebApplicationExtensions
 
             if (Directory.Exists(physicalPath))
             {
-                Console.WriteLine($"[DEBUG] Serving frontend assets from physical path: {Path.GetFullPath(physicalPath)}");
+                logger.LogDebug("Serving frontend assets from physical path: {PhysicalPath}", Path.GetFullPath(physicalPath));
                 app.UseStaticFiles(new StaticFileOptions
                 {
                     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Path.GetFullPath(physicalPath)),
@@ -1086,7 +1086,12 @@ public static class WebApplicationExtensions
             }
             else
             {
-                Console.WriteLine($"[DEBUG] Frontend physical path NOT FOUND: {Path.GetFullPath(physicalPath)} (CWD: {Directory.GetCurrentDirectory()})");
+                // Only log if CWD looks like it's inside the Ivy-Framework tree
+                var cwd = Directory.GetCurrentDirectory();
+                if (cwd.Contains("Ivy-Framework", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogDebug("Frontend physical path not found: {PhysicalPath} (CWD: {Cwd})", Path.GetFullPath(physicalPath), cwd);
+                }
             }
         }
         catch { /* fallback to embedded resources */ }

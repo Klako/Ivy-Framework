@@ -58,7 +58,7 @@ public record ServerArgs
     public bool FindAvailablePort { get; set; } = false;
 #endif
     public string? Host { get; set; } = null;
-    public string? PathBase { get; set; } = null;
+    public string? BasePath { get; set; } = null;
 
     /// <summary>
     /// True when the process is running a CLI-only command (--describe, --describe-connection, --test-connection)
@@ -774,10 +774,10 @@ public class Server
         forwardedHeadersOptions.KnownProxies.Clear();
         app.UseForwardedHeaders(forwardedHeadersOptions);
 
-        if (!string.IsNullOrEmpty(_args.PathBase))
+        if (!string.IsNullOrEmpty(_args.BasePath))
         {
-            Console.WriteLine($"Using base path: {_args.PathBase}");
-            app.UsePathBase(_args.PathBase);
+            Console.WriteLine($"Using base path: {_args.BasePath}");
+            app.UsePathBase(_args.BasePath);
         }
 
         app.UseRouting(); // First routing pass - match explicit routes (gRPC, controllers)

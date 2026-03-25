@@ -18,19 +18,19 @@ public class PathBaseFilter : IHtmlFilter
 {
     public void Process(HtmlPipelineContext context, XDocument document)
     {
-        var pathBase = context.ServerArgs.PathBase;
+        var basePath = context.ServerArgs.BasePath;
         var head = document.Root?.Element("head");
         if (head == null) return;
 
-        if (string.IsNullOrEmpty(pathBase))
+        if (string.IsNullOrEmpty(basePath))
         {
-            // No path base: inject <base href="/"> so relative asset paths (./assets/...)
+            // No base path: inject <base href="/"> so relative asset paths (./assets/...)
             // resolve from root even when the browser URL has path segments.
             head.AddFirst(new XElement("base", new XAttribute("href", "/")));
         }
         else
         {
-            var trimmed = pathBase.TrimEnd('/');
+            var trimmed = basePath.TrimEnd('/');
             head.AddFirst(new XElement("meta",
                 new XAttribute("name", "ivy-path-base"),
                 new XAttribute("content", trimmed)));

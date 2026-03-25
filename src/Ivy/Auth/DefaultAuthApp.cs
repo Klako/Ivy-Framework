@@ -146,9 +146,9 @@ public class OAuthFlowView(AuthOption option) : ViewBase
         var state = this.UseState(() => registry.RegisterPending(args.ConnectionId, option.Id ?? ""));
 
         // Build OAuth URI with path base prefix if present
-        var oauthPath = string.IsNullOrEmpty(args.PathBase)
+        var oauthPath = string.IsNullOrEmpty(args.BasePath)
             ? "/ivy/auth/oauth-login"
-            : $"/{args.PathBase}/ivy/auth/oauth-login";
+            : $"/{args.BasePath}/ivy/auth/oauth-login";
 
         var oauthUriBuilder = new UriBuilder($"{args.BaseUrl}{oauthPath}")
         {

@@ -930,14 +930,21 @@ const SliderVariant: React.FC<SelectInputWidgetProps & { eventHandler: EventHand
       className={cn(
         "relative w-full flex-1 flex flex-col gap-1 pt-6 pb-2 my-auto justify-center",
         ghost && "border-transparent shadow-none",
+        disabled && "opacity-50 cursor-not-allowed",
       )}
       style={width ? getWidth(width) : undefined}
       data-testid={dataTestId}
-      onBlur={() => {
-        if (events.includes("OnBlur")) eventHandler("OnBlur", id, []);
+      onBlur={(e) => {
+        if (disabled) return;
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          if (events.includes("OnBlur")) eventHandler("OnBlur", id, []);
+        }
       }}
-      onFocus={() => {
-        if (events.includes("OnFocus")) eventHandler("OnFocus", id, []);
+      onFocus={(e) => {
+        if (disabled) return;
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          if (events.includes("OnFocus")) eventHandler("OnFocus", id, []);
+        }
       }}
       tabIndex={disabled ? -1 : 0}
     >

@@ -1,3 +1,4 @@
+import { Densities } from "@/types/density";
 import Icon from "@/components/Icon";
 import { useEventHandler } from "@/components/event-handler";
 import { getHeight, getWidth } from "@/lib/styles";
@@ -12,6 +13,7 @@ interface CalloutWidgetProps {
   title?: string;
   children?: React.ReactNode;
   variant?: "Info" | "Success" | "Warning" | "Error" | "Destructive";
+  density?: Densities;
   width?: string;
   height?: string;
   icon?: string;
@@ -57,6 +59,7 @@ export const CalloutWidget: React.FC<CalloutWidgetProps> = ({
   title,
   children,
   variant = "Info",
+  density = Densities.Medium,
   icon,
   width,
   height,
@@ -77,17 +80,29 @@ export const CalloutWidget: React.FC<CalloutWidgetProps> = ({
   const variantKey = variant || "Info";
   const variantStyles = calloutVariant[variantKey];
 
+  const isSmall = density === Densities.Small;
+  const isLarge = density === Densities.Large;
+
+  const iconSize = isSmall ? "20" : isLarge ? "32" : "24";
+  const paddingClass = isSmall ? "py-2.5 px-3" : isLarge ? "py-6 px-6" : "py-4 px-4";
+  const iconAlignmentClass = isSmall ? "mt-0.5" : isLarge ? "mt-1.5" : "mt-0.5";
+
   return (
     <div
       style={styles}
       className={cn(
-        "flex items-start px-4 py-4 text-large-body rounded-box border transition-colors relative",
+        "flex items-start text-large-body rounded-box border transition-colors relative",
+        paddingClass,
         variantStyles.container,
       )}
       role="alert"
     >
       {icon && (
-        <Icon size="30" name={icon} className={cn("mr-4 shrink-0 -mt-1", variantStyles.icon)} />
+        <Icon
+          size={iconSize}
+          name={icon}
+          className={cn("mr-4 shrink-0 opacity-90", iconAlignmentClass, variantStyles.icon)}
+        />
       )}
       <span className="sr-only">{variant}</span>
       <div className="flex flex-col min-w-0 flex-1">

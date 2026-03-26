@@ -9,7 +9,8 @@ public class CalloutApp : SampleBase
         return Layout.Tabs(
             new Tab("Variants", new CalloutVariantsExample()),
             new Tab("Closable", new CalloutClosableExample()),
-            new Tab("Multi-line", new CalloutMultiLineExample())
+            new Tab("Multi-line", new CalloutMultiLineExample()),
+            new Tab("Density", new CalloutDensityExample())
         ).Variant(TabsVariant.Content);
     }
 }
@@ -75,5 +76,25 @@ public class CalloutMultiLineExample : ViewBase
                 "This helps maintain visual balance even when the content is extensive.",
                 variant: CalloutVariant.Warning
             );
+    }
+}
+
+public class CalloutDensityExample : ViewBase
+{
+    public override object? Build()
+    {
+        return Layout.Vertical().Gap(6)
+            | Text.H3("Small Density")
+            | Layout.Vertical().Gap(2)
+                | Callout.Info("This is a small density callout. Ideal for tight layouts.", "Small Info").Small()
+                | Callout.Warning("Warning in small density.").Small()
+            | Text.H3("Medium Density (Default)")
+            | Layout.Vertical().Gap(2)
+                | Callout.Info("This is the default medium density callout.", "Medium Info").Medium()
+                | Callout.Warning("Warning in medium density.").Medium()
+            | Text.H3("Large Density")
+            | Layout.Vertical().Gap(2)
+                | Callout.Info("This is a large density callout for high-impact zones.", "Large Info").Large()
+                | Callout.Warning("Warning in large density.").Large();
     }
 }

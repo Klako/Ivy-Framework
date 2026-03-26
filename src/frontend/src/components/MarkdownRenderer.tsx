@@ -10,7 +10,7 @@ import "katex/dist/katex.min.css";
 import { cn, getIvyHost, convertAppUrlToPath } from "@/lib/utils";
 import {
   validateLinkUrl,
-  validateImageUrl,
+  validateMediaUrl,
   isExternalUrl,
   isAnchorLink,
   isAppProtocol,
@@ -29,13 +29,18 @@ import { Components } from "react-markdown";
 interface MarkdownRendererProps {
   content: string;
   onLinkClick?: (url: string) => void;
+  dangerouslyAllowLocalFiles?: boolean;
 }
 
 const hasContentFeature = (content: string, feature: RegExp): boolean => {
   return feature.test(content);
 };
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onLinkClick }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
+  content,
+  onLinkClick,
+  dangerouslyAllowLocalFiles = false,
+}) => {
   const typography = useTypography();
   const contentFeatures = useMemo(
     () => ({
@@ -158,15 +163,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onLinkClic
             return null;
           }
 
-          // Validate and sanitize image URL to prevent open redirect vulnerabilities
-          const validatedSrc = validateImageUrl(src);
+          // Validate and sanitize image URL with optional local file support
+          const validatedSrc = validateMediaUrl(src, {
+            mediaType: "image",
+            dangerouslyAllowLocalFiles,
+          });
           if (!validatedSrc) {
-            // Invalid URL, don't render image (return null to prevent any rendering)
+            // Invalid URL, don't render image
             return null;
           }
 
           // Construct the final image source URL
-          const imageSrc = validatedSrc.match(/^(https?:\/\/|data:|blob:|app:)/i)
+          // For file:// URLs, use them directly (no Ivy host prefix)
+          const imageSrc = validatedSrc.match(/^(https?:\/\/|data:|blob:|app:|file:)/i)
             ? validatedSrc
             : (() => {
                 const normalizedSrc = validatedSrc.startsWith("/")
@@ -249,6 +258,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onLinkClic
       typography.hr,
       typography.details,
       typography.summary,
+      dangerouslyAllowLocalFiles,
     ],
   );
 

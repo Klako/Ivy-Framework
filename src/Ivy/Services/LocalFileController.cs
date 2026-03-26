@@ -7,7 +7,21 @@ namespace Ivy;
 [Route("ivy/local-file")]
 public class LocalFileController(Server server) : Controller
 {
-    private static readonly FileExtensionContentTypeProvider ContentTypeProvider = new();
+    private static readonly FileExtensionContentTypeProvider ContentTypeProvider = CreateContentTypeProvider();
+
+    private static FileExtensionContentTypeProvider CreateContentTypeProvider()
+    {
+        var provider = new FileExtensionContentTypeProvider();
+
+        // Add mappings not included by default
+        provider.Mappings[".webp"] = "image/webp";
+        provider.Mappings[".avif"] = "image/avif";
+        provider.Mappings[".webm"] = "video/webm";
+        provider.Mappings[".md"] = "text/markdown";
+        provider.Mappings[".jsonl"] = "application/jsonl";
+
+        return provider;
+    }
 
     [HttpGet]
     public IActionResult GetFile([FromQuery] string? path)
@@ -24,6 +38,9 @@ public class LocalFileController(Server server) : Controller
 
         if (!ContentTypeProvider.TryGetContentType(fullPath, out var contentType))
             contentType = "application/octet-stream";
+
+        var fileName = Path.GetFileName(fullPath);
+        Response.Headers.ContentDisposition = $"inline; filename=\"{fileName}\"";
 
         return PhysicalFile(fullPath, contentType);
     }

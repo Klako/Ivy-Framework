@@ -7,7 +7,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import "katex/dist/katex.min.css";
-import { cn, getIvyHost, convertAppUrlToPath } from "@/lib/utils";
+import { cn, getIvyHost, convertAppUrlToPath, isLocalFilesEnabled } from "@/lib/utils";
 import {
   validateLinkUrl,
   validateMediaUrl,
@@ -175,7 +175,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
           // Construct the final image source URL
           // For file:// URLs, use them directly (no Ivy host prefix)
-          const imageSrc = validatedSrc.match(/^(https?:\/\/|data:|blob:|app:|file:)/i)
+          const imageSrc = validatedSrc.match(/^(https?:\/\/|data:|blob:|app:)/i)
             ? validatedSrc
             : (() => {
                 const normalizedSrc = validatedSrc.startsWith("/")
@@ -368,16 +368,43 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     emoji: ({ name }: { name: string }) => <CustomEmoji name={name} />,
   };
 
-  const urlTransform = useCallback((url: string) => {
-    if (url.startsWith("app://")) {
-      return url;
-    }
-    // Validate URL before transforming to prevent open redirect vulnerabilities
-    // validateLinkUrl always returns a string ('#' for invalid URLs)
-    const validatedUrl = validateLinkUrl(url);
-    // defaultUrlTransform handles all valid URLs, and '#' for invalid URLs
-    return defaultUrlTransform(validatedUrl);
-  }, []);
+  const urlTransform = useCallback(
+    (url: string) => {
+      if (url.startsWith("app://")) {
+        return url;
+      }
+      // Allow file:// URLs and Windows paths when local files are enabled
+      if (
+        dangerouslyAllowLocalFiles &&
+        (url.startsWith("file://") || /^[a-zA-Z]:[\\/]/.test(url))
+      ) {
+        if (isLocalFilesEnabled()) {
+          // Server supports local file proxy - use /ivy/local-file endpoint
+          let filePath: string;
+          if (url.startsWith("file:///")) {
+            filePath = decodeURIComponent(url.slice(8));
+          } else if (url.startsWith("file://")) {
+            filePath = decodeURIComponent(url.slice(7));
+          } else {
+            filePath = url.replace(/\\/g, "/");
+          }
+          return `/ivy/local-file?path=${encodeURIComponent(filePath)}`;
+        }
+        // Fallback: pass file:// URL through (browser will likely block it)
+        if (/^[a-zA-Z]:[\\/]/.test(url)) {
+          const normalized = url.replace(/\\/g, "/");
+          return `file:///${normalized}`;
+        }
+        return url;
+      }
+      // Validate URL before transforming to prevent open redirect vulnerabilities
+      // validateLinkUrl always returns a string ('#' for invalid URLs)
+      const validatedUrl = validateLinkUrl(url);
+      // defaultUrlTransform handles all valid URLs, and '#' for invalid URLs
+      return defaultUrlTransform(validatedUrl);
+    },
+    [dangerouslyAllowLocalFiles],
+  );
 
   return (
     <>

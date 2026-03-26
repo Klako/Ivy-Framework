@@ -81,14 +81,16 @@ export const CalloutWidget: React.FC<CalloutWidgetProps> = ({
     <div
       style={styles}
       className={cn(
-        "flex items-center px-4 text-large-body rounded-box border transition-colors relative",
+        "flex items-start px-4 py-4 text-large-body rounded-box border transition-colors relative",
         variantStyles.container,
       )}
       role="alert"
     >
-      {icon && <Icon size="30" name={icon} className={cn("mr-4 shrink-0", variantStyles.icon)} />}
+      {icon && (
+        <Icon size="30" name={icon} className={cn("mr-4 shrink-0 -mt-1", variantStyles.icon)} />
+      )}
       <span className="sr-only">{variant}</span>
-      <div className="flex flex-col min-w-0 flex-1 py-4">
+      <div className="flex flex-col min-w-0 flex-1">
         {title && <div className="font-medium leading-none mb-1">{title}</div>}
         {children && <div className="text-sm opacity-90 [&_p]:text-sm [&_p]:mb-0">{children}</div>}
       </div>

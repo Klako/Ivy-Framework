@@ -14,8 +14,6 @@ import {
   isExternalUrl,
   isAnchorLink,
   isAppProtocol,
-  isRelativePath,
-  isStandardUrl,
   extractAnchorId,
 } from "@/lib/url";
 import { useTypography } from "@/contexts/TypographyContext";
@@ -71,11 +69,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         return;
       }
 
-      // Only call backend handler for custom link handling scenarios
-      // validateLinkUrl already handles external links, anchor links, app:// URLs, and relative paths safely
-      // If the URL is one of these standard types, the browser will handle it naturally
-      // Only call onLinkClick for non-standard URLs that need custom handling
-      if (!isStandardUrl(validatedHref) && onLinkClick) {
+      // When onLinkClick is registered, intercept ALL link clicks
+      // This allows the backend handler to decide how to handle the URL
+      if (onLinkClick) {
         event.preventDefault();
         onLinkClick(validatedHref);
       }
@@ -297,7 +293,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         const isExternalLink = isExternalUrl(safeHref);
         const isAnchor = isAnchorLink(safeHref);
         const isApp = isAppProtocol(safeHref);
-        const isRelative = isRelativePath(safeHref);
 
         // Convert app:// URLs to regular paths for href attribute
         let hrefForNavigation = safeHref;
@@ -311,8 +306,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             {...props}
             className="text-primary underline underline-offset-[3px] brightness-90 hover:brightness-100"
             href={hrefForNavigation}
-            target={isExternalLink ? "_blank" : undefined}
-            rel={isExternalLink ? "noopener noreferrer" : undefined}
+            target={isExternalLink && !onLinkClick ? "_blank" : undefined}
+            rel={isExternalLink && !onLinkClick ? "noopener noreferrer" : undefined}
             onClick={
               isAnchor
                 ? (e) => {
@@ -334,9 +329,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       });
                     }
                   }
-                : isApp || isRelative
-                  ? undefined // Let browser handle navigation naturally
-                  : (e) => handleLinkClick(safeHref, e)
+                : onLinkClick
+                  ? (e) => handleLinkClick(safeHref, e)
+                  : undefined
             }
           >
             {children}

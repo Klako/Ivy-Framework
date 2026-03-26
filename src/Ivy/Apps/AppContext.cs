@@ -29,7 +29,18 @@ public class AppContext
     /// Useful for constructing absolute URLs for shareable links, webhooks, OAuth callbacks, etc.
     /// Example: "https://example.com"
     /// </summary>
-    public string BaseUrl => $"{Scheme}://{Host}";
+    public string BaseUrl
+    {
+        get
+        {
+            if (BasePath != null)
+            {
+                return $"{Scheme}://{Host}/{BasePath.Trim('/')}/";
+            }
+
+            return $"{Scheme}://{Host}";
+        }
+    }
 
     public string AppId { get; set; }
 

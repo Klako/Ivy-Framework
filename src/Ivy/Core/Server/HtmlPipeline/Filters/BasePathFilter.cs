@@ -14,7 +14,7 @@ namespace Ivy.Core.Server.HtmlPipeline.Filters;
 /// and relative assets must resolve under that prefix, so &lt;base href="/studio/"&gt; is injected
 /// along with the ivy-path-base meta tag for JS use.
 /// </summary>
-public class PathBaseFilter : IHtmlFilter
+public class BasePathFilter : IHtmlFilter
 {
     public void Process(HtmlPipelineContext context, XDocument document)
     {

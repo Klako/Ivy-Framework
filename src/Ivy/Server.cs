@@ -1130,7 +1130,7 @@ public static class WebApplicationExtensions
                 .Use<ThemeFilter>()
                 .Use<ManifestFilter>()
                 .Use<OpenGraphFilter>()
-                .Use<PathBaseFilter>();
+                .Use<BasePathFilter>();
 
             foreach (var filter in server.GetCustomFilters())
                 pipeline.Use(filter);

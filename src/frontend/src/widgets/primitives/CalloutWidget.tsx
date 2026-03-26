@@ -85,7 +85,7 @@ export const CalloutWidget: React.FC<CalloutWidgetProps> = ({
 
   const iconSize = isSmall ? "20" : isLarge ? "28" : "24";
   const paddingClass = isSmall ? "py-2.5 px-3" : isLarge ? "py-6 px-6" : "py-4 px-4";
-  const iconAlignmentClass = isSmall ? "mt-0.5" : isLarge ? "mt-0.5" : "mt-0";
+  const iconAlignmentClass = isSmall ? "mt-1" : isLarge ? "mt-1.5" : "mt-0.5";
 
   return (
     <div

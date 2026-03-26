@@ -16,7 +16,12 @@ public enum MenuItemVariant
 public enum MenuItemColor
 {
     Default,
-    Destructive
+    Destructive,
+    Primary,
+    Secondary,
+    Success,
+    Warning,
+    Info
 }
 
 public record MenuItem(
@@ -202,6 +207,31 @@ public static class MenuItemExtensions
     public static MenuItem Destructive(this MenuItem menuItem)
     {
         return menuItem with { Color = MenuItemColor.Destructive };
+    }
+
+    public static MenuItem Primary(this MenuItem menuItem)
+    {
+        return menuItem with { Color = MenuItemColor.Primary };
+    }
+
+    public static MenuItem Secondary(this MenuItem menuItem)
+    {
+        return menuItem with { Color = MenuItemColor.Secondary };
+    }
+
+    public static MenuItem Success(this MenuItem menuItem)
+    {
+        return menuItem with { Color = MenuItemColor.Success };
+    }
+
+    public static MenuItem Warning(this MenuItem menuItem)
+    {
+        return menuItem with { Color = MenuItemColor.Warning };
+    }
+
+    public static MenuItem Info(this MenuItem menuItem)
+    {
+        return menuItem with { Color = MenuItemColor.Info };
     }
 
     public static MenuItem Color(this MenuItem menuItem, MenuItemColor color)

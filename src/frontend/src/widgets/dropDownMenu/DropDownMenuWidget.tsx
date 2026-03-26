@@ -59,15 +59,14 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
       return <DropdownMenuSeparator key={sepKey} />;
     }
 
-    // Handle checkbox variant
     if (item.variant === "Checkbox") {
-      const isDestructive = item.color === "Destructive";
       return (
         <DropdownMenuItem
           key={item.label}
           onClick={() => onItemClick(item)}
           disabled={item.disabled}
-          className={`${item.checked ? "bg-accent" : ""}${isDestructive ? " text-destructive focus:text-destructive" : ""}`}
+          variant={(item.color?.toLowerCase() as any) || "default"}
+          className={item.checked ? "bg-accent" : ""}
         >
           {item.icon && <Icon name={item.icon} size={14} />}
           {item.label}
@@ -77,15 +76,14 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
       );
     }
 
-    // Handle radio variant
     if (item.variant === "Radio") {
-      const isDestructive = item.color === "Destructive";
       return (
         <DropdownMenuItem
           key={item.label}
           onClick={() => onItemClick(item)}
           disabled={item.disabled}
-          className={`${item.checked ? "bg-accent" : ""}${isDestructive ? " text-destructive focus:text-destructive" : ""}`}
+          variant={(item.color?.toLowerCase() as any) || "default"}
+          className={item.checked ? "bg-accent" : ""}
         >
           {item.icon && <Icon name={item.icon} size={14} />}
           {item.label}
@@ -101,7 +99,7 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
         <DropdownMenuSub key={item.label}>
           <DropdownMenuSubTrigger
             disabled={item.disabled}
-            className={item.color === "Destructive" ? "text-destructive focus:text-destructive" : ""}
+            variant={(item.color?.toLowerCase() as any) || "default"}
           >
             {item.icon && <Icon name={item.icon} size={14} />}
             {item.label}
@@ -122,7 +120,7 @@ const DropDownMenuItemGroup = ({ items, onItemClick }: DropDownMenuItemGroupProp
         key={item.label}
         onClick={() => onItemClick(item)}
         disabled={item.disabled}
-        className={item.color === "Destructive" ? "text-destructive focus:text-destructive" : ""}
+        variant={(item.color?.toLowerCase() as any) || "default"}
       >
         {item.icon && <Icon name={item.icon} size={14} />}
         {item.label}

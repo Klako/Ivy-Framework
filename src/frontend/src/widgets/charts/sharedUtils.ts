@@ -33,12 +33,27 @@ export const generateDataProps = (data: Record<string, unknown>[]) => {
   if (data.length === 0) {
     return { categoryKey: "", categories: [], valueKeys: [] };
   }
-  const categoryKey = Object.keys(data[0]).find((k) => typeof data[0][k] === "string");
+
+  // Find the category key (dimension) - prioritize strings, but accept other types
+  // Assumption: the dimension is typically the first non-numeric key, or the first key overall
+  const keys = Object.keys(data[0]);
+  let categoryKey = keys.find((k) => typeof data[0][k] === "string");
+
+  // If no string key found, use the first key (handles integer years, dates, etc.)
+  if (!categoryKey && keys.length > 0) {
+    categoryKey = keys[0];
+  }
+
   if (!categoryKey) {
     return { categoryKey: "", categories: [], valueKeys: [] };
   }
-  const categories = data.map((d) => d[categoryKey] as string);
-  const valueKeys = Object.keys(data[0]).filter((k) => typeof data[0][k] === "number");
+
+  // Extract categories - convert all values to strings for display
+  const categories = data.map((d) => String(d[categoryKey]));
+
+  // Value keys are all numeric fields except the category key
+  const valueKeys = keys.filter((k) => k !== categoryKey && typeof data[0][k] === "number");
+
   const allValues = data.flatMap((d) =>
     Object.values(d).filter((v) => typeof v === "number"),
   ) as number[];

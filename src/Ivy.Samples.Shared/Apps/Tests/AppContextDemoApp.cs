@@ -10,7 +10,7 @@ public class AppContextDemoApp : ViewBase
         return Layout.Vertical().Gap(4).Padding(4)
             | Text.H1("App Context Demo")
             | Text.Lead("This application displays the current runtime environment information provided by the AppContext.")
-            
+
             | new Card(
                 Layout.Vertical().Gap(2)
                 | new { Property = "AppId", Value = context.AppId }.ToDetails()
@@ -18,7 +18,7 @@ public class AppContextDemoApp : ViewBase
                 | new { Property = "ConnectionId", Value = context.ConnectionId }.ToDetails()
                 | new { Property = "MachineId", Value = context.MachineId }.ToDetails()
             ).Title("Identification").Description("Identifiers for the current app, session and client.")
-            
+
             | new Card(
                 Layout.Vertical().Gap(2)
                 | new { Property = "Scheme", Value = context.Scheme }.ToDetails()
@@ -26,7 +26,7 @@ public class AppContextDemoApp : ViewBase
                 | new { Property = "BasePath", Value = context.BasePath ?? "(none)" }.ToDetails()
                 | new { Property = "BaseUrl", Value = context.BaseUrl }.ToDetails()
             ).Title("Hosting").Description("Information about how and where the application is hosted.")
-            
+
             | new Card(
                 Layout.Vertical().Gap(2)
                 | Text.P("You can access these values in the frontend using Ivy's utility functions:")

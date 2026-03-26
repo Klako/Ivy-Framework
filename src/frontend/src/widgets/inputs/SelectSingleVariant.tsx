@@ -141,7 +141,14 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
     >
       <SelectValue placeholder={placeholder} />
       {((nullable && hasValue && !disabled) || invalid || loading) && (
-        <div className="flex items-center gap-1 px-1 ml-auto shrink-0">
+        <div
+          className="flex items-center gap-1 px-1 ml-auto shrink-0"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
           {loading && (
             <div className="flex items-center h-6">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground text-opacity-50" />
@@ -170,7 +177,7 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
             </div>
           )}
           {invalid && (
-            <div className="flex items-center h-6">
+            <div className="flex items-center h-6 cursor-default">
               <InvalidIcon message={invalid} />
             </div>
           )}

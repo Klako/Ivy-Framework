@@ -44,7 +44,14 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
     (option) => option.value != null && option.value.toString().trim() !== "",
   );
 
-  const handleValueChange = useSelectValueHandler(id, value, validOptions, eventHandler, false);
+  const handleValueChange = useSelectValueHandler(
+    id,
+    value,
+    validOptions,
+    eventHandler,
+    false,
+    nullable,
+  );
 
   const stringValue =
     value != null && value.toString().trim() !== "" ? value.toString() : undefined;

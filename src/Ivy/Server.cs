@@ -277,7 +277,7 @@ public class Server
         try
         {
             // Load all "Ivy.Auth.*" assemblies eagerly to ensure their handlers are registered in the DI container
-            var assemblyDirectory = AppContext.BaseDirectory;
+            var assemblyDirectory = System.AppContext.BaseDirectory;
             if (!string.IsNullOrEmpty(assemblyDirectory))
             {
                 var authAssemblyFiles = Directory.GetFiles(assemblyDirectory, "Ivy.Auth.*.dll");

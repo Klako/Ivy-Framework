@@ -262,8 +262,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   // Memoize code component separately (depends on contentFeatures.hasCodeBlocks and hasMermaid)
   const codeComponent = useMemo(
     () => ({
-      code: memo((props: React.ComponentProps<"code"> & { inline?: boolean }) => {
-        const { children, className, inline } = props;
+      code: memo((props: React.ComponentProps<"code">) => {
+        const { children, className } = props;
+        const inline = !className;
 
         // Detect Icons.X pattern in inline code
         if (inline) {

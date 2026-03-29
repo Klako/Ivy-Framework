@@ -22,6 +22,7 @@ import { remarkCustomEmojiPlugin } from "./custom-emojis/remarkCustomEmojiPlugin
 
 import { ImageOverlay } from "./markdown/ImageOverlay";
 import { CodeBlock } from "./markdown/CodeBlock";
+import Icon from "@/components/Icon";
 import { Components } from "react-markdown";
 
 interface MarkdownRendererProps {
@@ -261,8 +262,24 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   // Memoize code component separately (depends on contentFeatures.hasCodeBlocks and hasMermaid)
   const codeComponent = useMemo(
     () => ({
-      code: memo((props: React.ComponentProps<"code"> & { inline?: boolean }) => {
-        const { children, className, inline } = props;
+      code: memo((props: React.ComponentProps<"code">) => {
+        const { children, className } = props;
+        const inline = !className;
+
+        // Detect Icons.X pattern in inline code
+        if (inline) {
+          const text = String(children);
+          const iconMatch = text.match(/^Icons\.([A-Z][a-zA-Z0-9]*)$/);
+          if (iconMatch) {
+            return (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25em" }}>
+                <code className={typography.code}>{children}</code>
+                <Icon name={iconMatch[1]} size="1em" />
+              </span>
+            );
+          }
+        }
+
         return (
           <CodeBlock
             className={className}
@@ -275,7 +292,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         );
       }),
     }),
-    [contentFeatures.hasCodeBlocks, contentFeatures.hasMermaid],
+    [contentFeatures.hasCodeBlocks, contentFeatures.hasMermaid, typography.code],
   );
 
   // Memoize link component separately (depends on handleLinkClick)

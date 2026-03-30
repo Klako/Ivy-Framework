@@ -723,6 +723,28 @@ foreach (var fact in favorites)
 c496d3d8-c090-44b5-9551-4cdf3b0aca06
 4f66c0f1-5fc5-44aa-b62a-f3592bfec1dc
 
+## Align used where TextAlignment expected — type confusion
+
+**Hallucinated API:**
+
+```csharp
+Text.H1("0").Align(Align.Right)  // passing Ivy.Align instead of Ivy.TextAlignment
+```
+
+**Error:** `CS1503: Argument 1: cannot convert from 'Ivy.Align' to 'Ivy.TextAlignment'`
+
+**Correct API:**
+
+```csharp
+Text.H1("0").Align(TextAlignment.Right)
+```
+
+`Align` (layout alignment for positioning elements) and `TextAlignment` (text alignment within a text block) are two different enums. `Align` has values like `TopLeft`, `Center`, `Stretch`, etc. `TextAlignment` has values `Left`, `Center`, `Right`, `Justify`. Methods accepting text alignment require `TextAlignment`, not `Align`.
+
+**Found In:**
+2739aa95-7d5b-481b-a456-af895e6268df
+818a3388-f1c8-4206-a44c-303b0fa481fa
+
 ## FileInput.MaxFiles(n) on single-file state — runtime error
 
 **Hallucinated API:**
@@ -2502,27 +2524,6 @@ b.Func<PayrollRow, double>(row => new Text($"{row.TotalHours:F1}h"))
 
 **Found In:**
 8b576f86-85cc-43b8-97e2-358bae83464a
-
-## Align used where TextAlignment expected — type confusion
-
-**Hallucinated API:**
-
-```csharp
-Text.H1("0").Align(Align.Right)  // passing Ivy.Align instead of Ivy.TextAlignment
-```
-
-**Error:** `CS1503: Argument 1: cannot convert from 'Ivy.Align' to 'Ivy.TextAlignment'`
-
-**Correct API:**
-
-```csharp
-Text.H1("0").Align(TextAlignment.Right)
-```
-
-`Align` (layout alignment for positioning elements) and `TextAlignment` (text alignment within a text block) are two different enums. `Align` has values like `TopLeft`, `Center`, `Stretch`, etc. `TextAlignment` has values `Left`, `Center`, `Right`, `Justify`. Methods accepting text alignment require `TextAlignment`, not `Align`.
-
-**Found In:**
-2739aa95-7d5b-481b-a456-af895e6268df
 
 ## Separator() — constructor invoked without `new`
 

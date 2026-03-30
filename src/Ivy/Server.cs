@@ -59,6 +59,10 @@ public record ServerArgs
     public bool FindAvailablePort { get; set; } = false;
 #endif
     public string? Host { get; set; } = null;
+
+    /// <summary>
+    /// Base path for the application when running behind a reverse proxy (e.g., "/myapp").
+    /// </summary>
     public string? BasePath { get; set; } = null;
 
     /// <summary>
@@ -108,6 +112,11 @@ public class Server
         if (_args.Host == null && Environment.GetEnvironmentVariable("HOST") is { } host)
         {
             _args = _args with { Host = host };
+        }
+
+        if (_args.BasePath == null && Environment.GetEnvironmentVariable("BASE_PATH") is { } basePath)
+        {
+            _args = _args with { BasePath = basePath };
         }
 
         _args = _args with

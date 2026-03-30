@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using MessagePack.Formatters;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
@@ -10,24 +11,6 @@ namespace Ivy.Core.Sync
 {
     internal class WidgetSerializer : IMessagePackFormatter<IWidget>
     {
-        private static bool ValuesAreEqual(object? a, object? b)
-        {
-            if (Equals(a, b)) return true;
-
-            if (a is Array arrA && b is Array arrB)
-            {
-                if (arrA.Length != arrB.Length) return false;
-                for (int i = 0; i < arrA.Length; i++)
-                {
-                    if (!ValuesAreEqual(arrA.GetValue(i), arrB.GetValue(i)))
-                        return false;
-                }
-                return true;
-            }
-
-            return false;
-        }
-
         public void Serialize(ref MessagePackWriter writer, IWidget widget, MessagePackSerializerOptions options)
         {
             var metadata = WidgetMetadata.FromWidgetType(widget.GetType());
@@ -51,7 +34,7 @@ namespace Ivy.Core.Sync
                 // Skip properties that match their default values (unless AlwaysSerialize is set)
                 if (!propMetadata.AlwaysSerialize && propMetadata.DefaultValue != null)
                 {
-                    if (ValuesAreEqual(value, propMetadata.DefaultValue))
+                    if (StructuralComparisons.StructuralEqualityComparer.Equals(value, propMetadata.DefaultValue))
                         continue;
                 }
                 if (value != null)

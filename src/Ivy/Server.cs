@@ -116,7 +116,8 @@ public class Server
         };
 
         Services.AddSingleton(_args);
-        Services.AddSingleton(Configuration);
+        // capture the latest Configuration value at resolution time in case it gets replaced by UseConfiguration()
+        Services.AddSingleton(_ => Configuration);
 
         AddDefaultApps();
     }

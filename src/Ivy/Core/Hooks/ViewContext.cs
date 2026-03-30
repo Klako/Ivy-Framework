@@ -15,7 +15,6 @@ public class ViewContext : IViewContext
     private readonly AsyncDisposables _asyncDisposables = new();
     private readonly Dictionary<int, StateHook> _hooks = new();
     private readonly Dictionary<int, EffectHook> _effects = new();
-    private readonly Dictionary<int, ContextHook> _contextHooks = new();
     private readonly EffectQueue _effectQueue;
     private readonly IServiceContainer _services;
     private readonly HashSet<Type> _registeredServices;
@@ -152,39 +151,16 @@ public class ViewContext : IViewContext
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        var callingIndex = _callingIndex++;
         var type = typeof(T);
 
-        if (_contextHooks.TryGetValue(callingIndex, out var existingHook))
+        if (_registeredServices.Contains(type))
         {
-            // Re-evaluate factory to get fresh context with updated state
-            T newContext = factory()!;
-            existingHook.UpdateInstance(newContext);
-
-            // Update service container so UseContext finds the new instance
-            var services = (_services as ServiceContainer)!;
-            services.RemoveService(type);
-            services.AddService(type, newContext);
-
-            return newContext;
+            return (T)_services.GetService(type)!;
         }
 
-        // First call at this position - create new context hook
         T context = factory()!;
-        var hook = new ContextHook(callingIndex, type, context);
-        _contextHooks[callingIndex] = hook;
-
-        if (!_registeredServices.Contains(type))
-        {
-            _services.AddService(type, context);
-            _registeredServices.Add(type);
-        }
-        else
-        {
-            var services = (_services as ServiceContainer)!;
-            services.RemoveService(type);
-            services.AddService(type, context);
-        }
+        _services.AddService(type, context);
+        _registeredServices.Add(type);
 
         if (context is IDisposable disposable)
         {
@@ -322,12 +298,7 @@ public class ViewContext : IViewContext
     {
         _disposables.Dispose();
         await _asyncDisposables.DisposeAsync();
-
-        foreach (var hook in _contextHooks.Values)
-            hook.Dispose();
-
         _hooks.Clear();
         _effects.Clear();
-        _contextHooks.Clear();
     }
 }

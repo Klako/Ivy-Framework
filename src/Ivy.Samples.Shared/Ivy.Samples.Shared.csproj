@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Ivy.XamlBuilder/Ivy.XamlBuilder.csproj" />
-    <ProjectReference Include="../widgets/Ivy.Widgets.DiffView/Ivy.Widgets.DiffView.csproj" />
   </ItemGroup>
   
   <!-- enable ivy analyzer for samples -->

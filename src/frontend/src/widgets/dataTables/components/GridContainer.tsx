@@ -114,6 +114,7 @@ export const GridContainer: React.FC<GridContainerProps> = ({
         display: "flex",
         flexDirection: "column",
         position: "relative",
+        overflow: "hidden",
       }}
       data-has-empty-rows={hasEmptyRows || undefined}
     >

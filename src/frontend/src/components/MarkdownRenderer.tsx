@@ -133,9 +133,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       )),
       li: memo(({ children, className }: { children: React.ReactNode; className?: string }) => {
         const isTaskItem = className?.includes("task-list-item");
-        return (
-          <li className={cn(typography.li, isTaskItem && "list-none")}>{children}</li>
-        );
+        return <li className={cn(typography.li, isTaskItem && "list-none")}>{children}</li>;
       }),
       strong: memo(({ children }: { children: React.ReactNode }) => (
         <strong className={typography.strong}>{children}</strong>

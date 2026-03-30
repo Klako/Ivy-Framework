@@ -330,7 +330,14 @@ userNameState.ToTextInput().Required().MaxLength(50).Placeholder("Enter your nam
 
 ## CLI Commands
 
-Prefer using `ivy cli explain` for command discovery over MCP server tools as it provides a reliable, built-in structural breakdown.
+The Ivy CLI provides powerful tools for exploring framework documentation and getting contextual answers:
+
+- `ivy docs list` — list all available documentation paths
+- `ivy docs <path>` — retrieve raw Markdown content for a specific doc page
+- `ivy ask "question"` — semantic search against the framework knowledge base (alias: `ivy question`)
+- `ivy cli explain` — structural breakdown of available CLI commands
+
+For detailed usage and examples, see [src/skills/ivy/SKILLS.md](src/skills/ivy/SKILLS.md).
 
 ## Further Reading
 

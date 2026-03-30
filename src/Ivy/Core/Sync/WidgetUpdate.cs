@@ -10,9 +10,9 @@ namespace Ivy.Core.Sync
     internal record WidgetUpdate(
         Type? type = null,
         string? id = null,
-        Dictionary<string, object>? props = null,
+        IDictionary<string, object?>? props = null,
         string[]? events = null,
-        IWidgetListDiff? children = null)
+        WidgetListDiff? children = null)
     {
         [Key(0)]
         [MessagePackFormatter(typeof(WidgetTypeFormatter))]
@@ -22,13 +22,13 @@ namespace Ivy.Core.Sync
         public string? Id { get; init; } = id;
 
         [Key(2)]
-        public Dictionary<string, object>? Props { get; init; } = props;
+        public IDictionary<string, object?>? Props { get; init; } = props;
 
         [Key(3)]
         public string[]? Events { get; init; } = events;
 
         [Key(4)]
-        public IWidgetListDiff? Children { get; init; } = children;
+        public WidgetListDiff? Children { get; init; } = children;
 
         private class WidgetTypeFormatter : IMessagePackFormatter<Type>
         {
@@ -50,15 +50,15 @@ namespace Ivy.Core.Sync
     }
 
     [MessagePackObject]
-    internal record IWidgetListDiff(
-        IWidgetListComplexOperation[]? complexOperations = null,
-        IWidgetListOperation[]? operations = null)
+    internal record WidgetListDiff(
+        IWidgetListComplexOperation[]? complexChanges = null,
+        IWidgetListOperation[]? changes = null)
     {
         [Key(0)]
-        public IWidgetListComplexOperation[]? ComplexOperations { get; init; } = complexOperations;
+        public IWidgetListComplexOperation[]? ComplexChanges { get; init; } = complexChanges;
 
         [Key(1)]
-        public IWidgetListOperation[]? Operations { get; init; } = operations;
+        public IWidgetListOperation[]? Changes { get; init; } = changes;
     }
 
     [Union(0, typeof(WidgetListUpdate))]

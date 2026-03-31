@@ -20,7 +20,8 @@ import {
 import { useEventHandler } from "@/components/event-handler";
 import type { HoverEffect } from "@/widgets/primitives/BoxWidget";
 import { cardStyles } from "@/widgets/card/styles";
-import React, { useCallback } from "react";
+import { ImageOverlay } from "@/components/markdown/ImageOverlay";
+import React, { useCallback, useState } from "react";
 
 interface ImageWidgetProps {
   id: string;
@@ -38,6 +39,7 @@ interface ImageWidgetProps {
   borderStyle?: BorderStyle;
   borderThickness?: string;
   hoverVariant?: HoverEffect;
+  overlay?: boolean;
 }
 
 const getImageUrl = (url: string | undefined | null): string | null => {
@@ -118,13 +120,19 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
   borderStyle = "None",
   borderThickness = "0",
   hoverVariant = "None",
+  overlay = false,
 }) => {
   const eventHandler = useEventHandler();
   const hasOnClick = events?.includes("OnClick") ?? false;
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const handleClick = useCallback(() => {
-    if (hasOnClick) eventHandler("OnClick", id, []);
-  }, [id, eventHandler, hasOnClick]);
+    if (overlay) {
+      setShowOverlay(true);
+    } else if (hasOnClick) {
+      eventHandler("OnClick", id, []);
+    }
+  }, [id, eventHandler, hasOnClick, overlay]);
 
   const outerStyles: React.CSSProperties = {
     ...getWidth(width),
@@ -163,8 +171,8 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     );
   }
 
-  // OnClick takes precedence over Link
-  const linkProps = !hasOnClick && link ? getLinkProps(link) : null;
+  // Overlay takes precedence over OnClick and Link
+  const linkProps = !overlay && !hasOnClick && link ? getLinkProps(link) : null;
 
   const altText = alt ?? caption ?? "";
 
@@ -201,29 +209,41 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     <img src={validatedImageSrc} alt={altText} style={imgStyles} />
   );
 
-  if (needsContainer || hasOnClick) {
-    const clickable = hasOnClick || linkProps;
+  const isClickable = overlay || hasOnClick || linkProps;
+
+  const overlayElement = overlay && showOverlay ? (
+    <ImageOverlay src={validatedImageSrc} alt={altText} onClose={() => setShowOverlay(false)} />
+  ) : null;
+
+  if (needsContainer || overlay || hasOnClick) {
     return (
-      <div
-        key={id}
-        style={{ ...outerStyles, ...containerStyles, ...(clickable ? { cursor: "pointer" } : {}) }}
-        className={cn(hoverClass)}
-        onClick={hasOnClick ? handleClick : undefined}
-        onKeyDown={
-          hasOnClick
-            ? (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleClick();
+      <>
+        <div
+          key={id}
+          style={{
+            ...outerStyles,
+            ...containerStyles,
+            ...(isClickable ? { cursor: overlay ? "zoom-in" : "pointer" } : {}),
+          }}
+          className={cn(hoverClass)}
+          onClick={overlay || hasOnClick ? handleClick : undefined}
+          onKeyDown={
+            overlay || hasOnClick
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleClick();
+                  }
                 }
-              }
-            : undefined
-        }
-        role={hasOnClick ? "button" : undefined}
-        tabIndex={hasOnClick ? 0 : undefined}
-      >
-        {content}
-      </div>
+              : undefined
+          }
+          role={overlay || hasOnClick ? "button" : undefined}
+          tabIndex={overlay || hasOnClick ? 0 : undefined}
+        >
+          {content}
+        </div>
+        {overlayElement}
+      </>
     );
   }
 

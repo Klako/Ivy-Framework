@@ -40,6 +40,7 @@ public record Image : WidgetBase<Image>
     [Prop] public BorderStyle BorderStyle { get; set; } = BorderStyle.None;
     [Prop] public Thickness BorderThickness { get; set; } = new(0);
     [Prop] public HoverEffect HoverVariant { get; set; } = HoverEffect.None;
+    [Prop] public bool Overlay { get; set; }
 
     [Event] public EventHandler<Event<Image>>? OnClick { get; set; }
 }

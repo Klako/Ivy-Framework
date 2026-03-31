@@ -1,5 +1,14 @@
-import { getHeight, getWidth } from "@/lib/styles";
-import { getIvyHost, convertAppUrlToPath } from "@/lib/utils";
+import {
+  BorderRadius,
+  BorderStyle,
+  getBorderStyle,
+  getBorderThickness,
+  getBoxRadius,
+  getColor,
+  getHeight,
+  getWidth,
+} from "@/lib/styles";
+import { cn, getIvyHost, convertAppUrlToPath } from "@/lib/utils";
 import {
   validateImageUrl,
   isFullUrl,
@@ -9,6 +18,8 @@ import {
   isAppProtocol,
 } from "@/lib/url";
 import { useEventHandler } from "@/components/event-handler";
+import type { BoxHoverVariant } from "@/widgets/primitives/BoxWidget";
+import { cardStyles } from "@/widgets/card/styles";
 import React, { useCallback } from "react";
 
 interface ImageWidgetProps {
@@ -21,6 +32,12 @@ interface ImageWidgetProps {
   events?: string[];
   width?: string;
   height?: string;
+  borderColor?: string;
+  borderOpacity?: number;
+  borderRadius?: BorderRadius;
+  borderStyle?: BorderStyle;
+  borderThickness?: string;
+  hoverVariant?: BoxHoverVariant;
 }
 
 const getImageUrl = (url: string | undefined | null): string | null => {
@@ -72,6 +89,19 @@ const objectFitMap: Record<string, React.CSSProperties["objectFit"]> = {
   ScaleDown: "scale-down",
 };
 
+const getHoverClass = (hoverVariant?: BoxHoverVariant): string | null => {
+  if (!hoverVariant || hoverVariant === "None") return null;
+  if (hoverVariant === "Pointer") return cardStyles.hover.pointer;
+  if (hoverVariant === "Shadow") return cardStyles.hover.shadow;
+  return cardStyles.hover.pointerAndTranslate;
+};
+
+const getBorderRadiusStyle = (borderRadius?: BorderRadius): React.CSSProperties => {
+  if (!borderRadius || borderRadius === "None") return { borderRadius: "0" };
+  if (borderRadius === "Full") return { borderRadius: "9999px" };
+  return getBoxRadius();
+};
+
 export const ImageWidget: React.FC<ImageWidgetProps> = ({
   id,
   src,
@@ -82,6 +112,12 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
   events,
   width = "MinContent",
   height = "MinContent",
+  borderColor,
+  borderOpacity,
+  borderRadius = "None",
+  borderStyle = "None",
+  borderThickness = "0",
+  hoverVariant = "None",
 }) => {
   const eventHandler = useEventHandler();
   const hasOnClick = events?.includes("OnClick") ?? false;
@@ -90,11 +126,25 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     if (hasOnClick) eventHandler("OnClick", id, []);
   }, [id, eventHandler, hasOnClick]);
 
-  const styles: React.CSSProperties = {
+  const outerStyles: React.CSSProperties = {
     ...getWidth(width),
     ...getHeight(height),
-    ...(objectFit ? { objectFit: objectFitMap[objectFit] } : {}),
   };
+
+  const hasBorder = borderStyle !== "None" || borderColor != null || borderThickness !== "0";
+  const hasHover = hoverVariant !== "None";
+  const needsContainer = hasBorder || hasHover;
+
+  const containerStyles: React.CSSProperties = needsContainer
+    ? {
+        ...getBorderStyle(borderStyle),
+        ...getBorderThickness(borderThickness),
+        ...getBorderRadiusStyle(borderRadius),
+        ...getColor(borderColor, "borderColor", "background", borderOpacity),
+        overflow: "hidden",
+        display: "inline-block",
+      }
+    : {};
 
   // getImageUrl handles null/undefined and validates the URL internally
   const validatedImageSrc = getImageUrl(src);
@@ -103,7 +153,7 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     return (
       <div
         key={id}
-        style={styles}
+        style={outerStyles}
         className="flex items-center justify-center bg-destructive/10 text-destructive rounded border-2 border-dashed border-destructive/25 p-4"
         role="alert"
         aria-label="Invalid image URL"
@@ -118,10 +168,6 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
 
   const altText = alt ?? caption ?? "";
 
-  const clickProps = hasOnClick
-    ? { onClick: handleClick, style: { cursor: "pointer" as const } }
-    : {};
-
   const imgStyles: React.CSSProperties = objectFit
     ? {
         width: "100%",
@@ -130,9 +176,9 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
       }
     : {};
 
-  const imgElement = (
-    <img src={validatedImageSrc} alt={altText} style={imgStyles} {...clickProps} />
-  );
+  const hoverClass = getHoverClass(hoverVariant);
+
+  const imgElement = <img src={validatedImageSrc} alt={altText} style={imgStyles} />;
 
   const wrappedImg = linkProps ? (
     <a {...linkProps} style={{ cursor: "pointer" }}>
@@ -142,30 +188,45 @@ export const ImageWidget: React.FC<ImageWidgetProps> = ({
     imgElement
   );
 
-  if (caption) {
-    return (
-      <figure key={id} style={styles} className="flex flex-col items-center">
-        {wrappedImg}
-        <figcaption className="text-sm text-muted-foreground mt-1">{caption}</figcaption>
-      </figure>
-    );
-  }
-
-  if (linkProps) {
-    return (
-      <a key={id} {...linkProps} style={{ ...styles, cursor: "pointer" }}>
-        <img src={validatedImageSrc} alt={altText} style={imgStyles} />
-      </a>
-    );
-  }
-
-  return (
-    <img
-      src={validatedImageSrc}
-      key={id}
-      style={{ ...styles, ...(hasOnClick ? { cursor: "pointer" } : {}) }}
-      alt={altText}
-      onClick={hasOnClick ? handleClick : undefined}
-    />
+  const content = caption ? (
+    <figure className="flex flex-col items-center">
+      {wrappedImg}
+      <figcaption className="text-sm text-muted-foreground mt-1">{caption}</figcaption>
+    </figure>
+  ) : linkProps ? (
+    <a {...linkProps} style={{ cursor: "pointer" }}>
+      <img src={validatedImageSrc} alt={altText} style={imgStyles} />
+    </a>
+  ) : (
+    <img src={validatedImageSrc} alt={altText} style={imgStyles} />
   );
+
+  if (needsContainer || hasOnClick) {
+    const clickable = hasOnClick || linkProps;
+    return (
+      <div
+        key={id}
+        style={{ ...outerStyles, ...containerStyles, ...(clickable ? { cursor: "pointer" } : {}) }}
+        className={cn(hoverClass)}
+        onClick={hasOnClick ? handleClick : undefined}
+        onKeyDown={
+          hasOnClick
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleClick();
+                }
+              }
+            : undefined
+        }
+        role={hasOnClick ? "button" : undefined}
+        tabIndex={hasOnClick ? 0 : undefined}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  // Simple case: no border, no hover, no click
+  return <img src={validatedImageSrc} key={id} style={outerStyles} alt={altText} />;
 };

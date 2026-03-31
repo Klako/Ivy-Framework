@@ -12,7 +12,13 @@ namespace Ivy.Core;
 /// </summary>
 public static class NativeJsonDiff
 {
+    private const string RustLib = "rustserver";
     private static IntPtr _cachedHandle = IntPtr.Zero;
+
+    static NativeJsonDiff()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(NativeJsonDiff).Assembly, ResolveDllImport);
+    }
 
     private static IntPtr ResolveDllImport(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {

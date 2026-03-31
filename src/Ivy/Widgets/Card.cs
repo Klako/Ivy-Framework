@@ -72,7 +72,7 @@ public static class CardExtensions
     public static Card Header(this Card card, object? title = null, object? description = null, object? icon = null)
     {
         object? header = Layout.Vertical().Gap(0)
-                         | (Layout.Horizontal().Align(Align.Center)
+                         | (Layout.Horizontal().AlignContent(Align.Center)
                             | title?.WithLayout().Grow()
                             | icon)
                          | description;

@@ -90,7 +90,7 @@ public class DataTableBuilder<TModel>(
                     Name = field.Name,
                     Header = StringHelper.LabelFor(field.Name, field.Type),
                     ColType = DataTableBuilderHelpers.GetDataTypeHint(field.Type),
-                    Align = align,
+                    AlignContent = align,
                     Order = order++
                 },
                 Removed = removed
@@ -136,10 +136,10 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
-    public DataTableBuilder<TModel> Align(Expression<Func<TModel, object>> field, Align align)
+    public DataTableBuilder<TModel> AlignContent(Expression<Func<TModel, object>> field, Align align)
     {
         var column = GetColumn(field);
-        column.Column.Align = align;
+        column.Column.AlignContent = align;
         return this;
     }
 

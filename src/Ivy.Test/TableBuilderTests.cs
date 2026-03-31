@@ -27,7 +27,7 @@ public class TableBuilderTests
 
         // Modify state
         builder.Remove(x => x.Age);
-        builder.Align(x => x.Name, Align.Right);
+        builder.AlignContent(x => x.Name, Align.Right);
 
         // Act
         builder.Reset();

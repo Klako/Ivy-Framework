@@ -31,6 +31,89 @@ interface MarkdownRendererProps {
   dangerouslyAllowLocalFiles?: boolean;
 }
 
+interface FenceBlock {
+  openLine: number;
+  closeLine: number;
+  indent: string;
+  infoString: string;
+  children: FenceBlock[];
+}
+
+/**
+ * Normalizes nested fenced code blocks so that outer fences use more backticks
+ * than inner fences. This fixes CommonMark rendering where nested fences of
+ * the same length cause the inner fence to prematurely close the outer one.
+ *
+ * For example, a markdown block containing a ```csharp block would have its
+ * outer fence increased to ```` so the inner ``` doesn't close it.
+ */
+export function normalizeNestedFences(content: string): string {
+  const lines = content.split("\n");
+  const fenceRegex = /^(\s{0,3})(`{3,})\s*(.*)/;
+
+  const stack: { line: number; indent: string; infoString: string; children: FenceBlock[] }[] = [];
+  const topLevel: FenceBlock[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(fenceRegex);
+    if (!match) continue;
+
+    const indent = match[1];
+    const infoString = match[3].trim();
+
+    if (stack.length === 0 || infoString) {
+      // Opening fence: either top-level or nested (has info string)
+      stack.push({ line: i, indent, infoString, children: [] });
+    } else {
+      // Closing fence (no info string, inside an open block)
+      const open = stack.pop()!;
+      const block: FenceBlock = {
+        openLine: open.line,
+        closeLine: i,
+        indent: open.indent,
+        infoString: open.infoString,
+        children: open.children,
+      };
+      if (stack.length > 0) {
+        stack[stack.length - 1].children.push(block);
+      } else {
+        topLevel.push(block);
+      }
+    }
+  }
+
+  // No nesting found — return content unchanged
+  if (topLevel.every((b) => b.children.length === 0)) {
+    return content;
+  }
+
+  function getRequiredBackticks(block: FenceBlock): number {
+    if (block.children.length === 0) return 3;
+    const maxChild = Math.max(...block.children.map(getRequiredBackticks));
+    return maxChild + 1;
+  }
+
+  function rewriteBlock(block: FenceBlock) {
+    const count = getRequiredBackticks(block);
+    const backticks = "`".repeat(count);
+
+    lines[block.openLine] = block.infoString
+      ? `${block.indent}${backticks}${block.infoString}`
+      : `${block.indent}${backticks}`;
+    lines[block.closeLine] = `${block.indent}${backticks}`;
+
+    for (const child of block.children) {
+      rewriteBlock(child);
+    }
+  }
+
+  for (const block of topLevel) {
+    rewriteBlock(block);
+  }
+
+  return lines.join("\n");
+}
+
 const hasContentFeature = (content: string, feature: RegExp): boolean => {
   return feature.test(content);
 };
@@ -391,6 +474,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     emoji: ({ name }: { name: string }) => <CustomEmoji name={name} />,
   };
 
+  const normalizedContent = useMemo(() => normalizeNestedFences(content), [content]);
+
   const urlTransform = useCallback(
     (url: string, key: string) => {
       if (url.startsWith("app://")) {
@@ -448,7 +533,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         rehypePlugins={plugins.rehypePlugins}
         urlTransform={urlTransform}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </>
   );

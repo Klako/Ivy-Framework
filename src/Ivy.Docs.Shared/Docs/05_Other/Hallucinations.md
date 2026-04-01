@@ -127,6 +127,44 @@ fd5baba6-72aa-4d28-ac10-72e1be86e494
 9e1cba6f-bd19-472e-83a3-8db63b4860f6
 e8232f03-12c3-4c9c-bf1b-42bed9f6d44c
 
+## ChatMessage — ambiguous reference between Microsoft.Extensions.AI and Ivy
+
+**Hallucinated API:**
+
+```csharp
+var messages = new List<ChatMessage>
+{
+    new ChatMessage(ChatRole.System, "You are a helpful assistant."),
+    new ChatMessage(ChatRole.User, content)
+};
+```
+
+**Error:** `CS0104: 'ChatMessage' is an ambiguous reference between 'Microsoft.Extensions.AI.ChatMessage' and 'Ivy.ChatMessage'`
+
+**Correct API:**
+
+```csharp
+// Fully qualify the namespace:
+var messages = new List<Microsoft.Extensions.AI.ChatMessage>
+{
+    new(Microsoft.Extensions.AI.ChatRole.System, "You are a helpful assistant."),
+    new(Microsoft.Extensions.AI.ChatRole.User, content)
+};
+
+// Or add a using alias at the top of the file:
+using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
+using ChatRole = Microsoft.Extensions.AI.ChatRole;
+```
+
+When using `IChatClient` from `Microsoft.Extensions.AI` in an Ivy project, `ChatMessage` conflicts with `Ivy.ChatMessage` (the Chat widget's message record) which is available via global using. Always fully qualify or alias the `Microsoft.Extensions.AI` types.
+
+**Found In:**
+142f4e78-ada2-4bd6-8c9f-a8562c82afb7
+ab7c7708-b26c-49fa-83a4-176df47c5866
+a8e15b46-41e2-4281-b570-6d46721e0425
+b73d8115-b4d2-45d5-926e-0a915c1dca63
+b16d95b1-ff2f-4db3-9c67-910e21eb0713
+
 ## Callout constructor — wrong constructor + invented enum / wrong argument order
 
 **Hallucinated API:**
@@ -248,43 +286,6 @@ f20dced8-1689-4289-a2d8-ee67136eb6ce
 7a9aadf3-097e-448d-8d5c-bc86152710a6
 5ba11e91-7b05-49e1-8a0f-5ea01235b192
 f07bc643-b0d7-4a23-a4c8-f4e488285e98
-
-## ChatMessage — ambiguous reference between Microsoft.Extensions.AI and Ivy
-
-**Hallucinated API:**
-
-```csharp
-var messages = new List<ChatMessage>
-{
-    new ChatMessage(ChatRole.System, "You are a helpful assistant."),
-    new ChatMessage(ChatRole.User, content)
-};
-```
-
-**Error:** `CS0104: 'ChatMessage' is an ambiguous reference between 'Microsoft.Extensions.AI.ChatMessage' and 'Ivy.ChatMessage'`
-
-**Correct API:**
-
-```csharp
-// Fully qualify the namespace:
-var messages = new List<Microsoft.Extensions.AI.ChatMessage>
-{
-    new(Microsoft.Extensions.AI.ChatRole.System, "You are a helpful assistant."),
-    new(Microsoft.Extensions.AI.ChatRole.User, content)
-};
-
-// Or add a using alias at the top of the file:
-using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
-using ChatRole = Microsoft.Extensions.AI.ChatRole;
-```
-
-When using `IChatClient` from `Microsoft.Extensions.AI` in an Ivy project, `ChatMessage` conflicts with `Ivy.ChatMessage` (the Chat widget's message record) which is available via global using. Always fully qualify or alias the `Microsoft.Extensions.AI` types.
-
-**Found In:**
-142f4e78-ada2-4bd6-8c9f-a8562c82afb7
-ab7c7708-b26c-49fa-83a4-176df47c5866
-a8e15b46-41e2-4281-b570-6d46721e0425
-b73d8115-b4d2-45d5-926e-0a915c1dca63
 
 ## TextInputBase.Icon() — wrong receiver type
 
@@ -554,6 +555,33 @@ The fluent method is `.Icon(Icons.X)`, not `.WithIcon(Icons.X)`. The agent likel
 8b93fae2-c7ce-4890-b0c0-43310c65dd00
 310e1e6a-facb-4caf-87b9-4f1422b51abc
 7c0abfe8-e16f-40d1-9323-95505a4697e7
+
+## IBladeService — non-existent interface (correct: IBladeContext)
+
+**Hallucinated API:**
+
+```csharp
+var blades = UseContext<IBladeService>();
+blades.Push(new CustomerDetailsBlade(id));
+blades.Pop();
+```
+
+**Error:** `CS0246: The type or namespace name 'IBladeService' could not be found`
+
+**Correct API:**
+
+```csharp
+var blades = UseContext<IBladeContext>();
+blades.Push(new CustomerDetailsBlade(id));
+blades.Pop();
+```
+
+The blade navigation context interface is `IBladeContext`, not `IBladeService`. Access it via `UseContext<IBladeContext>()` inside views initialized with the `UseBlades` hook. The agent consistently uses `IBladeService` because **IvyMcp returns the wrong interface name in all blade-related answers** (10 out of 10 IvyQuestion responses about blades use `IBladeService`). This is an IvyMcp knowledge base bug, not an LLM hallucination.
+
+**Found In:**
+2235e1c1-ab1e-4313-be50-995daa1be1f9 (12 blade files affected)
+6341e55e-56eb-41d0-81d3-c2cdfff33093 (8 blade files affected)
+b4b09997-2c10-4b65-861c-16592e447c46 (10 blade files affected)
 
 ## UseAlert().ShowInfo() — wrong API usage
 
@@ -1070,6 +1098,42 @@ form.ToSheet(title: "Edit Post")
 **Found In:**
 c1b87041-f92b-4ba5-96d7-6a92419e84ea (traces 009, 014)
 0e9fc5ed-1724-4fed-b9ea-44b370358457 (footer parameter variant)
+
+## Server.OnReady / Server.OnStartup / Server.OnAfterStart — non-existent lifecycle callbacks
+
+**Hallucinated API:**
+
+```csharp
+server.OnReady(() => { /* seed data */ });
+server.OnStartup(() => { /* initialize */ });
+server.OnAfterStart(() => { /* seed data */ });
+```
+
+**Error:** `CS1061: 'Server' does not contain a definition for 'OnReady'` / `CS1061: 'Server' does not contain a definition for 'OnAfterStart'`
+
+**Correct API:**
+
+```csharp
+// Seed data via the context factory pattern:
+var connection = server.UseConnection<MyDbContext>(options =>
+    options.ContextFactory = () =>
+    {
+        var ctx = new MyDbContext();
+        ctx.Database.EnsureCreated();
+        SeedData(ctx);
+        return ctx;
+    });
+
+// Or resolve services directly in Program.cs:
+var myService = server.Services.GetRequiredService<IMyService>();
+myService.Initialize();
+```
+
+The `Server` class does not have `OnReady`, `OnStartup`, or similar lifecycle callback methods. To run initialization code (e.g., database seeding), use the connection's context factory pattern — seed data in the factory's `CreateContext` method or use `server.Services` to resolve and call services directly in `Program.cs`.
+
+**Found In:**
+c1b87041-f92b-4ba5-96d7-6a92419e84ea
+6341e55e-56eb-41d0-81d3-c2cdfff33093
 
 ## FileInput.MaxFiles(n) on single-file state — runtime error
 
@@ -2535,41 +2599,6 @@ When using `UseDownload` with a lambda, you must explicitly cast to `Func<byte[]
 **Found In:**
 (session not yet recorded)
 
-## Server.OnReady / Server.OnStartup / Server.OnAfterStart — non-existent lifecycle callbacks
-
-**Hallucinated API:**
-
-```csharp
-server.OnReady(() => { /* seed data */ });
-server.OnStartup(() => { /* initialize */ });
-server.OnAfterStart(() => { /* seed data */ });
-```
-
-**Error:** `CS1061: 'Server' does not contain a definition for 'OnReady'` / `CS1061: 'Server' does not contain a definition for 'OnAfterStart'`
-
-**Correct API:**
-
-```csharp
-// Seed data via the context factory pattern:
-var connection = server.UseConnection<MyDbContext>(options =>
-    options.ContextFactory = () =>
-    {
-        var ctx = new MyDbContext();
-        ctx.Database.EnsureCreated();
-        SeedData(ctx);
-        return ctx;
-    });
-
-// Or resolve services directly in Program.cs:
-var myService = server.Services.GetRequiredService<IMyService>();
-myService.Initialize();
-```
-
-The `Server` class does not have `OnReady`, `OnStartup`, or similar lifecycle callback methods. To run initialization code (e.g., database seeding), use the connection's context factory pattern — seed data in the factory's `CreateContext` method or use `server.Services` to resolve and call services directly in `Program.cs`.
-
-**Found In:**
-c1b87041-f92b-4ba5-96d7-6a92419e84ea
-
 ## Fragment.Empty — non-existent static member
 
 **Hallucinated API:**
@@ -2964,31 +2993,6 @@ var blades = UseContext<IBladeContext>();
 **Found In:**
 0e9fc5ed-1724-4fed-b9ea-44b370358457 (4 instances across CategoryListBlade, CategoryDetailsBlade, TagListBlade, TagDetailsBlade)
 
-## IBladeService — non-existent interface (correct: IBladeContext)
-
-**Hallucinated API:**
-
-```csharp
-var blades = UseContext<IBladeService>();
-blades.Push(new CustomerDetailsBlade(id));
-blades.Pop();
-```
-
-**Error:** `CS0246: The type or namespace name 'IBladeService' could not be found`
-
-**Correct API:**
-
-```csharp
-var blades = UseContext<IBladeContext>();
-blades.Push(new CustomerDetailsBlade(id));
-blades.Pop();
-```
-
-The blade navigation context interface is `IBladeContext`, not `IBladeService`. Access it via `UseContext<IBladeContext>()` inside views initialized with the `UseBlades` hook. The agent consistently uses `IBladeService` because **IvyMcp returns the wrong interface name in all blade-related answers** (10 out of 10 IvyQuestion responses about blades use `IBladeService`). This is an IvyMcp knowledge base bug, not an LLM hallucination.
-
-**Found In:**
-2235e1c1-ab1e-4313-be50-995daa1be1f9 (12 blade files affected)
-
 ## Server.StartAsync() / Server.WaitForShutdownAsync() — non-existent methods
 
 **Hallucinated API:**
@@ -3022,6 +3026,61 @@ The `Server` class does not have `StartAsync()` or `WaitForShutdownAsync()`. The
 
 **Found In:**
 2235e1c1-ab1e-4313-be50-995daa1be1f9
+
+## Languages.Bash — non-existent language enum value
+
+**Hallucinated API:**
+
+```csharp
+new CodeBlock(result, Languages.Bash)
+```
+
+**Error:** `CS0117: 'Languages' does not contain a definition for 'Bash'`
+
+**Correct API:**
+
+```csharp
+new CodeBlock(result, Languages.Text)
+```
+
+The agent hallucinated `Languages.Bash` when displaying non-code content (e.g., commit messages) in a `CodeBlock`. `Bash` is not a valid `Languages` enum value. Use `Languages.Text` for plain text. This is a variant of the existing `Languages.PlainText/Plain/Http` hallucination pattern.
+
+**Found In:**
+139008ad-82b6-441d-ab2f-ae26b56a6de2
+
+## SelectOption\<T\> — non-existent type
+
+**Hallucinated API:**
+
+```csharp
+var clauseTypes = new SelectOption<string>[]
+{
+    new("Indemnification", "Indemnification"),
+    new("Termination", "Termination")
+};
+```
+
+**Error:** `CS0246: The type or namespace name 'SelectOption<>' could not be found`
+
+**Correct API:**
+
+```csharp
+// Use .ToOptions() on a string array:
+var options = new[] { "Indemnification", "Termination" }.ToOptions();
+state.ToSelectInput(options)
+
+// Or use Option<T> for custom value/label pairs:
+var options = new[] {
+    new Option<string>("indemnification", "Indemnification"),
+    new Option<string>("termination", "Termination")
+};
+state.ToSelectInput(options)
+```
+
+`SelectOption<T>` does not exist in Ivy. The agent confused the naming with `Option<T>` or the `.ToOptions()` pattern. For simple string options, use `.ToOptions()` on a string array. For key-value pairs, use `Option<T>`.
+
+**Found In:**
+b16d95b1-ff2f-4db3-9c67-910e21eb0713
 
 ## TextInput.Grow() — Box-only extension called on TextInput
 

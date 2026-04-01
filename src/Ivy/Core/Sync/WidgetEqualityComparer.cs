@@ -19,7 +19,17 @@ namespace Ivy.Core.Sync
                 return x == null;
             }
 
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
             if (!x.GetType().Equals(y.GetType()))
+            {
+                return false;
+            }
+
+            if (x.Id != y.Id)
             {
                 return false;
             }

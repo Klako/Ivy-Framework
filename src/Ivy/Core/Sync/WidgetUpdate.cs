@@ -7,28 +7,37 @@ using System.Text;
 namespace Ivy.Core.Sync
 {
     [MessagePackObject]
-    internal record WidgetUpdate(
-        Type? type = null,
-        string? id = null,
-        IDictionary<string, object?>? props = null,
-        string[]? events = null,
-        WidgetListDiff? children = null)
+    internal record WidgetUpdate
     {
+        public WidgetUpdate(
+            Type? type = null,
+            string? id = null,
+            IDictionary<string, object?>? props = null,
+            string[]? events = null,
+            WidgetListDiff? children = null)
+        {
+            Type = type;
+            Id = id;
+            Props = props;
+            Events = events;
+            Children = children;
+        }
+
         [Key(0)]
         [MessagePackFormatter(typeof(WidgetTypeFormatter))]
-        public Type? Type { get; init; } = type;
+        public Type? Type { get; init; }
 
         [Key(1)]
-        public string? Id { get; init; } = id;
+        public string? Id { get; init; }
 
         [Key(2)]
-        public IDictionary<string, object?>? Props { get; init; } = props;
+        public IDictionary<string, object?>? Props { get; init; }
 
         [Key(3)]
-        public string[]? Events { get; init; } = events;
+        public string[]? Events { get; init; }
 
         [Key(4)]
-        public WidgetListDiff? Children { get; init; } = children;
+        public WidgetListDiff? Children { get; init; }
 
         private class WidgetTypeFormatter : IMessagePackFormatter<Type>
         {
@@ -50,15 +59,21 @@ namespace Ivy.Core.Sync
     }
 
     [MessagePackObject]
-    internal record WidgetListDiff(
-        IWidgetListComplexOperation[]? complexChanges = null,
-        IWidgetListOperation[]? changes = null)
+    internal record WidgetListDiff
     {
+        public WidgetListDiff(
+            IWidgetListComplexOperation[]? complexChanges = null,
+            IWidgetListOperation[]? changes = null)
+        {
+            ComplexChanges = complexChanges;
+            Changes = changes;
+        }
+
         [Key(0)]
-        public IWidgetListComplexOperation[]? ComplexChanges { get; init; } = complexChanges;
+        public IWidgetListComplexOperation[]? ComplexChanges { get; init; }
 
         [Key(1)]
-        public IWidgetListOperation[]? Changes { get; init; } = changes;
+        public IWidgetListOperation[]? Changes { get; init; }
     }
 
     [Union(0, typeof(WidgetListUpdate))]
@@ -73,64 +88,95 @@ namespace Ivy.Core.Sync
     }
 
     [MessagePackObject]
-    internal record WidgetListUpdate(int index, WidgetUpdate update) : IWidgetListOperation
+    internal record WidgetListUpdate : IWidgetListOperation
     {
+        public WidgetListUpdate(int index, WidgetUpdate update)
+        {
+            Index = index;
+            Update = update;
+        }
+
         [Key(0)]
-        public int Index { get; init; } = index;
+        public int Index { get; init; }
 
         [Key(1)]
-        public WidgetUpdate Widget { get; init; } = update;
+        public WidgetUpdate Update { get; init; }
 
         public int SortIndex { get => Index; }
     }
 
     [MessagePackObject]
-    internal record WidgetListAdd(int index, IWidget widget) : IWidgetListOperation
+    internal record WidgetListAdd : IWidgetListOperation
     {
+        public WidgetListAdd(int index, IWidget widget)
+        {
+            Index = index;
+            Widget = widget;
+        }
+
         [Key(0)]
-        public int Index { get; init; } = index;
+        public int Index { get; init; }
         
         [Key(1)]
-        public IWidget Widget { get; init; } = widget;
+        public IWidget Widget { get; init; }
 
         public int SortIndex { get => Index; }
     }
 
     [MessagePackObject]
-    internal record WidgetListAddRange(int index, IWidget[] widgets) : IWidgetListOperation
+    internal record WidgetListAddRange : IWidgetListOperation
     {
+        public WidgetListAddRange(int index, IWidget[] widgets)
+        {
+            Index = index;
+            Widgets = widgets;
+        }
+
         [Key(0)]
-        public int Index { get; init; } = index;
+        public int Index { get; init; }
 
         [Key(1)]
-        public IWidget[] Widgets { get; init; } = widgets;
+        public IWidget[] Widgets { get; init; }
 
         public int SortIndex { get => Index; }
     }
 
     [MessagePackObject]
-    internal record WidgetListReplace(int index, IWidget? widget) : IWidgetListOperation
+    internal record WidgetListReplace : IWidgetListOperation
     {
+        public WidgetListReplace(int index, IWidget? widget)
+        {
+            Index = index;
+            Widget = widget;
+        }
+
         [Key(0)]
-        public int Index { get; init; } = index;
+        public int Index { get; init; }
 
         [Key(1)]
-        public IWidget? Widget { get; init; } = widget;
+        public IWidget? Widget { get; init; }
 
         public int SortIndex { get => Index; }
     }
 
     [MessagePackObject]
-    internal record WidgetListReplaceRange(int startIndex, int endIndex, IWidget[]? widgets) : IWidgetListOperation
+    internal record WidgetListReplaceRange : IWidgetListOperation
     {
+        public WidgetListReplaceRange(int startIndex, int endIndex, IWidget[]? widgets)
+        {
+            StartIndex = startIndex;
+            EndIndex = endIndex;
+            Widgets = widgets;
+        }
+
         [Key(0)]
-        public int StartIndex { get; init; } = startIndex;
+        public int StartIndex { get; init; }
 
         [Key(1)]
-        public int EndIndex { get; init; } = endIndex;
+        public int EndIndex { get; init; }
 
         [Key(2)]
-        public IWidget[]? widgets { get; init; } = widgets;
+        public IWidget[]? Widgets { get; init; }
 
         public int SortIndex { get => StartIndex; }
     }
@@ -142,12 +188,18 @@ namespace Ivy.Core.Sync
     }
 
     [MessagePackObject]
-    internal record WidgetListMove(int fromIndex, int toIndex) : IWidgetListComplexOperation
+    internal record WidgetListMove : IWidgetListComplexOperation
     {
+        public WidgetListMove(int fromIndex, int toIndex)
+        {
+            FromIndex = fromIndex;
+            ToIndex = toIndex;
+        }
+
         [Key(0)]
-        public int FromIndex { get; init; } = fromIndex;
+        public int FromIndex { get; init; }
 
         [Key(1)]
-        public int ToIndex { get; init; } = toIndex;
+        public int ToIndex { get; init; }
     }
 }

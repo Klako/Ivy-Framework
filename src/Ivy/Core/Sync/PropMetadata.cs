@@ -14,22 +14,22 @@ namespace Ivy.Core.Sync
 
         public object? DefaultValue { get; }
 
-        private PropertyInfo propInfo;
+        public PropAttribute Attribute { get; }
 
-        private PropAttribute attribute;
+        private PropertyInfo propInfo;
 
         public PropMetadata(PropertyInfo propInfo, PropAttribute attribute, object? defaultValue)
         {
             AlwaysSerialize = attribute.AlwaysSerialize;
             CamelCaseName = Utils.PascalCaseToCamelCase(propInfo.Name);
             DefaultValue = defaultValue;
+            Attribute = attribute;
             this.propInfo = propInfo;
-            this.attribute = attribute;
         }
 
         public object? GetValue(IWidget widget)
         {
-            if (attribute.IsAttached)
+            if (Attribute.IsAttached)
             {
                 if (!propInfo.PropertyType.IsArray || !propInfo.PropertyType.GetElementType()!.IsGenericType)
                     throw new InvalidOperationException("Attached properties must be arrays of nullable types.");
@@ -37,7 +37,7 @@ namespace Ivy.Core.Sync
                 var children = widget.Children;
                 var attachedValues = new object?[children.Length];
                 var widgetType = widget.GetType();
-                var attachedName = attribute.AttachedName!;
+                var attachedName = Attribute.AttachedName!;
 
                 for (int i = 0; i < children.Length; i++)
                 {

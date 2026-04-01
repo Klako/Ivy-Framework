@@ -78,6 +78,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Ivy.Test" />
+    <InternalsVisibleTo Include="Ivy.Tests" />
     <InternalsVisibleTo Include="Ivy.Docs" />
     <InternalsVisibleTo Include="Ivy.XamlBuilder" />
     <InternalsVisibleTo Include="Ivy.XamlBuilder.Test" />

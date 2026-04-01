@@ -1,7 +1,7 @@
 using Ivy.Core.Apps;
 using Microsoft.AspNetCore.Http;
 
-namespace Ivy.Tests.Core.Apps;
+namespace Ivy.Test;
 
 public class AppRouterTests
 {
@@ -48,9 +48,8 @@ public class AppRouterTests
     }
 
     [Fact]
-    public void GetAppShell_ShellTakePrecedenceOverChrome()
+    public void GetAppShell_ShellTakesPrecedenceOverChrome()
     {
-        // ?shell=true&chrome=false → shell wins, returns true
         var context = CreateHttpContext("?shell=true&chrome=false");
         Assert.True(AppRouter.GetAppShell(context));
     }
@@ -58,7 +57,6 @@ public class AppRouterTests
     [Fact]
     public void GetAppShell_ShellFalseTakesPrecedenceOverChromeTrue()
     {
-        // ?shell=false&chrome=true → shell wins, returns false
         var context = CreateHttpContext("?shell=false&chrome=true");
         Assert.False(AppRouter.GetAppShell(context));
     }
@@ -66,8 +64,8 @@ public class AppRouterTests
     [Fact]
     public void GetAppShell_CaseInsensitive()
     {
-        var context = CreateHttpContext("?shell=FALSE");
-        Assert.False(AppRouter.GetAppShell(context));
+        var context1 = CreateHttpContext("?shell=FALSE");
+        Assert.False(AppRouter.GetAppShell(context1));
 
         var context2 = CreateHttpContext("?chrome=False");
         Assert.False(AppRouter.GetAppShell(context2));

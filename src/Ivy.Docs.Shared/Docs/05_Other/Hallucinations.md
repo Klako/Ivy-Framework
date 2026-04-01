@@ -2945,21 +2945,21 @@ b73d8115-b4d2-45d5-926e-0a915c1dca63
 
 ## UseService vs UseContext — blade/context services
 
-LLMs sometimes use `UseService<IBladeService>()` to obtain the blade service. This is incorrect — `IBladeService` is a **context** service provided by `UseBlades()`, not a DI-registered service. Using `UseService` returns `null`, causing `NullReferenceException` at runtime.
+LLMs sometimes use `UseService<IBladeContext>()` to obtain the blade context. This is incorrect — `IBladeContext` is a **context** provided by `UseBlades()`, not a DI-registered service. Using `UseService` returns `null`, causing `NullReferenceException` at runtime.
 
 **Wrong:**
 
 ```csharp
-var bladeService = UseService<IBladeService>(); // Returns null!
+var blades = UseService<IBladeContext>(); // Returns null!
 ```
 
 **Correct:**
 
 ```csharp
-var bladeService = UseContext<IBladeService>();
+var blades = UseContext<IBladeContext>();
 ```
 
-**Rule:** Use `UseContext<T>()` for framework-provided context services (`IBladeService`, etc.). Use `UseService<T>()` only for application-registered DI services (e.g., `DbContextFactory`, `HttpClient`).
+**Rule:** Use `UseContext<T>()` for framework-provided context services (`IBladeContext`, etc.). Use `UseService<T>()` only for application-registered DI services (e.g., `DbContextFactory`, `HttpClient`).
 
 **Found In:**
 0e9fc5ed-1724-4fed-b9ea-44b370358457 (4 instances across CategoryListBlade, CategoryDetailsBlade, TagListBlade, TagDetailsBlade)

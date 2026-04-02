@@ -171,5 +171,49 @@ namespace Ivy.Test.Sync
             Assert.Equivalent(convertedTarget, updatedSource);
 
         }
+
+        private static string[] texts = [
+                "Five foxes four fairies",
+                "Lorem ipsum dolor sit amet",
+                "Aliquam augue massa",
+                "Vivamus lobortis diam id nulla mattis"
+            ];
+
+        private IWidget GenerateBinaryTree(Random rand, int depth)
+        {
+            if (depth == 1)
+            {
+                return (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!; ;
+            }
+            var prefix = rand.Next().ToString();
+
+            var nodeText = (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
+            nodeText.Id = prefix + "1";
+            var left = GenerateBinaryTree(rand, depth - 1);
+            left.Id = prefix + "2";
+            var right = GenerateBinaryTree(rand, depth - 1);
+            right.Id = prefix + "3";
+            return new List(nodeText, left, right);
+        }
+
+        [Fact]
+        public void TreeDiffer_RandomBinaryTree()
+        {
+            var source = GenerateBinaryTree(new Random(), (int)Math.Log2(100));
+            source.Id = "dwqpokqwd";
+            var target = GenerateBinaryTree(new Random(), (int)Math.Log2(100));
+            target.Id = "dwqpokqwd";
+
+            var convertedSource = SerializedWidget.FromWidget(source);
+            var convertedTarget = SerializedWidget.FromWidget(target);
+
+            var update = TreeDiffer.ComputeDiff(source, target);
+
+            Assert.IsType<WidgetUpdate>(update);
+
+            var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
+
+            Assert.Equivalent(convertedTarget, updatedSource);
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnostics.Windows;
+using BenchmarkDotNet.Running;
 
 namespace Ivy.Benchmark.Sync
 {
@@ -6,7 +8,9 @@ namespace Ivy.Benchmark.Sync
     {
         static void Main(string[] args)
         {
-            var _ = BenchmarkRunner.Run(typeof(Program).Assembly);
+            var _ = BenchmarkRunner.Run(typeof(Program).Assembly,
+                DefaultConfig.Instance
+                    .AddDiagnoser(new EtwProfiler()));
         }
     }
 }

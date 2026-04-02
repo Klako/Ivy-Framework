@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Ivy.Core.Sync
 {
-    internal class WidgetSerializer : IMessagePackFormatter<IWidget>
+    public class WidgetSerializer : IMessagePackFormatter<IWidget>
     {
         public void Serialize(ref MessagePackWriter writer, IWidget widget, MessagePackSerializerOptions options)
         {

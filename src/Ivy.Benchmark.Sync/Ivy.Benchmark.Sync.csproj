@@ -6,8 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
+    <PackageReference Include="AlekseiFedorov.BenchmarkDotNet.ReportColumns" Version="0.1.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.16.0-nightly.20260302.459" />
     <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.3.36812.1" />
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="4.0.0-beta.24314.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -382,6 +382,60 @@ export const getColumnGap = (columnGap?: number): React.CSSProperties => {
   };
 };
 
+export const getGridAlign = (align?: Align): React.CSSProperties => {
+  const styles: React.CSSProperties = {};
+
+  switch (align) {
+    case "TopLeft":
+      styles.alignItems = "start";
+      styles.justifyItems = "start";
+      break;
+    case "TopCenter":
+      styles.alignItems = "start";
+      styles.justifyItems = "center";
+      break;
+    case "TopRight":
+      styles.alignItems = "start";
+      styles.justifyItems = "end";
+      break;
+    case "Left":
+      styles.alignItems = "center";
+      styles.justifyItems = "start";
+      break;
+    case "Center":
+      styles.alignItems = "center";
+      styles.justifyItems = "center";
+      break;
+    case "Right":
+      styles.alignItems = "center";
+      styles.justifyItems = "end";
+      break;
+    case "BottomLeft":
+      styles.alignItems = "end";
+      styles.justifyItems = "start";
+      break;
+    case "BottomCenter":
+      styles.alignItems = "end";
+      styles.justifyItems = "center";
+      break;
+    case "BottomRight":
+      styles.alignItems = "end";
+      styles.justifyItems = "end";
+      break;
+    case "Stretch":
+      styles.alignItems = "stretch";
+      styles.justifyItems = "stretch";
+      break;
+    default:
+      // Default to top-left
+      styles.alignItems = "start";
+      styles.justifyItems = "start";
+      break;
+  }
+
+  return styles;
+};
+
 export const getAlignSelf = (alignSelf?: Align): React.CSSProperties => {
   if (!alignSelf) return {};
 
@@ -710,11 +764,11 @@ export const typography: Record<string, string> = {
   td: "border border-border px-4 py-2 text-sm",
 
   // Media
-  img: "max-w-full h-auto cursor-zoom-in",
+  img: "max-w-full h-auto cursor-zoom-in border border-border rounded-md",
   hr: "border-t border-border",
 
   // Expandable sections
-  details: "my-4 rounded-lg border border-border bg-card shadow-sm overflow-hidden",
+  details: "my-2 rounded-lg border border-border bg-card shadow-sm overflow-hidden",
   summary:
     "cursor-pointer select-none px-4 py-3 font-medium hover:bg-accent/50 transition-colors list-none [&::-webkit-details-marker]:hidden",
 };

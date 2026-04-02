@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using Ivy.Core.Helpers;
@@ -23,6 +24,8 @@ public class DataTableBuilder<TModel>(
     private readonly Dictionary<string, EventHandler<object>> _cellActions = [];
     private RefreshToken? _refreshToken;
     private FuncViewBuilder? _emptyViewFactory;
+    private FuncViewBuilder? _headerLeftFactory;
+    private FuncViewBuilder? _headerRightFactory;
     private Dictionary<string, object>? _footerValuesByColumn;
 
     private readonly string? _idColumnName =
@@ -80,8 +83,13 @@ public class DataTableBuilder<TModel>(
                 align = Ivy.Align.Center;
             }
 
-            var removed = field.Name.StartsWith($"_") && field.Name.Length > 1 && char.IsLetter(field.Name[1]) ||
-                          field.Name == "_hiddenKey";
+            var isNavigationCollection = field.Type.IsCollectionType() &&
+                field.Type.GetCollectionTypeParameter() is { IsClass: true } elementType &&
+                elementType != typeof(string);
+
+            var removed = field.Name.StartsWith("_") && field.Name.Length > 1 && char.IsLetter(field.Name[1]) ||
+                          field.Name == "_hiddenKey" ||
+                          isNavigationCollection;
 
             _columns[field.Name] = new InternalColumn()
             {
@@ -90,7 +98,7 @@ public class DataTableBuilder<TModel>(
                     Name = field.Name,
                     Header = StringHelper.LabelFor(field.Name, field.Type),
                     ColType = DataTableBuilderHelpers.GetDataTypeHint(field.Type),
-                    Align = align,
+                    AlignContent = align,
                     Order = order++
                 },
                 Removed = removed
@@ -136,10 +144,10 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
-    public DataTableBuilder<TModel> Align(Expression<Func<TModel, object>> field, Align align)
+    public DataTableBuilder<TModel> AlignContent(Expression<Func<TModel, object>> field, Align align)
     {
         var column = GetColumn(field);
-        column.Column.Align = align;
+        column.Column.AlignContent = align;
         return this;
     }
 
@@ -180,7 +188,7 @@ public class DataTableBuilder<TModel>(
         var selector = field.Compile();
         var values = GetOrCreateFooterValueList(field, selector);
         var result = aggregateFunc(values);
-        var footerText = $"{label}: {result}";
+        var footerText = $"{label}: {FormatFooterValue(column.Column, result)}";
         column.Column.Footer ??= [];
         column.Column.Footer.Add(footerText);
         return this;
@@ -194,11 +202,59 @@ public class DataTableBuilder<TModel>(
         var selector = field.Compile();
         var values = GetOrCreateFooterValueList(field, selector);
         var footerValues = aggregates
-            .Select(agg => $"{agg.Label}: {agg.AggregateFunc(values)}")
+            .Select(agg => $"{agg.Label}: {FormatFooterValue(column.Column, agg.AggregateFunc(values))}")
             .ToList();
         column.Column.Footer ??= [];
         column.Column.Footer.AddRange(footerValues);
         return this;
+    }
+
+    private static string FormatFooterValue(DataTableColumn column, object value)
+    {
+        if (value is IFormattable formattable && column.FormatStyle.HasValue)
+        {
+            var style = column.FormatStyle.Value;
+            var precision = column.Precision ?? 2;
+
+            if (style == NumberFormatStyle.Currency || style == NumberFormatStyle.Accounting)
+            {
+                var currency = column.Currency ?? "USD";
+                var culture = GetCultureForCurrency(currency);
+                return formattable.ToString($"C{precision}", culture);
+            }
+
+            var invariant = CultureInfo.InvariantCulture;
+            return style switch
+            {
+                NumberFormatStyle.Percent => formattable.ToString($"P{precision}", invariant),
+                NumberFormatStyle.Decimal => formattable.ToString($"N{precision}", invariant),
+                _ => value.ToString() ?? ""
+            };
+        }
+
+        return value.ToString() ?? "";
+    }
+
+    private static CultureInfo GetCultureForCurrency(string isoCurrencyCode)
+    {
+        try
+        {
+            foreach (var ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
+            {
+                var region = new RegionInfo(ci.Name);
+                if (string.Equals(region.ISOCurrencySymbol, isoCurrencyCode, StringComparison.OrdinalIgnoreCase))
+                    return ci;
+            }
+        }
+        catch
+        {
+            // Fall through to default
+        }
+
+        // Default to en-US for unknown currencies
+        var fallback = new CultureInfo("en-US");
+        fallback.NumberFormat.CurrencySymbol = isoCurrencyCode;
+        return fallback;
     }
 
     private List<TValue> GetOrCreateFooterValueList<TValue>(
@@ -360,6 +416,18 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
+    public DataTableBuilder<TModel> HeaderLeft(FuncViewBuilder factory)
+    {
+        _headerLeftFactory = factory;
+        return this;
+    }
+
+    public DataTableBuilder<TModel> HeaderRight(FuncViewBuilder factory)
+    {
+        _headerRightFactory = factory;
+        return this;
+    }
+
     public override object? Build()
     {
         Context.TryUseService<IChatClient>(out var chatClient);
@@ -430,7 +498,9 @@ public class DataTableBuilder<TModel>(
             onRowAction: _onRowAction,
             idSelector: idSelectorForView,
             refreshToken: _refreshToken,
-            emptyViewFactory: _emptyViewFactory);
+            emptyViewFactory: _emptyViewFactory,
+            headerLeftFactory: _headerLeftFactory,
+            headerRightFactory: _headerRightFactory);
     }
 
     public object[] GetMemoValues()

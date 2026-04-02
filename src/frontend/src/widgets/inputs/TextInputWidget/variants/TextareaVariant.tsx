@@ -7,10 +7,14 @@ import { Densities } from "@/types/density";
 import { textareaSizeVariant, xIconVariant } from "@/components/ui/input/text-input-variant";
 import { TextInputWidgetProps } from "../types";
 import { useCursorPosition, usePasteHandler, formatShortcutForDisplay } from "../hooks";
-import { X } from "lucide-react";
+import { Mic, X } from "lucide-react";
 
 interface TextareaVariantProps {
-  props: Omit<TextInputWidgetProps, "variant">;
+  props: Omit<TextInputWidgetProps, "variant"> & {
+    dictation?: boolean;
+    isRecording?: boolean;
+    onDictationToggle?: () => void;
+  };
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onBlur: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
   onFocus: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
@@ -47,8 +51,11 @@ export const TextareaVariant: React.FC<TextareaVariantProps> = ({
     onChange(syntheticEvent);
   });
 
-  const styles: React.CSSProperties = {
+  const wrapperStyles: React.CSSProperties = {
     ...getWidth(props.width),
+  };
+
+  const textareaStyles: React.CSSProperties = {
     ...getHeight(props.height),
   };
 
@@ -60,7 +67,7 @@ export const TextareaVariant: React.FC<TextareaVariantProps> = ({
     <div className="relative w-full select-none">
       <div
         className="rounded-field border border-input bg-transparent shadow-sm dark:bg-white/5 dark:border-white/10"
-        style={styles}
+        style={wrapperStyles}
       >
         <Textarea
           ref={elementRef as React.RefObject<HTMLTextAreaElement>}
@@ -75,9 +82,11 @@ export const TextareaVariant: React.FC<TextareaVariantProps> = ({
           onBlur={onBlur}
           onFocus={onFocus}
           onPaste={handlePaste}
+          style={textareaStyles}
           className={cn(
             textareaSizeVariant({ density }),
-            "border-0 shadow-none dark:bg-transparent h-full",
+            "border-0 shadow-none dark:bg-transparent",
+            !props.height && "h-full",
             props.invalid && inputStyles.invalidInput,
             (props.invalid || showClear) && "pr-8",
             props.shortcutKey && !isFocused && !hasValue && !showClear && !props.invalid && "pr-16",
@@ -88,6 +97,24 @@ export const TextareaVariant: React.FC<TextareaVariantProps> = ({
         />
       </div>
       <div className="absolute right-2.5 top-2 flex items-start gap-2 pointer-events-none z-10">
+        {props.dictation && !props.disabled && (
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={props.isRecording ? "Stop dictation" : "Start dictation"}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              props.onDictationToggle?.();
+            }}
+            className={cn(
+              "p-1 rounded hover:bg-accent focus:outline-none cursor-pointer pointer-events-auto flex items-center transition-colors",
+              props.isRecording && "bg-destructive/10 text-destructive",
+            )}
+          >
+            <Mic className={cn("h-4 w-4", props.isRecording && "animate-pulse text-destructive")} />
+          </button>
+        )}
         {showClear && (
           <button
             type="button"

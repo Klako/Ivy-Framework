@@ -1,6 +1,6 @@
 namespace Ivy.Samples.Shared.Apps.Widgets;
 
-[App(icon: Icons.BarChart3, group: ["Widgets"], searchHints: ["stacked", "segmented", "multi", "progress", "bar"])]
+[App(icon: Icons.ChartBarStacked, group: ["Widgets"], searchHints: ["stacked", "segmented", "multi", "progress", "bar"])]
 public class StackedProgressApp : SampleBase
 {
     protected override object? BuildSample()
@@ -46,7 +46,7 @@ public class StackedProgressApp : SampleBase
             | new StackedProgress(
                 new ProgressSegment(60, Colors.Blue),
                 new ProgressSegment(40, Colors.Amber)
-            ).Height(4)
+            ).BarHeight(4)
             | new StackedProgress(
                 new ProgressSegment(60, Colors.Blue),
                 new ProgressSegment(40, Colors.Amber)
@@ -54,7 +54,7 @@ public class StackedProgressApp : SampleBase
             | new StackedProgress(
                 new ProgressSegment(60, Colors.Blue),
                 new ProgressSegment(40, Colors.Amber)
-            ).Height(16)
+            ).BarHeight(16)
 
             | Text.H2("Without Rounded Corners")
             | new StackedProgress(
@@ -69,7 +69,7 @@ public class StackedProgressApp : SampleBase
                 new ProgressSegment(inProgress.Value, Colors.Blue, "In Progress"),
                 new ProgressSegment(pending.Value, Colors.Orange, "Pending"),
                 new ProgressSegment(failed.Value, Colors.Red, "Failed")
-            ).ShowLabels().Height(12)
+            ).ShowLabels().BarHeight(12)
             | (Layout.Horizontal()
                 | new Button("More Completed", _ => { completed.Set(completed.Value + 5); failed.Set(Math.Max(0, failed.Value - 5)); })
                 | new Button("More Failed", _ => { failed.Set(failed.Value + 5); completed.Set(Math.Max(0, completed.Value - 5)); })

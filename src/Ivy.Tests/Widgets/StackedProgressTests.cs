@@ -28,17 +28,17 @@ public class StackedProgressTests
         var widget = new StackedProgress();
 
         Assert.Empty(widget.Segments);
-        Assert.Equal(8, widget.Height);
+        Assert.Equal(8, widget.BarHeight);
         Assert.False(widget.ShowLabels);
         Assert.True(widget.Rounded);
     }
 
     [Fact]
-    public void Height_Extension_SetsHeight()
+    public void BarHeight_Extension_SetsHeight()
     {
-        var widget = new StackedProgress().Height(16);
+        var widget = new StackedProgress().BarHeight(16);
 
-        Assert.Equal(16, widget.Height);
+        Assert.Equal(16, widget.BarHeight);
     }
 
     [Fact]

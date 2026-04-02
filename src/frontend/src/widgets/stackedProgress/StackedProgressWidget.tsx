@@ -1,11 +1,6 @@
 import React from "react";
 import { getWidth } from "@/lib/styles";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ProgressSegment {
   value: number;
@@ -16,7 +11,7 @@ interface ProgressSegment {
 interface StackedProgressWidgetProps {
   id: string;
   segments?: ProgressSegment[];
-  height?: number;
+  barHeight?: number;
   showLabels?: boolean;
   rounded?: boolean;
   width?: string;
@@ -24,7 +19,7 @@ interface StackedProgressWidgetProps {
 
 export const StackedProgressWidget: React.FC<StackedProgressWidgetProps> = ({
   segments = [],
-  height = 8,
+  barHeight = 8,
   showLabels = false,
   rounded = true,
   width = "Full",
@@ -37,8 +32,8 @@ export const StackedProgressWidget: React.FC<StackedProgressWidgetProps> = ({
         className="bg-neutral/10"
         style={{
           ...getWidth(width),
-          height: `${height}px`,
-          borderRadius: rounded ? `${height / 2}px` : undefined,
+          height: `${barHeight}px`,
+          borderRadius: rounded ? `${barHeight / 2}px` : undefined,
         }}
       />
     );
@@ -46,10 +41,10 @@ export const StackedProgressWidget: React.FC<StackedProgressWidgetProps> = ({
 
   const containerStyles: React.CSSProperties = {
     ...getWidth(width),
-    height: `${height}px`,
+    height: `${barHeight}px`,
     display: "flex",
     overflow: "hidden",
-    borderRadius: rounded ? `${height / 2}px` : undefined,
+    borderRadius: rounded ? `${barHeight / 2}px` : undefined,
   };
 
   return (
@@ -81,9 +76,7 @@ export const StackedProgressWidget: React.FC<StackedProgressWidgetProps> = ({
                   <TooltipTrigger asChild>{segmentEl}</TooltipTrigger>
                   <TooltipContent>
                     <span>
-                      {segment.label
-                        ? `${segment.label}: ${segment.value}`
-                        : `${segment.value}`}
+                      {segment.label ? `${segment.label}: ${segment.value}` : `${segment.value}`}
                     </span>
                   </TooltipContent>
                 </Tooltip>
@@ -102,7 +95,10 @@ export const StackedProgressWidget: React.FC<StackedProgressWidgetProps> = ({
                   ? `var(--${segment.color.toLowerCase()})`
                   : "var(--primary)";
                 return (
-                  <div key={index} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <div
+                    key={index}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                  >
                     <div
                       className="rounded-full"
                       style={{

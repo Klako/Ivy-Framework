@@ -24,7 +24,7 @@ public record StackedProgress : WidgetBase<StackedProgress>
     }
 
     [Prop] public ProgressSegment[] Segments { get; set; } = [];
-    [Prop] public double Height { get; set; } = 8;
+    [Prop] public double BarHeight { get; set; } = 8;
     [Prop] public bool ShowLabels { get; set; }
     [Prop] public bool Rounded { get; set; } = true;
 
@@ -36,7 +36,7 @@ public record StackedProgress : WidgetBase<StackedProgress>
 
 public static class StackedProgressExtensions
 {
-    public static StackedProgress Height(this StackedProgress w, double height) => w with { Height = height };
+    public static StackedProgress BarHeight(this StackedProgress w, double height) => w with { BarHeight = height };
     public static StackedProgress ShowLabels(this StackedProgress w, bool show = true) => w with { ShowLabels = show };
     public static StackedProgress Rounded(this StackedProgress w, bool rounded = true) => w with { Rounded = rounded };
 }

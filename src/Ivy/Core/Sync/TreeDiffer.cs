@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Ivy.Core.Sync
 {
-    internal class TreeDiffer
+    public class TreeDiffer
     {
         public static object? ComputeDiff(IWidget source, IWidget target)
         {

@@ -72,7 +72,7 @@ namespace Ivy.Core.Sync
 
         public static WidgetMetadata FromWidgetType(Type type)
         {
-            return cache.GetOrAdd(type, new WidgetMetadata(type));
+            return cache.GetOrAdd(type, t => new WidgetMetadata(t));
         }
     }
 }

@@ -401,13 +401,14 @@ export const generateYAxis = (
 ) => {
   const safeTransform = transformValue ?? ((v: number) => v);
 
-  const buildAxisConfig = (axis: Partial<YAxisProps>) => {
+  const buildAxisConfig = (axis: Partial<YAxisProps>, skipLargeSpread: boolean = false) => {
+    const effectiveLargeSpread = largeSpread && !skipLargeSpread;
     const allowDataOverflow = axis.allowDataOverflow ?? false;
 
     let minOpt = getAxisDomainBound("min", axis.domainMin, allowDataOverflow, safeTransform);
     let maxOpt = getAxisDomainBound("max", axis.domainMax, allowDataOverflow, safeTransform);
 
-    if (largeSpread) {
+    if (effectiveLargeSpread) {
       if (minOpt === undefined) minOpt = safeTransform(minValue);
       if (maxOpt === undefined) maxOpt = safeTransform(maxValue);
     }
@@ -423,7 +424,7 @@ export const generateYAxis = (
           if (axis.tickFormatter) {
             return formatTickLabel(value, axis.tickFormatter);
           }
-          if (largeSpread) {
+          if (effectiveLargeSpread) {
             const unscaled = Math.sign(value) * (10 ** Math.abs(value) - 1);
             if (Math.abs(unscaled) >= 1e9) return (unscaled / 1e9).toFixed(0) + "B";
             if (Math.abs(unscaled) >= 1e6) return (unscaled / 1e6).toFixed(0) + "M";
@@ -437,7 +438,7 @@ export const generateYAxis = (
         },
         ...generateAxisLabelStyle(themeColors?.mutedForeground, themeColors?.fontSans),
       },
-      splitNumber: largeSpread ? 3 : 5,
+      splitNumber: effectiveLargeSpread ? 3 : 5,
       position: axis.orientation === "Right" ? "right" : "left",
       axisLine: {
         show: true,
@@ -466,7 +467,8 @@ export const generateYAxis = (
   };
 
   if (yAxis && yAxis.length > 1) {
-    return yAxis.map((axis) => buildAxisConfig(axis));
+    // Each axis auto-scales independently; global largeSpread is misleading for multi-axis charts
+    return yAxis.map((axis) => buildAxisConfig(axis, /* skipLargeSpread: */ true));
   }
 
   return buildAxisConfig(yAxis?.[0] || ({} as Partial<YAxisProps>));

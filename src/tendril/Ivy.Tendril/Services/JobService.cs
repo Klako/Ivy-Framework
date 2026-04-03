@@ -26,6 +26,8 @@ public class JobService
     private static readonly string PromptsRoot =
         Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory, "..", "..", "..", ".promptwares"));
 
+    internal static readonly string SharedRoot = Path.Combine(PromptsRoot, ".shared");
+
     private static readonly Dictionary<string, string> ScriptPaths = new()
     {
         ["MakePlan"] = Path.Combine(PromptsRoot, "MakePlan.ps1"),
@@ -193,6 +195,7 @@ public class JobService
         };
         psi.Environment["TENDRIL_JOB_ID"] = id;
         psi.Environment["TENDRIL_URL"] = "http://localhost:5010";
+        psi.Environment["TENDRIL_SHARED"] = SharedRoot;
 
         foreach (var arg in processArgs)
             psi.ArgumentList.Add(arg);

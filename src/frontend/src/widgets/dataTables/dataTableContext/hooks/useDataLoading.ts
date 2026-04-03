@@ -85,10 +85,10 @@ export const useDataLoading = ({
 
         const result = await fetchTableData(connection, 0, rowsToFetch, activeFilter, activeSort);
 
-        // Merge Arrow columns with columnsProp (columnsProp has all metadata)
-        // Arrow columns only provide name and calculated width (type inference is unreliable)
+        // Merge Arrow results with columnsProp (columnsProp has all metadata).
+        // Arrow's inferred metadata is unreliable, so we keep the prop metadata and
+        // compute display widths from the column's configured width/header text.
         const mergedColumns = columnsProp.map((propCol) => {
-          const arrowCol = result.columns.find((ac) => ac.name === propCol.name);
           // Parse width from Size string format to numeric pixels
           const parsedWidth = parseSize(propCol.width);
           return {

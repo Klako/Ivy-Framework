@@ -2,9 +2,10 @@ import * as arrow from 'apache-arrow';
 import { DataColumn, DataRow, ColType } from '../types/types';
 
 /**
- * Converts an Arrow Decimal128 raw value to a JavaScript number.
+ * Converts Arrow Decimal128 raw values into a JS number.
+ * Used only for header/content width estimation (not the exported row conversion).
  */
-function convertDecimalValue(rawValue: unknown, scale: number): number {
+function convertDecimalValueForWidthEstimate(rawValue: unknown, scale: number): number {
   const str = String(rawValue);
   if (scale <= 0 || str === '0') return Number(str);
 
@@ -38,7 +39,7 @@ function calculateColumnWidth(
     let value = columnData.get(i);
     if (value != null) {
       if (isDecimal) {
-        value = convertDecimalValue(value, field.type.scale);
+        value = convertDecimalValueForWidthEstimate(value, field.type.scale);
       }
       const strValue = String(value);
       maxLength = Math.max(maxLength, strValue.length);

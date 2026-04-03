@@ -1,4 +1,4 @@
-import { DataColumn } from '../../types/types';
+import { DataColumn } from "../../types/types";
 
 /**
  * Character width estimation for width calculation
@@ -27,13 +27,11 @@ const TYPE_DEFAULTS: Record<string, number> = {
  * Calculate optimal column width based on header and type
  */
 export function calculateAutoWidth(column: DataColumn): number {
-  const normalizedType = (column.type ?? 'text').toLowerCase();
+  const normalizedType = (column.type ?? "text").toLowerCase();
   const typeDefaultWidth = TYPE_DEFAULTS[normalizedType] || TYPE_DEFAULTS.text;
 
   const headerText = column.header || column.name;
-  const headerWidth = Math.ceil(
-    headerText.length * AVG_CHAR_WIDTH + HEADER_PADDING
-  );
+  const headerWidth = Math.ceil(headerText.length * AVG_CHAR_WIDTH + HEADER_PADDING);
 
   const calculatedWidth = Math.max(typeDefaultWidth, headerWidth);
 

@@ -35,7 +35,7 @@ if ($planContent -match "(?m)^project:\s*(.+)$") {
 
 # Parse PRs
 $prs = @()
-if ($planContent -match "(?ms)^prs:\s*\n((?:- .+\n?)*?)(?=\n\w+:|$)") {
+if ($planContent -match "(?m)^prs:\s*\n((?:- .+\n)*?)(?=\w+:|$)") {
     $prs = [regex]::Matches($Matches[1], "- (.+)") | ForEach-Object { $_.Groups[1].Value.Trim() }
 }
 

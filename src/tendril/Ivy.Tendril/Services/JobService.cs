@@ -43,7 +43,7 @@ public class JobService
         _configService = configService;
         _jobTimeout = TimeSpan.FromMinutes(configService.Settings.JobTimeout);
         _staleOutputTimeout = TimeSpan.FromMinutes(configService.Settings.StaleOutputTimeout);
-        _inboxPath = Path.Combine(configService.TendrilData, "Inbox");
+        _inboxPath = Path.Combine(configService.TendrilHome, "Inbox");
     }
 
     public JobService(TimeSpan jobTimeout, TimeSpan staleOutputTimeout, string? inboxPath = null)

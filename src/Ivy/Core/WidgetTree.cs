@@ -143,6 +143,11 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
         {
             //ignore
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] WidgetTree.RefreshRequested failed: {ex}");
+            // Don't rethrow — this runs from async void, rethrowing would crash the process
+        }
         finally
         {
             try

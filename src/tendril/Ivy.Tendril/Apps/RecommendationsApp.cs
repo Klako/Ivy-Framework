@@ -7,6 +7,7 @@ public class RecommendationRow
 {
     public string Id { get; set; } = "";
     public string Date { get; set; } = "";
+    public string State { get; set; } = "";
     public string PlanId { get; set; } = "";
     public string PlanFolderName { get; set; } = "";
     public string Title { get; set; } = "";
@@ -21,15 +22,21 @@ public class RecommendationsApp : ViewBase
         var planService = UseService<PlanReaderService>();
         var nav = this.UseNavigation();
         var refreshToken = UseRefreshToken();
+        var stateFilter = UseState<string?>(null);
 
         UseInterval(() => refreshToken.Refresh(), TimeSpan.FromMinutes(1));
 
         var recommendations = planService.GetRecommendations();
 
-        var rows = recommendations.Select(r => new RecommendationRow
+        var filtered = stateFilter.Value is { } filter
+            ? recommendations.Where(r => r.State == filter).ToList()
+            : recommendations;
+
+        var rows = filtered.Select(r => new RecommendationRow
         {
             Id = $"{r.PlanId}-{r.Title.GetHashCode()}",
             Date = r.Date.ToString("yyyy-MM-dd HH:mm"),
+            State = r.State,
             PlanId = r.PlanId,
             PlanFolderName = r.PlanFolderName,
             Title = r.Title,
@@ -41,6 +48,7 @@ public class RecommendationsApp : ViewBase
             .RefreshToken(refreshToken)
             .Width(Size.Full())
             .Height(Size.Full())
+            .Header(r => r.State, "State")
             .Header(r => r.Date, "Date")
             .Header(r => r.PlanId, "Plan")
             .Header(r => r.Title, "Title")
@@ -57,6 +65,7 @@ public class RecommendationsApp : ViewBase
                 c.BatchSize = 50;
                 c.EnableCellClickEvents = true;
             })
+            .Renderer(r => r.State, new LabelsDisplayRenderer())
             .Renderer(r => r.PlanId, new ButtonDisplayRenderer())
             .OnCellClick(e =>
             {
@@ -75,10 +84,49 @@ public class RecommendationsApp : ViewBase
                     }
                 }
                 return ValueTask.CompletedTask;
+            })
+            .RowActions(
+                new MenuItem(Label: "Accept", Icon: Icons.Check, Tag: "accept"),
+                new MenuItem(Label: "Decline", Icon: Icons.X, Tag: "decline")
+            )
+            .OnRowAction(e =>
+            {
+                var tag = e.Value.Tag?.ToString();
+                var id = e.Value.Id?.ToString();
+                var row = rows.FirstOrDefault(r => r.Id == id);
+
+                if (row != null && tag is "accept" or "decline")
+                {
+                    var newState = tag == "accept" ? "Accepted" : "Declined";
+                    planService.UpdateRecommendationState(row.PlanFolderName, row.Title, newState);
+                    refreshToken.Refresh();
+                }
+                return ValueTask.CompletedTask;
             });
 
+        var pendingCount = recommendations.Count(r => r.State == "Pending");
+        var acceptedCount = recommendations.Count(r => r.State == "Accepted");
+        var declinedCount = recommendations.Count(r => r.State == "Declined");
+
+        var header = Layout.Horizontal().Gap(2) | new object?[]
+        {
+            Text.Block($"Recommendations ({filtered.Count})").Bold(),
+            stateFilter.Value == null
+                ? (object)new Button("All").OnClick(() => stateFilter.Set(null))
+                : new Button("All").Ghost().OnClick(() => stateFilter.Set(null)),
+            stateFilter.Value == "Pending"
+                ? (object)new Button($"Pending ({pendingCount})").OnClick(() => stateFilter.Set("Pending"))
+                : new Button($"Pending ({pendingCount})").Ghost().OnClick(() => stateFilter.Set("Pending")),
+            stateFilter.Value == "Accepted"
+                ? (object)new Button($"Accepted ({acceptedCount})").OnClick(() => stateFilter.Set("Accepted"))
+                : new Button($"Accepted ({acceptedCount})").Ghost().OnClick(() => stateFilter.Set("Accepted")),
+            stateFilter.Value == "Declined"
+                ? (object)new Button($"Declined ({declinedCount})").OnClick(() => stateFilter.Set("Declined"))
+                : new Button($"Declined ({declinedCount})").Ghost().OnClick(() => stateFilter.Set("Declined"))
+        };
+
         return new HeaderLayout(
-            header: Text.Block($"All Recommendations ({recommendations.Count})").Bold(),
+            header: header,
             content: dataTable
         );
     }

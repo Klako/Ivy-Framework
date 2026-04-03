@@ -116,4 +116,39 @@ public class RecommendationServiceTests : IDisposable
     {
         _service.UpdateRecommendationState("99999-DoesNotExist", "Title", "Accepted");
     }
+
+    [Fact]
+    public void GetPendingRecommendationsCount_MatchesFullDeserializationCount()
+    {
+        var yaml1 = "- title: Pending item\n  description: Needs work\n  state: Pending\n- title: Accepted item\n  description: Done\n  state: Accepted\n";
+        var yaml2 = "- title: No state item\n  description: Defaults to Pending\n";
+        CreatePlanWithRecommendations("01610-CountTest1", yaml1);
+        CreatePlanWithRecommendations("01611-CountTest2", yaml2);
+
+        var countOnly = _service.GetPendingRecommendationsCount();
+        var fullList = _service.GetRecommendations();
+        var fullListCount = fullList.Count(r => r.State == "Pending");
+
+        Assert.Equal(fullListCount, countOnly);
+        Assert.Equal(2, countOnly);
+    }
+
+    [Fact]
+    public void GetPendingRecommendationsCount_ReturnsZero_WhenNoPendingItems()
+    {
+        var yaml = "- title: Accepted item\n  description: Done\n  state: Accepted\n- title: Declined item\n  description: Nope\n  state: Declined\n";
+        CreatePlanWithRecommendations("01612-NoPending", yaml);
+
+        var count = _service.GetPendingRecommendationsCount();
+
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public void GetPendingRecommendationsCount_ReturnsZero_WhenNoRecommendationFiles()
+    {
+        var count = _service.GetPendingRecommendationsCount();
+
+        Assert.Equal(0, count);
+    }
 }

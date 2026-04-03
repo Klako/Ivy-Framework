@@ -539,6 +539,39 @@ public class PlanReaderService(ConfigService config)
         return recommendations.OrderByDescending(r => r.Date).ToList();
     }
 
+    public int GetPendingRecommendationsCount()
+    {
+        if (!Directory.Exists(PlansDirectory)) return 0;
+
+        var count = 0;
+
+        foreach (var dir in Directory.GetDirectories(PlansDirectory))
+        {
+            var recommendationsPath = Path.Combine(dir, "artifacts", "recommendations.yaml");
+            if (!File.Exists(recommendationsPath)) continue;
+
+            try
+            {
+                var yaml = File.ReadAllText(recommendationsPath);
+                var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(yaml);
+                if (items == null) continue;
+
+                foreach (var item in items)
+                {
+                    var state = string.IsNullOrWhiteSpace(item.State) ? "Pending" : item.State;
+                    if (state.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                        count++;
+                }
+            }
+            catch
+            {
+                // Skip malformed YAML files
+            }
+        }
+
+        return count;
+    }
+
     public void UpdateRecommendationState(string planFolderName, string recommendationTitle, string newState)
     {
         var recommendationsPath = Path.Combine(PlansDirectory, planFolderName, "artifacts", "recommendations.yaml");

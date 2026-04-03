@@ -44,13 +44,12 @@ public class PlanCountsService : IDisposable
     {
         var plans = _planReaderService.GetPlans();
         var jobs = _jobService.GetJobs();
-        var recommendations = _planReaderService.GetRecommendations();
         return new PlanCounts(
             Drafts: plans.Count(p => p.Status == PlanStatus.Draft),
             RunningJobs: jobs.Count(j => j.Status == "Running"),
             Reviews: plans.Count(p => p.Status is PlanStatus.ReadyForReview or PlanStatus.Failed),
             Icebox: plans.Count(p => p.Status == PlanStatus.Icebox),
-            Recommendations: recommendations.Count(r => r.State == "Pending")
+            Recommendations: _planReaderService.GetPendingRecommendationsCount()
         );
     }
 

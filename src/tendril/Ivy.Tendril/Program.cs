@@ -93,5 +93,5 @@ server.UseWebApplication(app =>
 server.AddAppsFromAssembly();
 server.AddConnectionsFromAssembly();
 server.UseAppShell(() => new TendrilAppShell(new AppShellSettings()
-    .UseTabs(preventDuplicates: true)));
+    .UseTabs(preventDuplicates: false)));
 await server.RunAsync();

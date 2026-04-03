@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { generateYAxis } from "./sharedUtils";
+import type { YAxisProps } from "./chartTypes";
 
 describe("generateYAxis", () => {
   describe("multi-axis charts skip largeSpread", () => {
     const multiYAxis = [
       { label: "Cost ($)", tickFormatter: "C2" },
-      { label: "Tokens", orientation: "Right" as const },
-    ];
+      { label: "Tokens", orientation: "Right" },
+    ] as unknown as YAxisProps[];
 
     it("should not apply largeSpread min/max overrides when multiple Y-axes are configured", () => {
       const result = generateYAxis(

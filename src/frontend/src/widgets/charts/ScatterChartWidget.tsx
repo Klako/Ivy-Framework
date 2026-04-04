@@ -286,6 +286,7 @@ const generateScatterSeries = (
         data: scatterData,
         symbol: customPath || symbol,
         symbolSize,
+        yAxisIndex: scatter.yAxisIndex ?? 0,
         itemStyle: {
           color: scatter.fill || undefined,
           opacity: scatter.fillOpacity !== null ? scatter.fillOpacity : 0.8,

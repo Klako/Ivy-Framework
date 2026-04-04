@@ -5,7 +5,7 @@
 # Ensure powershell-yaml is available
 if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
     Write-Host "Installing powershell-yaml module..." -ForegroundColor Yellow
-    Install-Module -Name powershell-yaml -Force -Scope CurrentUser
+    Install-Module -Name powershell-yaml -RequiredVersion 0.4.12 -Force -Scope CurrentUser
 }
 
 # Import the module

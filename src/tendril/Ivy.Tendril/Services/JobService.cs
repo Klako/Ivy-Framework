@@ -330,6 +330,7 @@ public class JobService
                 actionPsi.Environment["TENDRIL_JOB_TYPE"] = jobType;
                 actionPsi.Environment["TENDRIL_JOB_STATUS"] = job.Status;
                 actionPsi.Environment["TENDRIL_PLAN_FOLDER"] = planFolder;
+                actionPsi.Environment["TENDRIL_CONFIG"] = _configService.ConfigPath;
 
                 var actionProc = System.Diagnostics.Process.Start(actionPsi);
                 var output = actionProc?.StandardOutput.ReadToEnd().Trim() ?? "";

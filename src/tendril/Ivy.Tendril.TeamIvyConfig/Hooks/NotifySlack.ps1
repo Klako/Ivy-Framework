@@ -36,10 +36,10 @@ if ($prs.Count -eq 0) {
 }
 
 # Read config.yaml to find slackEmoji for the project
-$configPath = Join-Path (Split-Path (Split-Path $planFolder -Parent) -Parent) "config.yaml"
-# Try standard config location; fall back to repo path
-if (-not (Test-Path $configPath)) {
-    $configPath = "D:\Repos\_Ivy\Ivy-Tendril\config.yaml"
+$configPath = $env:TENDRIL_CONFIG
+if (-not $configPath -or -not (Test-Path $configPath)) {
+    Write-Error "TENDRIL_CONFIG not set or config.yaml not found at $configPath"
+    exit 1
 }
 
 $slackEmoji = ""

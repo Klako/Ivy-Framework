@@ -152,6 +152,24 @@ The `## Tests` section MUST include two parts:
    
    Never leave test scope unspecified — this causes the full suite to run unnecessarily.
 
+### 4.7. API Validation
+
+When suggesting Ivy Framework code in plan revisions:
+
+1. **Read Memory** — Check `Memory/ivy-framework-api-reference.md` for known patterns
+2. **Verify APIs** — Before suggesting any Ivy API (widgets, layouts, properties):
+   - Use `Grep` to find actual usage in `D:\Repos\_Ivy\Ivy-Framework\src\Ivy`
+   - Read the source file to confirm method signatures
+   - Check AGENTS.md for documented patterns
+3. **Never Guess** — If you can't verify an API, either:
+   - Use a verified alternative from memory/AGENTS.md
+   - Suggest the user verify the API (in ## Questions section)
+   - Omit the specific API and describe behavior instead
+
+**Example violation**: Writing `AlignItems(Alignment.Center)` without verifying it exists.
+
+**Correct approach**: Grep for `AlignContent` → Read `LayoutView.cs` → Confirm `AlignContent(Align align)` exists → Suggest verified API.
+
 ### 5. Verification Checklist
 
 In the `## Verification` section of the plan revision, generate a checklist from the project's `verifications` in `config.yaml`.

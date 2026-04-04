@@ -33,13 +33,23 @@ export function useScrollShadow(
     viewport.addEventListener("scroll", handleScroll);
 
     const resizeObserver = direction === "top" ? new ResizeObserver(handleScroll) : null;
+    const mutationObserver = direction === "top" ? new MutationObserver(handleScroll) : null;
+
     if (resizeObserver) {
       resizeObserver.observe(viewport);
+    }
+
+    if (mutationObserver) {
+      mutationObserver.observe(viewport, {
+        childList: true,
+        subtree: true,
+      });
     }
 
     return () => {
       viewport.removeEventListener("scroll", handleScroll);
       resizeObserver?.disconnect();
+      mutationObserver?.disconnect();
     };
   }, [selector, direction]);
 

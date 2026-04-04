@@ -84,6 +84,24 @@ describe("useScrollShadow direction parameter", () => {
   });
 });
 
+describe("useScrollShadow MutationObserver for dynamic content", () => {
+  const hookSource = fs.readFileSync(path.resolve(__dirname, "./use-scroll-shadow.ts"), "utf-8");
+
+  it("should create a MutationObserver when direction is top", () => {
+    expect(hookSource).toContain("new MutationObserver(handleScroll)");
+    expect(hookSource).toMatch(/direction === "top" \? new MutationObserver/);
+  });
+
+  it("should observe viewport with childList and subtree options", () => {
+    expect(hookSource).toContain("childList: true");
+    expect(hookSource).toContain("subtree: true");
+  });
+
+  it("should disconnect the MutationObserver on cleanup", () => {
+    expect(hookSource).toContain("mutationObserver?.disconnect()");
+  });
+});
+
 describe("HeaderLayoutWidget uses useScrollShadow hook", () => {
   const widgetSource = fs.readFileSync(
     path.resolve(__dirname, "../widgets/layouts/HeaderLayoutWidget.tsx"),

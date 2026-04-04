@@ -206,6 +206,7 @@ public class ConfigService
 
     public TendrilSettings Settings => _settings;
     public string TendrilHome => _tendrilHome;
+    public string ConfigPath => _configPath;
     public string PlanFolder => string.IsNullOrEmpty(_tendrilHome) ? "" : Path.Combine(_tendrilHome, "Plans");
     public List<ProjectConfig> Projects => _settings.Projects;
     public List<LevelConfig> Levels => _settings.Levels;

@@ -588,7 +588,7 @@ public class ContentView(
                 new DialogHeader("Keyboard Shortcuts"),
                 new DialogBody(
                     Layout.Vertical().Gap(2)
-                        | Text.Block("Navigate through plans and actions using these shortcuts:").Padding(0, 0, 2, 0)
+                        | Text.Muted("Navigate through plans and actions using these shortcuts:")
                         | (Layout.Horizontal().Gap(2)
                             | new Badge("p").Variant(BadgeVariant.Outline)
                             | Text.Block("Previous plan"))

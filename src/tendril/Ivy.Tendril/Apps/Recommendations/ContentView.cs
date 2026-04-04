@@ -31,17 +31,9 @@ public class ContentView(
 
         var currentIndex = _all.FindIndex(r => r.PlanId == _selected.PlanId && r.Title == _selected.Title);
 
-        var stateBadgeVariant = _selected.State switch
-        {
-            "Accepted" => BadgeVariant.Success,
-            "Declined" => BadgeVariant.Destructive,
-            _ => BadgeVariant.Outline
-        };
-
         // Header
         var header = Layout.Horizontal().Width(Size.Full()).Padding(1).Gap(2)
             | Text.Block(_selected.Title).Bold()
-            | new Badge(_selected.State).Variant(stateBadgeVariant)
             | new Badge($"#{_selected.PlanId}").Variant(BadgeVariant.Outline)
             | new Spacer().Width(Size.Grow())
             | Text.Rich()

@@ -19,11 +19,8 @@ if (-not $env:TENDRIL_HOME) {
 $script:ConfigPath = Join-Path $env:TENDRIL_HOME "config.yaml"
 $script:PlansDir = Join-Path $env:TENDRIL_HOME "Plans"
 
-# Ensure powershell-yaml is available
-if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
-    Install-Module -Name powershell-yaml -Force -Scope CurrentUser
-}
-Import-Module powershell-yaml
+# Bootstrap required PowerShell modules
+. (Join-Path $PSScriptRoot "Bootstrap-Modules.ps1")
 
 function GetProgramFolder {
     param([string]$ScriptPath)

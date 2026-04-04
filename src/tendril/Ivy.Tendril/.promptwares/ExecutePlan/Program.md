@@ -137,6 +137,16 @@ git worktree add "<PlanFolder>/worktrees/<RepoName>" -b "plan-<PlanId>-<RepoName
 
 **!CRITICAL: Frontend builds in worktrees have known issues with `@linaria/core` and `echarts` module resolution that cause 15-25 minute timeouts. Follow this workaround to avoid them.**
 
+#### Cleanup Leftover Files
+
+Before setting up frontend dependencies, clean up any `.npmrc` files left from previous crashed runs:
+
+```bash
+pwsh -NoProfile -File "$env:TENDRIL_HOME/.promptwares/ExecutePlan/Tools/Cleanup-WorktreeFrontend.ps1" -WorktreeRoot "<PlanFolder>/worktrees"
+```
+
+This prevents stale `.npmrc` files with auth tokens from accumulating across multiple plan executions.
+
 #### Default Path (Most Plans)
 
 If the plan does **NOT** modify frontend code (`.tsx`, `.ts`, `.css` files in `src/frontend/` or `src/widgets/*/frontend/`):

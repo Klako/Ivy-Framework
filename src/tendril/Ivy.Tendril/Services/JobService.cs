@@ -200,6 +200,8 @@ public class JobService
         psi.Environment["TENDRIL_JOB_ID"] = id;
         psi.Environment["TENDRIL_URL"] = "http://localhost:5010";
         psi.Environment["TENDRIL_SHARED"] = SharedRoot;
+        if (_configService != null)
+            psi.Environment["TENDRIL_CONFIG"] = _configService.ConfigPath;
 
         foreach (var arg in processArgs)
             psi.ArgumentList.Add(arg);

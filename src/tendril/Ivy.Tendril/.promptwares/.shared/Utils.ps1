@@ -16,7 +16,11 @@ if (-not $env:TENDRIL_HOME) {
     exit 1
 }
 
-$script:ConfigPath = Join-Path $env:TENDRIL_HOME "config.yaml"
+$script:ConfigPath = if ($env:TENDRIL_CONFIG) {
+    $env:TENDRIL_CONFIG
+} else {
+    Join-Path $env:TENDRIL_HOME "config.yaml"
+}
 $script:PlansDir = Join-Path $env:TENDRIL_HOME "Plans"
 
 # Bootstrap required PowerShell modules

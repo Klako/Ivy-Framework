@@ -10,11 +10,9 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-# Ensure powershell-yaml is available
-if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
-    Install-Module -Name powershell-yaml -Force -Scope CurrentUser
-}
-Import-Module powershell-yaml
+# Bootstrap required PowerShell modules
+$sharedPath = Join-Path (Split-Path (Split-Path $PSScriptRoot)) "Ivy.Tendril/.promptwares/.shared"
+. (Join-Path $sharedPath "Bootstrap-Modules.ps1")
 
 # Resolve plans directory
 $tendrilHome = $env:TENDRIL_HOME

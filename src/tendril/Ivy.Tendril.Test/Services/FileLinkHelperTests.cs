@@ -1,5 +1,4 @@
 using Ivy;
-using Ivy.Core.Hooks;
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Test.Services;
@@ -90,25 +89,31 @@ public class FileLinkHelperTests
     }
 
     [Fact]
-    public void BuildFileLinkSheet_CallsOnClose()
+    public void BuildFileLinkSheet_ReturnsSheet_WhenFileNotFound()
     {
-        var closed = false;
         var result = FileLinkHelper.BuildFileLinkSheet(
-            "/nonexistent/file.txt", () => closed = true, []);
+            "/nonexistent/file.txt", () => { }, []);
         Assert.NotNull(result);
-        // Verify it's a Sheet (the onClose callback is wired internally)
         Assert.IsType<Sheet>(result);
     }
 
-    private class TestState<T>(T initial) : IState<T>
+    private class TestState<T> : IState<T>
     {
-        public T Value { get; set; } = initial;
+        private readonly T _initial;
+
+        public TestState(T initial)
+        {
+            _initial = initial;
+            Value = initial;
+        }
+
+        public T Value { get; set; }
 
         public T Set(T value) => Value = value;
 
         public T Set(Func<T, T> setter) => Value = setter(Value);
 
-        public T Reset() => Value = initial;
+        public T Reset() => Value = _initial;
 
         public IDisposable Subscribe(IObserver<T> observer) => throw new NotImplementedException();
         public IDisposable SubscribeAny(Action action) => throw new NotImplementedException();
@@ -116,6 +121,6 @@ public class FileLinkHelperTests
         public Type GetStateType() => typeof(T);
         public object? GetValueAsObject() => Value;
         public void Dispose() { }
-        public IEffectTrigger ToEffectTrigger() => throw new NotImplementedException();
+        public IEffectTrigger ToTrigger() => throw new NotImplementedException();
     }
 }

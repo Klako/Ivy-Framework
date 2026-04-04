@@ -399,12 +399,12 @@ public class ScatterChart12View : ViewBase
     {
         var data = new[]
         {
-            new { Quarter = "Q1", Revenue = 150, MarketShare = 12 },
-            new { Quarter = "Q2", Revenue = 280, MarketShare = 18 },
-            new { Quarter = "Q3", Revenue = 420, MarketShare = 25 },
-            new { Quarter = "Q4", Revenue = 380, MarketShare = 22 },
-            new { Quarter = "Q5", Revenue = 510, MarketShare = 28 },
-            new { Quarter = "Q6", Revenue = 650, MarketShare = 35 },
+            new { Month = 1, Revenue = 150, MarketShare = 12 },
+            new { Month = 2, Revenue = 280, MarketShare = 18 },
+            new { Month = 3, Revenue = 420, MarketShare = 25 },
+            new { Month = 4, Revenue = 380, MarketShare = 22 },
+            new { Month = 5, Revenue = 510, MarketShare = 28 },
+            new { Month = 6, Revenue = 650, MarketShare = 35 },
         };
 
         return new Card().Title("Dual Axis (Revenue vs Market Share)")
@@ -412,7 +412,7 @@ public class ScatterChart12View : ViewBase
                 .ColorScheme(ColorScheme.Default)
                 .Scatter(new Scatter("Revenue").Name("Revenue ($K)").YAxisIndex(0).Shape(ScatterShape.Circle))
                 .Scatter(new Scatter("MarketShare").Name("Market Share (%)").YAxisIndex(1).Shape(ScatterShape.Diamond))
-                .XAxis(new XAxis("Quarter").Type(AxisTypes.Category).TickLine(false).AxisLine(false))
+                .XAxis(new XAxis("Month").Type(AxisTypes.Number).TickLine(false).AxisLine(false))
                 .YAxis(new YAxis("Revenue")
                     .Orientation(YAxis.Orientations.Left)
                     .TickFormatter("C0"))

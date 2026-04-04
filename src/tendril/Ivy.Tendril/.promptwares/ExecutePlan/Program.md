@@ -42,6 +42,54 @@ If `plan.yaml` has a `dependsOn` list, for each entry:
 
 **Note:** The JobService also performs this check before launching ExecutePlan, but this step acts as a safety net in case the dependency state changed between job launch and execution.
 
+### 1.7. Validate Code State
+
+After reading the plan revision, scan it for code validation markers to detect stale plans (where the described code has already been changed by another plan).
+
+1. **Extract validation blocks** — Parse the plan revision for sections containing:
+   - Headers matching `**Current implementation**`, `**Current implementation in <file>**`, or `**Old implementation**`
+   - Fenced code blocks (` ```language ... ``` `) immediately following these headers
+   - Associated file paths (markdown links with `file:///` or inline text like `Utils.ps1:217`)
+
+2. **Validate code exists** — For each validation block found:
+   - Extract the file path from the context (header text or preceding paragraph)
+   - Convert `file:///` URLs to local paths if needed
+   - If a line range is specified (e.g., `:217-242`), read those specific lines
+   - Otherwise, read the entire file and search for the code snippet (normalize whitespace when comparing — ignore leading/trailing blank lines and trailing spaces)
+   - **Exact match** → validation passes, proceed
+   - **Not found** → validation fails, the code may have already changed
+   - **File not found** → validation fails, the file may have been deleted/moved
+
+3. **Decision logic:**
+   - **If no validation blocks found** → Skip validation, proceed to worktree creation (backward compatible)
+   - **If all validation blocks pass** → Proceed to worktree creation
+   - **If any validation fails** → Fail the plan immediately with a detailed report
+
+4. **Write validation report** — Create `<PlanFolder>/verification/PreExecution.md`:
+
+```markdown
+# PreExecution
+
+- **Date:** <CurrentTime>
+- **Result:** Pass / Fail / Skipped
+- **Blocks Found:** <number>
+
+## Validation Blocks
+
+### Block 1: <file path>
+- **Status:** Pass / Fail
+- **Expected:** (first 5 lines of expected code)
+- **Actual:** (first 5 lines of actual code, or "File not found")
+
+## Recommendation (on failure)
+
+- Review the plan against the current codebase
+- Check if this work was already completed by another plan
+- Update the plan via UpdatePlan or mark as Skipped
+```
+
+**Note:** This step runs against the original repo (before worktrees are created), since it validates whether the plan's assumptions about the codebase are still accurate.
+
 ### 2. Create Worktrees
 
 For each repo listed in `plan.yaml` `repos` (or the project's repos from `config.yaml` if empty):

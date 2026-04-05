@@ -18,7 +18,7 @@ public class PlanReaderService(ConfigService config)
         .IgnoreUnmatchedProperties()
         .Build();
 
-    private static readonly ISerializer YamlSerializer = new SerializerBuilder()
+    public static readonly ISerializer YamlSerializer = new SerializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .Build();
 

@@ -16,11 +16,13 @@ if (-not $env:TENDRIL_HOME) {
     exit 1
 }
 
-$script:ConfigPath = if ($env:TENDRIL_CONFIG) {
-    $env:TENDRIL_CONFIG
-} else {
-    Join-Path $env:TENDRIL_HOME "config.yaml"
+# TENDRIL_CONFIG is required
+if (-not $env:TENDRIL_CONFIG) {
+    Write-Error "TENDRIL_CONFIG environment variable is not set. This variable must be set by JobService before invoking promptware scripts."
+    exit 1
 }
+
+$script:ConfigPath = $env:TENDRIL_CONFIG
 $script:PlansDir = Join-Path $env:TENDRIL_HOME "Plans"
 
 # Bootstrap required PowerShell modules

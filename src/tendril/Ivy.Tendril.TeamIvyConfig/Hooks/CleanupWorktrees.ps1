@@ -10,6 +10,11 @@ param(
 
 $ErrorActionPreference = "Continue"
 
+# Set TENDRIL_CONFIG if not already set (for standalone execution)
+if (-not $env:TENDRIL_CONFIG -and $env:TENDRIL_HOME) {
+    $env:TENDRIL_CONFIG = Join-Path $env:TENDRIL_HOME "config.yaml"
+}
+
 # Bootstrap shared utilities (includes Bootstrap-Modules.ps1 and ExtractRepoPathsFromYaml)
 $sharedPath = Join-Path (Split-Path (Split-Path $PSScriptRoot)) "Ivy.Tendril/.promptwares/.shared"
 . (Join-Path $sharedPath "Utils.ps1")

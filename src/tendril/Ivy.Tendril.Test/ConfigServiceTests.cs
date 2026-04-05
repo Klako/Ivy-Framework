@@ -170,4 +170,101 @@ projects:
         Assert.NotNull(project.ReviewActions);
         Assert.Empty(project.ReviewActions);
     }
+
+    [Fact]
+    public void Constructor_IgnoresUnknownYamlKeys()
+    {
+        var tempDir = CreateTempConfigFile(@"
+agentCommand: claude
+unknownKey: someValue
+projects:
+  - name: Test
+    color: Blue
+    repos: []
+    verifications: []
+");
+
+        var previousHome = Environment.GetEnvironmentVariable("TENDRIL_HOME");
+        Environment.SetEnvironmentVariable("TENDRIL_HOME", tempDir);
+
+        try
+        {
+            var service = new ConfigService();
+
+            Assert.NotNull(service.Settings);
+            Assert.Equal("claude", service.Settings.AgentCommand);
+            Assert.False(service.NeedsOnboarding);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TENDRIL_HOME", previousHome);
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void SetTendrilHome_IgnoresUnknownYamlKeys()
+    {
+        var tempDir = CreateTempConfigFile(@"
+agentCommand: test-agent
+anotherUnknownKey: anotherValue
+projects:
+  - name: TestProject
+    color: Red
+    repos: []
+    verifications: []
+");
+
+        var service = new ConfigService(new TendrilSettings { AgentCommand = "initial" }, "");
+
+        try
+        {
+            service.SetTendrilHome(tempDir);
+
+            Assert.NotNull(service.Settings);
+            Assert.Equal("test-agent", service.Settings.AgentCommand);
+            Assert.Equal(tempDir, service.TendrilHome);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void Constructor_And_SetTendrilHome_BehaviorIsConsistent()
+    {
+        var tempDir = CreateTempConfigFile(@"
+agentCommand: consistent-agent
+unknownField: ignored
+maxConcurrentJobs: 10
+projects: []
+verifications: []
+");
+
+        var previousHome = Environment.GetEnvironmentVariable("TENDRIL_HOME");
+        Environment.SetEnvironmentVariable("TENDRIL_HOME", tempDir);
+
+        try
+        {
+            // Load via constructor
+            var serviceViaConstructor = new ConfigService();
+
+            // Load via SetTendrilHome
+            var serviceViaSetHome = new ConfigService(new TendrilSettings(), "");
+            serviceViaSetHome.SetTendrilHome(tempDir);
+
+            // Both should succeed and load the same settings
+            Assert.Equal("consistent-agent", serviceViaConstructor.Settings.AgentCommand);
+            Assert.Equal("consistent-agent", serviceViaSetHome.Settings.AgentCommand);
+
+            Assert.Equal(10, serviceViaConstructor.Settings.MaxConcurrentJobs);
+            Assert.Equal(10, serviceViaSetHome.Settings.MaxConcurrentJobs);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TENDRIL_HOME", previousHome);
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

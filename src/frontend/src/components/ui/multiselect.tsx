@@ -266,8 +266,9 @@ const MultipleSelector = React.forwardRef<
       return defaultOptions.filter((o) => set.has(o.value) && !o.disable);
     }, [defaultOptions, filteredForBulk]);
 
-    const bulkSelectAllDisabled =
-      visibleEnabledForBulk.every((o) => selectedValueStrings.includes(o.value));
+    const bulkSelectAllDisabled = visibleEnabledForBulk.every((o) =>
+      selectedValueStrings.includes(o.value),
+    );
 
     const bulkClearAllDisabled = selectedValueStrings.length <= (minSelections ?? 0);
 

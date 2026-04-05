@@ -59,7 +59,7 @@ public class JobsApp : ViewBase
             .Select(g => new ProgressSegment(
                 Value: g.Count,
                 Color: GetStatusColor(g.Status),
-                Label: $"{g.Status} ({g.Count})"
+                Label: g.Status
             ))
             .ToArray();
 

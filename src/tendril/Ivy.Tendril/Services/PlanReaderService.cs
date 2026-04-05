@@ -117,6 +117,11 @@ public class PlanReaderService(ConfigService config)
         }
     }
 
+    /// <summary>
+    /// Retrieves all plans from the plans directory, optionally filtered by status.
+    /// </summary>
+    /// <param name="statusFilter">Optional status to filter by. If <c>null</c>, returns all plans.</param>
+    /// <returns>List of plans ordered by ID, or an empty list if the plans directory does not exist or parsing fails.</returns>
     public List<PlanFile> GetPlans(PlanStatus? statusFilter = null)
     {
         try
@@ -142,17 +147,31 @@ public class PlanReaderService(ConfigService config)
         }
     }
 
+    /// <summary>
+    /// Retrieves a single plan by its folder path.
+    /// </summary>
+    /// <param name="folderPath">Absolute path to the plan folder.</param>
+    /// <returns>The parsed <see cref="PlanFile"/>, or <c>null</c> if the folder does not exist or parsing fails.</returns>
     public PlanFile? GetPlanByFolder(string folderPath)
     {
         if (!Directory.Exists(folderPath)) return null;
         return ParsePlanFolder(folderPath);
     }
 
+    /// <summary>
+    /// Retrieves all plans that are in the <see cref="PlanStatus.Icebox"/> state.
+    /// </summary>
+    /// <returns>List of icebox plans ordered by ID.</returns>
     public List<PlanFile> GetIceboxPlans()
     {
         return GetPlans(PlanStatus.Icebox);
     }
 
+    /// <summary>
+    /// Transitions a plan to a new state by updating its <c>plan.yaml</c> file.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder (e.g. <c>01105-TestPlan</c>).</param>
+    /// <param name="newState">The target state to transition to.</param>
     public void TransitionState(string folderName, PlanStatus newState)
     {
         var folderPath = Path.Combine(PlansDirectory, folderName);
@@ -169,6 +188,11 @@ public class PlanReaderService(ConfigService config)
         File.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
     }
 
+    /// <summary>
+    /// Creates a new revision file for a plan and updates the plan's timestamp.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <param name="content">Markdown content of the new revision.</param>
     public void SaveRevision(string folderName, string content)
     {
         var revisionsDir = Path.Combine(PlansDirectory, folderName, "revisions");
@@ -189,6 +213,11 @@ public class PlanReaderService(ConfigService config)
         }
     }
 
+    /// <summary>
+    /// Reads the content of the most recent revision file for a plan.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <returns>The markdown content of the latest revision, or <see cref="string.Empty"/> if no revisions exist.</returns>
     public string ReadLatestRevision(string folderName)
     {
         var revisionsDir = Path.Combine(PlansDirectory, folderName, "revisions");
@@ -201,6 +230,11 @@ public class PlanReaderService(ConfigService config)
         return latestFile != null ? File.ReadAllText(latestFile) : string.Empty;
     }
 
+    /// <summary>
+    /// Gets all revisions for a plan, ordered by revision number.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <returns>List of tuples containing revision number, content, and last-modified timestamp (UTC).</returns>
     public List<(int Number, string Content, DateTime Modified)> GetRevisions(string folderName)
     {
         var revisionsDir = Path.Combine(PlansDirectory, folderName, "revisions");
@@ -219,6 +253,12 @@ public class PlanReaderService(ConfigService config)
             .ToList();
     }
 
+    /// <summary>
+    /// Appends a log entry to a plan's logs directory.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <param name="action">Action name used in the log filename (e.g. <c>ExecutePlan</c>).</param>
+    /// <param name="content">Markdown content of the log entry.</param>
     public void AddLog(string folderName, string action, string content)
     {
         var logsDir = Path.Combine(PlansDirectory, folderName, "logs");
@@ -244,6 +284,14 @@ public class PlanReaderService(ConfigService config)
         File.WriteAllText(logPath, content);
     }
 
+    /// <summary>
+    /// Deletes a plan folder and all its contents, including any associated git worktrees.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <remarks>
+    /// Removes git worktrees first to avoid locked file issues on Windows, then clears
+    /// read-only attributes before deleting the directory tree.
+    /// </remarks>
     public void DeletePlan(string folderName)
     {
         var folderPath = Path.Combine(PlansDirectory, folderName);
@@ -318,16 +366,31 @@ public class PlanReaderService(ConfigService config)
         }
     }
 
+    /// <summary>
+    /// Reads the raw content of a plan's latest revision.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <returns>The markdown content of the latest revision.</returns>
     public string ReadRawPlan(string folderName)
     {
         return ReadLatestRevision(folderName);
     }
 
+    /// <summary>
+    /// Saves content to a plan by overwriting its latest revision.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <param name="fullContent">The full markdown content to write.</param>
     public void SavePlan(string folderName, string fullContent)
     {
         UpdateLatestRevision(folderName, fullContent);
     }
 
+    /// <summary>
+    /// Overwrites the most recent revision file for a plan and updates the plan's timestamp.
+    /// </summary>
+    /// <param name="folderName">Name of the plan folder.</param>
+    /// <param name="content">The updated markdown content to write.</param>
     public void UpdateLatestRevision(string folderName, string content)
     {
         var revisionsDir = Path.Combine(PlansDirectory, folderName, "revisions");
@@ -387,6 +450,11 @@ public class PlanReaderService(ConfigService config)
         }
     }
 
+    /// <summary>
+    /// Calculates the total cost for a plan by summing all entries in its <c>costs.csv</c> file.
+    /// </summary>
+    /// <param name="folderPath">Absolute path to the plan folder.</param>
+    /// <returns>Total cost in dollars, or <c>0</c> if no costs file exists.</returns>
     public decimal GetPlanTotalCost(string folderPath)
     {
         var costsPath = Path.Combine(folderPath, "costs.csv");
@@ -407,6 +475,11 @@ public class PlanReaderService(ConfigService config)
         return total;
     }
 
+    /// <summary>
+    /// Calculates the total token usage for a plan by summing all entries in its <c>costs.csv</c> file.
+    /// </summary>
+    /// <param name="folderPath">Absolute path to the plan folder.</param>
+    /// <returns>Total token count, or <c>0</c> if no costs file exists.</returns>
     public int GetPlanTotalTokens(string folderPath)
     {
         var costsPath = Path.Combine(folderPath, "costs.csv");
@@ -427,6 +500,15 @@ public class PlanReaderService(ConfigService config)
         return total;
     }
 
+    /// <summary>
+    /// Computes hourly token usage and cost statistics across all plans over a given time window.
+    /// </summary>
+    /// <param name="days">Number of days to look back from now. Defaults to 7.</param>
+    /// <returns>List of hourly buckets with aggregated cost and token counts, ordered chronologically.</returns>
+    /// <remarks>
+    /// Correlates <c>costs.csv</c> entries with log file timestamps to determine when tokens were consumed.
+    /// Plans without both a costs file and a logs directory are skipped.
+    /// </remarks>
     public List<HourlyTokenBurn> GetHourlyTokenBurn(int days = 7)
     {
         var cutoff = DateTime.UtcNow.AddDays(-days);
@@ -595,6 +677,11 @@ public class PlanReaderService(ConfigService config)
         int PendingRecommendations
     );
 
+    /// <summary>
+    /// Efficiently computes plan counts by status and pending recommendation count
+    /// using regex-based state extraction instead of full YAML deserialization.
+    /// </summary>
+    /// <returns>A <see cref="PlanCountSnapshot"/> with counts for each status category and pending recommendations.</returns>
     public PlanCountSnapshot ComputePlanCounts()
     {
         int drafts = 0, reviews = 0, failed = 0, icebox = 0, pendingRecs = 0;
@@ -642,6 +729,12 @@ public class PlanReaderService(ConfigService config)
         return new PlanCountSnapshot(drafts, reviews, failed, icebox, pendingRecs);
     }
 
+    /// <summary>
+    /// Updates the state of a specific recommendation within a plan's <c>recommendations.yaml</c> file.
+    /// </summary>
+    /// <param name="planFolderName">Name of the plan folder containing the recommendation.</param>
+    /// <param name="recommendationTitle">Exact title of the recommendation to update.</param>
+    /// <param name="newState">The new state value (e.g. <c>Pending</c>, <c>Accepted</c>, <c>Dismissed</c>).</param>
     public void UpdateRecommendationState(string planFolderName, string recommendationTitle, string newState)
     {
         var recommendationsPath = Path.Combine(PlansDirectory, planFolderName, "artifacts", "recommendations.yaml");

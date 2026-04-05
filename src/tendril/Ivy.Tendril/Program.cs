@@ -94,13 +94,17 @@ server.UseWebApplication(app =>
 });
 server.AddAppsFromAssembly();
 server.AddConnectionsFromAssembly();
-var version = typeof(TendrilAppShell).Assembly.GetName().Version!.ToString();
+var version = typeof(TendrilAppShell).Assembly.GetName().Version!;
+var versionString = version.ToString(3);
 var appShellSettings = new AppShellSettings()
     .Header(
         Layout.Horizontal(
-            new Image("/tendril/assets/Tendril.svg").Width(Size.Units(21)).Height(Size.Auto()),
-            Text.Muted($"v{version}")
-        ).Gap(2).Padding(2).AlignContent(Align.Left)
+            new Image("/tendril/assets/Tendril.svg").Width(Size.Units(15)).Height(Size.Auto()),
+            Layout.Vertical(
+                Text.Muted("Ivy Tendril").Small(),
+                Text.Muted($"v{versionString}")
+            )
+        ).Gap(2).Padding(2).AlignContent(Align.BottomLeft)
     )
     .DefaultAppId("dashboard")
     .UseTabs(preventDuplicates: false);

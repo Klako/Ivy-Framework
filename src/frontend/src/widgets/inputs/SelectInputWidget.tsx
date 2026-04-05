@@ -280,8 +280,7 @@ const ToggleVariant: React.FC<SelectInputWidgetProps> = ({
   );
 
   const bulkSelectAllDisabled =
-    !selectMany ||
-    visibleEnabledForBulk.every((o) => selectedValues.includes(o.value));
+    !selectMany || visibleEnabledForBulk.every((o) => selectedValues.includes(o.value));
 
   const bulkClearAllDisabled = !selectMany || selectedValues.length <= (minSelections ?? 0);
 
@@ -760,8 +759,9 @@ const CheckboxVariant: React.FC<SelectInputWidgetProps> = ({
     [filteredOptions, disabled, loading],
   );
 
-  const bulkSelectAllDisabledList =
-    visibleEnabledForBulkList.every((o) => selectedValues.includes(o.value));
+  const bulkSelectAllDisabledList = visibleEnabledForBulkList.every((o) =>
+    selectedValues.includes(o.value),
+  );
 
   const bulkClearAllDisabledList = selectedValues.length <= (minSelections ?? 0);
 

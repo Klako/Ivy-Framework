@@ -108,6 +108,11 @@ public class TendrilSettings
 
 public class ConfigService
 {
+    // Shared deserializer with lenient validation (.IgnoreUnmatchedProperties).
+    // This allows config.yaml to contain keys that aren't in TendrilSettings without
+    // throwing errors, improving resilience to config changes and forward/backward
+    // compatibility. Both the constructor and SetTendrilHome use this deserializer
+    // to ensure consistent behavior.
     private static readonly IDeserializer CamelCaseDeserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()

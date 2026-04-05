@@ -808,11 +808,3 @@ public record Recommendation(
     PlanStatus SourcePlanStatus,
     string? DeclineReason = null
 );
-
-public class RecommendationYaml
-{
-    public string Title { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string State { get; set; } = "Pending";
-    public string? DeclineReason { get; set; }
-}

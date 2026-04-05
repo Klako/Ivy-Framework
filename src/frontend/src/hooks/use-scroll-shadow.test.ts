@@ -107,7 +107,7 @@ describe("useScrollShadow MutationObserver performance optimization", () => {
 
   it("should wrap MutationObserver callback in requestAnimationFrame", () => {
     expect(hookSource).toContain("requestAnimationFrame");
-    expect(hookSource).toMatch(/new MutationObserver\([^)]*requestAnimationFrame/s);
+    expect(hookSource).toMatch(/new MutationObserver\([\s\S]*?requestAnimationFrame/);
   });
 
   it("should cancel pending requestAnimationFrame on cleanup", () => {

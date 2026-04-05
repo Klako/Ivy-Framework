@@ -107,6 +107,6 @@ var appShellSettings = new AppShellSettings()
         ).Gap(2).Padding(2).AlignContent(Align.BottomLeft)
     )
     .DefaultAppId("dashboard")
-    .UseTabs(preventDuplicates: false);
+    .UseTabs(preventDuplicates: true);
 server.UseAppShell(() => new TendrilAppShell(appShellSettings));
 await server.RunAsync();

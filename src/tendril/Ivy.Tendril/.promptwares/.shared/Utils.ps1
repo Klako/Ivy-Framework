@@ -237,10 +237,36 @@ function ReadPlanProject {
     return @{ Content = $content; Project = $project; Yaml = $yaml }
 }
 
+# ExtractRepoPathsFromYaml — Centralized repo path extraction
+#
+# Use this function whenever you need to extract repository paths from YAML config.
+# Handles both formats:
+# - Plain strings: repos: ["D:\Repos\Foo"]
+# - Objects: repos: [{ path: "%REPOS_HOME%/Foo", prRule: "yolo" }]
+#
+# Automatically expands environment variables (%REPOS_HOME%, %TENDRIL_HOME%, etc.)
+# and optionally validates paths exist on disk.
+#
+# Examples:
+#   # From plan.yaml (plan repos are plain strings or objects)
+#   $repoPaths = ExtractRepoPathsFromYaml -ReposArray $planYaml.repos -ValidateExists
+#
+#   # From config.yaml project entry
+#   $projectConfig = $config.projects | Where-Object { $_.name -eq $project } | Select-Object -First 1
+#   $repoPaths = ExtractRepoPathsFromYaml -ReposArray $projectConfig.repos
+#
+#   # Get first repo path only (for working directory)
+#   $workDir = (ExtractRepoPathsFromYaml -ReposArray $projectConfig.repos)[0]
+#
 function ExtractRepoPathsFromYaml {
     <#
     .SYNOPSIS
     Extracts and resolves repository paths from YAML repo entries.
+
+    .DESCRIPTION
+    Centralized utility for extracting repository paths from config.yaml or plan.yaml.
+    Handles both plain string entries and object entries with a .path property.
+    Automatically expands environment variables (e.g. %REPOS_HOME%).
 
     .PARAMETER Repos
     Array of repo entries from YAML (can be hashtables with .path or plain strings)
@@ -253,6 +279,13 @@ function ExtractRepoPathsFromYaml {
 
     .EXAMPLE
     $repoPaths = ExtractRepoPathsFromYaml $planInfo.Yaml.repos -ValidateExists
+
+    .EXAMPLE
+    $projectConfig = $config.projects | Where-Object { $_.name -eq $project } | Select-Object -First 1
+    $repoPaths = ExtractRepoPathsFromYaml $projectConfig.repos
+
+    .EXAMPLE
+    $workDir = ExtractRepoPathsFromYaml $projectConfig.repos -ReturnFirst
     #>
     param(
         [Parameter(Mandatory = $true)]

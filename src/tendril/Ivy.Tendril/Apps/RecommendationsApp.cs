@@ -35,6 +35,11 @@ public class RecommendationsApp : ViewBase
             })
             .ToList();
 
+        if (selectedState.Value == null && filtered.Count > 0)
+        {
+            selectedState.Set(filtered[0]);
+        }
+
         // If selected recommendation is no longer in filtered list, adjust selection
         if (selectedState.Value is { } selected && !filtered.Any(r => r.PlanId == selected.PlanId && r.Title == selected.Title))
         {

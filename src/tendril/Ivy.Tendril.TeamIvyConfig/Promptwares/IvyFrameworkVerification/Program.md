@@ -25,7 +25,16 @@ If the changes are non-visual (docs, analyzers, refactoring, code-only fixes), w
 ### 2. Research
 
 - Read `Memory/IvyFrameworkGotchas.md` for known API issues and workarounds
-- Read `Memory/PlaywrightKnowledge.md` for Ivy testing patterns and locator strategies
+- Read `Memory/PlaywrightKnowledge-Index.md` for an overview of the split knowledge files
+- Always read the critical files:
+  - `Memory/PlaywrightKnowledge-Process.md` — mandatory for all tests
+  - `Memory/PlaywrightKnowledge-Gotchas.md` — avoid known crash patterns
+- Read additional files based on the feature being verified (identified in Step 1):
+  - For new test projects or framework setup: `Memory/PlaywrightKnowledge-Framework.md`
+  - For widget testing: `Memory/PlaywrightKnowledge-Widgets.md`
+  - For locator/assertion work: `Memory/PlaywrightKnowledge-Locators.md`
+  - For DOM/rendering issues: `Memory/PlaywrightKnowledge-DOM.md`
+  - For test structure guidance: `Memory/PlaywrightKnowledge-Testing.md`
 - Read the Ivy Framework AGENTS.md: `~/git/ivy/Ivy-Framework/AGENTS.md`
 - Read relevant source code for the changed feature from `~/git/ivy/Ivy-Framework/src/`
 - Read existing samples: `~/git/ivy/Ivy-Framework/src/Ivy.Samples.Shared/Apps/`
@@ -221,7 +230,7 @@ process.on('exit', () => {
 5. No console errors or warnings
 6. No backend errors or exceptions
 
-**Code patterns (from PlaywrightKnowledge.md):**
+**Code patterns (refer to PlaywrightKnowledge-Index.md for specific files):**
 
 - Use `getByText()`, `getByRole()` locators
 - Use `.first()` when multiple matches possible

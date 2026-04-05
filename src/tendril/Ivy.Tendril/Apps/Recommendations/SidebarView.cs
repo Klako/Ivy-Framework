@@ -6,14 +6,22 @@ public class SidebarView(
     List<Recommendation> recommendations,
     IState<Recommendation?> selectedState,
     int totalCount,
-    bool hasActiveFilters) : ViewBase
+    bool hasActiveFilters,
+    IState<string?> textFilter) : ViewBase
 {
     private readonly List<Recommendation> _recommendations = recommendations;
     private readonly IState<Recommendation?> _selectedState = selectedState;
     private readonly int _totalCount = totalCount;
     private readonly bool _hasActiveFilters = hasActiveFilters;
+    private readonly IState<string?> _textFilter = textFilter;
 
-    public override object Build()
+    public object BuildHeader()
+    {
+        return Layout.Vertical()
+            | _textFilter.ToSearchInput().Placeholder("Search recommendations...");
+    }
+
+    public object BuildContent()
     {
         if (_recommendations.Count == 0 && _hasActiveFilters && _totalCount > 0)
         {
@@ -34,5 +42,10 @@ public class SidebarView(
             return new ListItem($"#{rec.PlanId} {rec.Title}", subtitle: preview)
                 .OnClick(() => _selectedState.Set(clickableRec));
         }));
+    }
+
+    public override object Build()
+    {
+        return BuildContent();
     }
 }

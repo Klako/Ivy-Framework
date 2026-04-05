@@ -13,6 +13,7 @@ public class RecommendationsApp : ViewBase
         var selectedState = UseState<Recommendation?>(null);
         var projectFilter = UseState<string?>(null);
         var planStatusFilter = UseState<string?>(null);
+        var textFilter = UseState<string?>("");
 
         UseInterval(() => refreshToken.Refresh(), TimeSpan.FromMinutes(1));
 
@@ -22,6 +23,15 @@ public class RecommendationsApp : ViewBase
             .Where(r => r.State == "Pending")
             .Where(r => projectFilter.Value == null || r.Project == projectFilter.Value)
             .Where(r => planStatusFilter.Value == null || r.SourcePlanStatus.ToString() == planStatusFilter.Value)
+            .Where(r =>
+            {
+                if (string.IsNullOrWhiteSpace(textFilter.Value)) return true;
+                var search = textFilter.Value.ToLowerInvariant();
+                return r.Title.ToLowerInvariant().Contains(search) ||
+                       r.Description.ToLowerInvariant().Contains(search) ||
+                       r.PlanId.Contains(search) ||
+                       r.PlanTitle.ToLowerInvariant().Contains(search);
+            })
             .ToList();
 
         // If selected recommendation is no longer in filtered list, adjust selection
@@ -55,15 +65,16 @@ public class RecommendationsApp : ViewBase
         ).Open(false).Ghost();
 
         var totalPendingCount = recommendations.Count(r => r.State == "Pending");
-        var hasActiveFilters = projectFilter.Value != null || planStatusFilter.Value != null;
+        var hasActiveFilters = projectFilter.Value != null || planStatusFilter.Value != null || !string.IsNullOrWhiteSpace(textFilter.Value);
 
-        var sidebar = new Recommendations.SidebarView(filtered, selectedState, totalPendingCount, hasActiveFilters);
+        var sidebar = new Recommendations.SidebarView(filtered, selectedState, totalPendingCount, hasActiveFilters, textFilter);
 
         return new SidebarLayout(
             mainContent: new Recommendations.ContentView(selectedState.Value, filtered, selectedState, planService, jobService, Refresh),
             sidebarContent: Layout.Vertical()
                 | filterBar
-                | sidebar
+                | sidebar.BuildContent(),
+            sidebarHeader: sidebar.BuildHeader()
         );
     }
 }

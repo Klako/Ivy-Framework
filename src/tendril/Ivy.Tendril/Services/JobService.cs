@@ -19,6 +19,7 @@ public class JobService
     private readonly TimeSpan _jobTimeout;
     private readonly TimeSpan _staleOutputTimeout;
     private readonly int _maxConcurrentJobs;
+    private readonly SemaphoreSlim _jobSlotSemaphore;
 
     private readonly string? _inboxPath;
 
@@ -49,6 +50,7 @@ public class JobService
         _jobTimeout = TimeSpan.FromMinutes(configService.Settings.JobTimeout);
         _staleOutputTimeout = TimeSpan.FromMinutes(configService.Settings.StaleOutputTimeout);
         _maxConcurrentJobs = configService.Settings.MaxConcurrentJobs;
+        _jobSlotSemaphore = new SemaphoreSlim(_maxConcurrentJobs, _maxConcurrentJobs);
         _inboxPath = Path.Combine(configService.TendrilHome, "Inbox");
     }
 
@@ -57,6 +59,7 @@ public class JobService
         _jobTimeout = jobTimeout;
         _staleOutputTimeout = staleOutputTimeout;
         _maxConcurrentJobs = maxConcurrentJobs;
+        _jobSlotSemaphore = new SemaphoreSlim(maxConcurrentJobs, maxConcurrentJobs);
         _inboxPath = inboxPath;
     }
 
@@ -172,9 +175,8 @@ public class JobService
             }
         }
 
-        // Check concurrency limit
-        var runningCount = _jobs.Values.Count(j => j.Status == "Running");
-        if (runningCount >= _maxConcurrentJobs)
+        // Try to acquire a job slot
+        if (!_jobSlotSemaphore.Wait(0))
         {
             job.Status = "Queued";
             job.StatusMessage = $"Waiting (max {_maxConcurrentJobs} concurrent jobs)";
@@ -436,6 +438,9 @@ public class JobService
         if (job.StartedAt.HasValue)
             job.DurationSeconds = (int)(job.CompletedAt.Value - job.StartedAt.Value).TotalSeconds;
 
+        // Release job slot for next queued job
+        _jobSlotSemaphore.Release();
+
         // Run after-hooks
         var planFolderForHooks = job.Args.Length > 0 ? job.Args[0] : "";
         RunHooks("after", job.Type, planFolderForHooks, job.Project, job);
@@ -514,6 +519,10 @@ public class JobService
         if (job.StartedAt.HasValue)
             job.DurationSeconds = (int)(job.CompletedAt.Value - job.StartedAt.Value).TotalSeconds;
 
+        // Release job slot if the job was running
+        if (wasRunning)
+            _jobSlotSemaphore.Release();
+
         CleanupInboxFile(job);
         ResetPlanState(job);
         JobsChanged?.Invoke();
@@ -567,15 +576,23 @@ public class JobService
     {
         while (_jobQueue.TryPeek(out var queuedId))
         {
-            var runningCount = _jobs.Values.Count(j => j.Status == "Running");
-            if (runningCount >= _maxConcurrentJobs)
+            // Try to acquire a job slot (non-blocking)
+            if (!_jobSlotSemaphore.Wait(0))
                 break;
 
             if (!_jobQueue.TryDequeue(out queuedId))
+            {
+                // Failed to dequeue — release the slot we just acquired
+                _jobSlotSemaphore.Release();
                 break;
+            }
 
             if (!_jobs.TryGetValue(queuedId, out var queuedJob) || queuedJob.Status != "Queued")
+            {
+                // Job was removed or state changed — release the slot
+                _jobSlotSemaphore.Release();
                 continue;
+            }
 
             LaunchJob(queuedJob);
         }

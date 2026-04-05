@@ -33,13 +33,22 @@ public class DashboardApp : ViewBase
         var completedCount = filteredPlans.Count(p => p.Status == PlanStatus.Completed);
         var failedCount = filteredPlans.Count(p => p.Status == PlanStatus.Failed);
 
+        var completedOrFailedPlans = filteredPlans
+            .Where(p => p.Status is PlanStatus.Completed or PlanStatus.Failed or PlanStatus.ReadyForReview)
+            .ToList();
+        var totalCost = completedOrFailedPlans.Sum(p => planService.GetPlanTotalCost(p.FolderPath));
+        var avgCost = completedOrFailedPlans.Count > 0
+            ? totalCost / completedOrFailedPlans.Count
+            : 0;
+
         var statsRow = Layout.Horizontal().Gap(2).Padding(2)
             | BuildStatCard(totalCount, "Total Plans")
             | BuildStatCard(draftCount, "Draft")
             | BuildStatCard(inProgressCount, "In Progress")
             | BuildStatCard(reviewCount, "Ready for Review")
             | BuildStatCard(completedCount, "Completed")
-            | BuildStatCard(failedCount, "Failed");
+            | BuildStatCard(failedCount, "Failed")
+            | BuildStatCard($"${avgCost:F2}", "Avg Cost/Plan");
 
         var today = DateTime.UtcNow.Date;
         var days = Enumerable.Range(0, 7).Select(i => today.AddDays(-i)).ToList();
@@ -188,8 +197,13 @@ public class DashboardApp : ViewBase
 
     private static object BuildStatCard(int count, string label)
     {
+        return BuildStatCard(count.ToString(), label);
+    }
+
+    private static object BuildStatCard(string value, string label)
+    {
         return Layout.Vertical().Padding(1)
-            | Text.Block(count.ToString()).Bold()
+            | Text.Block(value).Bold()
             | Text.Muted(label);
     }
 }

@@ -33,7 +33,20 @@ export function useScrollShadow(
     viewport.addEventListener("scroll", handleScroll);
 
     const resizeObserver = direction === "top" ? new ResizeObserver(handleScroll) : null;
-    const mutationObserver = direction === "top" ? new MutationObserver(handleScroll) : null;
+
+    // Track pending RAF to avoid scheduling multiple frames
+    let rafId: number | null = null;
+
+    const mutationObserver =
+      direction === "top"
+        ? new MutationObserver(() => {
+            if (rafId !== null) return; // Already scheduled
+            rafId = requestAnimationFrame(() => {
+              handleScroll();
+              rafId = null;
+            });
+          })
+        : null;
 
     if (resizeObserver) {
       resizeObserver.observe(viewport);
@@ -50,6 +63,9 @@ export function useScrollShadow(
       viewport.removeEventListener("scroll", handleScroll);
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, [selector, direction]);
 

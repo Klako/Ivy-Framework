@@ -914,7 +914,7 @@ public class JobService
         File.AppendAllText(csvPath, line);
     }
 
-    private void WriteJobLog(JobItem job)
+    internal void WriteJobLog(JobItem job)
     {
         if (_planReaderService == null || string.IsNullOrEmpty(job.PlanFile))
             return;
@@ -932,6 +932,9 @@ public class JobService
                 $"- **Started:** {job.StartedAt:u}\n" +
                 $"- **Completed:** {job.CompletedAt:u}\n" +
                 $"- **Duration:** {duration}\n";
+
+            if (!string.IsNullOrEmpty(job.SessionId))
+                logContent += $"- **SessionId:** {job.SessionId}\n";
 
             if (job.Status == "Timeout" && job.StatusMessage != null)
                 logContent += $"- **Timeout Reason:** {job.StatusMessage}\n";

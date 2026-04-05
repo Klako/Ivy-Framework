@@ -118,7 +118,7 @@ From `<ArtifactsDir>/sample/`:
 Before building, kill any leftover processes from previous runs that may lock DLLs:
 
 ```bash
-powershell.exe -NoProfile -Command "Get-Process | Where-Object { $_.Path -and $_.Path -like '*artifacts*sample*bin*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+powershell.exe -NoProfile -Command "Get-Process -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path -match '\\\\artifacts\\\\sample\\\\bin\\\\' } | ForEach-Object { Write-Host \"Killing \$(\$_.ProcessName) (PID \$(\$_.Id))\"; \$_ | Stop-Process -Force -ErrorAction Stop } ; Start-Sleep -Milliseconds 2000"
 ```
 
 ```bash
@@ -173,6 +173,14 @@ cd <ArtifactsDir>/sample/.ivy/tests
 vp install
 npx playwright install chromium
 vp run test
+```
+
+### 8.5. Post-Test Cleanup
+
+Even if tests pass, kill all sample processes to ensure clean state:
+
+```bash
+powershell.exe -NoProfile -Command "Get-Process -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path -match '\\\\artifacts\\\\sample\\\\bin\\\\' } | Stop-Process -Force -ErrorAction SilentlyContinue"
 ```
 
 ### 9. Fix Loop (up to 10 rounds)

@@ -122,13 +122,13 @@ public class ContentView(
 
         // Recommendations
         var recommendationsPath = Path.Combine(_selectedPlan.FolderPath, "artifacts", "recommendations.yaml");
-        var recommendations = new List<RecommendationItem>();
+        var recommendations = new List<RecommendationYaml>();
         if (File.Exists(recommendationsPath))
         {
             var recDeserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .Build();
-            recommendations = recDeserializer.Deserialize<List<RecommendationItem>>(
+            recommendations = recDeserializer.Deserialize<List<RecommendationYaml>>(
                 File.ReadAllText(recommendationsPath)) ?? new();
         }
 

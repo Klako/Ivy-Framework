@@ -39,7 +39,7 @@ public record PlanFile(
     public string FolderName => Path.GetFileName(FolderPath);
 }
 
-public class RecommendationItem
+public class RecommendationYaml
 {
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";

@@ -29,11 +29,7 @@ import {
 import { ChartData } from "./chartTypes";
 import { getTransformValueFn } from "./sharedUtils";
 import { ReferenceDot } from "./chartTypes";
-import {
-  LINE_DEFAULTS,
-  REFERENCE_LINE_DEFAULTS,
-  applyDefaults,
-} from "./chartDefaults";
+import { LINE_DEFAULTS, REFERENCE_LINE_DEFAULTS, applyDefaults } from "./chartDefaults";
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -78,10 +74,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
   });
 
   // Extract chart-specific theme colors
-  const themeColors = useMemo(
-    () => getChartThemeColors(colors, isDark),
-    [colors, isDark],
-  );
+  const themeColors = useMemo(() => getChartThemeColors(colors, isDark), [colors, isDark]);
 
   // When height is Full (100%), use flex to expand. Otherwise use explicit height.
   const heightStyle = height ? getHeight(height) : {};
@@ -90,34 +83,23 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
   const styles: React.CSSProperties = {
     ...getWidth(width),
     position: "relative",
-    ...(isFull
-      ? { display: "flex", flexDirection: "column", height: "100%" }
-      : {}),
+    ...(isFull ? { display: "flex", flexDirection: "column", height: "100%" } : {}),
   };
 
   const chartStyles: React.CSSProperties = {
-    ...(isFull
-      ? { flex: 1, minHeight: "200px" }
-      : { ...heightStyle, minHeight: "200px" }),
+    ...(isFull ? { flex: 1, minHeight: "200px" } : { ...heightStyle, minHeight: "200px" }),
     width: "100%",
   };
 
   const { categories, valueKeys } = generateDataProps(data);
 
   // Chart colors depend on theme (chromatic colors automatically adapt to light/dark mode)
-  const chartColors = useMemo(
-    () => getColors(colorScheme, colors),
-    [colorScheme, colors],
-  );
+  const chartColors = useMemo(() => getColors(colorScheme, colors), [colorScheme, colors]);
 
-  const { transform, largeSpread, minValue, maxValue } =
-    getTransformValueFn(data);
+  const { transform, largeSpread, minValue, maxValue } = getTransformValueFn(data);
 
   // Memoize gradient colors
-  const gradientColors = useMemo(
-    () => generateGradientColors(chartColors, 0.4),
-    [chartColors],
-  );
+  const gradientColors = useMemo(() => generateGradientColors(chartColors, 0.4), [chartColors]);
 
   // Convert ReferenceDot[] to ECharts markPoint format
   const markPoint = useMemo(
@@ -140,9 +122,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
         ? {
             ...referenceLines[0],
             lineStyle: {
-              width:
-                referenceLines[0]?.lineStyle?.width ??
-                REFERENCE_LINE_DEFAULTS.strokeWidth,
+              width: referenceLines[0]?.lineStyle?.width ?? REFERENCE_LINE_DEFAULTS.strokeWidth,
               ...referenceLines[0]?.lineStyle,
             },
             data: referenceLines.flatMap((ml) => ml.data),
@@ -164,9 +144,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
   );
 
   // When explicit series are configured, only plot those data keys
-  const configuredAreaKeys = (areas || [])
-    .map((a) => a.dataKey)
-    .filter(Boolean);
+  const configuredAreaKeys = (areas || []).map((a) => a.dataKey).filter(Boolean);
   const areaKeysToPlot =
     configuredAreaKeys.length > 0
       ? valueKeys.filter((k) =>
@@ -178,9 +156,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
   const series = useMemo(
     () =>
       areaKeysToPlot.map((key, i) => {
-        const rawAreaConfig = areas?.find(
-          (a) => a.dataKey.toLowerCase() === key.toLowerCase(),
-        );
+        const rawAreaConfig = areas?.find((a) => a.dataKey.toLowerCase() === key.toLowerCase());
         // Apply C# defaults for area config
         const areaConfig = rawAreaConfig
           ? applyDefaults(rawAreaConfig, LINE_DEFAULTS)
@@ -205,26 +181,13 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
           markArea: markAreaConfig,
         };
       }),
-    [
-      areaKeysToPlot,
-      areas,
-      chartColors,
-      gradientColors,
-      data,
-      markPoint,
-      markLine,
-      markAreaConfig,
-    ],
+    [areaKeysToPlot, areas, chartColors, gradientColors, data, markPoint, markLine, markAreaConfig],
   );
 
   // Memoize complete option configuration
   const option = useMemo(
     () => ({
-      grid: generateEChartGrid(
-        cartesianGrid,
-        !!toolbox && toolbox.enabled !== false,
-        yAxis,
-      ),
+      grid: generateEChartGrid(cartesianGrid, !!toolbox && toolbox.enabled !== false, yAxis),
       color: chartColors,
       tooltip: generateTooltip(tooltip, "cross", {
         foreground: themeColors.foreground,
@@ -237,10 +200,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
         fontSans: themeColors.fontSans,
       }),
       toolbox: generateEChartToolbox(toolbox),
-      textStyle: generateTextStyle(
-        themeColors.foreground,
-        themeColors.fontSans,
-      ),
+      textStyle: generateTextStyle(themeColors.foreground, themeColors.fontSans),
       xAxis: generateXAxis(
         ChartType.Line,
         categories as string[],

@@ -31,11 +31,7 @@ import {
   YAxisProps,
 } from "./chartTypes";
 import { ChartData } from "./chartTypes";
-import {
-  BAR_DEFAULTS,
-  REFERENCE_LINE_DEFAULTS,
-  applyDefaults,
-} from "./chartDefaults";
+import { BAR_DEFAULTS, REFERENCE_LINE_DEFAULTS, applyDefaults } from "./chartDefaults";
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -91,10 +87,7 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
   });
 
   // Extract chart-specific theme colors
-  const themeColors = useMemo(
-    () => getChartThemeColors(colors, isDark),
-    [colors, isDark],
-  );
+  const themeColors = useMemo(() => getChartThemeColors(colors, isDark), [colors, isDark]);
 
   // When height is Full (100%), use flex to expand. Otherwise use explicit height.
   const heightStyle = height ? getHeight(height) : {};
@@ -103,15 +96,11 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
   const styles: React.CSSProperties = {
     ...getWidth(width),
     position: "relative",
-    ...(isFull
-      ? { display: "flex", flexDirection: "column", height: "100%" }
-      : {}),
+    ...(isFull ? { display: "flex", flexDirection: "column", height: "100%" } : {}),
   };
 
   const chartStyles: React.CSSProperties = {
-    ...(isFull
-      ? { flex: 1, minHeight: "200px" }
-      : { ...heightStyle, minHeight: "200px" }),
+    ...(isFull ? { flex: 1, minHeight: "200px" } : { ...heightStyle, minHeight: "200px" }),
     width: "100%",
   };
 
@@ -119,10 +108,7 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
     generateDataProps(data);
 
   // Chart colors depend on theme (chromatic colors automatically adapt to light/dark mode)
-  const chartColors = useMemo(
-    () => getColors(colorScheme, colors),
-    [colorScheme, colors],
-  );
+  const chartColors = useMemo(() => getColors(colorScheme, colors), [colorScheme, colors]);
 
   // Convert ReferenceDot[] to ECharts markPoint format
   const markPoint = useMemo(
@@ -146,9 +132,7 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
         ? {
             ...referenceLines[0],
             lineStyle: {
-              width:
-                referenceLines[0]?.lineStyle?.width ??
-                REFERENCE_LINE_DEFAULTS.strokeWidth,
+              width: referenceLines[0]?.lineStyle?.width ?? REFERENCE_LINE_DEFAULTS.strokeWidth,
               ...referenceLines[0]?.lineStyle,
             },
             data: referenceLines.flatMap((ml) => ml.data),
@@ -184,13 +168,9 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
   const series = useMemo(
     () =>
       barKeysToPlot.map((key) => {
-        const rawBarConfig = bars?.find(
-          (b) => b.dataKey?.toLowerCase() === key.toLowerCase(),
-        );
+        const rawBarConfig = bars?.find((b) => b.dataKey?.toLowerCase() === key.toLowerCase());
         // Apply C# defaults for bar config
-        const barConfig = rawBarConfig
-          ? applyDefaults(rawBarConfig, BAR_DEFAULTS)
-          : BAR_DEFAULTS;
+        const barConfig = rawBarConfig ? applyDefaults(rawBarConfig, BAR_DEFAULTS) : BAR_DEFAULTS;
 
         return {
           name: barConfig.name || key,
@@ -198,15 +178,10 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
           legendHoverLink: true,
           showBackground: false,
           data: data.map((d) => d[key]),
-          stack:
-            barConfig.stackId !== undefined
-              ? String(barConfig.stackId)
-              : undefined,
+          stack: barConfig.stackId !== undefined ? String(barConfig.stackId) : undefined,
           barGap: typeof barGap === "number" ? `${barGap}%` : barGap || "4%",
           barCategoryGap:
-            typeof barCategoryGap === "number"
-              ? `${barCategoryGap}%`
-              : barCategoryGap || "10%",
+            typeof barCategoryGap === "number" ? `${barCategoryGap}%` : barCategoryGap || "10%",
           barMaxWidth: maxBarSize,
           stackOrder: reverseStackOrder ? "seriesDesc" : "seriesAsc",
           yAxisIndex: barConfig.yAxisIndex ?? 0,
@@ -241,16 +216,9 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
   // Memoize option configuration
   const option = useMemo(
     () => ({
-      grid: generateEChartGrid(
-        cartesianGrid,
-        !!toolbox && toolbox.enabled !== false,
-        yAxis,
-      ),
+      grid: generateEChartGrid(cartesianGrid, !!toolbox && toolbox.enabled !== false, yAxis),
       color: chartColors,
-      textStyle: generateTextStyle(
-        themeColors.foreground,
-        themeColors.fontSans,
-      ),
+      textStyle: generateTextStyle(themeColors.foreground, themeColors.fontSans),
       xAxis: generateXAxis(
         ChartType.Bar,
         categories,

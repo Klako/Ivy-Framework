@@ -18,6 +18,11 @@ public class PlanReaderService(ConfigService config)
 
     private static readonly Regex FolderNameRegex = new(@"^(\d{5})-(.+)$", RegexOptions.Compiled);
 
+    // Cache for GetRecommendations results
+    private List<Recommendation>? _recommendationsCache;
+    private DateTime? _recommendationsCacheTime;
+    private static readonly TimeSpan RecommendationsCacheExpiration = TimeSpan.FromMinutes(2);
+
     public static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
@@ -641,6 +646,23 @@ public class PlanReaderService(ConfigService config)
     /// <returns>List of all recommendations ordered by date (most recent first).</returns>
     public List<Recommendation> GetRecommendations()
     {
+        if (_recommendationsCache != null &&
+            _recommendationsCacheTime != null &&
+            DateTime.UtcNow - _recommendationsCacheTime.Value < RecommendationsCacheExpiration)
+        {
+            return _recommendationsCache;
+        }
+
+        var result = ComputeRecommendations();
+
+        _recommendationsCache = result;
+        _recommendationsCacheTime = DateTime.UtcNow;
+
+        return result;
+    }
+
+    private List<Recommendation> ComputeRecommendations()
+    {
         var recommendations = new List<Recommendation>();
 
         foreach (var (folderPath, folderName, planYamlPath) in EnumerateValidPlanFolders())
@@ -788,6 +810,10 @@ public class PlanReaderService(ConfigService config)
             item.DeclineReason = declineReason;
         }
         FileHelper.WriteAllText(recommendationsPath, YamlSerializer.Serialize(items));
+
+        // Invalidate cache after state change
+        _recommendationsCache = null;
+        _recommendationsCacheTime = null;
     }
 
     private static DateTime? ExtractCompletedTimestamp(string logFilePath)

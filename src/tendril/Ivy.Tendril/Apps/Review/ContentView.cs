@@ -125,10 +125,7 @@ public class ContentView(
         var recommendations = new List<RecommendationYaml>();
         if (File.Exists(recommendationsPath))
         {
-            var recDeserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-            recommendations = recDeserializer.Deserialize<List<RecommendationYaml>>(
+            recommendations = PlanReaderService.YamlDeserializer.Deserialize<List<RecommendationYaml>>(
                 File.ReadAllText(recommendationsPath)) ?? new();
         }
 

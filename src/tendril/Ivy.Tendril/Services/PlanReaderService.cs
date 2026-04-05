@@ -13,7 +13,7 @@ public class PlanReaderService(ConfigService config)
 
     private static readonly Regex FolderNameRegex = new(@"^(\d{5})-(.+)$", RegexOptions.Compiled);
 
-    private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
+    public static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
         .Build();

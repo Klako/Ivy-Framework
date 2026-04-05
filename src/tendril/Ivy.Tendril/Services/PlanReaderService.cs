@@ -42,7 +42,7 @@ public class PlanReaderService(ConfigService config)
                 var planYamlPath = Path.Combine(dir, "plan.yaml");
                 if (!File.Exists(planYamlPath)) continue;
 
-                var yaml = File.ReadAllText(planYamlPath);
+                var yaml = FileHelper.ReadAllText(planYamlPath);
                 var stateMatch = Regex.Match(yaml, @"(?m)^state:\s*(.+)$");
                 if (!stateMatch.Success) continue;
 
@@ -54,7 +54,7 @@ public class PlanReaderService(ConfigService config)
                     var updated = Regex.Replace(yaml, @"(?m)^state:\s*.*$", $"state: {newState}");
                     updated = Regex.Replace(updated, @"(?m)^updated:\s*.*$",
                         $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
-                    File.WriteAllText(planYamlPath, updated);
+                    FileHelper.WriteAllText(planYamlPath, updated);
                 }
             }
             catch (Exception ex)
@@ -80,7 +80,7 @@ public class PlanReaderService(ConfigService config)
                 var planYamlPath = Path.Combine(dir, "plan.yaml");
                 if (!File.Exists(planYamlPath)) continue;
 
-                var yaml = File.ReadAllText(planYamlPath);
+                var yaml = FileHelper.ReadAllText(planYamlPath);
 
                 // Fix structured repos (path: + optional prRule:) → plain path strings
                 var repaired = Regex.Replace(yaml,
@@ -88,7 +88,7 @@ public class PlanReaderService(ConfigService config)
                     "$1- $2");
 
                 if (repaired != yaml)
-                    File.WriteAllText(planYamlPath, repaired);
+                    FileHelper.WriteAllText(planYamlPath, repaired);
             }
         }
         catch { }
@@ -179,13 +179,13 @@ public class PlanReaderService(ConfigService config)
 
         if (!File.Exists(planYamlPath)) return;
 
-        var yaml = File.ReadAllText(planYamlPath);
+        var yaml = FileHelper.ReadAllText(planYamlPath);
         var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
 
         planYaml.State = newState.ToString();
         planYaml.Updated = DateTime.UtcNow;
 
-        File.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
+        FileHelper.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
     }
 
     /// <summary>
@@ -206,10 +206,10 @@ public class PlanReaderService(ConfigService config)
         var planYamlPath = Path.Combine(PlansDirectory, folderName, "plan.yaml");
         if (File.Exists(planYamlPath))
         {
-            var yaml = File.ReadAllText(planYamlPath);
+            var yaml = FileHelper.ReadAllText(planYamlPath);
             var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
             planYaml.Updated = DateTime.UtcNow;
-            File.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
+            FileHelper.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
         }
     }
 
@@ -407,10 +407,10 @@ public class PlanReaderService(ConfigService config)
             var planYamlPath = Path.Combine(PlansDirectory, folderName, "plan.yaml");
             if (File.Exists(planYamlPath))
             {
-                var yaml = File.ReadAllText(planYamlPath);
+                var yaml = FileHelper.ReadAllText(planYamlPath);
                 var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
                 planYaml.Updated = DateTime.UtcNow;
-                File.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
+                FileHelper.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
             }
         }
     }
@@ -420,7 +420,7 @@ public class PlanReaderService(ConfigService config)
         try
         {
             var planYamlPath = Path.Combine(folderPath, "plan.yaml");
-            var yamlContent = File.ReadAllText(planYamlPath);
+            var yamlContent = FileHelper.ReadAllText(planYamlPath);
             var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yamlContent);
             if (planYaml == null) return null;
 
@@ -460,7 +460,7 @@ public class PlanReaderService(ConfigService config)
         var costsPath = Path.Combine(folderPath, "costs.csv");
         if (!File.Exists(costsPath)) return 0m;
 
-        var lines = File.ReadAllLines(costsPath);
+        var lines = FileHelper.ReadAllLines(costsPath);
         decimal total = 0m;
         foreach (var line in lines.Skip(1)) // skip header
         {
@@ -485,7 +485,7 @@ public class PlanReaderService(ConfigService config)
         var costsPath = Path.Combine(folderPath, "costs.csv");
         if (!File.Exists(costsPath)) return 0;
 
-        var lines = File.ReadAllLines(costsPath);
+        var lines = FileHelper.ReadAllLines(costsPath);
         int total = 0;
         foreach (var line in lines.Skip(1))
         {
@@ -524,7 +524,7 @@ public class PlanReaderService(ConfigService config)
                 var logsDir = Path.Combine(dir, "logs");
                 if (!File.Exists(costsPath) || !Directory.Exists(logsDir)) continue;
 
-                var costLines = File.ReadAllLines(costsPath).Skip(1).ToList();
+                var costLines = FileHelper.ReadAllLines(costsPath).Skip(1).ToList();
                 if (costLines.Count == 0) continue;
 
                 // Build a map: promptware name -> list of log files (ordered by number)
@@ -617,11 +617,11 @@ public class PlanReaderService(ConfigService config)
 
             try
             {
-                var planYaml = File.ReadAllText(planYamlPath);
+                var planYaml = FileHelper.ReadAllText(planYamlPath);
                 var plan = YamlDeserializer.Deserialize<PlanYaml>(planYaml);
                 if (plan == null) continue;
 
-                var yaml = File.ReadAllText(recommendationsPath);
+                var yaml = FileHelper.ReadAllText(recommendationsPath);
                 var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(yaml);
                 if (items == null) continue;
 
@@ -690,7 +690,7 @@ public class PlanReaderService(ConfigService config)
         {
             try
             {
-                var yaml = File.ReadAllText(planYamlPath);
+                var yaml = FileHelper.ReadAllText(planYamlPath);
                 var stateMatch = Regex.Match(yaml, @"(?m)^state:\s*(.+)$");
                 if (stateMatch.Success)
                 {
@@ -707,7 +707,7 @@ public class PlanReaderService(ConfigService config)
                 var recommendationsPath = Path.Combine(folderPath, "artifacts", "recommendations.yaml");
                 if (File.Exists(recommendationsPath))
                 {
-                    var recYaml = File.ReadAllText(recommendationsPath);
+                    var recYaml = FileHelper.ReadAllText(recommendationsPath);
                     var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(recYaml);
                     if (items != null)
                     {
@@ -740,7 +740,7 @@ public class PlanReaderService(ConfigService config)
         var recommendationsPath = Path.Combine(PlansDirectory, planFolderName, "artifacts", "recommendations.yaml");
         if (!File.Exists(recommendationsPath)) return;
 
-        var yaml = File.ReadAllText(recommendationsPath);
+        var yaml = FileHelper.ReadAllText(recommendationsPath);
         var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(yaml);
         if (items == null) return;
 
@@ -748,7 +748,7 @@ public class PlanReaderService(ConfigService config)
         if (item == null) return;
 
         item.State = newState;
-        File.WriteAllText(recommendationsPath, YamlSerializer.Serialize(items));
+        FileHelper.WriteAllText(recommendationsPath, YamlSerializer.Serialize(items));
     }
 
     private static DateTime? ExtractCompletedTimestamp(string logFilePath)

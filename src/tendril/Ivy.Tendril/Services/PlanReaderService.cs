@@ -94,25 +94,38 @@ public class PlanReaderService(ConfigService config)
         catch { }
     }
 
+    /// <summary>
+    /// Enumerates all directories in PlansDirectory that match the plan folder
+    /// naming pattern ({5digits}-{name}) and contain a plan.yaml file.
+    /// </summary>
+    private IEnumerable<(string FolderPath, string FolderName, string PlanYamlPath)> EnumerateValidPlanFolders()
+    {
+        if (!Directory.Exists(PlansDirectory))
+            yield break;
+
+        foreach (var dir in Directory.GetDirectories(PlansDirectory))
+        {
+            var folderName = Path.GetFileName(dir);
+            if (!FolderNameRegex.Match(folderName).Success)
+                continue;
+
+            var planYamlPath = Path.Combine(dir, "plan.yaml");
+            if (!File.Exists(planYamlPath))
+                continue;
+
+            yield return (dir, folderName, planYamlPath);
+        }
+    }
+
     public List<PlanFile> GetPlans(PlanStatus? statusFilter = null)
     {
         try
         {
-            if (!Directory.Exists(PlansDirectory))
-                return new List<PlanFile>();
-
             var plans = new List<PlanFile>();
 
-            foreach (var dir in Directory.GetDirectories(PlansDirectory))
+            foreach (var (folderPath, _, _) in EnumerateValidPlanFolders())
             {
-                var folderName = Path.GetFileName(dir);
-                var match = FolderNameRegex.Match(folderName);
-                if (!match.Success) continue;
-
-                var planYamlPath = Path.Combine(dir, "plan.yaml");
-                if (!File.Exists(planYamlPath)) continue;
-
-                var plan = ParsePlanFolder(dir);
+                var plan = ParsePlanFolder(folderPath);
                 if (plan == null) continue;
 
                 if (statusFilter.HasValue && plan.Status != statusFilter.Value)
@@ -577,39 +590,29 @@ public class PlanReaderService(ConfigService config)
     {
         int drafts = 0, reviews = 0, failed = 0, icebox = 0, pendingRecs = 0;
 
-        if (!Directory.Exists(PlansDirectory))
-            return new PlanCountSnapshot(0, 0, 0, 0, 0);
-
-        foreach (var dir in Directory.GetDirectories(PlansDirectory))
+        foreach (var (folderPath, _, planYamlPath) in EnumerateValidPlanFolders())
         {
             try
             {
-                var folderName = Path.GetFileName(dir);
-                if (!FolderNameRegex.Match(folderName).Success) continue;
-
-                var planYamlPath = Path.Combine(dir, "plan.yaml");
-                if (File.Exists(planYamlPath))
+                var yaml = File.ReadAllText(planYamlPath);
+                var stateMatch = Regex.Match(yaml, @"(?m)^state:\s*(.+)$");
+                if (stateMatch.Success)
                 {
-                    var yaml = File.ReadAllText(planYamlPath);
-                    var stateMatch = Regex.Match(yaml, @"(?m)^state:\s*(.+)$");
-                    if (stateMatch.Success)
+                    var state = stateMatch.Groups[1].Value.Trim();
+                    switch (state.ToLowerInvariant())
                     {
-                        var state = stateMatch.Groups[1].Value.Trim();
-                        switch (state.ToLowerInvariant())
-                        {
-                            case "draft": drafts++; break;
-                            case "readyforreview": reviews++; break;
-                            case "failed": failed++; break;
-                            case "icebox": icebox++; break;
-                        }
+                        case "draft": drafts++; break;
+                        case "readyforreview": reviews++; break;
+                        case "failed": failed++; break;
+                        case "icebox": icebox++; break;
                     }
                 }
 
-                var recommendationsPath = Path.Combine(dir, "artifacts", "recommendations.yaml");
+                var recommendationsPath = Path.Combine(folderPath, "artifacts", "recommendations.yaml");
                 if (File.Exists(recommendationsPath))
                 {
-                    var yaml = File.ReadAllText(recommendationsPath);
-                    var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(yaml);
+                    var recYaml = File.ReadAllText(recommendationsPath);
+                    var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(recYaml);
                     if (items != null)
                     {
                         foreach (var item in items)

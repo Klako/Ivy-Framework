@@ -88,8 +88,8 @@ describe("useScrollShadow MutationObserver for dynamic content", () => {
   const hookSource = fs.readFileSync(path.resolve(__dirname, "./use-scroll-shadow.ts"), "utf-8");
 
   it("should create a MutationObserver when direction is top", () => {
-    expect(hookSource).toContain("new MutationObserver(handleScroll)");
-    expect(hookSource).toMatch(/direction === "top" \? new MutationObserver/);
+    expect(hookSource).toContain("new MutationObserver(");
+    expect(hookSource).toMatch(/direction === "top"\s*\n?\s*\? new MutationObserver/);
   });
 
   it("should observe viewport with childList and subtree options", () => {
@@ -99,6 +99,24 @@ describe("useScrollShadow MutationObserver for dynamic content", () => {
 
   it("should disconnect the MutationObserver on cleanup", () => {
     expect(hookSource).toContain("mutationObserver?.disconnect()");
+  });
+});
+
+describe("useScrollShadow MutationObserver performance optimization", () => {
+  const hookSource = fs.readFileSync(path.resolve(__dirname, "./use-scroll-shadow.ts"), "utf-8");
+
+  it("should wrap MutationObserver callback in requestAnimationFrame", () => {
+    expect(hookSource).toContain("requestAnimationFrame");
+    expect(hookSource).toMatch(/new MutationObserver\([^)]*requestAnimationFrame/s);
+  });
+
+  it("should cancel pending requestAnimationFrame on cleanup", () => {
+    expect(hookSource).toContain("cancelAnimationFrame(rafId)");
+  });
+
+  it("should track rafId to prevent multiple scheduled frames", () => {
+    expect(hookSource).toMatch(/let rafId.*=.*null/);
+    expect(hookSource).toContain("if (rafId !== null) return");
   });
 });
 

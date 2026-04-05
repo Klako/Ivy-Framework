@@ -181,19 +181,7 @@ internal static class WidgetSchemaGenerator
 
         if (isNullable)
         {
-            // For nullable, wrap as oneOf with null
-            if (schema.ContainsKey("type"))
-            {
-                var existingType = schema["type"]!.GetValue<string>();
-                schema["type"] = JsonValue.Create(new JsonArray(
-                    JsonValue.Create(existingType),
-                    JsonValue.Create("null")
-                ));
-            }
-            else
-            {
-                schema["nullable"] = true;
-            }
+            schema["nullable"] = true;
         }
 
         return schema;

@@ -32,6 +32,15 @@ public class PlanReaderService(ConfigService config) : IPlanReaderService
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .Build();
 
+    /// <summary>
+    /// Shared YAML serializer with OmitDefaults configuration for compact output.
+    /// Used when writing configuration files where default values should be suppressed.
+    /// </summary>
+    public static readonly ISerializer YamlSerializerCompact = new SerializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
+        .Build();
+
     public string PlansDirectory => _config.PlanFolder;
 
     /// <summary>

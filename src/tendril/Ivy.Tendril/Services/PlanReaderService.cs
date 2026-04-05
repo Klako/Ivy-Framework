@@ -642,7 +642,8 @@ public class PlanReaderService(ConfigService config)
                         PlanFolderName: folderName,
                         Project: plan.Project ?? "",
                         Date: plan.Updated,
-                        SourcePlanStatus: status
+                        SourcePlanStatus: status,
+                        DeclineReason: item.DeclineReason
                     ));
                 }
             }
@@ -735,7 +736,8 @@ public class PlanReaderService(ConfigService config)
     /// <param name="planFolderName">Name of the plan folder containing the recommendation.</param>
     /// <param name="recommendationTitle">Exact title of the recommendation to update.</param>
     /// <param name="newState">The new state value (e.g. <c>Pending</c>, <c>Accepted</c>, <c>Dismissed</c>).</param>
-    public void UpdateRecommendationState(string planFolderName, string recommendationTitle, string newState)
+    /// <param name="declineReason">Optional reason for declining the recommendation.</param>
+    public void UpdateRecommendationState(string planFolderName, string recommendationTitle, string newState, string? declineReason = null)
     {
         var recommendationsPath = Path.Combine(PlansDirectory, planFolderName, "artifacts", "recommendations.yaml");
         if (!File.Exists(recommendationsPath)) return;
@@ -748,6 +750,10 @@ public class PlanReaderService(ConfigService config)
         if (item == null) return;
 
         item.State = newState;
+        if (newState == "Declined" && !string.IsNullOrWhiteSpace(declineReason))
+        {
+            item.DeclineReason = declineReason;
+        }
         FileHelper.WriteAllText(recommendationsPath, YamlSerializer.Serialize(items));
     }
 
@@ -799,7 +805,8 @@ public record Recommendation(
     string PlanFolderName,
     string Project,
     DateTime Date,
-    PlanStatus SourcePlanStatus
+    PlanStatus SourcePlanStatus,
+    string? DeclineReason = null
 );
 
 public class RecommendationYaml
@@ -807,4 +814,5 @@ public class RecommendationYaml
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public string State { get; set; } = "Pending";
+    public string? DeclineReason { get; set; }
 }

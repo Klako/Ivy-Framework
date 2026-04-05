@@ -83,10 +83,10 @@ public class StackedProgressApp : SampleBase
                 new ProgressSegment(inProgress.Value, Colors.Blue, "In Progress"),
                 new ProgressSegment(pending.Value, Colors.Orange, "Pending"),
                 new ProgressSegment(failed.Value, Colors.Red, "Failed")
-            ).ShowLabels().Selected(selectedIndex.Value).OnSelect(async e =>
+            ).ShowLabels().Selected(selectedIndex.Value).OnSelect(e =>
             {
                 selectedIndex.Value = e.Value;
-                Client.Toast($"Selected segment {e.Value}: {segmentLabels[e.Value]}");
+                return ValueTask.CompletedTask;
             })
             | Text.Muted(selectedIndex.Value is { } idx ? $"Selected: {segmentLabels[idx]}" : "Click a segment to select it")
         ;

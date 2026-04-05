@@ -13,15 +13,17 @@ public class OnboardingApp : ViewBase
     private StepperItem[] GetSteps(int selectedIndex) =>
     [
         new("1", selectedIndex > 0 ? Icons.Check : null, "Welcome"),
-        new("2", selectedIndex > 1 ? Icons.Check : null, "Tendril Home"),
-        new("3", selectedIndex > 2 ? Icons.Check : null, "Complete")
+        new("2", selectedIndex > 1 ? Icons.Check : null, "Software Check"),
+        new("3", selectedIndex > 2 ? Icons.Check : null, "Tendril Home"),
+        new("4", selectedIndex > 3 ? Icons.Check : null, "Complete")
     ];
 
     private object GetStepViews(IState<int> stepperIndex) => stepperIndex.Value switch
     {
         0 => new WelcomeStepView(stepperIndex),
-        1 => new TendrilHomeStepView(stepperIndex),
-        2 => new CompleteStepView(stepperIndex),
+        1 => new SoftwareCheckStepView(stepperIndex),
+        2 => new TendrilHomeStepView(stepperIndex),
+        3 => new CompleteStepView(stepperIndex),
         _ => throw new ArgumentOutOfRangeException()
     };
 
@@ -58,6 +60,122 @@ public class WelcomeStepView(IState<int> stepperIndex) : ViewBase
                    "Let's begin!")
                | new Button("Get Started").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
                    .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1));
+    }
+}
+
+public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
+{
+    public override object? Build()
+    {
+        var checkResults = UseState<Dictionary<string, bool>?>(null);
+        var isChecking = UseState(false);
+
+        async Task CheckSoftware()
+        {
+            isChecking.Set(true);
+            var results = new Dictionary<string, bool>();
+
+            results["dotnet"] = await CheckCommand("dotnet", "--version");
+            results["claude"] = await CheckCommand("claude", "--version");
+            results["git"] = await CheckCommand("git", "--version");
+            results["powershell"] = await CheckCommand("pwsh", "-Version")
+                                    || await CheckCommand("powershell", "-Version");
+            results["pandoc"] = await CheckCommand("pandoc", "--version");
+
+            checkResults.Set(results);
+            isChecking.Set(false);
+        }
+
+        var allRequiredPassed = checkResults.Value != null
+            && checkResults.Value["dotnet"]
+            && checkResults.Value["claude"]
+            && checkResults.Value["git"]
+            && checkResults.Value["powershell"];
+
+        return Layout.Vertical()
+               | Text.H2("Required Software")
+               | Text.Markdown(
+                   "Tendril requires the following software to be installed:\n\n" +
+                   "- **.NET 10.0 SDK** - For running the application\n" +
+                   "- **Claude CLI** - For AI agent orchestration\n" +
+                   "- **Git** - For version control\n" +
+                   "- **PowerShell** - For running scripts and hooks\n\n" +
+                   "**Optional:**\n" +
+                   "- **pandoc** - For PDF export functionality\n\n" +
+                   "Click 'Check Software' to verify your system.")
+               | (checkResults.Value != null
+                   ? (Layout.Vertical()
+                      | Text.H3("Results")
+                      | (checkResults.Value["dotnet"]
+                          ? Text.Success("\u2713 .NET SDK is installed")
+                          : Text.Danger("\u2717 .NET SDK not found - Install from https://dotnet.microsoft.com/download"))
+                      | (checkResults.Value["claude"]
+                          ? Text.Success("\u2713 Claude CLI is installed")
+                          : Text.Danger("\u2717 Claude CLI not found - Install from https://docs.anthropic.com/en/docs/claude-code"))
+                      | (checkResults.Value["git"]
+                          ? Text.Success("\u2713 Git is installed")
+                          : Text.Danger("\u2717 Git not found - Install from https://git-scm.com/downloads"))
+                      | (checkResults.Value["powershell"]
+                          ? Text.Success("\u2713 PowerShell is installed")
+                          : Text.Danger("\u2717 PowerShell not found - Install PowerShell Core from https://github.com/PowerShell/PowerShell"))
+                      | Text.H3("Optional")
+                      | (checkResults.Value["pandoc"]
+                          ? Text.Success("\u2713 pandoc is installed")
+                          : Text.Muted("\u24d8 pandoc not found - Install from https://pandoc.org/installing.html for PDF export"))
+                     )
+                   : null!)
+               | (checkResults.Value == null
+                   ? new Button("Check Software")
+                       .Primary()
+                       .Large()
+                       .Icon(Icons.CirclePlay, Align.Right)
+                       .Loading(isChecking.Value)
+                       .Disabled(isChecking.Value)
+                       .OnClick(async () => await CheckSoftware())
+                   : (allRequiredPassed
+                       ? new Button("Continue")
+                           .Primary()
+                           .Large()
+                           .Icon(Icons.ArrowRight, Align.Right)
+                           .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1))
+                       : Layout.Vertical()
+                         | Text.Warning("Please install missing required software before continuing.")
+                         | (Layout.Horizontal().Gap(2)
+                           | new Button("Check Again")
+                               .Outline()
+                               .Icon(Icons.RefreshCw, Align.Right)
+                               .OnClick(async () => await CheckSoftware())
+                           | new Button("Skip Anyway")
+                               .Destructive()
+                               .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1))
+                         )
+                     )
+                  );
+    }
+
+    private static async Task<bool> CheckCommand(string fileName, string arguments)
+    {
+        try
+        {
+            return await Task.Run(() =>
+            {
+                var proc = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                proc?.WaitForExit();
+                return proc?.ExitCode == 0;
+            });
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
 

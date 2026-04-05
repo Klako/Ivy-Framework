@@ -211,7 +211,10 @@ const generateScatterSeries = (
               return { yAxis: line.y, name: line.label };
             }
             // Both x and y specified — point-to-point line
-            return [{ coord: [line.x, line.y], name: line.label }, { coord: [line.x, line.y] }];
+            return [
+              { coord: [line.x, line.y], name: line.label },
+              { coord: [line.x, line.y] },
+            ];
           }),
         }
       : undefined;
@@ -239,9 +242,11 @@ const generateScatterSeries = (
       // Prepare data in [x, y, size] format for scatter
       const scatterData = data.map((d) => {
         const xVal = resolveValue(d, xAxisDataKey);
-        const x = typeof xVal === "number" ? xVal : parseFloat(String(xVal || 0));
+        const x =
+          typeof xVal === "number" ? xVal : parseFloat(String(xVal || 0));
         const yVal = resolveValue(d, yAxisDataKey);
-        const y = typeof yVal === "number" ? yVal : parseFloat(String(yVal || 0));
+        const y =
+          typeof yVal === "number" ? yVal : parseFloat(String(yVal || 0));
         const zVal = zAxisDataKey ? resolveValue(d, zAxisDataKey) : undefined;
         const z =
           zVal !== undefined
@@ -263,7 +268,11 @@ const generateScatterSeries = (
         const zValues = data
           .map((d) => {
             const v = zAxisDataKey ? resolveValue(d, zAxisDataKey) : undefined;
-            return v !== undefined ? (typeof v === "number" ? v : parseFloat(String(v || 0))) : 0;
+            return v !== undefined
+              ? typeof v === "number"
+                ? v
+                : parseFloat(String(v || 0))
+              : 0;
           })
           .filter((z) => z > 0);
 
@@ -273,10 +282,13 @@ const generateScatterSeries = (
         // Create a function to map z values to symbol sizes
         symbolSize = (dataItem: number[]) => {
           const z = dataItem[2];
-          if (z === undefined || minZ === maxZ) return (rangeMin + rangeMax) / 2;
+          if (z === undefined || minZ === maxZ)
+            return (rangeMin + rangeMax) / 2;
 
           // Linear interpolation between rangeMin and rangeMax
-          return rangeMin + ((z - minZ) / (maxZ - minZ)) * (rangeMax - rangeMin);
+          return (
+            rangeMin + ((z - minZ) / (maxZ - minZ)) * (rangeMax - rangeMin)
+          );
         };
       }
 
@@ -358,7 +370,10 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
   });
 
   // Extract chart-specific theme colors
-  const themeColors = useMemo(() => getChartThemeColors(colors, isDark), [colors, isDark]);
+  const themeColors = useMemo(
+    () => getChartThemeColors(colors, isDark),
+    [colors, isDark],
+  );
 
   // When height is Full (100%), use flex to expand. Otherwise use explicit height.
   const heightStyle = height ? getHeight(height) : {};
@@ -367,16 +382,23 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
   const styles: React.CSSProperties = {
     ...getWidth(width),
     position: "relative",
-    ...(isFull ? { display: "flex", flexDirection: "column", height: "100%" } : {}),
+    ...(isFull
+      ? { display: "flex", flexDirection: "column", height: "100%" }
+      : {}),
   };
 
   const chartStyles: React.CSSProperties = {
-    ...(isFull ? { flex: 1, minHeight: "200px" } : { ...heightStyle, minHeight: "200px" }),
+    ...(isFull
+      ? { flex: 1, minHeight: "200px" }
+      : { ...heightStyle, minHeight: "200px" }),
     width: "100%",
   };
 
   // Chart colors depend on theme
-  const chartColors = useMemo(() => getColors(colorScheme, colors), [colorScheme, colors]);
+  const chartColors = useMemo(
+    () => getColors(colorScheme, colors),
+    [colorScheme, colors],
+  );
 
   const xAxisDataKey = xAxis[0]?.dataKey;
   const yAxisDataKey = yAxis[0]?.dataKey;
@@ -385,7 +407,11 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
   // Memoize option configuration
   const option = useMemo(
     () => ({
-      grid: generateEChartGrid(cartesianGrid, !!toolbox && toolbox.enabled !== false),
+      grid: generateEChartGrid(
+        cartesianGrid,
+        !!toolbox && toolbox.enabled !== false,
+        yAxis,
+      ),
       xAxis: generateScatterXAxis(xAxis, {
         mutedForeground: themeColors.mutedForeground,
         fontSans: themeColors.fontSans,
@@ -405,7 +431,10 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
         foreground: themeColors.foreground,
         fontSans: themeColors.fontSans,
       }),
-      textStyle: generateTextStyle(themeColors.foreground, themeColors.fontSans),
+      textStyle: generateTextStyle(
+        themeColors.foreground,
+        themeColors.fontSans,
+      ),
       color: chartColors,
       series: generateScatterSeries(
         data,

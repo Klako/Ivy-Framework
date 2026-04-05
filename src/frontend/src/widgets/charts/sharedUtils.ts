@@ -13,7 +13,11 @@ import {
   YAxisProps,
 } from "./chartTypes";
 import { ChartData } from "./chartTypes";
-import { generateTextStyle, generateAxisLabelStyle, type ChartThemeColors } from "./styles/theme";
+import {
+  generateTextStyle,
+  generateAxisLabelStyle,
+  type ChartThemeColors,
+} from "./styles/theme";
 import {
   CARTESIAN_GRID_DEFAULTS,
   LEGEND_DEFAULTS,
@@ -68,7 +72,10 @@ export const getAxisDomainBound = (
   };
 };
 
-export const formatTickLabel = (value: number | string, formatter?: string | null) => {
+export const formatTickLabel = (
+  value: number | string,
+  formatter?: string | null,
+) => {
   if (!formatter) return String(value);
 
   if (formatter.startsWith("C")) {
@@ -132,14 +139,17 @@ export const generateDataProps = (data: Record<string, unknown>[]) => {
   const categories = data.map((d) => String(d[categoryKey]));
 
   // Value keys are all numeric fields except the category key
-  const valueKeys = keys.filter((k) => k !== categoryKey && typeof data[0][k] === "number");
+  const valueKeys = keys.filter(
+    (k) => k !== categoryKey && typeof data[0][k] === "number",
+  );
 
   const allValues = data.flatMap((d) =>
     Object.values(d).filter((v) => typeof v === "number"),
   ) as number[];
   const minValue = Math.min(...allValues);
   const maxValue = Math.max(...allValues);
-  const largeSpread = Math.abs(maxValue / (minValue === 0 ? 1 : minValue)) > 1e5;
+  const largeSpread =
+    Math.abs(maxValue / (minValue === 0 ? 1 : minValue)) > 1e5;
 
   const transform = (v: number) => {
     if (!largeSpread) return v;
@@ -160,11 +170,16 @@ export const generateDataProps = (data: Record<string, unknown>[]) => {
 export function generateEChartGrid(
   cartesianGrid?: CartesianGridProps,
   hasToolbox: boolean = false,
+  yAxis?: YAxisProps[],
 ) {
+  // When all Y axes are hidden, remove left/right padding so the chart uses full width
+  const allYAxesHidden =
+    yAxis && yAxis.length > 0 && yAxis.every((axis) => axis.hide === true);
+
   const defaultGrid = {
     show: false, // Hide grid border to remove the square frame
-    left: "3%",
-    right: "4%",
+    left: allYAxesHidden ? 0 : "3%",
+    right: allYAxesHidden ? 0 : "4%",
     top: hasToolbox ? 40 : 15,
     bottom: 50, // Space for legend below axis labels
     containLabel: true,
@@ -193,7 +208,10 @@ export function generateEChartLegend(
   const defaultLegends = {
     type: "scroll",
     show: true,
-    textStyle: generateTextStyle(themeColors?.foreground, themeColors?.fontSans),
+    textStyle: generateTextStyle(
+      themeColors?.foreground,
+      themeColors?.fontSans,
+    ),
     top: "bottom",
   };
   if (!legend) return defaultLegends;
@@ -217,7 +235,8 @@ export const getTransformValueFn = (data: ChartData[]) => {
   ) as number[];
   const minValue = Math.min(...allValues);
   const maxValue = Math.max(...allValues);
-  const largeSpread = Math.abs(maxValue / (minValue === 0 ? 1 : minValue)) > 1e5;
+  const largeSpread =
+    Math.abs(maxValue / (minValue === 0 ? 1 : minValue)) > 1e5;
 
   const transform = (v: number) => {
     if (!largeSpread) return v;
@@ -256,7 +275,9 @@ export const generateSeries = (
       ? {
           ...referenceLines[0],
           lineStyle: {
-            width: referenceLines[0]?.lineStyle?.width ?? REFERENCE_LINE_DEFAULTS.strokeWidth,
+            width:
+              referenceLines[0]?.lineStyle?.width ??
+              REFERENCE_LINE_DEFAULTS.strokeWidth,
             ...referenceLines[0]?.lineStyle,
           },
           data: referenceLines.flatMap((ml) => ml.data),
@@ -283,14 +304,20 @@ export const generateSeries = (
       : valueKeys;
 
   return keysToPlot.map((key) => {
-    const rawLineConfig = lines?.find((l) => l.dataKey?.toLowerCase() === key.toLowerCase());
+    const rawLineConfig = lines?.find(
+      (l) => l.dataKey?.toLowerCase() === key.toLowerCase(),
+    );
     // Apply defaults for line config
-    const lineConfig = rawLineConfig ? applyDefaults(rawLineConfig, LINE_DEFAULTS) : LINE_DEFAULTS;
+    const lineConfig = rawLineConfig
+      ? applyDefaults(rawLineConfig, LINE_DEFAULTS)
+      : LINE_DEFAULTS;
 
     return {
       name: lineConfig.name || key,
       type: ChartType.Line,
-      data: data.map((d) => (transform ? transform(Number(d[key] ?? 0)) : Number(d[key] ?? 0))),
+      data: data.map((d) =>
+        transform ? transform(Number(d[key] ?? 0)) : Number(d[key] ?? 0),
+      ),
       step: lineConfig.curveType === "Step" ? "middle" : false,
       smooth: lineConfig.curveType === "Natural" ? true : false,
       showSymbol: true,
@@ -347,7 +374,9 @@ export const generateXAxis = (
               return formatTickLabel(value, axis.tickFormatter);
             }
             const strVal = String(value);
-            return strVal.length > 10 ? strVal.match(/.{1,10}/g)?.join("\n") : strVal;
+            return strVal.length > 10
+              ? strVal.match(/.{1,10}/g)?.join("\n")
+              : strVal;
           }
         : (value: number | string) => {
             if (axis.tickFormatter) {
@@ -360,7 +389,10 @@ export const generateXAxis = (
             return String(value);
           },
       interval: "auto",
-      ...generateAxisLabelStyle(themeColors?.mutedForeground, themeColors?.fontSans),
+      ...generateAxisLabelStyle(
+        themeColors?.mutedForeground,
+        themeColors?.fontSans,
+      ),
     },
     axisLine: {
       show: true,
@@ -401,12 +433,25 @@ export const generateYAxis = (
 ) => {
   const safeTransform = transformValue ?? ((v: number) => v);
 
-  const buildAxisConfig = (axis: Partial<YAxisProps>, skipLargeSpread: boolean = false) => {
+  const buildAxisConfig = (
+    axis: Partial<YAxisProps>,
+    skipLargeSpread: boolean = false,
+  ) => {
     const effectiveLargeSpread = largeSpread && !skipLargeSpread;
     const allowDataOverflow = axis.allowDataOverflow ?? false;
 
-    let minOpt = getAxisDomainBound("min", axis.domainMin, allowDataOverflow, safeTransform);
-    let maxOpt = getAxisDomainBound("max", axis.domainMax, allowDataOverflow, safeTransform);
+    let minOpt = getAxisDomainBound(
+      "min",
+      axis.domainMin,
+      allowDataOverflow,
+      safeTransform,
+    );
+    let maxOpt = getAxisDomainBound(
+      "max",
+      axis.domainMax,
+      allowDataOverflow,
+      safeTransform,
+    );
 
     if (effectiveLargeSpread) {
       if (minOpt === undefined) minOpt = safeTransform(minValue);
@@ -414,6 +459,7 @@ export const generateYAxis = (
     }
 
     return {
+      show: axis.hide ? false : true,
       type: isVertical ? "value" : "category",
       data: isVertical ? undefined : categories,
       ...(minOpt !== undefined && { min: minOpt }),
@@ -426,9 +472,12 @@ export const generateYAxis = (
           }
           if (effectiveLargeSpread) {
             const unscaled = Math.sign(value) * (10 ** Math.abs(value) - 1);
-            if (Math.abs(unscaled) >= 1e9) return (unscaled / 1e9).toFixed(0) + "B";
-            if (Math.abs(unscaled) >= 1e6) return (unscaled / 1e6).toFixed(0) + "M";
-            if (Math.abs(unscaled) >= 1e3) return (unscaled / 1e3).toFixed(0) + "K";
+            if (Math.abs(unscaled) >= 1e9)
+              return (unscaled / 1e9).toFixed(0) + "B";
+            if (Math.abs(unscaled) >= 1e6)
+              return (unscaled / 1e6).toFixed(0) + "M";
+            if (Math.abs(unscaled) >= 1e3)
+              return (unscaled / 1e3).toFixed(0) + "K";
             return unscaled.toFixed(0);
           }
           if (Math.abs(value) >= 1e9) return (value / 1e9).toFixed(0) + "B";
@@ -436,7 +485,10 @@ export const generateYAxis = (
           if (Math.abs(value) >= 1e3) return (value / 1e3).toFixed(0) + "K";
           return value;
         },
-        ...generateAxisLabelStyle(themeColors?.mutedForeground, themeColors?.fontSans),
+        ...generateAxisLabelStyle(
+          themeColors?.mutedForeground,
+          themeColors?.fontSans,
+        ),
       },
       splitNumber: effectiveLargeSpread ? 3 : 5,
       position: axis.orientation === "Right" ? "right" : "left",
@@ -468,7 +520,9 @@ export const generateYAxis = (
 
   if (yAxis && yAxis.length > 1) {
     // Each axis auto-scales independently; global largeSpread is misleading for multi-axis charts
-    return yAxis.map((axis) => buildAxisConfig(axis, /* skipLargeSpread: */ true));
+    return yAxis.map((axis) =>
+      buildAxisConfig(axis, /* skipLargeSpread: */ true),
+    );
   }
 
   return buildAxisConfig(yAxis?.[0] || ({} as Partial<YAxisProps>));
@@ -485,7 +539,9 @@ export const generateTooltip = (
   },
 ) => {
   // Apply defaults for tooltip
-  const tip = tooltip ? applyDefaults(tooltip, TOOLTIP_DEFAULTS) : TOOLTIP_DEFAULTS;
+  const tip = tooltip
+    ? applyDefaults(tooltip, TOOLTIP_DEFAULTS)
+    : TOOLTIP_DEFAULTS;
 
   return {
     trigger: type === "item" ? "item" : "axis",
@@ -505,7 +561,10 @@ export const generateTooltip = (
         color: "rgba(255, 255, 255, 0.9)",
       },
     },
-    textStyle: generateTextStyle(themeColors?.foreground, themeColors?.fontSans),
+    textStyle: generateTextStyle(
+      themeColors?.foreground,
+      themeColors?.fontSans,
+    ),
     backgroundColor: themeColors?.background || "rgba(255, 255, 255, 0.9)",
     borderColor: themeColors?.foreground || "#000",
     borderWidth: 1,
@@ -522,7 +581,9 @@ export const generateEChartToolbox = (toolbox?: ToolboxProps) => {
   const features: ToolboxFeatures = {};
 
   if (box.dataView !== false) {
-    const cardBg = getComputedStyle(document.documentElement).getPropertyValue("--card").trim();
+    const cardBg = getComputedStyle(document.documentElement)
+      .getPropertyValue("--card")
+      .trim();
     const foreground = getComputedStyle(document.documentElement)
       .getPropertyValue("--foreground")
       .trim();
@@ -556,7 +617,8 @@ export const generateEChartToolbox = (toolbox?: ToolboxProps) => {
 
   return {
     show: true,
-    orient: box.orientation?.toLowerCase() === "vertical" ? "vertical" : "horizontal",
+    orient:
+      box.orientation?.toLowerCase() === "vertical" ? "vertical" : "horizontal",
     left:
       box.align?.toLowerCase() === "left"
         ? "left"
@@ -579,7 +641,9 @@ export const generateEChartToolbox = (toolbox?: ToolboxProps) => {
       iconStyle: {
         color: null,
         borderColor: null,
-        textFill: getComputedStyle(document.documentElement).getPropertyValue("--toolbox").trim(),
+        textFill: getComputedStyle(document.documentElement)
+          .getPropertyValue("--toolbox")
+          .trim(),
       },
     },
   };

@@ -23,6 +23,8 @@ public class ContentView(
         var client = UseService<IClientProvider>();
         var showPlan = UseState<string?>(null);
         var showNotesDialog = UseState(false);
+        var showDeclineDialog = UseState<bool>(false);
+        var declineReason = UseState<string?>("");
 
         if (_selected is null)
         {
@@ -53,9 +55,8 @@ public class ContentView(
             })
             | new Button("Decline").Icon(Icons.X).Outline().ShortcutKey("x").OnClick(() =>
             {
-                _planService.UpdateRecommendationState(_selected.PlanFolderName, _selected.Title, "Declined");
-                _refresh();
-                GoToNext();
+                declineReason.Set("");
+                showDeclineDialog.Set(true);
             })
             | new Spacer().Width(Size.Grow())
             | Text.Rich()
@@ -108,6 +109,44 @@ public class ContentView(
                 _refresh();
                 GoToNext();
             });
+
+        if (showDeclineDialog.Value)
+        {
+            var selectedForDecline = _selected;
+            return new Fragment(
+                mainLayout,
+                new Dialog(
+                    _ => { declineReason.Set(""); showDeclineDialog.Set(false); },
+                    new DialogHeader("Decline Recommendation"),
+                    new DialogBody(
+                        Layout.Vertical()
+                            | Text.P("Optionally provide a reason for declining this recommendation.")
+                            | declineReason.ToTextareaInput("Enter reason (optional)...").Rows(4).AutoFocus()
+                    ),
+                    new DialogFooter(
+                        new Button("Cancel").Outline().ShortcutKey("Escape").OnClick(() =>
+                        {
+                            declineReason.Set("");
+                            showDeclineDialog.Set(false);
+                        }),
+                        new Button("Decline").Destructive().ShortcutKey("Enter").OnClick(() =>
+                        {
+                            _planService.UpdateRecommendationState(
+                                selectedForDecline.PlanFolderName,
+                                selectedForDecline.Title,
+                                "Declined",
+                                declineReason.Value
+                            );
+                            _refresh();
+                            showDeclineDialog.Set(false);
+                            declineReason.Set("");
+                            GoToNext();
+                        })
+                    )
+                ).Width(Size.Rem(40)),
+                notesDialog
+            );
+        }
 
         if (showPlan.Value is { } planPath)
         {

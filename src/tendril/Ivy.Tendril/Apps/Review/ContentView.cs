@@ -4,8 +4,6 @@ using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Apps.Review.Dialogs;
 using Ivy.Tendril.Services;
 using Ivy.Widgets.DiffView;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace Ivy.Tendril.Apps.Review;
 
@@ -495,11 +493,8 @@ public class ContentView(
                             ["assignee"] = customPrAssignee.Value ?? "",
                             ["comment"] = customPrComment.Value
                         };
-                        var serializer = new SerializerBuilder()
-                            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                            .Build();
                         var optionsPath = Path.Combine(_selectedPlan.FolderPath, ".custom-pr-options.yaml");
-                        File.WriteAllText(optionsPath, serializer.Serialize(options));
+                        File.WriteAllText(optionsPath, PlanReaderService.YamlSerializer.Serialize(options));
                         _jobService.StartJob("MakePr", _selectedPlan.FolderPath);
                         _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Building);
                         _refreshPlans();

@@ -21,9 +21,7 @@ const supportedMimeTypes = [
   "audio/wav",
 ];
 
-export function useDictation({
-  dictationUploadUrl,
-}: UseDictationOptions): UseDictationResult {
+export function useDictation({ dictationUploadUrl }: UseDictationOptions): UseDictationResult {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);

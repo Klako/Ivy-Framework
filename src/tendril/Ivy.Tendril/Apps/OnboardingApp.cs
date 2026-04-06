@@ -57,6 +57,9 @@ public class WelcomeStepView(IState<int> stepperIndex) : ViewBase
                | Text.H1("Welcome to Ivy Tendril")
                | Text.Markdown(
                    """
+                   
+                   TRY TO REMOVE THESE CHANGES
+                   
                    To get started, we need to set up a few things:
                    - Check that you have all necessary software installed
                    - Where to store your Tendril data

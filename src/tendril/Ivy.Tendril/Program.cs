@@ -29,7 +29,9 @@ server.SetMetaTitle("Ivy Tendril");
 var configService = new ConfigService();
 server.Services.AddSingleton<IConfigService>(configService);
 server.Services.AddSingleton<ConfigService>(configService);
-server.Services.AddSingleton<ModelPricingService>();
+var modelPricingService = new ModelPricingService();
+server.Services.AddSingleton<IModelPricingService>(modelPricingService);
+server.Services.AddSingleton<ModelPricingService>(modelPricingService);
 
 // Register IChatClient if LLM is configured
 if (configService.Settings.Llm is { } llmConfig && !string.IsNullOrEmpty(llmConfig.ApiKey))
@@ -67,7 +69,7 @@ server.Services.AddSingleton<TelemetryService>(sp =>
     (TelemetryService)sp.GetRequiredService<ITelemetryService>());
 server.Services.AddSingleton<JobService>(sp =>
 {
-    var jobService = new JobService(sp.GetRequiredService<IConfigService>(), sp.GetRequiredService<ModelPricingService>());
+    var jobService = new JobService(sp.GetRequiredService<IConfigService>(), sp.GetRequiredService<IModelPricingService>());
     jobService.SetPlanReaderService(sp.GetRequiredService<IPlanReaderService>());
     jobService.SetTelemetryService(sp.GetRequiredService<ITelemetryService>());
     return jobService;

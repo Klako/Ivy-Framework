@@ -17,7 +17,7 @@ public record CostCalculation
     public double TotalCost { get; init; }
 }
 
-public class ModelPricingService
+public class ModelPricingService : IModelPricingService
 {
     private static readonly IDeserializer DefaultDeserializer = new DeserializerBuilder().Build();
 

@@ -1,17 +1,27 @@
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 
-namespace Ivy.Analyser.Tests
+namespace Ivy.Analyser.Test
 {
     public static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TCodeFix : CodeFixProvider, new()
     {
-        public static DiagnosticResult Diagnostic(string diagnosticId) =>
-            new DiagnosticResult(diagnosticId, DiagnosticSeverity.Warning);
+        public static DiagnosticResult Diagnostic(string diagnosticId)
+        {
+            var analyzer = new TAnalyzer();
+            foreach (var descriptor in analyzer.SupportedDiagnostics)
+            {
+                if (descriptor.Id == diagnosticId)
+                    return new DiagnosticResult(descriptor);
+            }
+
+            return new DiagnosticResult(diagnosticId, DiagnosticSeverity.Warning);
+        }
 
         public static async Task VerifyAnalyzerAsync(string source)
         {

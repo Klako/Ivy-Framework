@@ -242,7 +242,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         var list = new List<string>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
-            list.Add(reader.GetString(0));
+            list.Add(reader.GetString(reader.GetOrdinal(column)));
         return list;
     }
 
@@ -255,7 +255,11 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         var list = new List<PlanVerificationEntry>();
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
-            list.Add(new PlanVerificationEntry { Name = reader.GetString(0), Status = reader.GetString(1) });
+            list.Add(new PlanVerificationEntry
+            {
+                Name = reader.GetString(reader.GetOrdinal("Name")),
+                Status = reader.GetString(reader.GetOrdinal("Status"))
+            });
         return list;
     }
 
@@ -273,13 +277,13 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
-            var planId = reader.GetInt32(0);
+            var planId = reader.GetInt32(reader.GetOrdinal("PlanId"));
             if (!result.TryGetValue(planId, out var list))
             {
                 list = new List<string>();
                 result[planId] = list;
             }
-            list.Add(reader.GetString(1));
+            list.Add(reader.GetString(reader.GetOrdinal(column)));
         }
         return result;
     }
@@ -296,13 +300,17 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
-            var planId = reader.GetInt32(0);
+            var planId = reader.GetInt32(reader.GetOrdinal("PlanId"));
             if (!result.TryGetValue(planId, out var list))
             {
                 list = new List<PlanVerificationEntry>();
                 result[planId] = list;
             }
-            list.Add(new PlanVerificationEntry { Name = reader.GetString(1), Status = reader.GetString(2) });
+            list.Add(new PlanVerificationEntry
+            {
+                Name = reader.GetString(reader.GetOrdinal("Name")),
+                Status = reader.GetString(reader.GetOrdinal("Status"))
+            });
         }
         return result;
     }
@@ -314,11 +322,11 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = """
                 SELECT
-                    COALESCE(SUM(CASE WHEN State = 'Draft' THEN 1 ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN State = 'ReadyForReview' THEN 1 ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN State = 'Failed' THEN 1 ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN State = 'Icebox' THEN 1 ELSE 0 END), 0),
-                    (SELECT COUNT(*) FROM Recommendations WHERE State = 'Pending')
+                    COALESCE(SUM(CASE WHEN State = 'Draft' THEN 1 ELSE 0 END), 0) AS DraftCount,
+                    COALESCE(SUM(CASE WHEN State = 'ReadyForReview' THEN 1 ELSE 0 END), 0) AS ReadyForReviewCount,
+                    COALESCE(SUM(CASE WHEN State = 'Failed' THEN 1 ELSE 0 END), 0) AS FailedCount,
+                    COALESCE(SUM(CASE WHEN State = 'Icebox' THEN 1 ELSE 0 END), 0) AS IceboxCount,
+                    (SELECT COUNT(*) FROM Recommendations WHERE State = 'Pending') AS PendingRecommendationsCount
                 FROM Plans
                 """;
 
@@ -326,11 +334,11 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             if (reader.Read())
             {
                 return new PlanReaderService.PlanCountSnapshot(
-                    reader.GetInt32(0),
-                    reader.GetInt32(1),
-                    reader.GetInt32(2),
-                    reader.GetInt32(3),
-                    reader.GetInt32(4)
+                    reader.GetInt32(reader.GetOrdinal("DraftCount")),
+                    reader.GetInt32(reader.GetOrdinal("ReadyForReviewCount")),
+                    reader.GetInt32(reader.GetOrdinal("FailedCount")),
+                    reader.GetInt32(reader.GetOrdinal("IceboxCount")),
+                    reader.GetInt32(reader.GetOrdinal("PendingRecommendationsCount"))
                 );
             }
 

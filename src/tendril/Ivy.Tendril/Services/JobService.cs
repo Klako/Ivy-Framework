@@ -532,6 +532,10 @@ public class JobService : IJobService
 
         _telemetryService?.TrackJobCompleted(job.Type, job.Status, job.DurationSeconds);
 
+        // Flush telemetry events to ensure they reach PostHog
+        if (_telemetryService != null)
+            _ = Task.Run(async () => await _telemetryService.FlushAsync());
+
         CleanupInboxFile(job);
         WriteJobLog(job);
 

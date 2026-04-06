@@ -574,7 +574,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var transaction = _connection.BeginTransaction();
             try
             {
-                UpsertPlanInternal(plan, transaction);
+                UpsertPlanInternal(plan);
                 transaction.Commit();
             }
             catch
@@ -828,7 +828,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             try
             {
                 foreach (var plan in plans)
-                    UpsertPlanInternal(plan, transaction);
+                    UpsertPlanInternal(plan);
                 transaction.Commit();
             }
             catch

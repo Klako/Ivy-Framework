@@ -27,9 +27,6 @@ public class JobService : IJobService
     public event Action? JobsChanged;
     public event Action<JobNotification>? NotificationReady;
 
-    [Obsolete("Use NotificationReady event instead. Will be removed in a future version.")]
-    public ConcurrentQueue<JobNotification> PendingNotifications { get; } = new();
-
     private static readonly string PromptsRoot =
         Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory, "..", "..", "..", ".promptwares"));
 
@@ -200,9 +197,6 @@ public class JobService : IJobService
                 ResetPlanStateToBlocked(job);
 
                 var blockedNotification = new JobNotification("Job Blocked", $"{planFile}: {blockReason}", false);
-#pragma warning disable CS0618 // Obsolete PendingNotifications kept for backward compatibility
-                PendingNotifications.Enqueue(blockedNotification);
-#pragma warning restore CS0618
                 RaiseNotification(blockedNotification);
                 RaiseJobsChanged();
                 return id;
@@ -486,9 +480,6 @@ public class JobService : IJobService
         if (!isSuccess && job.StatusMessage != null)
             message += $": {job.StatusMessage}";
         var completionNotification = new JobNotification(title, message, isSuccess);
-#pragma warning disable CS0618 // Obsolete PendingNotifications kept for backward compatibility
-        PendingNotifications.Enqueue(completionNotification);
-#pragma warning restore CS0618
         RaiseNotification(completionNotification);
 
         if (job.Status is "Failed" or "Timeout")

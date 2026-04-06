@@ -1,4 +1,3 @@
-#pragma warning disable CS0618 // PendingNotifications is obsolete — these tests verify backward compatibility
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Test;
@@ -16,9 +15,11 @@ public class JobServiceNotificationTests
         var service = CreateService();
         var id = service.StartJob("MakePr", Path.GetTempPath());
 
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
         service.CompleteJob(id, exitCode: 0);
 
-        Assert.True(service.PendingNotifications.TryDequeue(out var notification));
+        Assert.NotNull(notification);
         Assert.Equal("MakePr Completed", notification.Title);
         Assert.True(notification.IsSuccess);
     }
@@ -29,9 +30,11 @@ public class JobServiceNotificationTests
         var service = CreateService();
         var id = service.StartJob("ExecutePlan", Path.GetTempPath());
 
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
         service.CompleteJob(id, exitCode: 1);
 
-        Assert.True(service.PendingNotifications.TryDequeue(out var notification));
+        Assert.NotNull(notification);
         Assert.Equal("ExecutePlan Failed", notification.Title);
         Assert.False(notification.IsSuccess);
     }
@@ -42,9 +45,11 @@ public class JobServiceNotificationTests
         var service = CreateService();
         var id = service.StartJob("ExpandPlan", Path.GetTempPath());
 
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
         service.CompleteJob(id, exitCode: null, timedOut: true);
 
-        Assert.True(service.PendingNotifications.TryDequeue(out var notification));
+        Assert.NotNull(notification);
         Assert.Equal("ExpandPlan Timed Out", notification.Title);
         Assert.False(notification.IsSuccess);
     }

@@ -75,10 +75,16 @@ public class FolderInputValidationDemo : ViewBase
 By default, `FolderInput` returns only the folder name (web-safe). In desktop environments (Electron/Tauri), you can use `FolderInputMode.FullPath` to get the full filesystem path.
 
 ```csharp demo-below
-var folder = UseState<string?>();
-return Layout.Vertical()
-       | folder.ToFolderInput(mode: FolderInputMode.FullPath)
-       | Text.P($"Path: {folder.Value ?? "None"}");
+public class FolderInputModeDemo : ViewBase
+{
+    public override object? Build()
+    {
+        var folder = UseState<string?>();
+        return Layout.Vertical()
+               | folder.ToFolderInput(mode: FolderInputMode.FullPath)
+               | Text.P($"Path: {folder.Value ?? "None"}");
+    }
+}
 ```
 
 > **Note:** In browser environments, `FullPath` mode falls back to returning the folder name only, since the File System Access API does not expose full paths.

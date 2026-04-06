@@ -117,7 +117,10 @@ export const FolderInputWidget: React.FC<FolderInputWidgetProps> = ({
             <button
               type="button"
               className="flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors"
-              onClick={(e) => { e.stopPropagation(); handleClear(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+              }}
               tabIndex={-1}
               aria-label="Clear selection"
             >

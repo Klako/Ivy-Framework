@@ -60,16 +60,6 @@ export const TextInputWidget: React.FC<TextInputWidgetProps> = ({
 
   const { isRecording, startRecording, stopRecording } = useDictation({
     dictationUploadUrl,
-    onTranscription: useCallback(
-      (text: string) => {
-        const current = localValue;
-        const separator = current.length > 0 && !current.endsWith(" ") ? " " : "";
-        const newValue = current + separator + text;
-        setLocalValue(newValue);
-        if (events.includes("OnChange")) eventHandler("OnChange", id, [newValue]);
-      },
-      [localValue, setLocalValue, events, eventHandler, id],
-    ),
   });
 
   // Handle transcription results pushed from the server

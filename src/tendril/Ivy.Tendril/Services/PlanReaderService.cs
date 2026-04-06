@@ -2,9 +2,6 @@ using System.Text.RegularExpressions;
 
 using Ivy.Tendril.Apps.Plans;
 
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-
 namespace Ivy.Tendril.Services;
 
 public class PlanReaderService(IConfigService config) : IPlanReaderService
@@ -33,24 +30,6 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         _planCountsCache = null;
         _planCountsCacheTime = null;
     }
-
-    public static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .IgnoreUnmatchedProperties()
-        .Build();
-
-    public static readonly ISerializer YamlSerializer = new SerializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .Build();
-
-    /// <summary>
-    /// Shared YAML serializer with OmitDefaults configuration for compact output.
-    /// Used when writing configuration files where default values should be suppressed.
-    /// </summary>
-    public static readonly ISerializer YamlSerializerCompact = new SerializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
-        .Build();
 
     public string PlansDirectory => _config.PlanFolder;
 
@@ -211,12 +190,12 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         if (!File.Exists(planYamlPath)) return;
 
         var yaml = FileHelper.ReadAllText(planYamlPath);
-        var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
+        var planYaml = YamlHelper.Deserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
 
         planYaml.State = newState.ToString();
         planYaml.Updated = DateTime.UtcNow;
 
-        FileHelper.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
+        FileHelper.WriteAllText(planYamlPath, YamlHelper.Serializer.Serialize(planYaml));
         InvalidatePlanCountsCache();
     }
 
@@ -239,9 +218,9 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         if (File.Exists(planYamlPath))
         {
             var yaml = FileHelper.ReadAllText(planYamlPath);
-            var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
+            var planYaml = YamlHelper.Deserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
             planYaml.Updated = DateTime.UtcNow;
-            FileHelper.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
+            FileHelper.WriteAllText(planYamlPath, YamlHelper.Serializer.Serialize(planYaml));
             InvalidatePlanCountsCache();
         }
     }
@@ -441,9 +420,9 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
             if (File.Exists(planYamlPath))
             {
                 var yaml = FileHelper.ReadAllText(planYamlPath);
-                var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
+                var planYaml = YamlHelper.Deserializer.Deserialize<PlanYaml>(yaml) ?? new PlanYaml();
                 planYaml.Updated = DateTime.UtcNow;
-                FileHelper.WriteAllText(planYamlPath, YamlSerializer.Serialize(planYaml));
+                FileHelper.WriteAllText(planYamlPath, YamlHelper.Serializer.Serialize(planYaml));
                 InvalidatePlanCountsCache();
             }
         }
@@ -455,7 +434,7 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         {
             var planYamlPath = Path.Combine(folderPath, "plan.yaml");
             var yamlContent = FileHelper.ReadAllText(planYamlPath);
-            var planYaml = YamlDeserializer.Deserialize<PlanYaml>(yamlContent);
+            var planYaml = YamlHelper.Deserializer.Deserialize<PlanYaml>(yamlContent);
             if (planYaml == null) return null;
 
             var folderName = Path.GetFileName(folderPath);
@@ -578,7 +557,7 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
                 var planYamlPath = Path.Combine(dir, "plan.yaml");
                 if (!File.Exists(planYamlPath)) continue;
 
-                var planYaml = YamlDeserializer.Deserialize<PlanYaml>(FileHelper.ReadAllText(planYamlPath));
+                var planYaml = YamlHelper.Deserializer.Deserialize<PlanYaml>(FileHelper.ReadAllText(planYamlPath));
                 if (planYaml == null) continue;
 
                 var project = planYaml.Project ?? "";
@@ -697,11 +676,11 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
             try
             {
                 var planYaml = FileHelper.ReadAllText(planYamlPath);
-                var plan = YamlDeserializer.Deserialize<PlanYaml>(planYaml);
+                var plan = YamlHelper.Deserializer.Deserialize<PlanYaml>(planYaml);
                 if (plan == null) continue;
 
                 var yaml = FileHelper.ReadAllText(recommendationsPath);
-                var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(yaml);
+                var items = YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(yaml);
                 if (items == null) continue;
 
                 var match = FolderNameRegex.Match(folderName);
@@ -806,7 +785,7 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
                 if (File.Exists(recommendationsPath))
                 {
                     var recYaml = FileHelper.ReadAllText(recommendationsPath);
-                    var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(recYaml);
+                    var items = YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(recYaml);
                     if (items != null)
                     {
                         foreach (var item in items)
@@ -840,7 +819,7 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         if (!File.Exists(recommendationsPath)) return;
 
         var yaml = FileHelper.ReadAllText(recommendationsPath);
-        var items = YamlDeserializer.Deserialize<List<RecommendationYaml>>(yaml);
+        var items = YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(yaml);
         if (items == null) return;
 
         var item = items.FirstOrDefault(r => r.Title == recommendationTitle);
@@ -851,7 +830,7 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         {
             item.DeclineReason = declineReason;
         }
-        FileHelper.WriteAllText(recommendationsPath, YamlSerializer.Serialize(items));
+        FileHelper.WriteAllText(recommendationsPath, YamlHelper.Serializer.Serialize(items));
 
         // Invalidate caches after state change
         _recommendationsCache = null;

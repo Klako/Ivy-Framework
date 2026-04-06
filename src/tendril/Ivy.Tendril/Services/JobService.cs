@@ -14,7 +14,7 @@ public class JobService : IJobService
     private int _counter;
     private IPlanReaderService? _planReaderService;
     private readonly IConfigService? _configService;
-    private readonly ModelPricingService? _modelPricingService;
+    private readonly IModelPricingService? _modelPricingService;
     private ITelemetryService? _telemetryService;
     private readonly TimeSpan _jobTimeout;
     private readonly TimeSpan _staleOutputTimeout;
@@ -47,7 +47,7 @@ public class JobService : IJobService
         ["CreateIssue"] = Path.Combine(PromptsRoot, "CreateIssue.ps1"),
     };
 
-    public JobService(IConfigService configService, ModelPricingService? modelPricingService = null)
+    public JobService(IConfigService configService, IModelPricingService? modelPricingService = null)
     {
         _syncContext = SynchronizationContext.Current;
         _configService = configService;

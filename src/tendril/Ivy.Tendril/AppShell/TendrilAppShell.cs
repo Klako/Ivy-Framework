@@ -56,7 +56,7 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
         Context.TryUseService<IAuthService>(out var auth);
         var user = UseState<UserInfo?>();
         var currentApp = UseState<AppHost?>();
-        var countsService = UseService<PlanCountsService>();
+        var countsService = UseService<IPlanCountsService>();
         var menuItems = UseState(() => BuildMenuItems(appRepository, countsService.Current));
         var counts = UseState(() => countsService.Current);
         var jobService = UseService<IJobService>();

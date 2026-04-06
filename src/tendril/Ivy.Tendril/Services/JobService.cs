@@ -529,7 +529,6 @@ public class JobService : IJobService
                 }
 
                 _telemetryService?.TrackPlanCreated(new PlanCreatedContext(
-                    Project: job.Project,
                     Level: level,
                     DurationSeconds: job.DurationSeconds));
             }
@@ -538,7 +537,6 @@ public class JobService : IJobService
         if (isSuccess && job.Type == "MakePr")
         {
             _telemetryService?.TrackPrCreated(new PrCreatedContext(
-                Project: job.Project,
                 DurationSeconds: job.DurationSeconds));
         }
 

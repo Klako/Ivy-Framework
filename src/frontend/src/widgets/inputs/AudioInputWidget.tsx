@@ -12,8 +12,8 @@ import {
   timerSizeVariant,
   iconSizeVariant,
 } from "@/components/ui/input/audio-input-variant";
+import { uploadFile } from "@/widgets/filePicker/shared";
 import { EMPTY_ARRAY } from "@/lib/constants";
-import { getFullUrl } from "@/lib/url";
 
 interface AudioInputWidgetProps {
   id: string;
@@ -90,19 +90,10 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
       const selectedMime =
         selectedMimeTypeRef.current ?? normalizedMimeTypes[0] ?? supportedMimeTypes[0];
 
-      const formData = new FormData();
-      formData.append("file", chunk);
-      formData.append("mimeType", selectedMime);
-
       try {
-        const response = await fetch(getFullUrl(uploadUrl), {
-          method: "POST",
-          body: formData,
+        await uploadFile(uploadUrl, chunk, {
+          extraFields: { mimeType: selectedMime },
         });
-
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`);
-        }
       } catch (error) {
         logger.error("File upload error:", error);
       }
@@ -267,6 +258,7 @@ export const AudioInputWidget: React.FC<AudioInputWidgetProps> = ({
               }
         }
         role="button"
+        aria-label={recording ? "Stop recording" : "Start recording"}
         tabIndex={disabled ? -1 : 0}
         onBlur={(e) => {
           if (disabled) return;

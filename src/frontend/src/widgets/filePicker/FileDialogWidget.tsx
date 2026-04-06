@@ -51,9 +51,7 @@ export const FileDialogWidget: React.FC<FileDialogWidgetProps> = ({
   const handleFiles = useCallback(
     async (files: File[]) => {
       // Validate all files
-      const validFiles = files.filter((f) =>
-        validateFileWithToast({ file: f, accept, maxFileSize, minFileSize }),
-      );
+      const validFiles = files.filter((f) => validateFile(f, accept, maxFileSize, minFileSize));
       if (validFiles.length === 0) return;
 
       if (mode === "Upload" && uploadUrl) {

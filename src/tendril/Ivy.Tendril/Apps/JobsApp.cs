@@ -93,7 +93,7 @@ public class JobsApp : ViewBase
             .Width(t => t.StatusMessage, Size.Auto())
             .Renderer(t => t.Status, new LabelsDisplayRenderer
             {
-                BadgeColorMapping = StatusColors.ToDictionary(
+                BadgeColorMapping = StatusMappings.JobStatusColors.ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value.ToString()
                 )

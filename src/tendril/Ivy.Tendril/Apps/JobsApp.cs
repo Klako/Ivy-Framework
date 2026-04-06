@@ -111,6 +111,13 @@ public class JobsApp : ViewBase
                     kvp => kvp.Value.ToString()
                 )
             })
+            .Renderer(t => t.Type, new LabelsDisplayRenderer
+            {
+                BadgeColorMapping = StatusMappings.JobTypeColors.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.ToString()
+                )
+            })
             .Renderer(t => t.PlanId, new LinkDisplayRenderer())
             .Hidden(t => t.Id)
             .Hidden(t => t.LastOutputTimestamp)

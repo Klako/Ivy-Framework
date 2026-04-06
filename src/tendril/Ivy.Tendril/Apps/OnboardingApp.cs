@@ -290,7 +290,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
     {
         var config = UseService<IConfigService>();
         var projectName = UseState("");
-        var projectColor = UseState("");
+        var projectColor = UseState<Colors?>(null);
         var repoPaths = UseState(new List<string>());
         var newRepoPath = UseState("");
         var error = UseState<string?>(null);
@@ -327,7 +327,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                | Text.Muted("Set up your first project. You can add more projects later in Settings.")
                | (error.Value != null ? Text.Danger(error.Value) : null!)
                | projectName.ToTextInput("Project name...").WithField().Label("Project Name")
-               | projectColor.ToColorInput().Variant(ColorInputVariant.TextAndPicker).Nullable().WithField().Label("Color")
+               | projectColor.ToSelectInput().WithField().Label("Color")
                | (Layout.Vertical().Gap(2)
                    | Text.Block("Repositories").Bold()
                    | Text.Muted("Add at least one repository path for this project.")
@@ -352,7 +352,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                            var project = new ProjectConfig
                            {
                                Name = projectName.Value.Trim(),
-                               Color = projectColor.Value,
+                               Color = projectColor.Value?.ToString() ?? "",
                                Repos = repoPaths.Value.Select(p => new RepoRef { Path = p, PrRule = "default" }).ToList()
                            };
                            config.SetPendingProject(project);

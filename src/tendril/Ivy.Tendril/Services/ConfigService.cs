@@ -1,6 +1,3 @@
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-
 namespace Ivy.Tendril.Services;
 
 public record RepoConfig
@@ -108,16 +105,6 @@ public class TendrilSettings
 
 public class ConfigService : IConfigService
 {
-    // Shared deserializer with lenient validation (.IgnoreUnmatchedProperties).
-    // This allows config.yaml to contain keys that aren't in TendrilSettings without
-    // throwing errors, improving resilience to config changes and forward/backward
-    // compatibility. Both the constructor and SetTendrilHome use this deserializer
-    // to ensure consistent behavior.
-    private static readonly IDeserializer CamelCaseDeserializer = new DeserializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .IgnoreUnmatchedProperties()
-        .Build();
-
     private TendrilSettings _settings;
     private string _configPath;
     private string _tendrilHome;
@@ -162,7 +149,7 @@ public class ConfigService : IConfigService
             try
             {
                 var yaml = File.ReadAllText(_configPath);
-                _settings = CamelCaseDeserializer.Deserialize<TendrilSettings>(yaml) ?? new TendrilSettings();
+                _settings = YamlHelper.Deserializer.Deserialize<TendrilSettings>(yaml) ?? new TendrilSettings();
                 NeedsOnboarding = false;
             }
             catch (Exception)
@@ -230,7 +217,7 @@ public class ConfigService : IConfigService
 
     public void SaveSettings()
     {
-        var yaml = PlanReaderService.YamlSerializerCompact.Serialize(_settings);
+        var yaml = YamlHelper.SerializerCompact.Serialize(_settings);
         File.WriteAllText(_configPath, yaml);
     }
 
@@ -265,7 +252,7 @@ public class ConfigService : IConfigService
         if (File.Exists(_configPath))
         {
             var yaml = File.ReadAllText(_configPath);
-            var loadedSettings = CamelCaseDeserializer.Deserialize<TendrilSettings>(yaml);
+            var loadedSettings = YamlHelper.Deserializer.Deserialize<TendrilSettings>(yaml);
             if (loadedSettings != null)
             {
                 _settings = loadedSettings;

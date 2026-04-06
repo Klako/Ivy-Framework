@@ -101,7 +101,7 @@ public class ContentView(
         var recommendations = new List<RecommendationYaml>();
         if (File.Exists(recommendationsPath))
         {
-            recommendations = PlanReaderService.YamlDeserializer.Deserialize<List<RecommendationYaml>>(
+            recommendations = YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
                 File.ReadAllText(recommendationsPath)) ?? new();
         }
 

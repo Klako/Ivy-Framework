@@ -143,13 +143,8 @@ public class JobService : IJobService
             planFile = Path.GetFileName(planFolder);
             if (Directory.Exists(planFolder))
             {
-                var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-                if (File.Exists(planYamlPath))
-                {
-                    var yaml = FileHelper.ReadAllText(planYamlPath);
-                    var match = System.Text.RegularExpressions.Regex.Match(yaml, @"(?m)^project:\s*(.+)$");
-                    if (match.Success) project = match.Groups[1].Value.Trim();
-                }
+                var plan = ReadPlanYaml(planFolder);
+                if (plan != null) project = plan.Project;
             }
         }
 
@@ -529,13 +524,8 @@ public class JobService : IJobService
                 var level = "NiceToHave";
                 if (Directory.Exists(planFolder))
                 {
-                    var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-                    if (File.Exists(planYamlPath))
-                    {
-                        var yaml = FileHelper.ReadAllText(planYamlPath);
-                        var match = Regex.Match(yaml, @"(?m)^level:\s*(.+)$");
-                        if (match.Success) level = match.Groups[1].Value.Trim();
-                    }
+                    var plan = ReadPlanYaml(planFolder);
+                    if (plan != null) level = plan.Level;
                 }
 
                 _telemetryService?.TrackPlanCreated(new PlanCreatedContext(
@@ -746,6 +736,31 @@ public class JobService : IJobService
         return reason.Length > 200 ? reason[..200] + "..." : reason;
     }
 
+    internal static string? ReadPlanYamlRaw(string planFolder)
+    {
+        var planYamlPath = Path.Combine(planFolder, "plan.yaml");
+        return File.Exists(planYamlPath) ? FileHelper.ReadAllText(planYamlPath) : null;
+    }
+
+    internal static PlanYaml? ReadPlanYaml(string planFolder)
+    {
+        var yaml = ReadPlanYamlRaw(planFolder);
+        if (yaml == null) return null;
+
+        try
+        {
+            var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()
+                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
+                .IgnoreUnmatchedProperties()
+                .Build();
+            return deserializer.Deserialize<PlanYaml>(yaml);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static string? GetNamedArg(string[] args, string name)
     {
         for (int i = 0; i < args.Length - 1; i++)
@@ -761,29 +776,19 @@ public class JobService : IJobService
         try
         {
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            if (!File.Exists(planYamlPath)) return;
+            var plan = ReadPlanYaml(planFolder);
+            if (plan == null) return;
 
-            var content = FileHelper.ReadAllText(planYamlPath);
-            var stateMatch = System.Text.RegularExpressions.Regex.Match(content, @"(?m)^state:\s*(.+)$");
-            if (!stateMatch.Success) return;
-
-            var currentState = stateMatch.Groups[1].Value.Trim();
-            if (currentState is "Executing" or "Building")
+            if (plan.State is "Executing" or "Building")
             {
-                // Check verification statuses before deciding target state
-                var verificationStatuses = System.Text.RegularExpressions.Regex.Matches(content, @"(?m)^\s+status:\s*(.+)$")
-                    .Cast<System.Text.RegularExpressions.Match>()
-                    .Select(m => m.Groups[1].Value.Trim())
-                    .ToList();
-
-                var hasIncomplete = verificationStatuses.Any(s => s is "Pending" or "Fail");
+                var hasIncomplete = plan.Verifications?.Any(v => v.Status is "Pending" or "Fail") ?? false;
                 var targetState = hasIncomplete ? "Failed" : "ReadyForReview";
 
-                content = System.Text.RegularExpressions.Regex.Replace(
-                    content, @"(?m)^state:\s*.*$", $"state: {targetState}");
-                content = System.Text.RegularExpressions.Regex.Replace(
-                    content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+                var content = ReadPlanYamlRaw(planFolder);
+                if (content == null) return;
+                content = Regex.Replace(content, @"(?m)^state:\s*.*$", $"state: {targetState}");
+                content = Regex.Replace(content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+                var planYamlPath = Path.Combine(planFolder, "plan.yaml");
                 FileHelper.WriteAllText(planYamlPath, content);
             }
         }
@@ -795,14 +800,12 @@ public class JobService : IJobService
         try
         {
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            if (!File.Exists(planYamlPath)) return;
+            var content = ReadPlanYamlRaw(planFolder);
+            if (content == null) return;
 
-            var content = FileHelper.ReadAllText(planYamlPath);
-            content = System.Text.RegularExpressions.Regex.Replace(
-                content, @"(?m)^state:\s*.*$", $"state: {state}");
-            content = System.Text.RegularExpressions.Regex.Replace(
-                content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+            content = Regex.Replace(content, @"(?m)^state:\s*.*$", $"state: {state}");
+            content = Regex.Replace(content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
             FileHelper.WriteAllText(planYamlPath, content);
         }
         catch { /* Don't let state transition failures crash job completion */ }
@@ -838,15 +841,13 @@ public class JobService : IJobService
             if (job.Type is "MakePlan" or "MakePr" or "CreateIssue") return;
 
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            if (!File.Exists(planYamlPath)) return;
+            var content = ReadPlanYamlRaw(planFolder);
+            if (content == null) return;
 
-            var content = FileHelper.ReadAllText(planYamlPath);
             var newState = job.Type == "ExecutePlan" ? "Failed" : "Draft";
-            content = System.Text.RegularExpressions.Regex.Replace(
-                content, @"(?m)^state:\s*.*$", $"state: {newState}");
-            content = System.Text.RegularExpressions.Regex.Replace(
-                content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+            content = Regex.Replace(content, @"(?m)^state:\s*.*$", $"state: {newState}");
+            content = Regex.Replace(content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
             FileHelper.WriteAllText(planYamlPath, content);
         }
         catch { /* Don't let state reset failures crash job completion */ }
@@ -856,16 +857,7 @@ public class JobService : IJobService
     {
         try
         {
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            if (!File.Exists(planYamlPath)) return (true, null);
-
-            var yaml = FileHelper.ReadAllText(planYamlPath);
-            var planYaml = new YamlDotNet.Serialization.DeserializerBuilder()
-                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build()
-                .Deserialize<PlanYaml>(yaml);
-
+            var planYaml = ReadPlanYaml(planFolder);
             if (planYaml?.DependsOn == null || planYaml.DependsOn.Count == 0)
                 return (true, null);
 
@@ -875,31 +867,20 @@ public class JobService : IJobService
             foreach (var dep in planYaml.DependsOn)
             {
                 var depFolder = Path.Combine(plansDir, dep);
-                var depYamlPath = Path.Combine(depFolder, "plan.yaml");
+                var depPlan = ReadPlanYaml(depFolder);
 
-                if (!File.Exists(depYamlPath))
+                if (depPlan == null)
                     return (false, $"Dependency '{dep}' not found");
 
-                var depYaml = FileHelper.ReadAllText(depYamlPath);
-                var stateMatch = Regex.Match(depYaml, @"(?m)^state:\s*(.+)$");
-                if (!stateMatch.Success)
-                    return (false, $"Dependency '{dep}' has no state");
-
-                var state = stateMatch.Groups[1].Value.Trim();
-                if (!state.Equals("Completed", StringComparison.OrdinalIgnoreCase))
-                    return (false, $"Dependency '{dep}' is '{state}', not Completed");
+                if (!depPlan.State.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                    return (false, $"Dependency '{dep}' is '{depPlan.State}', not Completed");
 
                 // Check that all PRs are actually merged
-                var prMatches = Regex.Matches(depYaml, @"(?m)^- (https://github\.com/.+/pull/\d+)$");
-                if (prMatches.Count == 0)
-                {
-                    // No PRs — completed without PR (e.g. CreateIssue), that's ok
+                if (depPlan.Prs.Count == 0)
                     continue;
-                }
 
-                foreach (System.Text.RegularExpressions.Match prMatch in prMatches)
+                foreach (var prUrl in depPlan.Prs)
                 {
-                    var prUrl = prMatch.Groups[1].Value.Trim();
                     try
                     {
                         var psi = new System.Diagnostics.ProcessStartInfo
@@ -962,13 +943,13 @@ public class JobService : IJobService
         try
         {
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            if (!File.Exists(planYamlPath)) return;
+            var content = ReadPlanYamlRaw(planFolder);
+            if (content == null) return;
 
-            var content = FileHelper.ReadAllText(planYamlPath);
             content = Regex.Replace(content, @"(?m)^state:\s*.*$", "state: Draft");
             content = Regex.Replace(content, @"(?m)^updated:\s*.*$",
                 $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
             FileHelper.WriteAllText(planYamlPath, content);
         }
         catch { /* Don't let state reset failures crash job completion */ }

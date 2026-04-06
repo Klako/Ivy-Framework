@@ -2,9 +2,10 @@ import { useEventHandler } from "@/components/event-handler";
 import { InvalidIcon } from "@/components/InvalidIcon";
 import { useThemeWithMonitoring } from "@/components/theme-provider";
 import { inputStyles } from "@/lib/styles";
+import { getCSSVariable } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { Eraser } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface Point {
@@ -25,50 +26,11 @@ interface SignatureInputWidgetProps {
   "data-testid"?: string;
 }
 
-export const CHROMATIC_COLORS: Record<string, string> = {
-  black: "#000000",
-  white: "#ffffff",
-  slate: "#64748b",
-  gray: "#6b7280",
-  zinc: "#71717a",
-  neutral: "#737373",
-  stone: "#78716c",
-  red: "#ef4444",
-  orange: "#f97316",
-  amber: "#f59e0b",
-  yellow: "#eab308",
-  lime: "#84cc16",
-  green: "#22c55e",
-  emerald: "#10b981",
-  teal: "#14b8a6",
-  cyan: "#06b6d4",
-  sky: "#0ea5e9",
-  blue: "#3b82f6",
-  indigo: "#6366f1",
-  violet: "#8b5cf6",
-  purple: "#a855f7",
-  fuchsia: "#d946ef",
-  pink: "#ec4899",
-  rose: "#f43f5e",
-};
-
-export const DEFAULT_SEMANTIC_COLORS: Record<string, string> = {
-  primary: "#3b82f6",
-  secondary: "#6b7280",
-  destructive: "#ef4444",
-  muted: "#6b7280",
-  foreground: "#000000",
-  background: "#ffffff",
-};
-
-export function resolveColor(
-  color: string | undefined,
-  fallback: string,
-  colorMap: Record<string, string>,
-): string {
+export function resolveColor(color: string | undefined, fallback: string): string {
   if (!color) return fallback;
   if (color.startsWith("#") || color.startsWith("rgb")) return color;
-  return colorMap[color.toLowerCase()] ?? fallback;
+  const cssValue = getCSSVariable(`--${color.toLowerCase()}`);
+  return cssValue || fallback;
 }
 
 export const SignatureInputWidget: React.FC<SignatureInputWidgetProps> = ({
@@ -97,25 +59,10 @@ export const SignatureInputWidget: React.FC<SignatureInputWidgetProps> = ({
   const pathsRef = useRef<Point[][]>([]);
   const currentPathRef = useRef<Point[]>([]);
 
-  const colorMap = useMemo<Record<string, string>>(
-    () => ({
-      ...CHROMATIC_COLORS,
-      // Semantic colors — track actual theme CSS vars
-      primary: colors.primary || DEFAULT_SEMANTIC_COLORS.primary,
-      secondary: colors.secondary || DEFAULT_SEMANTIC_COLORS.secondary,
-      destructive: colors.destructive || DEFAULT_SEMANTIC_COLORS.destructive,
-      muted: colors.mutedForeground || DEFAULT_SEMANTIC_COLORS.muted,
-      // Surface colors
-      foreground: colors.foreground || DEFAULT_SEMANTIC_COLORS.foreground,
-      background: colors.background || DEFAULT_SEMANTIC_COLORS.background,
-    }),
-    [colors],
-  );
-
   const defaultPen = colors.foreground || (isDark ? "#e4e4e7" : "#000000");
   const defaultBg = colors.background || (isDark ? "#09090b" : "#ffffff");
-  const penColor = resolveColor(pen, defaultPen, colorMap);
-  const bgColor = resolveColor(background, defaultBg, colorMap);
+  const penColor = resolveColor(pen, defaultPen);
+  const bgColor = resolveColor(background, defaultBg);
 
   const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current;

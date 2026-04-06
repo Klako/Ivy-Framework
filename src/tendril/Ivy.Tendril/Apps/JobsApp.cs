@@ -18,6 +18,10 @@ public class JobsApp : ViewBase
         var showPlan = UseState<string?>(null);
         var openFile = UseState<string?>(null);
         var config = UseService<IConfigService>();
+        var projectColors = config.Projects
+            .Select(p => new { p.Name, Color = config.GetProjectColor(p.Name) })
+            .Where(x => x.Color.HasValue)
+            .ToDictionary(x => x.Name, x => x.Color!.Value.ToString());
         UseEffect(() =>
         {
             void OnNotification(JobNotification notification)
@@ -117,6 +121,10 @@ public class JobsApp : ViewBase
                     kvp => kvp.Key,
                     kvp => kvp.Value.ToString()
                 )
+            })
+            .Renderer(t => t.Project, new LabelsDisplayRenderer
+            {
+                BadgeColorMapping = projectColors
             })
             .Renderer(t => t.PlanId, new LinkDisplayRenderer())
             .Hidden(t => t.Id)

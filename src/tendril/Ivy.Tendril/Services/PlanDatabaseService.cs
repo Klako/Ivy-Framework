@@ -96,12 +96,9 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
 
             while (reader.Read())
             {
-                var planId = reader.GetInt32(0);
-                planIds.Add(planId);
-                rawPlans.Add((planId, reader.GetString(1), reader.GetString(2), reader.GetString(3),
-                    reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                    reader.GetInt32(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
-                    reader.IsDBNull(12) ? null : reader.GetString(12)));
+                var row = ReadPlanRow(reader);
+                planIds.Add(row.Id);
+                rawPlans.Add(row);
             }
 
             if (rawPlans.Count == 0)
@@ -147,7 +144,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
 
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
-                return BuildPlanFile(reader.GetInt32(0), reader);
+                return BuildPlanFile(reader);
 
             return null;
         }
@@ -167,7 +164,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
 
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
-                return BuildPlanFile(planId, reader);
+                return BuildPlanFile(reader);
 
             return null;
         }
@@ -178,19 +175,42 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
     /// For bulk queries, use BuildPlanFileFromRow with pre-fetched child data instead.
     /// Must be called within _lock.
     /// </summary>
-    private PlanFile? BuildPlanFile(int planId, SqliteDataReader reader)
+    private PlanFile? BuildPlanFile(SqliteDataReader reader)
     {
-        return BuildPlanFileFromRow(planId,
-            reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4),
-            reader.GetString(5), reader.GetString(6), reader.GetString(7), reader.GetInt32(8),
-            reader.GetString(9), reader.GetString(10), reader.GetString(11),
-            reader.IsDBNull(12) ? null : reader.GetString(12),
-            GetListForPlan(planId, "Repos", "RepoPath"),
-            GetListForPlan(planId, "Commits", "CommitHash"),
-            GetListForPlan(planId, "PullRequests", "PrUrl"),
-            GetVerificationsForPlan(planId),
-            GetListForPlan(planId, "RelatedPlans", "RelatedPlanPath"),
-            GetListForPlan(planId, "DependsOn", "DependsOnPlanPath"));
+        var row = ReadPlanRow(reader);
+        return BuildPlanFileFromRow(row.Id, row.Title, row.Project, row.Level, row.State,
+            row.FolderPath, row.FolderName, row.YamlRaw, row.RevisionCount, row.LatestContent,
+            row.Created, row.Updated, row.InitialPrompt,
+            GetListForPlan(row.Id, "Repos", "RepoPath"),
+            GetListForPlan(row.Id, "Commits", "CommitHash"),
+            GetListForPlan(row.Id, "PullRequests", "PrUrl"),
+            GetVerificationsForPlan(row.Id),
+            GetListForPlan(row.Id, "RelatedPlans", "RelatedPlanPath"),
+            GetListForPlan(row.Id, "DependsOn", "DependsOnPlanPath"));
+    }
+
+    private static (int Id, string Title, string Project, string Level, string State,
+        string FolderPath, string FolderName, string YamlRaw, int RevisionCount,
+        string LatestContent, string Created, string Updated, string? InitialPrompt)
+        ReadPlanRow(SqliteDataReader reader)
+    {
+        return (
+            Id: reader.GetInt32(reader.GetOrdinal("Id")),
+            Title: reader.GetString(reader.GetOrdinal("Title")),
+            Project: reader.GetString(reader.GetOrdinal("Project")),
+            Level: reader.GetString(reader.GetOrdinal("Level")),
+            State: reader.GetString(reader.GetOrdinal("State")),
+            FolderPath: reader.GetString(reader.GetOrdinal("FolderPath")),
+            FolderName: reader.GetString(reader.GetOrdinal("FolderName")),
+            YamlRaw: reader.GetString(reader.GetOrdinal("YamlRaw")),
+            RevisionCount: reader.GetInt32(reader.GetOrdinal("RevisionCount")),
+            LatestContent: reader.GetString(reader.GetOrdinal("LatestRevisionContent")),
+            Created: reader.GetString(reader.GetOrdinal("Created")),
+            Updated: reader.GetString(reader.GetOrdinal("Updated")),
+            InitialPrompt: reader.IsDBNull(reader.GetOrdinal("InitialPrompt"))
+                ? null
+                : reader.GetString(reader.GetOrdinal("InitialPrompt"))
+        );
     }
 
     private static PlanFile? BuildPlanFileFromRow(int planId, string title, string project, string level,
@@ -400,20 +420,22 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                if (!Enum.TryParse<PlanStatus>(reader.GetString(8), ignoreCase: true, out var sourceStatus))
+                var sourcePlanStatusStr = reader.GetString(reader.GetOrdinal("SourcePlanStatus"));
+                if (!Enum.TryParse<PlanStatus>(sourcePlanStatusStr, ignoreCase: true, out var sourceStatus))
                     sourceStatus = PlanStatus.Draft;
 
+                var declineReasonOrdinal = reader.GetOrdinal("DeclineReason");
                 result.Add(new Recommendation(
-                    Title: reader.GetString(0),
-                    Description: reader.GetString(1),
-                    State: reader.GetString(2),
-                    PlanId: reader.GetInt32(3).ToString("D5"),
-                    PlanTitle: reader.GetString(4),
-                    PlanFolderName: reader.GetString(5),
-                    Project: reader.GetString(6),
-                    Date: DateTime.Parse(reader.GetString(7), CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal),
+                    Title: reader.GetString(reader.GetOrdinal("Title")),
+                    Description: reader.GetString(reader.GetOrdinal("Description")),
+                    State: reader.GetString(reader.GetOrdinal("State")),
+                    PlanId: reader.GetInt32(reader.GetOrdinal("PlanId")).ToString("D5"),
+                    PlanTitle: reader.GetString(reader.GetOrdinal("PlanTitle")),
+                    PlanFolderName: reader.GetString(reader.GetOrdinal("PlanFolderName")),
+                    Project: reader.GetString(reader.GetOrdinal("Project")),
+                    Date: DateTime.Parse(reader.GetString(reader.GetOrdinal("Date")), CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal),
                     SourcePlanStatus: sourceStatus,
-                    DeclineReason: reader.IsDBNull(9) ? null : reader.GetString(9)
+                    DeclineReason: reader.IsDBNull(declineReasonOrdinal) ? null : reader.GetString(declineReasonOrdinal)
                 ));
             }
 
@@ -480,12 +502,9 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
-            var planId = reader.GetInt32(0);
-            planIds.Add(planId);
-            rawPlans.Add((planId, reader.GetString(1), reader.GetString(2), reader.GetString(3),
-                reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                reader.GetInt32(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
-                reader.IsDBNull(12) ? null : reader.GetString(12)));
+            var row = ReadPlanRow(reader);
+            planIds.Add(row.Id);
+            rawPlans.Add(row);
         }
 
         if (rawPlans.Count == 0)

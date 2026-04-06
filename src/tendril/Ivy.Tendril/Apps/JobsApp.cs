@@ -9,18 +9,6 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Jobs", icon: Icons.Activity, group: new[] { "Tools" }, order: MenuOrder.Jobs)]
 public class JobsApp : ViewBase
 {
-    private static readonly Dictionary<string, Colors> StatusColors = new()
-    {
-        ["Running"] = Colors.Blue,
-        ["Completed"] = Colors.Green,
-        ["Failed"] = Colors.Red,
-        ["Timeout"] = Colors.Red,
-        ["Queued"] = Colors.Amber,
-        ["Pending"] = Colors.Amber,
-        ["Stopped"] = Colors.Gray,
-        ["Blocked"] = Colors.Orange
-    };
-
     public override object? Build()
     {
         var jobService = UseService<IJobService>();
@@ -118,7 +106,7 @@ public class JobsApp : ViewBase
             .Width(t => t.StatusMessage, Size.Auto())
             .Renderer(t => t.Status, new LabelsDisplayRenderer
             {
-                BadgeColorMapping = StatusColors.ToDictionary(
+                BadgeColorMapping = StatusMappings.JobStatusColors.ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value.ToString()
                 )
@@ -309,5 +297,5 @@ public class JobsApp : ViewBase
     }
 
     private static Colors GetStatusColor(string status) =>
-        StatusColors.TryGetValue(status, out var color) ? color : Colors.Slate;
+        StatusMappings.JobStatusColors.TryGetValue(status, out var color) ? color : Colors.Slate;
 }

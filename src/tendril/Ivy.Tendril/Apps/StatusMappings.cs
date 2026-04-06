@@ -33,4 +33,19 @@ internal static class StatusMappings
         ["Pending"] = BadgeVariant.Outline,
         ["Skipped"] = BadgeVariant.Outline
     };
+
+    /// <summary>
+    /// Maps job status strings to color values for consistent styling.
+    /// </summary>
+    public static readonly Dictionary<string, Colors> JobStatusColors = new()
+    {
+        ["Running"] = Colors.Blue,
+        ["Completed"] = Colors.Green,
+        ["Failed"] = Colors.Red,
+        ["Timeout"] = Colors.Red,
+        ["Queued"] = Colors.Amber,
+        ["Pending"] = Colors.Amber,
+        ["Stopped"] = Colors.Gray,
+        ["Blocked"] = Colors.Orange
+    };
 }

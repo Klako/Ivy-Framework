@@ -732,7 +732,7 @@ public class Server
         app.MapGrpcService<DataTableService>().EnableGrpcWeb();
 
         app.UseFrontend(_args, logger2);
-        app.UseAssets(_args, logger2, "Assets", "ivy/assets");
+        app.UseAssets(_args, logger2, "Assets", "ivy-assets");
 
         return app;
     }
@@ -867,9 +867,6 @@ public class Server
             };
         }
 
-        var logger = _args.Verbose ? app.Services.GetRequiredService<ILogger<Server>>() : new NullLogger<Server>();
-        app.UseFrontend(_args, logger);
-        app.UseAssets(_args, logger, "Assets", "ivy-assets");
 
         app.Lifetime.ApplicationStarted.Register(() =>
         {

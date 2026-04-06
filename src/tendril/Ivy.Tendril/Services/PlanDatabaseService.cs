@@ -127,6 +127,49 @@ public class PlanDatabaseService : IPlanDatabaseService
             );
             """;
         cmd.ExecuteNonQuery();
+
+        // FTS5 full-text search index for plans
+        using var ftsCmd = _connection.CreateCommand();
+        ftsCmd.CommandText = """
+            CREATE VIRTUAL TABLE IF NOT EXISTS PlanSearch USING fts5(
+                Title,
+                LatestRevisionContent,
+                Project,
+                InitialPrompt,
+                content='Plans',
+                content_rowid=Id
+            );
+
+            CREATE TRIGGER IF NOT EXISTS plans_fts_insert AFTER INSERT ON Plans BEGIN
+                INSERT INTO PlanSearch(rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+                VALUES (new.Id, new.Title, new.LatestRevisionContent, new.Project, new.InitialPrompt);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS plans_fts_update AFTER UPDATE ON Plans BEGIN
+                INSERT INTO PlanSearch(PlanSearch, rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+                VALUES ('delete', old.Id, old.Title, old.LatestRevisionContent, old.Project, old.InitialPrompt);
+                INSERT INTO PlanSearch(rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+                VALUES (new.Id, new.Title, new.LatestRevisionContent, new.Project, new.InitialPrompt);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS plans_fts_delete AFTER DELETE ON Plans BEGIN
+                INSERT INTO PlanSearch(PlanSearch, rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+                VALUES ('delete', old.Id, old.Title, old.LatestRevisionContent, old.Project, old.InitialPrompt);
+            END;
+            """;
+        ftsCmd.ExecuteNonQuery();
+
+        // Populate FTS5 index if empty (handles migration from pre-FTS databases)
+        using var countCmd = _connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM PlanSearch";
+        var ftsCount = Convert.ToInt32(countCmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+
+        using var planCountCmd = _connection.CreateCommand();
+        planCountCmd.CommandText = "SELECT COUNT(*) FROM Plans";
+        var planCount = Convert.ToInt32(planCountCmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+
+        if (ftsCount == 0 && planCount > 0)
+            RebuildFtsIndex();
     }
 
     public List<PlanFile> GetPlans(PlanStatus? statusFilter = null)
@@ -468,17 +511,16 @@ public class PlanDatabaseService : IPlanDatabaseService
 
     public List<PlanFile> SearchPlans(string query)
     {
-        var search = $"%{query}%";
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = """
-            SELECT Id, Title, Project, Level, State, FolderPath, FolderName,
-                   YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated
-            FROM Plans
-            WHERE Title LIKE @search OR LatestRevisionContent LIKE @search
-                  OR CAST(Id AS TEXT) LIKE @search OR Project LIKE @search
-            ORDER BY Id
+            SELECT p.Id, p.Title, p.Project, p.Level, p.State, p.FolderPath, p.FolderName,
+                   p.YamlRaw, p.RevisionCount, p.LatestRevisionContent, p.Created, p.Updated
+            FROM Plans p
+            INNER JOIN PlanSearch fts ON fts.rowid = p.Id
+            WHERE PlanSearch MATCH @query
+            ORDER BY rank, p.Id
             """;
-        cmd.Parameters.AddWithValue("@search", search);
+        cmd.Parameters.AddWithValue("@query", query);
 
         var planIds = new List<int>();
         var rawPlans = new List<(int Id, string Title, string Project, string Level, string State,
@@ -758,6 +800,20 @@ public class PlanDatabaseService : IPlanDatabaseService
             ON CONFLICT(Key) DO UPDATE SET Value = excluded.Value
             """;
         cmd.Parameters.AddWithValue("@value", time.ToString("O", CultureInfo.InvariantCulture));
+        cmd.ExecuteNonQuery();
+    }
+
+    public void RebuildFtsIndex()
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO PlanSearch(PlanSearch) VALUES('delete-all');";
+        cmd.ExecuteNonQuery();
+
+        cmd.CommandText = """
+            INSERT INTO PlanSearch(rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+            SELECT Id, Title, LatestRevisionContent, Project, InitialPrompt
+            FROM Plans;
+            """;
         cmd.ExecuteNonQuery();
     }
 

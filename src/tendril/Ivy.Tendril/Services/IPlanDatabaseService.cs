@@ -25,6 +25,7 @@ public interface IPlanDatabaseService : IDisposable
 
     // Search
     List<PlanFile> SearchPlans(string query);
+    void RebuildFtsIndex();
 
     // Sync operations
     void UpsertPlan(PlanFile plan);

@@ -28,7 +28,7 @@ public class PlanDatabaseServiceTests : IDisposable
     }
 
     private PlanFile CreateTestPlan(int id, string title = "Test Plan", PlanStatus status = PlanStatus.Draft,
-        string project = "Tendril", string level = "NiceToHave")
+        string project = "Tendril", string level = "NiceToHave", string latestContent = "# Test Plan Content")
     {
         var metadata = new PlanMetadata(
             id, project, level, title, status,
@@ -44,7 +44,7 @@ public class PlanDatabaseServiceTests : IDisposable
 
         return new PlanFile(
             metadata,
-            "# Test Plan Content",
+            latestContent,
             $"D:\\Plans\\{id:D5}-{title.Replace(" ", "")}",
             "state: Draft\ntitle: Test Plan",
             1
@@ -246,11 +246,91 @@ public class PlanDatabaseServiceTests : IDisposable
     [Fact]
     public void SearchPlans_FindsByContent()
     {
-        var plan = CreateTestPlan(1500, "Some Plan");
-        _db.UpsertPlan(plan);
+        _db.UpsertPlan(CreateTestPlan(1500, "Some Plan",
+            latestContent: "Implement a new Button widget with click handlers"));
 
-        var results = _db.SearchPlans("Test Plan Content");
+        var results = _db.SearchPlans("handlers");
         Assert.Single(results);
+    }
+
+    [Fact]
+    public void SearchPlans_FtsMatchPhrase()
+    {
+        _db.UpsertPlan(CreateTestPlan(1500, "Add Widget Feature",
+            latestContent: "Implement a new Button widget with click handlers"));
+        _db.UpsertPlan(CreateTestPlan(1501, "Fix Bug",
+            latestContent: "Fix the widget layout issue"));
+
+        var results = _db.SearchPlans("\"Button widget\"");
+        Assert.Single(results);
+        Assert.Equal("Add Widget Feature", results[0].Title);
+    }
+
+    [Fact]
+    public void SearchPlans_FtsBooleanQuery()
+    {
+        _db.UpsertPlan(CreateTestPlan(1500, "Widget Plan",
+            latestContent: "Add button"));
+        _db.UpsertPlan(CreateTestPlan(1501, "Layout Plan",
+            latestContent: "Fix grid"));
+        _db.UpsertPlan(CreateTestPlan(1502, "Combined Plan",
+            latestContent: "Add button and fix grid"));
+
+        var results = _db.SearchPlans("button OR grid");
+        Assert.Equal(3, results.Count);
+    }
+
+    [Fact]
+    public void SearchPlans_FtsRankingRelevance()
+    {
+        _db.UpsertPlan(CreateTestPlan(1500, "Widget",
+            latestContent: "Mention widget once"));
+        _db.UpsertPlan(CreateTestPlan(1501, "Widget Widget Widget",
+            latestContent: "Mention widget widget widget many times"));
+
+        var results = _db.SearchPlans("widget");
+        Assert.Equal(2, results.Count);
+        // Higher term frequency should rank higher
+        Assert.Equal(1501, results[0].Id);
+    }
+
+    [Fact]
+    public void SearchPlans_FtsColumnSpecific()
+    {
+        _db.UpsertPlan(CreateTestPlan(1500, "Button Feature",
+            latestContent: "Widget implementation"));
+        _db.UpsertPlan(CreateTestPlan(1501, "Widget Feature",
+            latestContent: "Button implementation"));
+
+        var results = _db.SearchPlans("Title:Button");
+        Assert.Single(results);
+        Assert.Equal("Button Feature", results[0].Title);
+    }
+
+    [Fact]
+    public void RebuildFtsIndex_RepopulatesSearch()
+    {
+        _db.UpsertPlan(CreateTestPlan(1500, "Searchable Plan",
+            latestContent: "Find me via fulltext"));
+
+        Assert.Single(_db.SearchPlans("fulltext"));
+
+        // Clear FTS index using the proper FTS5 delete-all command
+        _db.RebuildFtsIndex();
+        // Manually clear FTS again to simulate corruption
+        using (var conn = new SqliteConnection($"Data Source={_dbPath}"))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "INSERT INTO PlanSearch(PlanSearch) VALUES('delete-all');";
+            cmd.ExecuteNonQuery();
+        }
+
+        Assert.Empty(_db.SearchPlans("fulltext"));
+
+        _db.RebuildFtsIndex();
+
+        Assert.Single(_db.SearchPlans("fulltext"));
     }
 
     [Fact]

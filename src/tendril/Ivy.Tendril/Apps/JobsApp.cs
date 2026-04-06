@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using System.Text.RegularExpressions;
 using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Apps.Plans;
@@ -19,17 +20,19 @@ public class JobsApp : ViewBase
         var showPlan = UseState<string?>(null);
         var openFile = UseState<string?>(null);
         var config = UseService<IConfigService>();
-        UseInterval(() =>
+        UseEffect(() =>
         {
-            while (jobService.PendingNotifications.TryDequeue(out var notification))
+            void OnNotification(JobNotification notification)
             {
                 if (notification.IsSuccess)
                     client.Toast(notification.Message, notification.Title);
                 else
                     client.Toast(notification.Message, notification.Title).Destructive();
             }
-            refreshToken.Refresh();
-        }, TimeSpan.FromSeconds(5));
+
+            jobService.NotificationReady += OnNotification;
+            return Disposable.Create(() => jobService.NotificationReady -= OnNotification);
+        });
 
         var jobs = jobService.GetJobs();
         var rows = jobs.Select(j => new JobItemRow

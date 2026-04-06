@@ -230,11 +230,7 @@ public class ConfigService
 
     public void SaveSettings()
     {
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
-            .Build();
-        var yaml = serializer.Serialize(_settings);
+        var yaml = PlanReaderService.YamlSerializerCompact.Serialize(_settings);
         File.WriteAllText(_configPath, yaml);
     }
 

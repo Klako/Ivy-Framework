@@ -69,10 +69,11 @@ server.Services.AddSingleton<TelemetryService>(sp =>
     (TelemetryService)sp.GetRequiredService<ITelemetryService>());
 server.Services.AddSingleton<JobService>(sp =>
 {
-    var jobService = new JobService(sp.GetRequiredService<IConfigService>(), sp.GetRequiredService<IModelPricingService>());
-    jobService.SetPlanReaderService(sp.GetRequiredService<IPlanReaderService>());
-    jobService.SetTelemetryService(sp.GetRequiredService<ITelemetryService>());
-    return jobService;
+    return new JobService(
+        sp.GetRequiredService<IConfigService>(),
+        sp.GetRequiredService<ModelPricingService>(),
+        sp.GetRequiredService<IPlanReaderService>(),
+        sp.GetRequiredService<ITelemetryService>());
 });
 server.Services.AddSingleton<IJobService>(sp => sp.GetRequiredService<JobService>());
 server.Services.AddSingleton<PlanWatcherService>(sp =>

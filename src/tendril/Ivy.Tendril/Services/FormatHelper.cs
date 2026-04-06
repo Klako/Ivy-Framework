@@ -15,4 +15,13 @@ public static class FormatHelper
              : tokens >= 1_000 ? $"{tokens / 1_000.0:F0}K"
              : tokens.ToString();
     }
+
+    /// <summary>
+    /// Formats a cost value as a currency string with 2 decimal places.
+    /// Returns "$X.XX" format (e.g. "$12.45" or "$0.00").
+    /// </summary>
+    public static string FormatCost(decimal cost)
+    {
+        return $"${cost:F2}";
+    }
 }

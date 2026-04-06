@@ -123,6 +123,15 @@ public class PlanReaderService(IConfigService config, ILogger<PlanReaderService>
             if (!File.Exists(planYamlPath))
                 continue;
 
+            // Ensure at least one revision file exists before yielding the plan
+            var revisionsDir = Path.Combine(dir, "revisions");
+            if (!Directory.Exists(revisionsDir))
+                continue;
+
+            var hasRevision = Directory.GetFiles(revisionsDir, "*.md").Length > 0;
+            if (!hasRevision)
+                continue;
+
             yield return (dir, folderName, planYamlPath);
         }
     }

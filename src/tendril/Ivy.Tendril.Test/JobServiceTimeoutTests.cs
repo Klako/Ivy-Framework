@@ -1,4 +1,3 @@
-#pragma warning disable CS0618 // PendingNotifications is obsolete — these tests verify backward compatibility
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Test;
@@ -15,12 +14,13 @@ public class JobServiceTimeoutTests
     {
         var service = CreateService(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(10));
 
-        // Use StartJob with a real process that completes quickly, then simulate timeout via CompleteJob
-        // Instead, directly test CompleteJob by starting a trivial job first
         var id = service.StartJob("ExecutePlan", Path.GetTempPath());
         var job = service.GetJob(id);
         Assert.NotNull(job);
         Assert.Equal("Running", job.Status);
+
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
 
         // Simulate timeout completion
         service.CompleteJob(id, exitCode: null, timedOut: true, staleOutput: false);
@@ -32,7 +32,6 @@ public class JobServiceTimeoutTests
         Assert.NotNull(job.CompletedAt);
         Assert.NotNull(job.DurationSeconds);
 
-        var notification = service.PendingNotifications.TryDequeue(out var result) ? result : null;
         Assert.NotNull(notification);
         Assert.Equal("ExecutePlan Timed Out", notification.Title);
     }
@@ -44,6 +43,9 @@ public class JobServiceTimeoutTests
 
         var id = service.StartJob("ExecutePlan", Path.GetTempPath());
 
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
+
         // Simulate stale output timeout
         service.CompleteJob(id, exitCode: null, timedOut: true, staleOutput: true);
 
@@ -52,7 +54,6 @@ public class JobServiceTimeoutTests
         Assert.Equal("Timeout", job.Status);
         Assert.Contains("No output for 10 minutes", job.StatusMessage);
 
-        var notification = service.PendingNotifications.TryDequeue(out var result) ? result : null;
         Assert.NotNull(notification);
         Assert.Equal("ExecutePlan Timed Out", notification.Title);
     }
@@ -64,6 +65,9 @@ public class JobServiceTimeoutTests
 
         var id = service.StartJob("ExecutePlan", Path.GetTempPath());
 
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
+
         service.CompleteJob(id, exitCode: 0);
 
         var job = service.GetJob(id);
@@ -71,7 +75,6 @@ public class JobServiceTimeoutTests
         Assert.Equal("Completed", job.Status);
         Assert.Null(job.StatusMessage);
 
-        var notification = service.PendingNotifications.TryDequeue(out var result) ? result : null;
         Assert.NotNull(notification);
         Assert.Equal("ExecutePlan Completed", notification.Title);
     }
@@ -83,13 +86,15 @@ public class JobServiceTimeoutTests
 
         var id = service.StartJob("ExecutePlan", Path.GetTempPath());
 
+        JobNotification? notification = null;
+        service.NotificationReady += n => notification = n;
+
         service.CompleteJob(id, exitCode: 1);
 
         var job = service.GetJob(id);
         Assert.NotNull(job);
         Assert.Equal("Failed", job.Status);
 
-        var notification = service.PendingNotifications.TryDequeue(out var result) ? result : null;
         Assert.NotNull(notification);
         Assert.Equal("ExecutePlan Failed", notification.Title);
     }

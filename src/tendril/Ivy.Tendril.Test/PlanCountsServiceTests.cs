@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Services;
 
@@ -158,8 +157,8 @@ public class PlanCountsServiceTests : IDisposable
 
 #pragma warning disable CS0067
         public event Action? JobsChanged;
+        public event Action<JobNotification>? NotificationReady;
 #pragma warning restore CS0067
-        public ConcurrentQueue<JobNotification> PendingNotifications { get; } = new();
 
         public void AddJob(string id, string status)
         {

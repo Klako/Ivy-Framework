@@ -101,9 +101,14 @@ export function parseGitHubAlert(children: React.ReactNode): ParsedGitHubAlert |
   const childArray = React.Children.toArray(children);
   if (childArray.length === 0) return null;
 
-  // Find the first paragraph element
-  const firstChild = childArray[0];
-  if (!React.isValidElement(firstChild)) return null;
+  // Find the first React element, skipping whitespace text nodes
+  let firstChildIndex = 0;
+  let firstChild = childArray[firstChildIndex];
+  while (firstChildIndex < childArray.length && !React.isValidElement(firstChild)) {
+    firstChildIndex++;
+    firstChild = childArray[firstChildIndex];
+  }
+  if (!firstChild || !React.isValidElement(firstChild)) return null;
 
   // react-markdown renders blockquote children as <p> elements
   // The type could be 'p' string, a component function, or a memo object
@@ -128,15 +133,16 @@ export function parseGitHubAlert(children: React.ReactNode): ParsedGitHubAlert |
     React.Children.toArray(strippedFirstChildren).length > 0 &&
     extractTextContent(strippedFirstChildren).trim().length > 0;
 
-  // Reconstruct content: modified first paragraph + remaining children
+  // Reconstruct content: modified first paragraph + remaining element children
+  const remainingChildren = childArray.slice(firstChildIndex + 1).filter(React.isValidElement);
   let content: React.ReactNode;
   if (hasRemainingContent) {
     // Clone the first paragraph with stripped children
     const modifiedFirst = React.cloneElement(firstChild, {}, strippedFirstChildren);
-    content = childArray.length > 1 ? [modifiedFirst, ...childArray.slice(1)] : modifiedFirst;
+    content = remainingChildren.length > 0 ? [modifiedFirst, ...remainingChildren] : modifiedFirst;
   } else {
     // First paragraph only had the marker, use remaining paragraphs
-    content = childArray.length > 1 ? childArray.slice(1) : null;
+    content = remainingChildren.length > 0 ? remainingChildren : null;
   }
 
   return { type, content };

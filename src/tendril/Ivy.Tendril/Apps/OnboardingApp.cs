@@ -202,10 +202,11 @@ public class TendrilHomeStepView(IState<int> stepperIndex) : ViewBase
     {
         var details = UseState(new TendrilHomeDetails
         {
-            TendrilHome = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".tendril"
-        )
+            TendrilHome = Environment.GetEnvironmentVariable("TENDRIL_HOME")
+                ?? Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".tendril"
+                )
         });
         var error = UseState<string?>(null);
         var config = UseService<IConfigService>();

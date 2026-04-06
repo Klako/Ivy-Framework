@@ -29,6 +29,8 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
     {
         _planCountsCache = null;
         _planCountsCacheTime = null;
+        _hourlyBurnCache = null;
+        _hourlyBurnCacheTime = null;
     }
 
     // Cache for GetPlanTotalCost/GetPlanTotalTokens results
@@ -889,6 +891,8 @@ public class PlanReaderService(IConfigService config) : IPlanReaderService
         // Invalidate caches after state change
         _recommendationsCache = null;
         _recommendationsCacheTime = null;
+        _hourlyBurnCache = null;
+        _hourlyBurnCacheTime = null;
         InvalidatePlanCountsCache();
     }
 

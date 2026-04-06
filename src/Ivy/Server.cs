@@ -866,7 +866,7 @@ public class Server
                 }
             };
         }
-      
+
         var logger = _args.Verbose ? app.Services.GetRequiredService<ILogger<Server>>() : new NullLogger<Server>();
         app.UseFrontend(_args, logger);
         app.UseAssets(_args, logger, "Assets", "ivy-assets");

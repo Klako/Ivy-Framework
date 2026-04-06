@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Reflection;
 using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Services;
 
@@ -10,8 +9,8 @@ public class PlanCountsServiceTests : IDisposable
     private readonly string _tempDir;
     private readonly string _plansDir;
     private readonly PlanReaderService _planReader;
-    private readonly JobService _jobService;
-    private readonly PlanWatcherService _planWatcher;
+    private readonly FakeJobService _jobService;
+    private readonly FakePlanWatcherService _planWatcher;
 
     public PlanCountsServiceTests()
     {
@@ -22,8 +21,8 @@ public class PlanCountsServiceTests : IDisposable
         var settings = new TendrilSettings();
         var configService = new ConfigService(settings, _tempDir);
         _planReader = new PlanReaderService(configService);
-        _jobService = new JobService(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(10));
-        _planWatcher = new PlanWatcherService(configService);
+        _jobService = new FakeJobService();
+        _planWatcher = new FakePlanWatcherService();
     }
 
     public void Dispose()
@@ -53,9 +52,7 @@ public class PlanCountsServiceTests : IDisposable
 
     private void AddJob(string id, string status)
     {
-        var jobsField = typeof(JobService).GetField("_jobs", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        var jobs = (ConcurrentDictionary<string, JobItem>)jobsField.GetValue(_jobService)!;
-        jobs[id] = new JobItem { Id = id, Status = status };
+        _jobService.AddJob(id, status);
     }
 
     private PlanCountsService CreateService()
@@ -148,38 +145,48 @@ public class PlanCountsServiceTests : IDisposable
         // Initially no plans
         Assert.Equal(0, service.Current.Drafts);
 
-        // Add a draft plan and trigger refresh via the CountsChanged event flow
+        // Add a draft plan and trigger refresh
         CreatePlan("00001-NewDraft", "Draft");
-
-        // Trigger the PlansChanged event through the watcher's debounce timer
-        // Since PlanWatcherService uses a debounce timer, we invoke the event via reflection
-        var plansChangedField = typeof(PlanWatcherService).GetField("PlansChanged", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        // The event is public, so we can get the backing field or invoke via reflection
-        // PlanWatcherService.PlansChanged is a public event - invoke it
-        var eventDelegate = typeof(PlanWatcherService)
-            .GetField("PlansChanged", BindingFlags.NonPublic | BindingFlags.Instance)?
-            .GetValue(_planWatcher) as Action;
-
-        if (eventDelegate != null)
-        {
-            eventDelegate.Invoke();
-        }
-        else
-        {
-            // Fallback: use the event's raise method through the service's subscription
-            // The PlanCountsService subscribes to PlansChanged, so we need to trigger it
-            // Try accessing through the debounce timer elapsed event
-            var debounceTimer = typeof(PlanWatcherService)
-                .GetField("_debounceTimer", BindingFlags.NonPublic | BindingFlags.Instance)?
-                .GetValue(_planWatcher) as System.Timers.Timer;
-
-            // Simulate the timer elapsed by waiting
-            debounceTimer?.Stop();
-            debounceTimer?.Start();
-            Thread.Sleep(600); // wait for debounce (500ms)
-        }
+        _planWatcher.RaisePlansChanged();
 
         Assert.Equal(1, service.Current.Drafts);
+    }
+
+    private class FakeJobService : IJobService
+    {
+        private readonly List<JobItem> _jobs = new();
+
+#pragma warning disable CS0067
+        public event Action? JobsChanged;
+#pragma warning restore CS0067
+        public ConcurrentQueue<JobNotification> PendingNotifications { get; } = new();
+
+        public void AddJob(string id, string status)
+        {
+            _jobs.Add(new JobItem { Id = id, Status = status });
+        }
+
+        public List<JobItem> GetJobs() => _jobs;
+        public JobItem? GetJob(string id) => _jobs.FirstOrDefault(j => j.Id == id);
+
+        public void SetPlanReaderService(PlanReaderService planReaderService) => throw new NotImplementedException();
+        public void SetTelemetryService(TelemetryService telemetryService) => throw new NotImplementedException();
+        public string StartJob(string type, string[] args, string? inboxFilePath) => throw new NotImplementedException();
+        public string StartJob(string type, params string[] args) => throw new NotImplementedException();
+        public void CompleteJob(string id, int? exitCode, bool timedOut = false, bool staleOutput = false) => throw new NotImplementedException();
+        public void StopJob(string id) => throw new NotImplementedException();
+        public void DeleteJob(string id) => throw new NotImplementedException();
+        public void ClearCompletedJobs() => throw new NotImplementedException();
+        public void ClearFailedJobs() => throw new NotImplementedException();
+        public bool IsInboxFileTracked(string filePath) => throw new NotImplementedException();
+    }
+
+    private class FakePlanWatcherService : IPlanWatcherService
+    {
+        public event Action? PlansChanged;
+
+        public void RaisePlansChanged() => PlansChanged?.Invoke();
+
+        public void Dispose() { }
     }
 }

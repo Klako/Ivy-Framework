@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // PendingNotifications is obsolete — these tests verify backward compatibility
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Test;

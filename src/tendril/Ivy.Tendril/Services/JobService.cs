@@ -25,6 +25,9 @@ public class JobService : IJobService
     private readonly SynchronizationContext? _syncContext;
 
     public event Action? JobsChanged;
+    public event Action<JobNotification>? NotificationReady;
+
+    [Obsolete("Use NotificationReady event instead. Will be removed in a future version.")]
     public ConcurrentQueue<JobNotification> PendingNotifications { get; } = new();
 
     private static readonly string PromptsRoot =
@@ -85,6 +88,18 @@ public class JobService : IJobService
         else
         {
             JobsChanged?.Invoke();
+        }
+    }
+
+    private void RaiseNotification(JobNotification notification)
+    {
+        if (_syncContext != null)
+        {
+            _syncContext.Post(_ => NotificationReady?.Invoke(notification), null);
+        }
+        else
+        {
+            NotificationReady?.Invoke(notification);
         }
     }
 
@@ -184,7 +199,11 @@ public class JobService : IJobService
                 // Reset plan state back to Draft since we can't execute
                 ResetPlanStateToBlocked(job);
 
-                PendingNotifications.Enqueue(new JobNotification("Job Blocked", $"{planFile}: {blockReason}", false));
+                var blockedNotification = new JobNotification("Job Blocked", $"{planFile}: {blockReason}", false);
+#pragma warning disable CS0618 // Obsolete PendingNotifications kept for backward compatibility
+                PendingNotifications.Enqueue(blockedNotification);
+#pragma warning restore CS0618
+                RaiseNotification(blockedNotification);
                 RaiseJobsChanged();
                 return id;
             }
@@ -466,7 +485,11 @@ public class JobService : IJobService
         var message = job.PlanFile ?? job.Type;
         if (!isSuccess && job.StatusMessage != null)
             message += $": {job.StatusMessage}";
-        PendingNotifications.Enqueue(new JobNotification(title, message, isSuccess));
+        var completionNotification = new JobNotification(title, message, isSuccess);
+#pragma warning disable CS0618 // Obsolete PendingNotifications kept for backward compatibility
+        PendingNotifications.Enqueue(completionNotification);
+#pragma warning restore CS0618
+        RaiseNotification(completionNotification);
 
         if (job.Status is "Failed" or "Timeout")
             ResetPlanState(job);

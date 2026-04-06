@@ -6,6 +6,9 @@ namespace Ivy.Tendril.Services;
 public interface IJobService
 {
     event Action? JobsChanged;
+    event Action<JobNotification>? NotificationReady;
+
+    [Obsolete("Use NotificationReady event instead. Will be removed in a future version.")]
     ConcurrentQueue<JobNotification> PendingNotifications { get; }
 
     void SetPlanReaderService(PlanReaderService planReaderService);

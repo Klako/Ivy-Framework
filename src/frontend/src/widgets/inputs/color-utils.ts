@@ -114,6 +114,16 @@ export function convertToHex(colorValue: string): string {
   return colorValue;
 }
 
+export function getDisplayColor(displayValue: string): string {
+  if (!displayValue) return "#000000";
+  const hexValue = convertToHex(displayValue);
+  if (hexValue.startsWith("var(")) return "#000000";
+  if (hexValue.startsWith("#") && hexValue.length === 9) {
+    return hexValue.slice(0, 7);
+  }
+  return hexValue.startsWith("#") ? hexValue : "#000000";
+}
+
 export function parseHexAlpha(hex: string): { rgb: string; alpha: number } {
   if (!hex || !hex.startsWith("#")) return { rgb: hex || "#000000", alpha: 255 };
   const clean = hex.slice(1);

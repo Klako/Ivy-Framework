@@ -68,9 +68,9 @@ public class PullRequestApp : ViewBase
             })
             .OnCellClick(e =>
             {
-                if (e.Value.ColumnName == "Plan" || e.Value.ColumnName == "PlanId")
+                if (e.Value.ColumnName == "Plan")
                 {
-                    var row = rows.FirstOrDefault(r => r.Id == e.Value.RowId?.ToString());
+                    var row = rows.ElementAtOrDefault(e.Value.RowIndex);
                     if (row != null && !string.IsNullOrEmpty(row.PlanFolderPath) && Directory.Exists(row.PlanFolderPath))
                         showPlan.Set(row.PlanFolderPath);
                 }

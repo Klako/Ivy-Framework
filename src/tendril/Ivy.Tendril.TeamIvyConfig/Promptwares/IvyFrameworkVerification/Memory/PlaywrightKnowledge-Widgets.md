@@ -101,6 +101,7 @@ DataTable uses Glide Data Grid — renders as `<canvas>`, NOT HTML `<table>`.
 
 - `.ToDialog()`, `.WithConfirm()`, `.ToSheet()` all render as `<div role="dialog">`, NOT HTML `<dialog>`
 - **NEVER** use `page.locator("dialog")` — use `page.getByRole("dialog", { name: "Title" })` or `[role='dialog']`
+- **Sheet title strict mode**: `.WithSheet(title: "My Sheet")` renders the title as both button text ("Open My Sheet") and `<h2>` heading inside the sheet. `getByText("My Sheet")` matches both → strict mode violation. Use `getByRole('heading', { name: 'My Sheet' })` for the sheet heading.
 - `.WithConfirm("message", "title")` always uses **"Ok"** and **"Cancel"** buttons (hardcoded)
 - Edit sheets use "Save" button; create dialogs use entity action name (e.g., "Create")
 - `[Required]` fields render labels as "FieldName *" — `getByText("Code", { exact: true })` won't match "Code *"; use input element locators

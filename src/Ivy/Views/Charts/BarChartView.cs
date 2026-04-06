@@ -100,7 +100,7 @@ public class BarChartBuilder<TSource>(
             throw new InvalidOperationException("At least one measure is required.");
         }
 
-        var lineChartData = UseState(ImmutableArray.Create<Dictionary<string, object>>);
+        var barChartData = UseState(ImmutableArray.Create<Dictionary<string, object>>);
         var loading = UseState(true);
 
         UseEffect(async () =>
@@ -124,7 +124,7 @@ public class BarChartBuilder<TSource>(
                 }
 
                 var results = await pivotBuilder.ExecuteAsync();
-                lineChartData.Set([.. results]);
+                barChartData.Set([.. results]);
             }
             finally
             {
@@ -140,7 +140,7 @@ public class BarChartBuilder<TSource>(
         var resolvedDesigner = style ?? BarChartStyleHelpers.GetStyle<TSource>(BarChartStyles.Default);
 
         var scaffolded = resolvedDesigner.Design(
-            lineChartData.Value.ToExpando(),
+            barChartData.Value.ToExpando(),
             dimension,
             _measures.ToArray()
         );

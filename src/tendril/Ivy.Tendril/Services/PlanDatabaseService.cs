@@ -71,7 +71,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         {
             var sql = """
                 SELECT Id, Title, Project, Level, State, FolderPath, FolderName,
-                       YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated
+                       YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated, InitialPrompt
                 FROM Plans
                 """;
 
@@ -92,7 +92,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var reader = cmd.ExecuteReader();
             var rawPlans = new List<(int Id, string Title, string Project, string Level, string State,
                 string FolderPath, string FolderName, string YamlRaw, int RevisionCount,
-                string LatestContent, string Created, string Updated)>();
+                string LatestContent, string Created, string Updated, string? InitialPrompt)>();
 
             while (reader.Read())
             {
@@ -100,7 +100,8 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
                 planIds.Add(planId);
                 rawPlans.Add((planId, reader.GetString(1), reader.GetString(2), reader.GetString(3),
                     reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                    reader.GetInt32(8), reader.GetString(9), reader.GetString(10), reader.GetString(11)));
+                    reader.GetInt32(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
+                    reader.IsDBNull(12) ? null : reader.GetString(12)));
             }
 
             if (rawPlans.Count == 0)
@@ -117,7 +118,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             {
                 var plan = BuildPlanFileFromRow(row.Id, row.Title, row.Project, row.Level, row.State,
                     row.FolderPath, row.FolderName, row.YamlRaw, row.RevisionCount, row.LatestContent,
-                    row.Created, row.Updated,
+                    row.Created, row.Updated, row.InitialPrompt,
                     allRepos.GetValueOrDefault(row.Id, []),
                     allCommits.GetValueOrDefault(row.Id, []),
                     allPrs.GetValueOrDefault(row.Id, []),
@@ -139,7 +140,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = """
                 SELECT Id, Title, Project, Level, State, FolderPath, FolderName,
-                       YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated
+                       YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated, InitialPrompt
                 FROM Plans WHERE FolderPath = @folderPath
                 """;
             cmd.Parameters.AddWithValue("@folderPath", folderPath);
@@ -159,7 +160,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = """
                 SELECT Id, Title, Project, Level, State, FolderPath, FolderName,
-                       YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated
+                       YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated, InitialPrompt
                 FROM Plans WHERE Id = @id
                 """;
             cmd.Parameters.AddWithValue("@id", planId);
@@ -183,6 +184,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4),
             reader.GetString(5), reader.GetString(6), reader.GetString(7), reader.GetInt32(8),
             reader.GetString(9), reader.GetString(10), reader.GetString(11),
+            reader.IsDBNull(12) ? null : reader.GetString(12),
             GetListForPlan(planId, "Repos", "RepoPath"),
             GetListForPlan(planId, "Commits", "CommitHash"),
             GetListForPlan(planId, "PullRequests", "PrUrl"),
@@ -193,7 +195,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
 
     private static PlanFile? BuildPlanFileFromRow(int planId, string title, string project, string level,
         string state, string folderPath, string folderName, string yamlRaw, int revisionCount,
-        string latestContent, string createdStr, string updatedStr,
+        string latestContent, string createdStr, string updatedStr, string? initialPrompt,
         List<string> repos, List<string> commits, List<string> prs,
         List<PlanVerificationEntry> verifications, List<string> relatedPlans, List<string> dependsOn)
     {
@@ -204,7 +206,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         var updated = DateTime.Parse(updatedStr, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
 
         var metadata = new PlanMetadata(planId, project, level, title, status,
-            repos, commits, prs, verifications, relatedPlans, dependsOn, created, updated);
+            repos, commits, prs, verifications, relatedPlans, dependsOn, created, updated, initialPrompt);
 
         return new PlanFile(metadata, latestContent, folderPath, yamlRaw, revisionCount);
     }
@@ -437,7 +439,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             using var ftsCmd = _connection.CreateCommand();
             ftsCmd.CommandText = """
                 SELECT p.Id, p.Title, p.Project, p.Level, p.State, p.FolderPath, p.FolderName,
-                       p.YamlRaw, p.RevisionCount, p.LatestRevisionContent, p.Created, p.Updated
+                       p.YamlRaw, p.RevisionCount, p.LatestRevisionContent, p.Created, p.Updated, p.InitialPrompt
                 FROM Plans p
                 INNER JOIN PlanSearch fts ON fts.rowid = p.Id
                 WHERE PlanSearch MATCH @query
@@ -454,7 +456,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
                 using var likeCmd = _connection.CreateCommand();
                 likeCmd.CommandText = """
                     SELECT Id, Title, Project, Level, State, FolderPath, FolderName,
-                           YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated
+                           YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated, InitialPrompt
                     FROM Plans
                     WHERE Title LIKE @search OR LatestRevisionContent LIKE @search
                           OR CAST(Id AS TEXT) LIKE @search OR Project LIKE @search
@@ -473,7 +475,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         var planIds = new List<int>();
         var rawPlans = new List<(int Id, string Title, string Project, string Level, string State,
             string FolderPath, string FolderName, string YamlRaw, int RevisionCount,
-            string LatestContent, string Created, string Updated)>();
+            string LatestContent, string Created, string Updated, string? InitialPrompt)>();
 
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -482,7 +484,8 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             planIds.Add(planId);
             rawPlans.Add((planId, reader.GetString(1), reader.GetString(2), reader.GetString(3),
                 reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
-                reader.GetInt32(8), reader.GetString(9), reader.GetString(10), reader.GetString(11)));
+                reader.GetInt32(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
+                reader.IsDBNull(12) ? null : reader.GetString(12)));
         }
 
         if (rawPlans.Count == 0)
@@ -500,7 +503,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         {
             var plan = BuildPlanFileFromRow(row.Id, row.Title, row.Project, row.Level, row.State,
                 row.FolderPath, row.FolderName, row.YamlRaw, row.RevisionCount, row.LatestContent,
-                row.Created, row.Updated,
+                row.Created, row.Updated, row.InitialPrompt,
                 allRepos.GetValueOrDefault(row.Id, []),
                 allCommits.GetValueOrDefault(row.Id, []),
                 allPrs.GetValueOrDefault(row.Id, []),
@@ -537,9 +540,9 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = """
             INSERT INTO Plans (Id, Title, Project, Level, State, FolderPath, FolderName,
-                               YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated)
+                               YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated, InitialPrompt)
             VALUES (@id, @title, @project, @level, @state, @folderPath, @folderName,
-                    @yamlRaw, @revisionCount, @latestContent, @created, @updated)
+                    @yamlRaw, @revisionCount, @latestContent, @created, @updated, @initialPrompt)
             ON CONFLICT(Id) DO UPDATE SET
                 Title = excluded.Title,
                 Project = excluded.Project,
@@ -551,7 +554,8 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
                 RevisionCount = excluded.RevisionCount,
                 LatestRevisionContent = excluded.LatestRevisionContent,
                 Created = excluded.Created,
-                Updated = excluded.Updated
+                Updated = excluded.Updated,
+                InitialPrompt = excluded.InitialPrompt
             WHERE excluded.Updated >= Plans.Updated
             """;
 
@@ -567,6 +571,7 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         cmd.Parameters.AddWithValue("@latestContent", plan.LatestRevisionContent);
         cmd.Parameters.AddWithValue("@created", plan.Created.ToString("O", CultureInfo.InvariantCulture));
         cmd.Parameters.AddWithValue("@updated", plan.Updated.ToString("O", CultureInfo.InvariantCulture));
+        cmd.Parameters.AddWithValue("@initialPrompt", plan.InitialPrompt ?? (object)DBNull.Value);
 
         cmd.ExecuteNonQuery();
 

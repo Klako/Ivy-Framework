@@ -39,7 +39,8 @@ public class PlanDatabaseServiceTests : IDisposable
             new List<string>(),
             new List<string>(),
             DateTime.UtcNow.AddDays(-1),
-            DateTime.UtcNow
+            DateTime.UtcNow,
+            null
         );
 
         return new PlanFile(

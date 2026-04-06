@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
 import { validateFileWithToast, validateFileCount } from "../file-input-validation";
+import { useUploadWithProgress } from "../shared/useUploadWithProgress";
 
 interface UseFileAttachmentsOptions {
   uploadUrl?: string;
@@ -15,38 +16,17 @@ interface UseFileAttachmentsOptions {
 export function useFileAttachments(options: UseFileAttachmentsOptions) {
   const { uploadUrl, accept, maxFileSize, maxFiles, currentFileCount, disabled } = options;
   const [isDragging, setIsDragging] = useState(false);
+  const { uploadProgress, uploadSingleFile, cancelUpload } = useUploadWithProgress();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadFile = useCallback(
+  const handleUploadFile = useCallback(
     async (file: File): Promise<void> => {
       if (!uploadUrl) return;
       if (!validateFileWithToast({ file, accept, maxFileSize })) return;
 
-      const getUploadUrl = () => {
-        const ivyHostMeta = document.querySelector('meta[name="ivy-host"]');
-        if (ivyHostMeta) {
-          const host = ivyHostMeta.getAttribute("content");
-          return host + uploadUrl;
-        }
-        return uploadUrl;
-      };
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await fetch(getUploadUrl(), {
-          method: "POST",
-          body: formData,
-        });
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`);
-        }
-      } catch (error) {
-        console.error("File upload error:", error);
-      }
+      await uploadSingleFile(uploadUrl, file);
     },
-    [uploadUrl, accept, maxFileSize],
+    [uploadUrl, accept, maxFileSize, uploadSingleFile],
   );
 
   const uploadFiles = useCallback(
@@ -63,9 +43,9 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
         return;
       }
 
-      await Promise.all(files.map(uploadFile));
+      await Promise.all(files.map(handleUploadFile));
     },
-    [currentFileCount, maxFiles, uploadFile],
+    [currentFileCount, maxFiles, handleUploadFile],
   );
 
   const handlePaste = useCallback(
@@ -158,5 +138,7 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
     openFilePicker,
     handleFileInputChange,
     fileInputRef,
+    uploadProgress,
+    cancelUpload,
   };
 }

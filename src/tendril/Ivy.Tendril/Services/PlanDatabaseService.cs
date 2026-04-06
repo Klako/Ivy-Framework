@@ -585,10 +585,9 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         }
     }
 
-    private void UpsertPlanInternal(PlanFile plan, SqliteTransaction? transaction = null)
+    private void UpsertPlanInternal(PlanFile plan)
     {
         using var cmd = _connection.CreateCommand();
-        cmd.Transaction = transaction;
         cmd.CommandText = """
             INSERT INTO Plans (Id, Title, Project, Level, State, FolderPath, FolderName,
                                YamlRaw, RevisionCount, LatestRevisionContent, Created, Updated)
@@ -625,20 +624,19 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         cmd.ExecuteNonQuery();
 
         // Sync child tables
-        SyncChildTable(plan.Id, "Repos", "RepoPath", plan.Repos, transaction);
-        SyncChildTable(plan.Id, "Commits", "CommitHash", plan.Commits, transaction);
-        SyncChildTable(plan.Id, "PullRequests", "PrUrl", plan.Prs, transaction);
-        SyncVerifications(plan.Id, plan.Verifications, transaction);
-        SyncChildTable(plan.Id, "RelatedPlans", "RelatedPlanPath", plan.RelatedPlans, transaction);
-        SyncChildTable(plan.Id, "DependsOn", "DependsOnPlanPath", plan.DependsOn, transaction);
+        SyncChildTable(plan.Id, "Repos", "RepoPath", plan.Repos);
+        SyncChildTable(plan.Id, "Commits", "CommitHash", plan.Commits);
+        SyncChildTable(plan.Id, "PullRequests", "PrUrl", plan.Prs);
+        SyncVerifications(plan.Id, plan.Verifications);
+        SyncChildTable(plan.Id, "RelatedPlans", "RelatedPlanPath", plan.RelatedPlans);
+        SyncChildTable(plan.Id, "DependsOn", "DependsOnPlanPath", plan.DependsOn);
     }
 
-    private void SyncChildTable(int planId, string table, string column, List<string> values, SqliteTransaction? transaction = null)
+    private void SyncChildTable(int planId, string table, string column, List<string> values)
     {
         ValidateIdentifier(table);
         ValidateIdentifier(column);
         using var deleteCmd = _connection.CreateCommand();
-        deleteCmd.Transaction = transaction;
         deleteCmd.CommandText = $"DELETE FROM {table} WHERE PlanId = @planId";
         deleteCmd.Parameters.AddWithValue("@planId", planId);
         deleteCmd.ExecuteNonQuery();
@@ -646,7 +644,6 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         if (values.Count == 0) return;
 
         using var insertCmd = _connection.CreateCommand();
-        insertCmd.Transaction = transaction;
         insertCmd.CommandText = $"INSERT INTO {table} (PlanId, {column}) VALUES (@planId, @value)";
         insertCmd.Parameters.AddWithValue("@planId", planId);
         insertCmd.Parameters.AddWithValue("@value", string.Empty);
@@ -659,10 +656,9 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         }
     }
 
-    private void SyncVerifications(int planId, List<PlanVerificationEntry> verifications, SqliteTransaction? transaction = null)
+    private void SyncVerifications(int planId, List<PlanVerificationEntry> verifications)
     {
         using var deleteCmd = _connection.CreateCommand();
-        deleteCmd.Transaction = transaction;
         deleteCmd.CommandText = "DELETE FROM Verifications WHERE PlanId = @planId";
         deleteCmd.Parameters.AddWithValue("@planId", planId);
         deleteCmd.ExecuteNonQuery();
@@ -670,7 +666,6 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         if (verifications.Count == 0) return;
 
         using var insertCmd = _connection.CreateCommand();
-        insertCmd.Transaction = transaction;
         insertCmd.CommandText = "INSERT INTO Verifications (PlanId, Name, Status) VALUES (@planId, @name, @status)";
         insertCmd.Parameters.AddWithValue("@planId", planId);
         insertCmd.Parameters.AddWithValue("@name", string.Empty);

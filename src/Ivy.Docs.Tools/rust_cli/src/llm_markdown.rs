@@ -3,6 +3,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::process::Command;
 
 lazy_static! {

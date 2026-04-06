@@ -168,8 +168,6 @@ public class PlanCountsServiceTests : IDisposable
         public List<JobItem> GetJobs() => _jobs;
         public JobItem? GetJob(string id) => _jobs.FirstOrDefault(j => j.Id == id);
 
-        public void SetPlanReaderService(IPlanReaderService planReaderService) => throw new NotImplementedException();
-        public void SetTelemetryService(ITelemetryService telemetryService) => throw new NotImplementedException();
         public string StartJob(string type, string[] args, string? inboxFilePath) => throw new NotImplementedException();
         public string StartJob(string type, params string[] args) => throw new NotImplementedException();
         public void CompleteJob(string id, int? exitCode, bool timedOut = false, bool staleOutput = false) => throw new NotImplementedException();

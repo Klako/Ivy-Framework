@@ -12,10 +12,10 @@ public class JobService : IJobService
     private readonly ConcurrentDictionary<string, JobItem> _jobs = new();
     private readonly ConcurrentQueue<string> _jobQueue = new();
     private int _counter;
-    private IPlanReaderService? _planReaderService;
+    private readonly IPlanReaderService? _planReaderService;
     private readonly IConfigService? _configService;
-    private readonly IModelPricingService? _modelPricingService;
-    private ITelemetryService? _telemetryService;
+    private readonly ModelPricingService? _modelPricingService;
+    private readonly ITelemetryService? _telemetryService;
     private readonly TimeSpan _jobTimeout;
     private readonly TimeSpan _staleOutputTimeout;
     private readonly int _maxConcurrentJobs;
@@ -44,11 +44,17 @@ public class JobService : IJobService
         ["CreateIssue"] = Path.Combine(PromptsRoot, "CreateIssue.ps1"),
     };
 
-    public JobService(IConfigService configService, IModelPricingService? modelPricingService = null)
+    public JobService(
+        IConfigService configService,
+        ModelPricingService? modelPricingService = null,
+        IPlanReaderService? planReaderService = null,
+        ITelemetryService? telemetryService = null)
     {
         _syncContext = SynchronizationContext.Current;
         _configService = configService;
         _modelPricingService = modelPricingService;
+        _planReaderService = planReaderService;
+        _telemetryService = telemetryService;
         _jobTimeout = TimeSpan.FromMinutes(configService.Settings.JobTimeout);
         _staleOutputTimeout = TimeSpan.FromMinutes(configService.Settings.StaleOutputTimeout);
         _maxConcurrentJobs = configService.Settings.MaxConcurrentJobs;
@@ -56,7 +62,13 @@ public class JobService : IJobService
         _inboxPath = Path.Combine(configService.TendrilHome, "Inbox");
     }
 
-    public JobService(TimeSpan jobTimeout, TimeSpan staleOutputTimeout, string? inboxPath = null, int maxConcurrentJobs = 5)
+    public JobService(
+        TimeSpan jobTimeout,
+        TimeSpan staleOutputTimeout,
+        string? inboxPath = null,
+        int maxConcurrentJobs = 5,
+        IPlanReaderService? planReaderService = null,
+        ITelemetryService? telemetryService = null)
     {
         _syncContext = SynchronizationContext.Current;
         _jobTimeout = jobTimeout;
@@ -64,15 +76,7 @@ public class JobService : IJobService
         _maxConcurrentJobs = maxConcurrentJobs;
         _jobSlotSemaphore = new SemaphoreSlim(Math.Max(1, maxConcurrentJobs), Math.Max(1, maxConcurrentJobs));
         _inboxPath = inboxPath;
-    }
-
-    public void SetPlanReaderService(IPlanReaderService planReaderService)
-    {
         _planReaderService = planReaderService;
-    }
-
-    public void SetTelemetryService(ITelemetryService telemetryService)
-    {
         _telemetryService = telemetryService;
     }
 

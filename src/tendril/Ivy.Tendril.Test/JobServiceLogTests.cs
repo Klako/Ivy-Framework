@@ -14,8 +14,7 @@ public class JobServiceLogTests
         {
             var configService = new ConfigService(new TendrilSettings(), tempDir);
             var planReaderService = new PlanReaderService(configService);
-            var jobService = new JobService(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1));
-            jobService.SetPlanReaderService(planReaderService);
+            var jobService = new JobService(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1), planReaderService: planReaderService);
 
             var sessionId = Guid.NewGuid().ToString();
             var job = new JobItem
@@ -55,8 +54,7 @@ public class JobServiceLogTests
         {
             var configService = new ConfigService(new TendrilSettings(), tempDir);
             var planReaderService = new PlanReaderService(configService);
-            var jobService = new JobService(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1));
-            jobService.SetPlanReaderService(planReaderService);
+            var jobService = new JobService(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1), planReaderService: planReaderService);
 
             var job = new JobItem
             {

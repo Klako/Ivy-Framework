@@ -144,6 +144,7 @@ public class ContentInputSubmitExample : ViewBase
         var text = UseState("");
         var files = UseState(ImmutableArray<FileUpload<byte[]>>.Empty);
         var upload = UseUpload(MemoryStreamUploadHandler.Create(files));
+        var client = UseService<IClientProvider>();
 
         return Layout.Vertical()
                | Text.H2("Submit on Enter")
@@ -151,7 +152,7 @@ public class ContentInputSubmitExample : ViewBase
                | text.ToContentInput(upload)
                    .Files(files.Value)
                    .Placeholder("Type something and press Cmd+Enter...")
-                   .OnSubmit((value) => Toast.Show("Submitted", $"Value: {value}"))
+                   .OnSubmit((value) => client.Toast($"Value: {value}", "Submitted"))
                | Text.Muted("Use Shift+Enter for new lines.");
     }
 }

@@ -14,3 +14,4 @@ export { FileInputWidget } from "./FileInputWidget";
 export { SignatureInputWidget } from "./SignatureInputWidget";
 export { FieldWidget } from "./FieldWidget";
 export { CodeInputWidget } from "./code";
+export { FolderInputWidget } from "./FolderInputWidget";

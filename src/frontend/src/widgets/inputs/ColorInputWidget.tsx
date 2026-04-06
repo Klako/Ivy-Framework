@@ -6,7 +6,13 @@ import { X, Check } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useOptimisticValue } from "./shared/useOptimisticValue";
 import { cn } from "@/lib/utils";
-import { enumColorsToCssVar, convertToHex, getDisplayColor, parseHexAlpha, combineHexAlpha } from "./color-utils";
+import {
+  enumColorsToCssVar,
+  convertToHex,
+  getDisplayColor,
+  parseHexAlpha,
+  combineHexAlpha,
+} from "./color-utils";
 import {
   colorInputVariant,
   colorInputPickerVariant,

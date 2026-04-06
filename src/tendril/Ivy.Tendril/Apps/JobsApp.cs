@@ -18,10 +18,6 @@ public class JobsApp : ViewBase
         var showPlan = UseState<string?>(null);
         var openFile = UseState<string?>(null);
         var config = UseService<IConfigService>();
-        var projectColors = config.Projects
-            .Select(p => new { p.Name, Color = config.GetProjectColor(p.Name) })
-            .Where(x => x.Color.HasValue)
-            .ToDictionary(x => x.Name, x => x.Color!.Value.ToString());
         UseEffect(() =>
         {
             void OnNotification(JobNotification notification)
@@ -50,6 +46,11 @@ public class JobsApp : ViewBase
                 refreshToken.Refresh();
             }
         }, TimeSpan.FromSeconds(5));
+
+        var projectColors = config.Projects
+            .Select(p => new { p.Name, Color = config.GetProjectColor(p.Name) })
+            .Where(x => x.Color.HasValue)
+            .ToDictionary(x => x.Name, x => x.Color!.Value.ToString());
 
         var jobs = jobService.GetJobs();
         var rows = jobs.Select(j => new JobItemRow

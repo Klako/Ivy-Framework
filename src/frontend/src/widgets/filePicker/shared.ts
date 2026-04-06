@@ -28,9 +28,22 @@ export function validateFile(
 /**
  * Upload a file to the given upload URL using FormData.
  */
-export async function uploadFile(uploadUrl: string, file: File): Promise<void> {
+export async function uploadFile(
+  uploadUrl: string,
+  file: File | Blob,
+  options?: { filename?: string; extraFields?: Record<string, string> },
+): Promise<void> {
   const formData = new FormData();
-  formData.append("file", file);
+  if (options?.filename) {
+    formData.append("file", file, options.filename);
+  } else {
+    formData.append("file", file);
+  }
+  if (options?.extraFields) {
+    for (const [key, value] of Object.entries(options.extraFields)) {
+      formData.append(key, value);
+    }
+  }
 
   const response = await fetch(getFullUrl(uploadUrl), {
     method: "POST",

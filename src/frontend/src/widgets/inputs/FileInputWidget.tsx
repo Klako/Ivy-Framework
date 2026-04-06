@@ -14,6 +14,7 @@ import {
   textVariant,
 } from "@/components/ui/input/file-input-variant";
 import { validateFileWithToast, validateFileCount } from "./file-input-validation";
+import { uploadFile } from "@/widgets/filePicker/shared";
 import { EMPTY_ARRAY } from "@/lib/constants";
 import { FileItem } from "./shared/types";
 import { FileAttachmentList } from "./shared/FileAttachmentList";
@@ -66,7 +67,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
   const hasCancelHandler = Array.isArray(events) && events.includes("OnCancel");
   const hasBlurHandler = Array.isArray(events) && events.includes("OnBlur");
 
-  const uploadFile = useCallback(
+  const handleUploadFile = useCallback(
     async (file: File): Promise<void> => {
       if (!uploadUrl) return;
 
@@ -75,29 +76,8 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
         return;
       }
 
-      // Get the correct host from meta tag or use relative URL
-      const getUploadUrl = () => {
-        const ivyHostMeta = document.querySelector('meta[name="ivy-host"]');
-        if (ivyHostMeta) {
-          const host = ivyHostMeta.getAttribute("content");
-          return host + uploadUrl;
-        }
-        // If no meta tag, use relative URL (should work in production)
-        return uploadUrl;
-      };
-
-      const formData = new FormData();
-      formData.append("file", file);
-
       try {
-        const response = await fetch(getUploadUrl(), {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`);
-        }
+        await uploadFile(uploadUrl, file);
       } catch (error) {
         console.error("File upload error:", error);
       }
@@ -139,9 +119,9 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
       }
 
       if (multiple) {
-        await Promise.all(Array.from(files).map(uploadFile));
+        await Promise.all(Array.from(files).map(handleUploadFile));
       } else {
-        await uploadFile(files[0]);
+        await handleUploadFile(files[0]);
       }
 
       // Reset the input so selecting the same file again triggers onChange
@@ -155,7 +135,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
         handleBlur();
       }
     },
-    [multiple, uploadFile, maxFiles, value, handleBlur],
+    [multiple, handleUploadFile, maxFiles, value, handleBlur],
   );
 
   // Detect when file dialog closes without selection (cancel case only)
@@ -252,12 +232,12 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
       }
 
       if (multiple) {
-        await Promise.all(files.map(uploadFile));
+        await Promise.all(files.map(handleUploadFile));
       } else {
-        await uploadFile(files[0]);
+        await handleUploadFile(files[0]);
       }
     },
-    [multiple, disabled, uploadFile, maxFiles, value],
+    [multiple, disabled, handleUploadFile, maxFiles, value],
   );
 
   const openFileDialog = useCallback(() => {

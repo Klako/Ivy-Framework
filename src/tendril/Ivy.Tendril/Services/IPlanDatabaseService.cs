@@ -23,6 +23,7 @@ public interface IPlanDatabaseService : IDisposable
 
     // Search
     List<PlanFile> SearchPlans(string query);
+    void RebuildFtsIndex();
 
     // Immediate mutations (DB-first for UI responsiveness)
     void UpdatePlanState(int planId, PlanStatus state);

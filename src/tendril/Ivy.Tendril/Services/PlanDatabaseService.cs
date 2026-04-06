@@ -431,7 +431,28 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
 
     public List<PlanFile> SearchPlans(string query)
     {
+<<<<<<< HEAD
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT p.Id, p.Title, p.Project, p.Level, p.State, p.FolderPath, p.FolderName,
+                   p.YamlRaw, p.RevisionCount, p.LatestRevisionContent, p.Created, p.Updated
+            FROM Plans p
+            INNER JOIN PlanSearch fts ON fts.rowid = p.Id
+            WHERE PlanSearch MATCH @query
+            ORDER BY rank, p.Id
+            """;
+        cmd.Parameters.AddWithValue("@query", query);
+
+        var planIds = new List<int>();
+        var rawPlans = new List<(int Id, string Title, string Project, string Level, string State,
+            string FolderPath, string FolderName, string YamlRaw, int RevisionCount,
+            string LatestContent, string Created, string Updated)>();
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+=======
         lock (_lock)
+>>>>>>> origin/main
         {
             var search = $"%{query}%";
             using var cmd = _connection.CreateCommand();
@@ -798,6 +819,20 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
             cmd.Parameters.AddWithValue("@value", time.ToString("O", CultureInfo.InvariantCulture));
             cmd.ExecuteNonQuery();
         }
+    }
+
+    public void RebuildFtsIndex()
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO PlanSearch(PlanSearch) VALUES('delete-all');";
+        cmd.ExecuteNonQuery();
+
+        cmd.CommandText = """
+            INSERT INTO PlanSearch(rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+            SELECT Id, Title, LatestRevisionContent, Project, InitialPrompt
+            FROM Plans;
+            """;
+        cmd.ExecuteNonQuery();
     }
 
     public void Dispose()

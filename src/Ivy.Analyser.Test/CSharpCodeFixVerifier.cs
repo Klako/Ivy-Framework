@@ -11,8 +11,17 @@ namespace Ivy.Analyser.Test
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TCodeFix : CodeFixProvider, new()
     {
-        public static DiagnosticResult Diagnostic(string diagnosticId) =>
-            new DiagnosticResult(diagnosticId, DiagnosticSeverity.Warning);
+        public static DiagnosticResult Diagnostic(string diagnosticId)
+        {
+            var analyzer = new TAnalyzer();
+            foreach (var descriptor in analyzer.SupportedDiagnostics)
+            {
+                if (descriptor.Id == diagnosticId)
+                    return new DiagnosticResult(descriptor);
+            }
+
+            return new DiagnosticResult(diagnosticId, DiagnosticSeverity.Warning);
+        }
 
         public static async Task VerifyAnalyzerAsync(string source)
         {

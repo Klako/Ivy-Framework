@@ -92,10 +92,11 @@ export const FolderInputWidget: React.FC<FolderInputWidgetProps> = ({
       <div
         className={cn(
           inputVariant({ density }),
-          "flex items-center gap-2 cursor-default bg-background pr-1",
+          "flex items-center gap-2 bg-background pr-1",
           isInvalid && inputStyles.invalidInput,
-          disabled && "cursor-not-allowed opacity-50",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         )}
+        onClick={handleBrowse}
         onBlur={() => {
           if (hasOnBlur) handleEvent("OnBlur", id, []);
         }}
@@ -116,7 +117,7 @@ export const FolderInputWidget: React.FC<FolderInputWidgetProps> = ({
             <button
               type="button"
               className="flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors"
-              onClick={handleClear}
+              onClick={(e) => { e.stopPropagation(); handleClear(); }}
               tabIndex={-1}
               aria-label="Clear selection"
             >
@@ -124,16 +125,9 @@ export const FolderInputWidget: React.FC<FolderInputWidgetProps> = ({
             </button>
           )}
 
-          <button
-            type="button"
-            className="flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors"
-            onClick={handleBrowse}
-            disabled={disabled}
-            tabIndex={-1}
-            aria-label="Browse for folder"
-          >
+          <span className="flex h-6 w-6 items-center justify-center text-muted-foreground">
             <FolderOpen className="h-4 w-4" />
-          </button>
+          </span>
         </div>
       </div>
 

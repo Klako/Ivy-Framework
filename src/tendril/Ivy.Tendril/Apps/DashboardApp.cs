@@ -55,7 +55,7 @@ public class DashboardApp : ViewBase
             | BuildStatCard(reviewCount.ToString(), "Ready for Review")
             | BuildStatCard(completedCount.ToString(), "Completed")
             | BuildStatCard(failedCount.ToString(), "Failed")
-            | BuildStatCard($"${avgCost:F2}", "Avg Cost/Plan");
+            | BuildStatCard(FormatHelper.FormatCost(avgCost), "Avg Cost/Plan");
 
         var today = DateTime.UtcNow.Date;
         var days = Enumerable.Range(0, 7).Select(i => today.AddDays(-i)).ToList();
@@ -78,7 +78,7 @@ public class DashboardApp : ViewBase
             var dayCost = completedOrFailedPlans.Sum(p => costCache.GetValueOrDefault(p.FolderPath, 0m));
             var dayTokens = completedOrFailedPlans.Sum(p => tokenCache.GetValueOrDefault(p.FolderPath, 0));
             var costPerPlan = dayCompletedCount > 0 && dayCost > 0
-                ? $"${dayCost / dayCompletedCount:F2}"
+                ? FormatHelper.FormatCost(dayCost / dayCompletedCount)
                 : "";
 
             return new DashboardDayRow
@@ -89,7 +89,7 @@ public class DashboardApp : ViewBase
                 Completed = dayCompletedCount,
                 PrsMerged = prsMerged,
                 Failed = dayFailedCount,
-                Cost = dayCost > 0 ? $"${dayCost:F2}" : "",
+                Cost = dayCost > 0 ? FormatHelper.FormatCost(dayCost) : "",
                 CostPerPlan = costPerPlan,
                 Tokens = dayTokens > 0 ? FormatHelper.FormatTokens(dayTokens) : ""
             };

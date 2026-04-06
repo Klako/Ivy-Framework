@@ -123,8 +123,8 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
                           : Text.Danger("\u2717 PowerShell not found - Install PowerShell Core from https://github.com/PowerShell/PowerShell"))
                       | Text.H3("Optional")
                       | (checkResults.Value["pandoc"]
-                          ? Text.Success("\u2713 pandoc is installed")
-                          : Text.Muted("\u24d8 pandoc not found - Install from https://pandoc.org/installing.html for PDF export"))
+                          ? Text.Success("\u2713 Pandoc is installed")
+                          : Text.Muted("\u24d8 Pandoc not found - Install from https://pandoc.org/installing.html for PDF export"))
                      )
                    : null!)
                | (checkResults.Value == null
@@ -146,7 +146,7 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
                          | (Layout.Horizontal().Gap(2)
                            | new Button("Check Again")
                                .Outline()
-                               .Icon(Icons.RefreshCw, Align.Right)
+                               .Icon(Icons.CheckCheck, Align.Right)
                                .OnClick(async () => await CheckSoftware())
                            | new Button("Skip Anyway")
                                .Destructive()

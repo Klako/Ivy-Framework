@@ -1,7 +1,7 @@
 import { useCallback, useState, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
 import { validateFileWithToast, validateFileCount } from "../file-input-validation";
-import { uploadFile } from "@/widgets/filePicker/shared";
+import { useUploadWithProgress } from "../shared/useUploadWithProgress";
 
 interface UseFileAttachmentsOptions {
   uploadUrl?: string;
@@ -16,6 +16,7 @@ interface UseFileAttachmentsOptions {
 export function useFileAttachments(options: UseFileAttachmentsOptions) {
   const { uploadUrl, accept, maxFileSize, maxFiles, currentFileCount, disabled } = options;
   const [isDragging, setIsDragging] = useState(false);
+  const { uploadProgress, uploadSingleFile, cancelUpload } = useUploadWithProgress();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadFile = useCallback(
@@ -23,13 +24,9 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
       if (!uploadUrl) return;
       if (!validateFileWithToast({ file, accept, maxFileSize })) return;
 
-      try {
-        await uploadFile(uploadUrl, file);
-      } catch (error) {
-        console.error("File upload error:", error);
-      }
+      await uploadSingleFile(uploadUrl, file);
     },
-    [uploadUrl, accept, maxFileSize],
+    [uploadUrl, accept, maxFileSize, uploadSingleFile],
   );
 
   const uploadFiles = useCallback(
@@ -141,5 +138,7 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
     openFilePicker,
     handleFileInputChange,
     fileInputRef,
+    uploadProgress,
+    cancelUpload,
   };
 }

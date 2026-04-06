@@ -1,16 +1,6 @@
+import { getFullUrl } from "@/lib/url";
 import { validateFileWithToast } from "@/widgets/inputs/file-input-validation";
-
-/**
- * Get the full upload URL, accounting for the ivy-host meta tag.
- */
-export function getFullUrl(path: string): string {
-  const ivyHostMeta = document.querySelector('meta[name="ivy-host"]');
-  if (ivyHostMeta) {
-    const host = ivyHostMeta.getAttribute("content");
-    return host + path;
-  }
-  return path;
-}
+export { getFullUrl };
 
 /**
  * Validate a file against accept, maxFileSize, and minFileSize constraints.
@@ -27,6 +17,7 @@ export function validateFile(
 
 /**
  * Upload a file to the given upload URL using FormData.
+ * Supports Blob or File, optional filename, and optional extra form fields.
  */
 export async function uploadFile(
   uploadUrl: string,
@@ -53,6 +44,39 @@ export async function uploadFile(
   if (!response.ok) {
     throw new Error(`Upload failed: ${response.statusText}`);
   }
+}
+
+/**
+ * Upload a file using XMLHttpRequest with progress tracking.
+ * Returns a promise that resolves on success and an abort function.
+ */
+export function uploadFileWithProgress(
+  uploadUrl: string,
+  file: File,
+  onProgress?: (progress: number) => void,
+): { promise: Promise<void>; abort: () => void } {
+  const xhr = new XMLHttpRequest();
+  const fullUrl = getFullUrl(uploadUrl);
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const promise = new Promise<void>((resolve, reject) => {
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(e.loaded / e.total);
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed: ${xhr.statusText}`));
+    };
+    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.onabort = () => reject(new Error("Upload aborted"));
+    xhr.open("POST", fullUrl);
+    xhr.send(formData);
+  });
+
+  return { promise, abort: () => xhr.abort() };
 }
 
 /**

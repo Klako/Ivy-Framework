@@ -74,7 +74,7 @@ namespace Ivy.Core.Sync
 
         private static WidgetListDiff ChildrenNaiveDiff(IWidget source, IWidget target)
         {
-            var changes = new List<IWidgetListOperation>();
+            var changes = new List<IWidgetListOperation>(Math.Max(source.Children.Length, target.Children.Length));
 
             var commonLength = Math.Min(source.Children.Length, target.Children.Length);
 
@@ -87,7 +87,7 @@ namespace Ivy.Core.Sync
 
                 if (result is IWidget widget)
                 {
-                    changes.Add(new WidgetListReplace(i, widget));
+                    changes.Add(WidgetListSplice.Replace(i, widget));
                 } else if (result is WidgetUpdate update)
                 {
                     changes.Add(new WidgetListUpdate(i, update));
@@ -96,14 +96,15 @@ namespace Ivy.Core.Sync
 
             if (source.Children.Length > target.Children.Length)
             {
-                changes.Add(new WidgetListReplaceRange(commonLength, source.Children.Length, null));
+                var diffLength = source.Children.Length - target.Children.Length;
+                changes.Add(WidgetListSplice.RemoveRange(commonLength, diffLength));
             } else if (source.Children.Length < target.Children.Length)
             {
                 var widgetsToAdd = target.Children
                     .TakeLast(target.Children.Length - source.Children.Length)
                     .Cast<IWidget>()
                     .ToArray();
-                changes.Add(new WidgetListAddRange(source.Children.Length, widgetsToAdd));
+                changes.Add(WidgetListSplice.AddRange(source.Children.Length, widgetsToAdd));
             }
 
             return new WidgetListDiff(changes: changes.ToArray());
@@ -115,10 +116,10 @@ namespace Ivy.Core.Sync
 
             if (source.Children.Length == 0)
             {
-                childrenChanges.Add(new WidgetListAddRange(0, (IWidget[])target.Children));
+                childrenChanges.Add(WidgetListSplice.AddRange(0, (IWidget[])target.Children));
             } else if (target.Children.Length == 0)
             {
-                childrenChanges.Add(new WidgetListReplaceRange(0, source.Children.Length - 1, null));
+                childrenChanges.Add(WidgetListSplice.RemoveRange(0, source.Children.Length));
             } else
             {
                 var distances = new int[source.Children.Length + 1, target.Children.Length + 1];

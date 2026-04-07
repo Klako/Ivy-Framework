@@ -20,8 +20,9 @@ public class PlanPdfService
             {
                 Directory.Delete(tempDir, true);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"Failed to delete temporary PDF directory '{tempDir}': {ex}");
             }
         }
     }
@@ -76,10 +77,12 @@ public class PlanPdfService
             throw new InvalidOperationException("pandoc timed out after 30 seconds");
         }
 
+        var output = stdoutTask.Result;
         var error = stderrTask.Result;
 
         if (process.ExitCode != 0 || !File.Exists(outputPath))
-            throw new InvalidOperationException($"pandoc failed (exit {process.ExitCode}): {error}");
+            throw new InvalidOperationException(
+                $"pandoc failed (exit {process.ExitCode}): {error}{(string.IsNullOrWhiteSpace(output) ? "" : $"{Environment.NewLine}{output}")}");
 
         return File.ReadAllBytes(outputPath);
     }

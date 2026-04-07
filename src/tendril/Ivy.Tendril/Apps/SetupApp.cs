@@ -5,7 +5,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Setup", icon: Icons.Construction, isVisible: false)]
 public class SetupApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var selectedTab = UseState(0);
 

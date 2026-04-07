@@ -7,7 +7,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Drafts", icon: Icons.Feather, group: new[] { "Tools" }, order: MenuOrder.Drafts)]
 public class PlansApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var planService = UseService<IPlanReaderService>();
         var jobService = UseService<IJobService>();

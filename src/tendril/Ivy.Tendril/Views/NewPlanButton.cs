@@ -5,7 +5,7 @@ namespace Ivy.Tendril.Views;
 
 public class NewPlanButton : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var jobService = UseService<IJobService>();
         var configService = UseService<IConfigService>();

@@ -160,8 +160,9 @@ public class ConfigService : IConfigService
                 MigrateProjectColors();
                 NeedsOnboarding = false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"Failed to load Tendril config '{ConfigPath}': {ex}");
                 NeedsOnboarding = true;
                 Settings = new TendrilSettings();
             }

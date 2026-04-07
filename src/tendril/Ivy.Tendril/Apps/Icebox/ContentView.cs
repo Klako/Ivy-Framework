@@ -17,13 +17,12 @@ public class ContentView(
 {
     private readonly List<PlanFile> _allPlans = allPlans;
     private readonly IConfigService _config = config;
-    private readonly IJobService _jobService = jobService;
     private readonly IPlanReaderService _planService = planService;
     private readonly Action _refreshPlans = refreshPlans;
     private readonly PlanFile? _selectedPlan = selectedPlan;
     private readonly IState<PlanFile?> _selectedPlanState = selectedPlanState;
 
-    public override object? Build()
+    public override object Build()
     {
         var downloadUrl = PlanDownloadHelper.UsePlanDownload(Context, _planService, _selectedPlan);
         var client = UseService<IClientProvider>();

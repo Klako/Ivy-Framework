@@ -5,7 +5,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Claude", icon: Icons.Terminal, group: new[] { "Tools" }, order: MenuOrder.Claude, isVisible: false)]
 public class ClaudeApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var isOpen = UseState(false);
 

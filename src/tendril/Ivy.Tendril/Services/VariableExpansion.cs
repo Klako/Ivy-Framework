@@ -13,7 +13,6 @@ namespace Ivy.Tendril.Services;
 public static class VariableExpansion
 {
     private static IConfigurationRoot? _userSecretsConfig;
-    private static string? _userSecretsPath;
 
     /// <summary>
     ///     Initialize user secrets from the directory containing a .csproj with UserSecretsId.
@@ -34,7 +33,6 @@ public static class VariableExpansion
             if (!match.Success) return;
 
             var userSecretsId = match.Groups[1].Value;
-            _userSecretsPath = configDirectory;
 
             // Build configuration from user secrets
             var builder = new ConfigurationBuilder()
@@ -43,9 +41,9 @@ public static class VariableExpansion
 
             _userSecretsConfig = builder.Build();
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently fail if user secrets can't be loaded
+            Console.Error.WriteLine($"Failed to initialize user secrets from '{configDirectory}': {ex.Message}");
             _userSecretsConfig = null;
         }
     }

@@ -47,7 +47,7 @@ public class FileApp : ViewBase
         return LanguageMap.GetValueOrDefault(extension, Languages.Text);
     }
 
-    public override object? Build()
+    public override object Build()
     {
         var args = UseArgs<FileAppArgs>();
         var contentState = UseState("");

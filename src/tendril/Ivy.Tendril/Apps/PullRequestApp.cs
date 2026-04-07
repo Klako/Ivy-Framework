@@ -7,7 +7,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Pull Requests", icon: Icons.GitPullRequest, group: new[] { "Tools" }, order: MenuOrder.PullRequests)]
 public class PullRequestApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var planService = UseService<IPlanReaderService>();
         var refreshToken = UseRefreshToken();
@@ -154,8 +154,9 @@ public class PullRequestApp : ViewBase
             if (segments.Length >= 2)
                 return $"{segments[0]}/{segments[1]}";
         }
-        catch
+        catch (UriFormatException ex)
         {
+            Console.Error.WriteLine($"Failed to parse PR URL '{prUrl}': {ex.Message}");
         }
 
         return prUrl;

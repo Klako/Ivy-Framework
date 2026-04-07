@@ -6,7 +6,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Dashboard", icon: Icons.ChartBar, group: ["Tools"], order: MenuOrder.Dashboard)]
 public class DashboardApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var planService = UseService<IPlanReaderService>();
         var configService = UseService<IConfigService>();

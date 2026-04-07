@@ -715,7 +715,6 @@ public class PlanReaderService(
         string? currentListKey = null;
         var inVerificationItem = false;
         var inBlockScalar = false;
-        string? currentBlockScalarKey = null;
 
         static bool IsBlockScalarValue(string value)
         {
@@ -764,7 +763,6 @@ public class PlanReaderService(
                 currentListKey = listKeys.Contains(key) ? key : null;
                 inVerificationItem = false;
                 inBlockScalar = false;
-                currentBlockScalarKey = null;
 
                 if (currentListKey != null &&
                     Regex.IsMatch(normalizedTopLevelLine, @"^[A-Za-z][A-Za-z0-9]*:\s*\[\]\s*$"))
@@ -774,10 +772,7 @@ public class PlanReaderService(
 
                 var scalarValue = normalizedTopLevelLine[(key.Length + 1)..].Trim();
                 if (IsBlockScalarValue(scalarValue))
-                {
                     inBlockScalar = true;
-                    currentBlockScalarKey = key;
-                }
 
                 continue;
             }
@@ -969,9 +964,10 @@ public class PlanReaderService(
             {
                 planYaml = YamlHelper.Deserializer.Deserialize<PlanYaml>(yamlContent);
             }
-            catch
+            catch (Exception ex)
             {
                 // Fall back to the repair pass for malformed agent-generated YAML.
+                Console.Error.WriteLine($"Failed to parse plan YAML '{planYamlPath}', attempting repair: {ex.Message}");
                 var repaired = RepairPlanYaml(yamlContent);
                 if (repaired != yamlContent)
                     FileHelper.WriteAllText(planYamlPath, repaired);

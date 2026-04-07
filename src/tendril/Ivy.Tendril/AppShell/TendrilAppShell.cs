@@ -38,7 +38,7 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
         return repo.GetMenuItems().Select(m => AddBadge(m, badges)).ToArray();
     }
 
-    public override object? Build()
+    public override object Build()
     {
         // All hooks must be at the top level of Build()
         var config = UseService<IConfigService>();
@@ -52,7 +52,6 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
         var countsService = UseService<IPlanCountsService>();
         var menuItems = UseState(() => BuildMenuItems(appRepository, countsService.Current));
         var counts = UseState(() => countsService.Current);
-        var jobService = UseService<IJobService>();
         var sidebarOpen = UseState(settings.SidebarOpen);
         var args = UseService<AppContext>();
         var serverArgs = UseService<ServerArgs>();
@@ -92,18 +91,19 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
             }
 
             var initialAppId = args.NavigationAppId ?? settings.DefaultAppId;
-            if (!string.IsNullOrWhiteSpace(initialAppId))
+            var targetAppId = initialAppId;
+            if (!string.IsNullOrWhiteSpace(targetAppId))
             {
                 // Force redirect from onboarding if it's already done
-                if (!config.NeedsOnboarding && (initialAppId.Equals("onboarding", StringComparison.OrdinalIgnoreCase) ||
-                                                initialAppId.Equals("OnboardingApp",
+                if (!config.NeedsOnboarding && (targetAppId.Equals("onboarding", StringComparison.OrdinalIgnoreCase) ||
+                                                targetAppId.Equals("OnboardingApp",
                                                     StringComparison.OrdinalIgnoreCase) ||
-                                                initialAppId.Equals("onboarding-app",
+                                                targetAppId.Equals("onboarding-app",
                                                     StringComparison.OrdinalIgnoreCase)))
-                    initialAppId = settings.DefaultAppId ?? "dashboard";
+                    targetAppId = settings.DefaultAppId ?? "dashboard";
 
                 var appArgs = args.GetArgs<object>();
-                OpenApp(new NavigateArgs(initialAppId, appArgs), true);
+                OpenApp(new NavigateArgs(targetAppId, appArgs), true);
             }
             else
             {
@@ -144,19 +144,20 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
                 if (settings.Navigation == AppShellNavigation.Pages)
                 {
                     var previousApp = currentApp.Value?.AppId;
+                    var effectiveNavigateArgs = navigateArgs.AppId == null
+                        ? navigateArgs with { AppId = settings.DefaultAppId }
+                        : navigateArgs;
 
-                    if (navigateArgs.AppId == null) navigateArgs = navigateArgs with { AppId = settings.DefaultAppId };
-
-                    var appHost = navigateArgs.AppId != null
-                        ? navigateArgs.ToAppHost(args.ConnectionId)
+                    var appHost = effectiveNavigateArgs.AppId != null
+                        ? effectiveNavigateArgs.ToAppHost(args.ConnectionId)
                         : null;
 
                     currentApp.Set(appHost);
 
-                    if (navigateArgs.AppId != null) SetAppTitle(navigateArgs.AppId);
+                    if (effectiveNavigateArgs.AppId != null) SetAppTitle(effectiveNavigateArgs.AppId);
 
-                    if (navigateArgs.HistoryOp is HistoryOp.Push && previousApp != navigateArgs.AppId)
-                        RedirectToAppIfNotError(navigateArgs, replaceHistory);
+                    if (effectiveNavigateArgs.HistoryOp is HistoryOp.Push && previousApp != effectiveNavigateArgs.AppId)
+                        RedirectToAppIfNotError(effectiveNavigateArgs, replaceHistory);
                 }
                 else
                 {
@@ -188,13 +189,13 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
 
                     if (settings.PreventTabDuplicates)
                     {
-                        var appId = navigateArgs.AppId;
-                        var appDescriptor = appRepository.GetApp(appId);
+                        var targetAppId = navigateArgs.AppId;
+                        var appDescriptor = appRepository.GetApp(targetAppId);
                         if (appDescriptor?.AllowDuplicateTabs != true)
                         {
                             var existingTabIndex = -1;
                             for (var i = 0; i < tabs.Value.Length; i++)
-                                if (tabs.Value[i].AppId == appId)
+                                if (tabs.Value[i].AppId == targetAppId)
                                 {
                                     existingTabIndex = i;
                                     break;
@@ -204,12 +205,12 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
                             {
                                 var previousSelectedIndex = selectedIndex.Value;
                                 selectedIndex.Set(existingTabIndex);
-                                tabId = tabs.Value[existingTabIndex].Id;
-                                SetAppTitle(appId);
+                                var existingTabId = tabs.Value[existingTabIndex].Id;
+                                SetAppTitle(targetAppId);
 
                                 if (navigateArgs.HistoryOp is HistoryOp.Push &&
                                     previousSelectedIndex != existingTabIndex)
-                                    RedirectToAppIfNotError(navigateArgs, replaceHistory, tabId);
+                                    RedirectToAppIfNotError(navigateArgs, replaceHistory, existingTabId);
                                 return;
                             }
                         }
@@ -379,17 +380,24 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
         var authSession = auth?.GetAuthSession();
         var isLoggedIn = authSession != null;
 
-        var onLogout = new Action(async () =>
+        void OnLogout()
         {
+            _ = LogoutAsync();
+        }
+
+        async Task LogoutAsync()
+        {
+            if (auth == null) return;
+
             try
             {
-                if (auth == null) return;
                 await auth.LogoutAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"Logout failed: {ex}");
             }
-        });
+        }
 
         DropDownMenu? footer;
         if (user.Value != null)
@@ -413,7 +421,7 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
                 .Top();
 
             footer = footer.Items(settings.FooterMenuItemsTransformer([
-                ..commonMenuItems, MenuItem.Default("Logout").Tag("$logout").Icon(Icons.LogOut).OnSelect(onLogout)
+                ..commonMenuItems, MenuItem.Default("Logout").Tag("$logout").Icon(Icons.LogOut).OnSelect(OnLogout)
             ], navigator));
         }
         else
@@ -427,7 +435,7 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
                 .Variant(ButtonVariant.Ghost).Width(Size.Full());
 
             var footerMenuItems = isLoggedIn
-                ? [.. commonMenuItems, MenuItem.Default("Logout").Tag("$logout").Icon(Icons.LogOut).OnSelect(onLogout)]
+                ? [.. commonMenuItems, MenuItem.Default("Logout").Tag("$logout").Icon(Icons.LogOut).OnSelect(OnLogout)]
                 : commonMenuItems;
 
             footer = new DropDownMenu(

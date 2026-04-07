@@ -301,14 +301,14 @@ public class ModelPricingService : IModelPricingService
 
                 if (usage.TryGetProperty("cache_creation", out var cacheCreation))
                 {
-                    var cache5m = cacheCreation.TryGetProperty("ephemeral_5m_input_tokens", out var c5)
+                    var cacheFiveMinutes = cacheCreation.TryGetProperty("ephemeral_5m_input_tokens", out var c5)
                         ? c5.GetInt32()
                         : 0;
-                    var cache1h = cacheCreation.TryGetProperty("ephemeral_1h_input_tokens", out var c1)
+                    var cacheOneHour = cacheCreation.TryGetProperty("ephemeral_1h_input_tokens", out var c1)
                         ? c1.GetInt32()
                         : 0;
-                    totalTokens += cache5m + cache1h;
-                    totalCost += (cache5m + cache1h) * priceCacheWrite;
+                    totalTokens += cacheFiveMinutes + cacheOneHour;
+                    totalCost += (cacheFiveMinutes + cacheOneHour) * priceCacheWrite;
                 }
                 else if (usage.TryGetProperty("cache_creation_input_tokens", out var ccTokens))
                 {

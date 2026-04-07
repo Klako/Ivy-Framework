@@ -2,7 +2,7 @@ using Timer = System.Timers.Timer;
 
 namespace Ivy.Tendril.Services;
 
-public class PlanWatcherService : IPlanWatcherService, IDisposable
+public class PlanWatcherService : IPlanWatcherService
 {
     private static readonly HashSet<string> WatchedFiles = new(StringComparer.OrdinalIgnoreCase)
         { "plan.yaml" };

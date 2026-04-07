@@ -3,7 +3,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Help", icon: Icons.CircleQuestionMark, group: new[] { "Tools" }, order: MenuOrder.Help)]
 public class HelpApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var client = UseService<IClientProvider>();
 

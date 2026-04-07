@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Ivy.Tendril.Services;
 
-public class InboxWatcherService : IInboxWatcherService, IDisposable
+public class InboxWatcherService : IInboxWatcherService
 {
     private readonly string _inboxPath;
     private readonly IJobService _jobService;
@@ -29,15 +29,25 @@ public class InboxWatcherService : IInboxWatcherService, IDisposable
             EnableRaisingEvents = true
         };
 
-        _watcher.Created += (_, e) => _ = Task.Run(() => ProcessFileAsync(e.FullPath));
+        _watcher.Created += OnFileCreated;
 
-        _pollTimer = new Timer(_ => ProcessExistingFiles(), null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+        _pollTimer = new Timer(OnPollTimer, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
     }
 
     public void Dispose()
     {
         _pollTimer.Dispose();
         _watcher?.Dispose();
+    }
+
+    private void OnFileCreated(object sender, FileSystemEventArgs e)
+    {
+        _ = ProcessFileAsync(e.FullPath);
+    }
+
+    private void OnPollTimer(object? state)
+    {
+        ProcessExistingFiles();
     }
 
     internal void RecoverProcessingFiles()
@@ -57,7 +67,7 @@ public class InboxWatcherService : IInboxWatcherService, IDisposable
             }
             catch
             {
-                /* Will be retried on next startup */
+                Console.Error.WriteLine($"Failed to recover inbox file '{file}'. It will be retried on next startup.");
             }
     }
 
@@ -66,7 +76,8 @@ public class InboxWatcherService : IInboxWatcherService, IDisposable
         if (!Directory.Exists(_inboxPath))
             return;
 
-        foreach (var file in Directory.GetFiles(_inboxPath, "*.md")) _ = Task.Run(() => ProcessFileAsync(file));
+        foreach (var file in Directory.GetFiles(_inboxPath, "*.md"))
+            _ = ProcessFileAsync(file);
     }
 
     private async Task ProcessFileAsync(string filePath)
@@ -94,7 +105,7 @@ public class InboxWatcherService : IInboxWatcherService, IDisposable
                 args.AddRange(["-SourcePath", sourcePath]);
             _jobService.StartJob("MakePlan", args.ToArray(), processingPath);
         }
-        catch
+        catch (Exception ex)
         {
             // Retry once after a short delay
             try
@@ -114,9 +125,10 @@ public class InboxWatcherService : IInboxWatcherService, IDisposable
                     args.AddRange(["-SourcePath", sourcePath]);
                 _jobService.StartJob("MakePlan", args.ToArray(), processingPath);
             }
-            catch
+            catch (Exception retryEx)
             {
-                // Give up — file will be picked up on next poll
+                Console.Error.WriteLine(
+                    $"Failed to process inbox file '{filePath}' after retry. Initial error: {ex.Message}. Retry error: {retryEx.Message}");
             }
         }
         finally

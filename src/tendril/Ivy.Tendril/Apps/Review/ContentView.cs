@@ -26,7 +26,7 @@ public class ContentView(
     private readonly PlanFile? _selectedPlan = selectedPlan;
     private readonly IState<PlanFile?> _selectedPlanState = selectedPlanState;
 
-    public override object? Build()
+    public override object Build()
     {
         var client = UseService<IClientProvider>();
         var copyToClipboard = UseClipboard();
@@ -42,7 +42,7 @@ public class ContentView(
         var githubService = UseService<IGithubService>();
         var assigneesQuery = UseQuery<string[], string>(
             _selectedPlan?.Project ?? "",
-            async (_, ct) =>
+            async (_, _) =>
             {
                 if (_selectedPlan is null) return Array.Empty<string>();
                 var repos = _selectedPlan.GetEffectiveRepoPaths(_config);
@@ -123,7 +123,7 @@ public class ContentView(
 
                     // Review action conditions
                     var projectConfig = _config.GetProject(_selectedPlan.Project);
-                    var reviewActions = projectConfig?.ReviewActions ?? new List<ReviewActionConfig>();
+                    var reviewActions = projectConfig?.ReviewActions ?? [];
                     var actionStates = reviewActions.Select(action =>
                     {
                         if (string.IsNullOrEmpty(action.Condition)) return (action.Name, true);
@@ -144,8 +144,10 @@ public class ContentView(
                             proc?.WaitForExit(5000);
                             return (action.Name, proc?.ExitCode == 0);
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Console.Error.WriteLine(
+                                $"Failed to evaluate review action '{action.Name}' for plan '{_selectedPlan.FolderName}': {ex.Message}");
                             return (action.Name, false);
                         }
                     }).ToList();

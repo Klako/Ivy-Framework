@@ -9,7 +9,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Icebox", icon: Icons.Snowflake, group: new[] { "Tools" }, order: MenuOrder.Icebox)]
 public class IceboxApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var planService = UseService<IPlanReaderService>();
         var jobService = UseService<IJobService>();

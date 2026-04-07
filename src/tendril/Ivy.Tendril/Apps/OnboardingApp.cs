@@ -39,7 +39,7 @@ public class OnboardingApp : ViewBase
         };
     }
 
-    public override object? Build()
+    public override object Build()
     {
         var stepperIndex = UseState(0);
         var steps = GetSteps(stepperIndex.Value);
@@ -61,7 +61,7 @@ public class OnboardingApp : ViewBase
 
 public class WelcomeStepView(IState<int> stepperIndex) : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         return Layout.Vertical()
                | Text.H1("Welcome to Ivy Tendril")
@@ -77,7 +77,7 @@ public class WelcomeStepView(IState<int> stepperIndex) : ViewBase
 
 public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var checkResults = UseState<Dictionary<string, bool>?>(null);
         var isChecking = UseState(false);
@@ -244,10 +244,12 @@ public class CodingAgentStepView(IState<int> stepperIndex) : ViewBase
 {
     private static readonly string[] AgentOptions = ["claude", "codex", "gemini"];
 
-    public override object? Build()
+    public override object Build()
     {
         var config = UseService<IConfigService>();
-        var selectedAgent = UseState(config.Settings.CodingAgent ?? "claude");
+        var selectedAgent = UseState(string.IsNullOrWhiteSpace(config.Settings.CodingAgent)
+            ? "claude"
+            : config.Settings.CodingAgent);
 
         var description = selectedAgent.Value switch
         {
@@ -284,7 +286,7 @@ public record TendrilHomeDetails
 
 public class TendrilHomeStepView(IState<int> stepperIndex) : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var details = UseState(new TendrilHomeDetails
         {
@@ -306,9 +308,9 @@ public class TendrilHomeStepView(IState<int> stepperIndex) : ViewBase
                    .OnSubmit(OnSubmit)
             ;
 
-        Task OnSubmit(TendrilHomeDetails? details)
+        Task OnSubmit(TendrilHomeDetails? formDetails)
         {
-            if (string.IsNullOrEmpty(details?.TendrilHome))
+            if (string.IsNullOrEmpty(formDetails?.TendrilHome))
             {
                 error.Set("Please provide a valid path");
                 return Task.CompletedTask;
@@ -316,7 +318,7 @@ public class TendrilHomeStepView(IState<int> stepperIndex) : ViewBase
 
             try
             {
-                var tendrilHome = details.TendrilHome;
+                var tendrilHome = formDetails.TendrilHome;
 
                 // Expand environment variables (handles %VAR%)
                 tendrilHome = Environment.ExpandEnvironmentVariables(tendrilHome);
@@ -365,7 +367,7 @@ public class TendrilHomeStepView(IState<int> stepperIndex) : ViewBase
 
 public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var config = UseService<IConfigService>();
         var projectName = UseState("");
@@ -489,7 +491,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                                      Color = "Green",
                                      Repos = repoPaths.Value.Select(p => new RepoRef { Path = p, PrRule = "default" })
                                          .ToList(),
-                                     Context = projectContext.Value?.Trim() ?? "",
+                                      Context = projectContext.Value.Trim(),
                                      Verifications = validVerifications.Select(v => new ProjectVerificationRef
                                      {
                                          Name = v.Name,
@@ -549,7 +551,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
 
 public class CompleteStepView(IState<int> stepperIndex) : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var isProcessing = UseState(false);
         var error = UseState<string?>(null);

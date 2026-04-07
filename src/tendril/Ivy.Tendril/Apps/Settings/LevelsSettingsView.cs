@@ -4,7 +4,7 @@ namespace Ivy.Tendril.Apps.Settings;
 
 public class LevelsSettingsView : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var config = UseService<IConfigService>();
         var client = UseService<IClientProvider>();

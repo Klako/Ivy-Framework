@@ -20,7 +20,7 @@ public class ContentView(
     private readonly Recommendation? _selected = selectedRecommendation;
     private readonly IState<Recommendation?> _selectedState = selectedState;
 
-    public override object? Build()
+    public override object Build()
     {
         var client = UseService<IClientProvider>();
         var config = UseService<IConfigService>();

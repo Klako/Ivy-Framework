@@ -23,7 +23,7 @@ public class ContentView(
     private readonly PlanFile? _selectedPlan = selectedPlan;
     private readonly IState<PlanFile?> _selectedPlanState = selectedPlanState;
 
-    public override object? Build()
+    public override object Build()
     {
         var downloadUrl = PlanDownloadHelper.UsePlanDownload(Context, _planService, _selectedPlan);
         var client = UseService<IClientProvider>();
@@ -34,7 +34,7 @@ public class ContentView(
         var openFile = UseState<string?>(null);
         var selectedRepoState = UseState<string?>(null);
         var issueAssigneeState = UseState<string?>(null);
-        var issueLabelsState = UseState<string[]>(Array.Empty<string>());
+        var issueLabelsState = UseState<string[]>([]);
         var issueCommentState = UseState("");
 
         var updateText = UseState("");

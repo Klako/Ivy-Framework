@@ -9,7 +9,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Jobs", icon: Icons.Activity, group: new[] { "Tools" }, order: MenuOrder.Jobs)]
 public class JobsApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var jobService = UseService<IJobService>();
         var planService = UseService<IPlanReaderService>();
@@ -237,9 +237,9 @@ public class JobsApp : ViewBase
 
                 return ValueTask.CompletedTask;
             })
-            .HeaderRight(ctx => Layout.Horizontal().Gap(2)
-                                | jobsProgress
-                                | new Button().Icon(Icons.EllipsisVertical).Ghost().WithDropDown(
+            .HeaderRight(_ => Layout.Horizontal().Gap(2)
+                                 | jobsProgress
+                                 | new Button().Icon(Icons.EllipsisVertical).Ghost().WithDropDown(
                                     new MenuItem("Clear Completed", Icon: Icons.Trash, Tag: "ClearCompleted")
                                         .OnSelect(() =>
                                         {

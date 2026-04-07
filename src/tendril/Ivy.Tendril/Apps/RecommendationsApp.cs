@@ -6,7 +6,7 @@ namespace Ivy.Tendril.Apps;
 [App(title: "Recommendations", icon: Icons.Lightbulb, group: new[] { "Tools" }, order: MenuOrder.Recommendations)]
 public class RecommendationsApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var planService = UseService<IPlanReaderService>();
         var jobService = UseService<IJobService>();

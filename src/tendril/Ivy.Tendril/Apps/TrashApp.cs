@@ -15,7 +15,7 @@ public record TrashFileInfo(
 [App(title: "Trash", icon: Icons.Trash2, group: new[] { "Tools" }, order: MenuOrder.Trash, isVisible: false)]
 public class TrashApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var configService = UseService<IConfigService>();
         var jobService = UseService<IJobService>();

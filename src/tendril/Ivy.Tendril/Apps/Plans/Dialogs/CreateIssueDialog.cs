@@ -24,7 +24,7 @@ public class CreateIssueDialog(
         var githubService = UseService<IGithubService>();
         var assigneesQuery = UseQuery<string[], string>(
             _selectedRepoState.Value ?? "",
-            async (repoName, ct) =>
+            async (repoName, _) =>
             {
                 if (string.IsNullOrEmpty(repoName)) return Array.Empty<string>();
                 var repos = githubService.GetRepos();
@@ -38,7 +38,7 @@ public class CreateIssueDialog(
 
         var labelsQuery = UseQuery<string[], string>(
             _selectedRepoState.Value ?? "",
-            async (repoName, ct) =>
+            async (repoName, _) =>
             {
                 if (string.IsNullOrEmpty(repoName)) return Array.Empty<string>();
                 var repos = githubService.GetRepos();
@@ -54,8 +54,8 @@ public class CreateIssueDialog(
 
         var repos = githubService.GetRepos();
         var repositoryOptions = repos.Select(r => r.DisplayName).ToArray();
-        var assignees = assigneesQuery.Value ?? Array.Empty<string>();
-        var labels = labelsQuery.Value ?? Array.Empty<string>();
+        var assignees = assigneesQuery.Value;
+        var labels = labelsQuery.Value;
 
         return new Dialog(
             _ => _dialogOpen.Set(false),
@@ -76,15 +76,15 @@ public class CreateIssueDialog(
                 {
                     if (_selectedRepoState.Value is { } repo)
                     {
-                        var repos = githubService.GetRepos();
-                        var selectedRepo = repos.FirstOrDefault(r => r.DisplayName == repo);
+                        var availableRepos = githubService.GetRepos();
+                        var selectedRepo = availableRepos.FirstOrDefault(r => r.DisplayName == repo);
                         if (selectedRepo != null)
                         {
                             var repoPath = selectedRepo.FullName;
                             var assignee = _issueAssigneeState.Value ?? "";
-                            var labels = string.Join(",", _issueLabelsState.Value ?? Array.Empty<string>());
+                            var selectedLabels = string.Join(",", _issueLabelsState.Value);
                             _jobService.StartJob("CreateIssue", _selectedPlan.FolderPath, "-Repo", repoPath,
-                                "-Assignee", assignee, "-Comment", _issueCommentState.Value ?? "", "-Labels", labels);
+                                "-Assignee", assignee, "-Comment", _issueCommentState.Value, "-Labels", selectedLabels);
                         }
                     }
 

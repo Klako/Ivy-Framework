@@ -6,7 +6,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Ivy.Tendril.Services;
 
-public class PlanDatabaseService : IPlanDatabaseService, IDisposable
+public class PlanDatabaseService : IPlanDatabaseService
 {
     private static readonly HashSet<string> AllowedTableColumns = new(StringComparer.Ordinal)
     {
@@ -703,16 +703,19 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
 
     public void RebuildFtsIndex()
     {
-        using var cmd = _connection.CreateCommand();
-        cmd.CommandText = "INSERT INTO PlanSearch(PlanSearch) VALUES('delete-all');";
-        cmd.ExecuteNonQuery();
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = "INSERT INTO PlanSearch(PlanSearch) VALUES('delete-all');";
+            cmd.ExecuteNonQuery();
 
-        cmd.CommandText = """
-                          INSERT INTO PlanSearch(rowid, Title, LatestRevisionContent, Project, InitialPrompt)
-                          SELECT Id, Title, LatestRevisionContent, Project, InitialPrompt
-                          FROM Plans;
-                          """;
-        cmd.ExecuteNonQuery();
+            cmd.CommandText = """
+                              INSERT INTO PlanSearch(rowid, Title, LatestRevisionContent, Project, InitialPrompt)
+                              SELECT Id, Title, LatestRevisionContent, Project, InitialPrompt
+                              FROM Plans;
+                              """;
+            cmd.ExecuteNonQuery();
+        }
     }
 
     public void Dispose()

@@ -10,7 +10,7 @@ namespace Ivy.Tendril.Apps;
     allowDuplicateTabs: true)]
 public class ReviewApp : ViewBase
 {
-    public override object? Build()
+    public override object Build()
     {
         var planService = UseService<IPlanReaderService>();
         var jobService = UseService<IJobService>();

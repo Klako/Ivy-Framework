@@ -111,6 +111,7 @@ public class PlanReaderServiceComputePlanCountsTests : IDisposable
         CreatePlan("01022-Failed", "Failed");
         CreatePlan("01023-Icebox", "Icebox");
         CreatePlan("01024-Completed", "Completed");
+        CreatePlan("01025-Blocked", "Blocked");
         CreateRecommendations("01024-Completed",
             "- title: R1\n  description: d\n  state: Pending\n- title: R2\n  description: d\n  state: Resolved\n");
 
@@ -118,7 +119,7 @@ public class PlanReaderServiceComputePlanCountsTests : IDisposable
         var plans = _service.GetPlans();
         var pendingRecs = _service.GetPendingRecommendationsCount();
 
-        Assert.Equal(plans.Count(p => p.Status == PlanStatus.Draft), snapshot.Drafts);
+        Assert.Equal(plans.Count(p => p.Status is PlanStatus.Draft or PlanStatus.Blocked), snapshot.Drafts);
         Assert.Equal(plans.Count(p => p.Status == PlanStatus.ReadyForReview), snapshot.ReadyForReview);
         Assert.Equal(plans.Count(p => p.Status == PlanStatus.Failed), snapshot.Failed);
         Assert.Equal(plans.Count(p => p.Status == PlanStatus.Icebox), snapshot.Icebox);

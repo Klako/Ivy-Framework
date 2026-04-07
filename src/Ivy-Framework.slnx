@@ -34,7 +34,6 @@
   <Folder Name="/Auth/examples/">
     <Project Path="auth/examples/SliplaneExample/SliplaneExample.csproj" />
   </Folder>
-  <Project Path="Ivy.Benchmarks.Docs/Ivy.Benchmarks.Docs.csproj" />
   <Project Path="Ivy.Desktop/Ivy.Desktop.csproj" />
   <Project Path="Ivy.Docs.Helpers/Ivy.Docs.Helpers.csproj" />
   <Project Path="Ivy.Docs.Shared/Ivy.Docs.Shared.csproj" />
@@ -49,5 +48,4 @@
   <Project Path="Ivy/Ivy.csproj" />
   <Project Path="Ivy.Agent.EfQuery/Ivy.Agent.EfQuery.csproj" />
   <Project Path="Ivy.Agent.EfQuery.Test/Ivy.Agent.EfQuery.Test.csproj" />
-  <Project Path="Ivy.Docs.Tools/Ivy.Docs.Tools.csproj" />
 </Solution>

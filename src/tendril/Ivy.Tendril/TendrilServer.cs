@@ -90,7 +90,8 @@ public static class TendrilServer
                 sp.GetRequiredService<ModelPricingService>(),
                 sp.GetRequiredService<IPlanReaderService>(),
                 sp.GetRequiredService<ITelemetryService>(),
-                sp.GetRequiredService<IPlanWatcherService>());
+                sp.GetRequiredService<IPlanWatcherService>(),
+                sp.GetRequiredService<IPlanDatabaseService>());
         });
         server.Services.AddSingleton<IJobService>(sp => sp.GetRequiredService<JobService>());
         server.Services.AddSingleton<PlanWatcherService>(sp =>

@@ -1,3 +1,4 @@
+using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Services;
 using Microsoft.Data.Sqlite;
@@ -448,5 +449,114 @@ public class PlanDatabaseServiceTests : IDisposable
         Assert.Equal(2, results.Count);
         // Higher term frequency ranks first in FTS5
         Assert.Equal(1500, results[0].Id);
+    }
+
+    [Fact]
+    public void UpsertJob_PersistsAndRetrievesJobData()
+    {
+        var job = new JobItem
+        {
+            Id = "job-001",
+            Type = "ExecutePlan",
+            PlanFile = "01500-TestPlan",
+            Project = "Tendril",
+            Status = JobStatus.Completed,
+            Provider = "claude",
+            SessionId = "session-abc",
+            StartedAt = new DateTime(2026, 4, 7, 10, 0, 0, DateTimeKind.Utc),
+            CompletedAt = new DateTime(2026, 4, 7, 10, 15, 0, DateTimeKind.Utc),
+            DurationSeconds = 900,
+            Cost = 1.50m,
+            Tokens = 50000,
+            StatusMessage = null,
+        };
+
+        _db.UpsertJob(job);
+
+        var jobs = _db.GetRecentJobs();
+        Assert.Single(jobs);
+
+        var result = jobs[0];
+        Assert.Equal("job-001", result.Id);
+        Assert.Equal("ExecutePlan", result.Type);
+        Assert.Equal("01500-TestPlan", result.PlanFile);
+        Assert.Equal("Tendril", result.Project);
+        Assert.Equal(JobStatus.Completed, result.Status);
+        Assert.Equal("claude", result.Provider);
+        Assert.Equal("session-abc", result.SessionId);
+        Assert.Equal(job.StartedAt, result.StartedAt);
+        Assert.Equal(job.CompletedAt, result.CompletedAt);
+        Assert.Equal(900, result.DurationSeconds);
+        Assert.Equal(1.50m, result.Cost);
+        Assert.Equal(50000, result.Tokens);
+        Assert.Null(result.StatusMessage);
+    }
+
+    [Fact]
+    public void GetRecentJobs_ReturnsOrderedByCompletedAt()
+    {
+        _db.UpsertJob(new JobItem
+        {
+            Id = "job-001", Type = "ExecutePlan", PlanFile = "plan-a", Project = "Tendril",
+            Status = JobStatus.Completed, Provider = "claude",
+            CompletedAt = new DateTime(2026, 4, 7, 10, 0, 0, DateTimeKind.Utc),
+        });
+        _db.UpsertJob(new JobItem
+        {
+            Id = "job-003", Type = "ExecutePlan", PlanFile = "plan-c", Project = "Tendril",
+            Status = JobStatus.Completed, Provider = "claude",
+            CompletedAt = new DateTime(2026, 4, 7, 12, 0, 0, DateTimeKind.Utc),
+        });
+        _db.UpsertJob(new JobItem
+        {
+            Id = "job-002", Type = "MakePr", PlanFile = "plan-b", Project = "Tendril",
+            Status = JobStatus.Completed, Provider = "claude",
+            CompletedAt = new DateTime(2026, 4, 7, 11, 0, 0, DateTimeKind.Utc),
+        });
+
+        var jobs = _db.GetRecentJobs();
+        Assert.Equal(3, jobs.Count);
+        Assert.Equal("job-003", jobs[0].Id); // Most recent first
+        Assert.Equal("job-002", jobs[1].Id);
+        Assert.Equal("job-001", jobs[2].Id);
+    }
+
+    [Fact]
+    public void UpsertJob_UpdatesExistingJob()
+    {
+        var job = new JobItem
+        {
+            Id = "job-001", Type = "ExecutePlan", PlanFile = "plan-a", Project = "Tendril",
+            Status = JobStatus.Completed, Provider = "claude",
+            CompletedAt = new DateTime(2026, 4, 7, 10, 0, 0, DateTimeKind.Utc),
+            Cost = null, Tokens = null,
+        };
+        _db.UpsertJob(job);
+
+        // Update with cost and tokens
+        job.Cost = 2.50m;
+        job.Tokens = 75000;
+        _db.UpsertJob(job);
+
+        var jobs = _db.GetRecentJobs();
+        Assert.Single(jobs);
+        Assert.Equal(2.50m, jobs[0].Cost);
+        Assert.Equal(75000, jobs[0].Tokens);
+    }
+
+    [Fact]
+    public void Migration_003_CreatesJobsTable()
+    {
+        // The _db created in constructor already ran all migrations.
+        // Verify Jobs table exists by inserting and querying.
+        _db.UpsertJob(new JobItem
+        {
+            Id = "migration-test", Type = "Test", PlanFile = "test", Project = "Test",
+            Status = JobStatus.Completed, Provider = "claude",
+        });
+
+        var jobs = _db.GetRecentJobs();
+        Assert.Single(jobs);
+        Assert.Equal("migration-test", jobs[0].Id);
     }
 }

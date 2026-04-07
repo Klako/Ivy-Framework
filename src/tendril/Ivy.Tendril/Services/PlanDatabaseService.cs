@@ -1,4 +1,5 @@
 using System.Globalization;
+using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Database;
 using Microsoft.Data.Sqlite;
@@ -896,6 +897,65 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
                 transaction.Rollback();
                 throw;
             }
+        }
+    }
+
+    public void UpsertJob(JobItem job)
+    {
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                INSERT OR REPLACE INTO Jobs (Id, Type, PlanFile, Project, Status, Provider, SessionId, StartedAt, CompletedAt, DurationSeconds, Cost, Tokens, StatusMessage)
+                VALUES (@id, @type, @planFile, @project, @status, @provider, @sessionId, @startedAt, @completedAt, @durationSeconds, @cost, @tokens, @statusMessage)
+                """;
+            cmd.Parameters.AddWithValue("@id", job.Id);
+            cmd.Parameters.AddWithValue("@type", job.Type);
+            cmd.Parameters.AddWithValue("@planFile", job.PlanFile);
+            cmd.Parameters.AddWithValue("@project", job.Project);
+            cmd.Parameters.AddWithValue("@status", job.Status.ToString());
+            cmd.Parameters.AddWithValue("@provider", job.Provider);
+            cmd.Parameters.AddWithValue("@sessionId", (object?)job.SessionId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@startedAt", job.StartedAt?.ToString("O", CultureInfo.InvariantCulture) ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@completedAt", job.CompletedAt?.ToString("O", CultureInfo.InvariantCulture) ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@durationSeconds", (object?)job.DurationSeconds ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@cost", job.Cost.HasValue ? (object)(double)job.Cost.Value : DBNull.Value);
+            cmd.Parameters.AddWithValue("@tokens", (object?)job.Tokens ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@statusMessage", (object?)job.StatusMessage ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    public List<JobItem> GetRecentJobs(int limit = 100)
+    {
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = "SELECT * FROM Jobs ORDER BY CompletedAt DESC LIMIT @limit";
+            cmd.Parameters.AddWithValue("@limit", limit);
+
+            var jobs = new List<JobItem>();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                jobs.Add(new JobItem
+                {
+                    Id = reader.GetString(reader.GetOrdinal("Id")),
+                    Type = reader.GetString(reader.GetOrdinal("Type")),
+                    PlanFile = reader.GetString(reader.GetOrdinal("PlanFile")),
+                    Project = reader.GetString(reader.GetOrdinal("Project")),
+                    Status = Enum.Parse<JobStatus>(reader.GetString(reader.GetOrdinal("Status"))),
+                    Provider = reader.GetString(reader.GetOrdinal("Provider")),
+                    SessionId = reader.IsDBNull(reader.GetOrdinal("SessionId")) ? null : reader.GetString(reader.GetOrdinal("SessionId")),
+                    StartedAt = reader.IsDBNull(reader.GetOrdinal("StartedAt")) ? null : DateTime.Parse(reader.GetString(reader.GetOrdinal("StartedAt")), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    CompletedAt = reader.IsDBNull(reader.GetOrdinal("CompletedAt")) ? null : DateTime.Parse(reader.GetString(reader.GetOrdinal("CompletedAt")), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    DurationSeconds = reader.IsDBNull(reader.GetOrdinal("DurationSeconds")) ? null : reader.GetInt32(reader.GetOrdinal("DurationSeconds")),
+                    Cost = reader.IsDBNull(reader.GetOrdinal("Cost")) ? null : (decimal)reader.GetDouble(reader.GetOrdinal("Cost")),
+                    Tokens = reader.IsDBNull(reader.GetOrdinal("Tokens")) ? null : reader.GetInt32(reader.GetOrdinal("Tokens")),
+                    StatusMessage = reader.IsDBNull(reader.GetOrdinal("StatusMessage")) ? null : reader.GetString(reader.GetOrdinal("StatusMessage")),
+                });
+            }
+            return jobs;
         }
     }
 

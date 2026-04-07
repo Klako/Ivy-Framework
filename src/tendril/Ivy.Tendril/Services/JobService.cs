@@ -759,6 +759,36 @@ public class JobService : IJobService
         }
     }
 
+    /// <summary>
+    /// Updates one or more fields in plan.yaml using Regex replacement.
+    /// Preserves YAML formatting and field order.
+    /// </summary>
+    internal static void UpdatePlanYamlFields(string planFolder, params (string field, string value)[] updates)
+    {
+        var content = ReadPlanYamlRaw(planFolder);
+        if (content == null) return;
+
+        foreach (var (field, value) in updates)
+        {
+            var pattern = $@"(?m)^{Regex.Escape(field)}:\s*.*$";
+            var replacement = $"{field}: {value}";
+            content = Regex.Replace(content, pattern, replacement);
+        }
+
+        var planYamlPath = Path.Combine(planFolder, "plan.yaml");
+        FileHelper.WriteAllText(planYamlPath, content);
+    }
+
+    /// <summary>
+    /// Updates the state and updated timestamp in plan.yaml.
+    /// </summary>
+    internal static void SetPlanStateByFolder(string planFolder, string state)
+    {
+        UpdatePlanYamlFields(planFolder,
+            ("state", state),
+            ("updated", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")));
+    }
+
     private static string? GetNamedArg(string[] args, string name)
     {
         for (int i = 0; i < args.Length - 1; i++)
@@ -774,20 +804,16 @@ public class JobService : IJobService
         try
         {
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var plan = ReadPlanYaml(planFolder);
-            if (plan == null) return;
+            var planYaml = ReadPlanYaml(planFolder);
+            if (planYaml == null) return;
 
-            if (plan.State is "Executing" or "Building")
+            if (planYaml.State is "Executing" or "Building")
             {
-                var hasIncomplete = plan.Verifications?.Any(v => v.Status is "Pending" or "Fail") ?? false;
+                var hasIncomplete = planYaml.Verifications?
+                    .Any(v => v.Status is "Pending" or "Fail") ?? false;
                 var targetState = hasIncomplete ? "Failed" : "ReadyForReview";
 
-                var content = ReadPlanYamlRaw(planFolder);
-                if (content == null) return;
-                content = Regex.Replace(content, @"(?m)^state:\s*.*$", $"state: {targetState}");
-                content = Regex.Replace(content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
-                var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-                FileHelper.WriteAllText(planYamlPath, content);
+                SetPlanStateByFolder(planFolder, targetState);
             }
         }
         catch { /* Don't let state transition failures crash job completion */ }
@@ -798,13 +824,7 @@ public class JobService : IJobService
         try
         {
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var content = ReadPlanYamlRaw(planFolder);
-            if (content == null) return;
-
-            content = Regex.Replace(content, @"(?m)^state:\s*.*$", $"state: {state}");
-            content = Regex.Replace(content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            FileHelper.WriteAllText(planYamlPath, content);
+            SetPlanStateByFolder(planFolder, state);
         }
         catch { /* Don't let state transition failures crash job completion */ }
     }
@@ -839,14 +859,8 @@ public class JobService : IJobService
             if (job.Type is "MakePlan" or "MakePr" or "CreateIssue") return;
 
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var content = ReadPlanYamlRaw(planFolder);
-            if (content == null) return;
-
             var newState = job.Type == "ExecutePlan" ? "Failed" : "Draft";
-            content = Regex.Replace(content, @"(?m)^state:\s*.*$", $"state: {newState}");
-            content = Regex.Replace(content, @"(?m)^updated:\s*.*$", $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            FileHelper.WriteAllText(planYamlPath, content);
+            SetPlanStateByFolder(planFolder, newState);
         }
         catch { /* Don't let state reset failures crash job completion */ }
     }
@@ -941,14 +955,7 @@ public class JobService : IJobService
         try
         {
             var planFolder = job.Args.Length > 0 ? job.Args[0] : "";
-            var content = ReadPlanYamlRaw(planFolder);
-            if (content == null) return;
-
-            content = Regex.Replace(content, @"(?m)^state:\s*.*$", "state: Draft");
-            content = Regex.Replace(content, @"(?m)^updated:\s*.*$",
-                $"updated: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
-            var planYamlPath = Path.Combine(planFolder, "plan.yaml");
-            FileHelper.WriteAllText(planYamlPath, content);
+            SetPlanStateByFolder(planFolder, "Draft");
         }
         catch { /* Don't let state reset failures crash job completion */ }
     }

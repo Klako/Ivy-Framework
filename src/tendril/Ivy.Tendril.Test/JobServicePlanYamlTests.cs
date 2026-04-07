@@ -129,4 +129,140 @@ public class JobServicePlanYamlTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void UpdatePlanYamlFields_UpdatesSingleField()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"tendril-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var yamlContent = "state: Draft\nproject: TestProject\nupdated: 2026-01-01T00:00:00Z\n";
+            File.WriteAllText(Path.Combine(tempDir, "plan.yaml"), yamlContent);
+
+            JobService.UpdatePlanYamlFields(tempDir, ("state", "Executing"));
+
+            var result = File.ReadAllText(Path.Combine(tempDir, "plan.yaml"));
+            Assert.Contains("state: Executing", result);
+            Assert.Contains("project: TestProject", result);
+            Assert.Contains("updated: 2026-01-01T00:00:00Z", result);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void UpdatePlanYamlFields_UpdatesMultipleFields()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"tendril-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var yamlContent = "state: Draft\nproject: TestProject\nupdated: 2026-01-01T00:00:00Z\n";
+            File.WriteAllText(Path.Combine(tempDir, "plan.yaml"), yamlContent);
+
+            JobService.UpdatePlanYamlFields(tempDir,
+                ("state", "Executing"),
+                ("updated", "2026-04-06T20:00:00Z"));
+
+            var result = File.ReadAllText(Path.Combine(tempDir, "plan.yaml"));
+            Assert.Contains("state: Executing", result);
+            Assert.Contains("updated: 2026-04-06T20:00:00Z", result);
+            Assert.Contains("project: TestProject", result);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void UpdatePlanYamlFields_HandlesNonExistentFile()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"tendril-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            // Should not throw — just returns early
+            JobService.UpdatePlanYamlFields(tempDir, ("state", "Executing"));
+
+            Assert.False(File.Exists(Path.Combine(tempDir, "plan.yaml")));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void UpdatePlanYamlFields_PreservesOtherContent()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"tendril-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var yamlContent = "state: Draft\nproject: TestProject\nlevel: Critical\ntitle: My Plan\nupdated: 2026-01-01T00:00:00Z\nrepos:\n- D:\\Repos\\Test\n";
+            File.WriteAllText(Path.Combine(tempDir, "plan.yaml"), yamlContent);
+
+            JobService.UpdatePlanYamlFields(tempDir, ("state", "Completed"));
+
+            var result = File.ReadAllText(Path.Combine(tempDir, "plan.yaml"));
+            Assert.Contains("state: Completed", result);
+            Assert.Contains("project: TestProject", result);
+            Assert.Contains("level: Critical", result);
+            Assert.Contains("title: My Plan", result);
+            Assert.Contains("updated: 2026-01-01T00:00:00Z", result);
+            Assert.Contains("- D:\\Repos\\Test", result);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void SetPlanStateByFolder_UpdatesStateAndTimestamp()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"tendril-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var yamlContent = "state: Draft\nproject: TestProject\nupdated: 2026-01-01T00:00:00Z\n";
+            File.WriteAllText(Path.Combine(tempDir, "plan.yaml"), yamlContent);
+
+            JobService.SetPlanStateByFolder(tempDir, "Executing");
+
+            var result = File.ReadAllText(Path.Combine(tempDir, "plan.yaml"));
+            Assert.Contains("state: Executing", result);
+            Assert.DoesNotContain("updated: 2026-01-01T00:00:00Z", result);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void SetPlanStateByFolder_UsesCorrectTimestampFormat()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"tendril-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var yamlContent = "state: Draft\nproject: TestProject\nupdated: 2026-01-01T00:00:00Z\n";
+            File.WriteAllText(Path.Combine(tempDir, "plan.yaml"), yamlContent);
+
+            JobService.SetPlanStateByFolder(tempDir, "ReadyForReview");
+
+            var result = File.ReadAllText(Path.Combine(tempDir, "plan.yaml"));
+            // Verify ISO 8601 format with Z suffix: yyyy-MM-ddTHH:mm:ssZ
+            Assert.Matches(@"updated: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", result);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

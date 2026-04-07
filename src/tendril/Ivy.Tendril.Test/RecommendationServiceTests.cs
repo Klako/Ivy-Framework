@@ -81,6 +81,7 @@ public class RecommendationServiceTests : IDisposable
         CreatePlanWithRecommendations("01602-UpdateTest", yaml);
 
         _service.UpdateRecommendationState("01602-UpdateTest", "Fix bug", "Accepted");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         var recommendations = _service.GetRecommendations();
         Assert.Single(recommendations);
@@ -94,6 +95,7 @@ public class RecommendationServiceTests : IDisposable
         CreatePlanWithRecommendations("01603-PersistTest", yaml);
 
         _service.UpdateRecommendationState("01603-PersistTest", "Item Two", "Declined");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         var filePath = Path.Combine(_plansDir, "01603-PersistTest", "artifacts", "recommendations.yaml");
         var content = File.ReadAllText(filePath);
@@ -127,6 +129,7 @@ public class RecommendationServiceTests : IDisposable
         CreatePlanWithRecommendations("01605-AcceptWithNotes", yaml);
 
         _service.UpdateRecommendationState("01605-AcceptWithNotes", "Fix bug", "AcceptedWithNotes");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         var recommendations = _service.GetRecommendations();
         Assert.Single(recommendations);
@@ -239,6 +242,7 @@ public class RecommendationServiceTests : IDisposable
         CreatePlanWithRecommendations("01640-DeclineReason", yaml);
 
         _service.UpdateRecommendationState("01640-DeclineReason", "Fix bug", "Declined", "Not relevant to our project");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         var filePath = Path.Combine(_plansDir, "01640-DeclineReason", "artifacts", "recommendations.yaml");
         var content = File.ReadAllText(filePath);
@@ -258,6 +262,7 @@ public class RecommendationServiceTests : IDisposable
         CreatePlanWithRecommendations("01641-DeclineNoReason", yaml);
 
         _service.UpdateRecommendationState("01641-DeclineNoReason", "Fix bug", "Declined", "");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         var recommendations = _service.GetRecommendations();
         Assert.Single(recommendations);
@@ -272,6 +277,7 @@ public class RecommendationServiceTests : IDisposable
         CreatePlanWithRecommendations("01642-DeclinePersist", yaml);
 
         _service.UpdateRecommendationState("01642-DeclinePersist", "Item A", "Declined", "Duplicate of another recommendation");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         var recommendations = _service.GetRecommendations();
         var itemA = recommendations.First(r => r.Title == "Item A");
@@ -346,6 +352,7 @@ public class RecommendationServiceTests : IDisposable
 
         // Update state (should invalidate cache)
         _service.UpdateRecommendationState("01652-CacheInvalidate", "Fix bug", "Accepted");
+        _service.FlushPendingWritesAsync().GetAwaiter().GetResult();
 
         // Next call should recompute and reflect the updated state
         var result2 = _service.GetRecommendations();

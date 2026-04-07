@@ -21,7 +21,12 @@ Read the project configuration from the `TENDRIL_CONFIG` environment variable (a
 
 Args contains the user's task description. If it references related plans with `[number]` syntax (e.g. `[01205]`), find and read those plan files from `PlansDirectory` for context.
 
-**Extract Force Flag**: If args ends with ` [FORCE]`, set an internal flag to skip duplicate detection (see Step 3), then strip ` [FORCE]` entirely from the description. The cleaned description should be used for all subsequent steps (title, plan.yaml, etc.). Never let `[FORCE]` appear in any plan field or title.
+**Extract Flags**: Check for special flags at the end of args:
+
+- **Force Flag**: If args ends with ` [FORCE]`, set an internal flag to skip duplicate detection (see Step 3), then strip ` [FORCE]` from the description.
+- **YOLO Flag**: If args ends with ` [YOLO]` (or appears before ` [FORCE]`), set an internal flag to auto-execute the plan after creation (see Step 6), then strip ` [YOLO]` from the description.
+
+Flags can be combined (e.g., `task description [YOLO] [FORCE]` or `task description [FORCE] [YOLO]`). Strip all flags. The cleaned description should be used for all subsequent steps (title, plan.yaml, etc.). Never let flags appear in any plan field or title.
 
 ### 1.5. Load Project Context
 
@@ -245,6 +250,20 @@ Example for a Framework project plan:
 If the project has no verifications (e.g. `[Auto]`), leave the section empty or omit it.
 
 The user can edit the checklist before execution — unchecking a required verification or checking an optional one. ExecutePlan will run only the checked items.
+
+### 6. Auto-Execute Plan (YOLO Mode)
+
+If the YOLO flag was detected in Step 1, automatically execute the plan after creation:
+
+1. **Verify plan was created**: Confirm the plan folder exists at `PlansDirectory/<PlanId>-<SafeTitle>/`
+2. **Update plan state**: Change the plan's state from `Draft` to `Building` in `plan.yaml`
+3. **Invoke ExecutePlan**: Use `Tools/Invoke-ExecutePlan.ps1` to trigger plan execution:
+   ```powershell
+   & Tools/Invoke-ExecutePlan.ps1 -PlanPath "PlansDirectory/<PlanId>-<SafeTitle>"
+   ```
+4. **Report execution status**: Include the result of ExecutePlan in your summary to the user
+
+**Note**: If the plan was trashed in Step 3 (duplicate detection), skip this step entirely — there is no plan to execute.
 
 ### Rules
 

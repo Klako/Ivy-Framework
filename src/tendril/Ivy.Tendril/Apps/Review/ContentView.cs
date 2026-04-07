@@ -84,6 +84,30 @@ public class ContentView(
             initialValue: ""
         );
 
+        var commitQuery = UseQuery<CommitDetailData?, string>(
+            openCommit.Value ?? "",
+            async (hash, ct) =>
+            {
+                if (string.IsNullOrEmpty(hash)) return null;
+                var repoPaths2 = _selectedPlan!.GetEffectiveRepoPaths(_config);
+                return await Task.Run(() =>
+                {
+                    foreach (var repo in repoPaths2)
+                    {
+                        var title = _gitService.GetCommitTitle(repo, hash);
+                        if (title != null)
+                        {
+                            var diff = _gitService.GetCommitDiff(repo, hash);
+                            var files = _gitService.GetCommitFiles(repo, hash);
+                            return new CommitDetailData(title, diff, files);
+                        }
+                    }
+                    return null;
+                }, ct);
+            },
+            initialValue: null
+        );
+
         var planContentQuery = UseQuery<PlanContentData, string>(
             _selectedPlan?.FolderPath ?? "",
             async (folderPath, ct) =>
@@ -402,71 +426,50 @@ public class ContentView(
 
         if (openCommit.Value is { } commitHash && _selectedPlan is not null)
         {
-            var repoPaths2 = _selectedPlan.GetEffectiveRepoPaths(_config);
-
-            string? commitDiff = null;
-            List<(string Status, string FilePath)>? commitFiles = null;
-            string? commitTitle = null;
-            var cts = new CancellationTokenSource();
-            try
-            {
-                Parallel.ForEach(repoPaths2, new ParallelOptions { CancellationToken = cts.Token }, repo =>
-                {
-                    if (cts.IsCancellationRequested) return;
-                    var title = _gitService.GetCommitTitle(repo, commitHash);
-                    if (title != null)
-                    {
-                        lock (cts)
-                        {
-                            if (commitTitle == null)
-                            {
-                                commitTitle = title;
-                                commitDiff = _gitService.GetCommitDiff(repo, commitHash);
-                                commitFiles = _gitService.GetCommitFiles(repo, commitHash);
-                            }
-                        }
-                        cts.Cancel();
-                    }
-                });
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected when a repo is found and cts.Cancel() is called
-            }
-
             var shortHash = commitHash.Length > 7 ? commitHash[..7] : commitHash;
-            var commitSheetContent = Layout.Vertical().Gap(4).Padding(2);
+            object sheetContent;
 
-            if (commitFiles is { Count: > 0 })
+            if (commitQuery.Loading || commitQuery.Value is null && !string.IsNullOrEmpty(openCommit.Value))
             {
-                var filesLayout = Layout.Vertical().Gap(1);
-                filesLayout |= Text.Block("Changed Files").Bold();
-                foreach (var (status, filePath) in commitFiles)
+                sheetContent = Text.Muted("Loading...");
+            }
+            else
+            {
+                var data = commitQuery.Value;
+                var commitSheetContent = Layout.Vertical().Gap(4).Padding(2);
+
+                if (data?.Files is { Count: > 0 })
                 {
-                    var (label, variant) = status switch
+                    var filesLayout = Layout.Vertical().Gap(1);
+                    filesLayout |= Text.Block("Changed Files").Bold();
+                    foreach (var (status, filePath) in data.Files)
                     {
-                        "A" => ("Added", BadgeVariant.Success),
-                        "D" => ("Deleted", BadgeVariant.Destructive),
-                        _ => ("Modified", BadgeVariant.Outline)
-                    };
-                    filesLayout |= Layout.Horizontal().Gap(2)
-                                   | new Badge(label).Variant(variant).Small()
-                                   | Text.Block(filePath);
+                        var (label, variant) = status switch
+                        {
+                            "A" => ("Added", BadgeVariant.Success),
+                            "D" => ("Deleted", BadgeVariant.Destructive),
+                            _ => ("Modified", BadgeVariant.Outline)
+                        };
+                        filesLayout |= Layout.Horizontal().Gap(2)
+                            | new Badge(label).Variant(variant).Small()
+                            | Text.Block(filePath);
+                    }
+                    commitSheetContent |= filesLayout;
                 }
 
-                commitSheetContent |= filesLayout;
-            }
+                if (!string.IsNullOrWhiteSpace(data?.Diff))
+                {
+                    commitSheetContent |= Text.Block("Diff").Bold();
+                    commitSheetContent |= new DiffView().Diff(data.Diff).Split();
+                }
 
-            if (!string.IsNullOrWhiteSpace(commitDiff))
-            {
-                commitSheetContent |= Text.Block("Diff").Bold();
-                commitSheetContent |= new DiffView().Diff(commitDiff).Split();
+                sheetContent = commitSheetContent;
             }
 
             content |= new Sheet(
-                () => openCommit.Set(null),
-                commitSheetContent,
-                $"Commit {shortHash} — {commitTitle}"
+                onClose: () => openCommit.Set(null),
+                content: sheetContent,
+                title: $"Commit {shortHash} — {commitQuery.Value?.Title ?? ""}"
             ).Width(Size.Half()).Resizable();
         }
 
@@ -611,6 +614,12 @@ public class ContentView(
     }
 
     private record CommitRow(string Hash, string ShortHash, string Title);
+
+    private record CommitDetailData(
+        string Title,
+        string? Diff,
+        List<(string Status, string FilePath)>? Files
+    );
 
     private record PlanContentData(
         List<RecommendationYaml> Recommendations,

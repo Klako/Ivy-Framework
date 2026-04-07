@@ -3,9 +3,9 @@ import * as arrow from "apache-arrow";
 import { getHiddenKeyValue } from "./arrowUtils";
 
 function makeTable(fields: { name: string; values: (string | number | null)[] }[]): arrow.Table {
-  const columns: Record<string, arrow.Vector> = {};
+  const columns: Record<string, (string | number | null)[]> = {};
   for (const f of fields) {
-    columns[f.name] = arrow.vectorFromArray(f.values);
+    columns[f.name] = f.values;
   }
   return arrow.tableFromArrays(columns);
 }

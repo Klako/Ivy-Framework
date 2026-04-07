@@ -497,20 +497,32 @@ public class PlanDatabaseServiceTests : IDisposable
     {
         _db.UpsertJob(new JobItem
         {
-            Id = "job-001", Type = "ExecutePlan", PlanFile = "plan-a", Project = "Tendril",
-            Status = JobStatus.Completed, Provider = "claude",
+            Id = "job-001",
+            Type = "ExecutePlan",
+            PlanFile = "plan-a",
+            Project = "Tendril",
+            Status = JobStatus.Completed,
+            Provider = "claude",
             CompletedAt = new DateTime(2026, 4, 7, 10, 0, 0, DateTimeKind.Utc),
         });
         _db.UpsertJob(new JobItem
         {
-            Id = "job-003", Type = "ExecutePlan", PlanFile = "plan-c", Project = "Tendril",
-            Status = JobStatus.Completed, Provider = "claude",
+            Id = "job-003",
+            Type = "ExecutePlan",
+            PlanFile = "plan-c",
+            Project = "Tendril",
+            Status = JobStatus.Completed,
+            Provider = "claude",
             CompletedAt = new DateTime(2026, 4, 7, 12, 0, 0, DateTimeKind.Utc),
         });
         _db.UpsertJob(new JobItem
         {
-            Id = "job-002", Type = "MakePr", PlanFile = "plan-b", Project = "Tendril",
-            Status = JobStatus.Completed, Provider = "claude",
+            Id = "job-002",
+            Type = "MakePr",
+            PlanFile = "plan-b",
+            Project = "Tendril",
+            Status = JobStatus.Completed,
+            Provider = "claude",
             CompletedAt = new DateTime(2026, 4, 7, 11, 0, 0, DateTimeKind.Utc),
         });
 
@@ -526,10 +538,15 @@ public class PlanDatabaseServiceTests : IDisposable
     {
         var job = new JobItem
         {
-            Id = "job-001", Type = "ExecutePlan", PlanFile = "plan-a", Project = "Tendril",
-            Status = JobStatus.Completed, Provider = "claude",
+            Id = "job-001",
+            Type = "ExecutePlan",
+            PlanFile = "plan-a",
+            Project = "Tendril",
+            Status = JobStatus.Completed,
+            Provider = "claude",
             CompletedAt = new DateTime(2026, 4, 7, 10, 0, 0, DateTimeKind.Utc),
-            Cost = null, Tokens = null,
+            Cost = null,
+            Tokens = null,
         };
         _db.UpsertJob(job);
 
@@ -545,14 +562,74 @@ public class PlanDatabaseServiceTests : IDisposable
     }
 
     [Fact]
+    public void PurgeOldJobs_RemovesExcessJobs()
+    {
+        // Insert 600 jobs with distinct CompletedAt times
+        for (var i = 0; i < 600; i++)
+        {
+            _db.UpsertJob(new JobItem
+            {
+                Id = $"job-{i:D4}",
+                Type = "ExecutePlan",
+                PlanFile = $"plan-{i}",
+                Project = "Tendril",
+                Status = JobStatus.Completed,
+                Provider = "claude",
+                CompletedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMinutes(i),
+            });
+        }
+
+        Assert.Equal(600, _db.GetRecentJobs(1000).Count);
+
+        _db.PurgeOldJobs(500);
+
+        var remaining = _db.GetRecentJobs(1000);
+        Assert.Equal(500, remaining.Count);
+
+        // The oldest jobs (lowest i) should have been removed
+        Assert.DoesNotContain(remaining, j => j.Id == "job-0000");
+        Assert.DoesNotContain(remaining, j => j.Id == "job-0099");
+        // The newest jobs should remain
+        Assert.Contains(remaining, j => j.Id == "job-0599");
+        Assert.Contains(remaining, j => j.Id == "job-0100");
+    }
+
+    [Fact]
+    public void PurgeOldJobs_NoOpWhenUnderLimit()
+    {
+        for (var i = 0; i < 10; i++)
+        {
+            _db.UpsertJob(new JobItem
+            {
+                Id = $"job-{i}",
+                Type = "ExecutePlan",
+                PlanFile = $"plan-{i}",
+                Project = "Tendril",
+                Status = JobStatus.Completed,
+                Provider = "claude",
+                CompletedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMinutes(i),
+            });
+        }
+
+        _db.PurgeOldJobs(500);
+
+        var remaining = _db.GetRecentJobs(1000);
+        Assert.Equal(10, remaining.Count);
+    }
+
+    [Fact]
     public void Migration_003_CreatesJobsTable()
     {
         // The _db created in constructor already ran all migrations.
         // Verify Jobs table exists by inserting and querying.
         _db.UpsertJob(new JobItem
         {
-            Id = "migration-test", Type = "Test", PlanFile = "test", Project = "Test",
-            Status = JobStatus.Completed, Provider = "claude",
+            Id = "migration-test",
+            Type = "Test",
+            PlanFile = "test",
+            Project = "Test",
+            Status = JobStatus.Completed,
+            Provider = "claude",
         });
 
         var jobs = _db.GetRecentJobs();

@@ -41,6 +41,7 @@ public interface IPlanDatabaseService : IDisposable
     // Jobs
     void UpsertJob(JobItem job);
     List<JobItem> GetRecentJobs(int limit = 100);
+    void PurgeOldJobs(int keepCount = 500);
 
     // Diagnostics
     long GetDatabaseSize();

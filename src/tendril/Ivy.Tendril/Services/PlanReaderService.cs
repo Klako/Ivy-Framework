@@ -40,7 +40,7 @@ public class PlanReaderService(IConfigService config, ILogger<PlanReaderService>
     public void RecoverStuckPlans()
     {
         var stuckStates = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            { "Building", "Executing", "Updating" };
+            { "Building", "Executing", "Updating", "Blocked" };
 
         if (!Directory.Exists(PlansDirectory)) return;
 

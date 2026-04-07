@@ -94,11 +94,21 @@ try {
             $verificationStatuses = $planYamlParsed.verifications | ForEach-Object { $_.status }
         }
 
-        $hasFailed = $verificationStatuses | Where-Object { $_ -eq "Fail" }
-        $hasPending = $verificationStatuses | Where-Object { $_ -eq "Pending" }
+        $failedNames = @()
+        $pendingNames = @()
+        foreach ($v in $planYamlParsed.verifications) {
+            if ($v.status -eq "Fail") { $failedNames += $v.name }
+            if ($v.status -eq "Pending") { $pendingNames += $v.name }
+        }
 
-        if ($hasFailed -or $hasPending) {
+        if ($failedNames.Count -gt 0 -or $pendingNames.Count -gt 0) {
             UpdatePlanState $PlanPath "Failed"
+            if ($failedNames.Count -gt 0) {
+                Write-Host "Failed verifications: $($failedNames -join ', ')" -ForegroundColor Red
+            }
+            if ($pendingNames.Count -gt 0) {
+                Write-Host "Incomplete verifications (still Pending): $($pendingNames -join ', ')" -ForegroundColor Yellow
+            }
             Write-Host "Plan has incomplete or failed verifications" -ForegroundColor Red
             exit 1  # Signal failure to JobService
         }

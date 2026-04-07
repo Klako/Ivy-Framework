@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
+using Ivy.Tendril.Apps;
 using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Apps.Plans;
 using YamlDotNet.Serialization;
@@ -777,6 +778,9 @@ public class JobService : IJobService
                 if (HasActiveJobForPlan(planFolder))
                     continue;
 
+                // Transition plan to Building before re-launching (ExecutePlan.ps1 requires it)
+                SetPlanStateByFolder(planFolder, "Building");
+
                 // Re-start the job — skip dependency check since we just verified
                 StartJobSkipDepCheck(blockedJob.Type, blockedJob.Args);
 
@@ -1042,7 +1046,7 @@ public class JobService : IJobService
                 if (depPlan.Prs.Count == 0)
                     continue;
 
-                foreach (var prUrl in depPlan.Prs)
+                foreach (var prUrl in depPlan.Prs.Where(PullRequestApp.IsValidUrl))
                     try
                     {
                         var psi = new ProcessStartInfo
@@ -1096,7 +1100,7 @@ public class JobService : IJobService
                 var (allMet, _) = CheckDependencies(dir);
                 if (allMet)
                 {
-                    SetPlanStateByFolder(dir, "Draft");
+                    SetPlanStateByFolder(dir, "Building");
                     StartJobSkipDepCheck("ExecutePlan", dir);
                 }
             }

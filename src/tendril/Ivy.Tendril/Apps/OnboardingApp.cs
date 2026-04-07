@@ -242,38 +242,36 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
 
 public class CodingAgentStepView(IState<int> stepperIndex) : ViewBase
 {
-    private static readonly string[] AgentOptions = ["claude", "codex", "gemini"];
+    private static readonly string[] AgentOptions = ["Claude Code", "Codex", "Gemini"];
 
     public override object Build()
     {
         var config = UseService<IConfigService>();
         var selectedAgent = UseState(string.IsNullOrWhiteSpace(config.Settings.CodingAgent)
-            ? "claude"
+            ? "Claude"
             : config.Settings.CodingAgent);
 
-        var description = selectedAgent.Value switch
-        {
-            "claude" => "Claude Code CLI — the most mature integration with full streaming support and cost tracking.",
-            "codex" => "OpenAI Codex CLI — supports full-auto mode. Cost tracking not yet available.",
-            "gemini" => "Google Gemini CLI — supports sandbox mode. Cost tracking not yet available.",
-            _ => ""
-        };
-
         return Layout.Vertical()
-               | Text.H2("Choose Your Coding Agent")
-               | Text.Markdown(
-                   "Tendril supports multiple AI coding agents. Choose which one to use as your default.\n\n" +
-                   "You can change this later in Settings.")
-               | selectedAgent.ToSelectInput(AgentOptions)
+                | Text.H2("Choose Your Coding Agent")
+                | Text.Markdown(
+                    """
+                    Tendril supports multiple AI coding agents. Choose which one to use as your default.
+
+                    You can change this later in Settings.
+                    """)
+                | selectedAgent.ToSelectInput(AgentOptions)
                    .Variant(SelectInputVariant.Toggle)
-                   .WithField().Label("Coding Agent")
-               | Text.Muted(description)
-               | new Button("Continue").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
+                   .WithField()
+                   .Label("Coding Agent")
+                | new Button("Continue").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
                    .OnClick(() =>
                    {
+                       
+                       
                        config.Settings.CodingAgent = selectedAgent.Value;
                        stepperIndex.Set(stepperIndex.Value + 1);
                    });
+
     }
 }
 

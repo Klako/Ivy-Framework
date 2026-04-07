@@ -77,12 +77,13 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_ChangesState()
+    public async Task UpdateRecommendationState_ChangesState()
     {
         var yaml = "- title: Fix bug\n  description: Found a bug\n  state: Pending\n";
         CreatePlanWithRecommendations("01602-UpdateTest", yaml);
 
         _service.UpdateRecommendationState("01602-UpdateTest", "Fix bug", "Accepted");
+        await _service.FlushPendingWritesAsync();
 
         var recommendations = _service.GetRecommendations();
         Assert.Single(recommendations);
@@ -90,13 +91,14 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_PersistsToYaml()
+    public async Task UpdateRecommendationState_PersistsToYaml()
     {
         var yaml =
             "- title: Item One\n  description: First\n  state: Pending\n- title: Item Two\n  description: Second\n  state: Pending\n";
         CreatePlanWithRecommendations("01603-PersistTest", yaml);
 
         _service.UpdateRecommendationState("01603-PersistTest", "Item Two", "Declined");
+        await _service.FlushPendingWritesAsync();
 
         var filePath = Path.Combine(_plansDir, "01603-PersistTest", "artifacts", "recommendations.yaml");
         var content = File.ReadAllText(filePath);
@@ -124,12 +126,13 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_AcceptedWithNotes_PersistsCorrectly()
+    public async Task UpdateRecommendationState_AcceptedWithNotes_PersistsCorrectly()
     {
         var yaml = "- title: Fix bug\n  description: Found a bug\n  state: Pending\n";
         CreatePlanWithRecommendations("01605-AcceptWithNotes", yaml);
 
         _service.UpdateRecommendationState("01605-AcceptWithNotes", "Fix bug", "AcceptedWithNotes");
+        await _service.FlushPendingWritesAsync();
 
         var recommendations = _service.GetRecommendations();
         Assert.Single(recommendations);
@@ -238,12 +241,13 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_DeclineWithReason_StoresReasonInYaml()
+    public async Task UpdateRecommendationState_DeclineWithReason_StoresReasonInYaml()
     {
         var yaml = "- title: Fix bug\n  description: Found a bug\n  state: Pending\n";
         CreatePlanWithRecommendations("01640-DeclineReason", yaml);
 
         _service.UpdateRecommendationState("01640-DeclineReason", "Fix bug", "Declined", "Not relevant to our project");
+        await _service.FlushPendingWritesAsync();
 
         var filePath = Path.Combine(_plansDir, "01640-DeclineReason", "artifacts", "recommendations.yaml");
         var content = File.ReadAllText(filePath);
@@ -257,12 +261,13 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_DeclineWithEmptyReason_DoesNotStoreReason()
+    public async Task UpdateRecommendationState_DeclineWithEmptyReason_DoesNotStoreReason()
     {
         var yaml = "- title: Fix bug\n  description: Found a bug\n  state: Pending\n";
         CreatePlanWithRecommendations("01641-DeclineNoReason", yaml);
 
         _service.UpdateRecommendationState("01641-DeclineNoReason", "Fix bug", "Declined", "");
+        await _service.FlushPendingWritesAsync();
 
         var recommendations = _service.GetRecommendations();
         Assert.Single(recommendations);
@@ -271,7 +276,7 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_DeclineReasonPersistsAndCanBeReadBack()
+    public async Task UpdateRecommendationState_DeclineReasonPersistsAndCanBeReadBack()
     {
         var yaml =
             "- title: Item A\n  description: First\n  state: Pending\n- title: Item B\n  description: Second\n  state: Pending\n";
@@ -279,6 +284,7 @@ public class RecommendationServiceTests : IDisposable
 
         _service.UpdateRecommendationState("01642-DeclinePersist", "Item A", "Declined",
             "Duplicate of another recommendation");
+        await _service.FlushPendingWritesAsync();
 
         var recommendations = _service.GetRecommendations();
         var itemA = recommendations.First(r => r.Title == "Item A");
@@ -343,7 +349,7 @@ public class RecommendationServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateRecommendationState_InvalidatesCache()
+    public async Task UpdateRecommendationState_InvalidatesCache()
     {
         var yaml = "- title: Fix bug\n  description: Found a bug\n  state: Pending\n";
         CreatePlanWithRecommendations("01652-CacheInvalidate", yaml);
@@ -355,6 +361,7 @@ public class RecommendationServiceTests : IDisposable
 
         // Update state (should invalidate cache)
         _service.UpdateRecommendationState("01652-CacheInvalidate", "Fix bug", "Accepted");
+        await _service.FlushPendingWritesAsync();
 
         // Next call should recompute and reflect the updated state
         var result2 = _service.GetRecommendations();

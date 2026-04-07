@@ -1249,9 +1249,11 @@ public class PlanReaderService(
     ///     Runs a file write operation in the background (fire-and-forget).
     ///     The database is the primary data source; file writes are for durability only.
     /// </summary>
+    private Task _lastWriteTask = Task.CompletedTask;
+
     private void WriteFileInBackground(Action action)
     {
-        Task.Run(() =>
+        _lastWriteTask = Task.Run(() =>
         {
             try
             {
@@ -1282,6 +1284,11 @@ public class PlanReaderService(
 
         WriteFileInBackground(action);
     }
+
+    /// <summary>
+    /// Waits for any pending background file writes to complete. For testing only.
+    /// </summary>
+    internal Task FlushPendingWritesAsync() => _lastWriteTask;
 
     private static DateTime? ExtractCompletedTimestamp(string logFilePath)
     {

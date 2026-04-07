@@ -53,9 +53,6 @@ editor:
 
 telemetry: true
 
-# Model pricing is now embedded in Assets/models.yaml and managed by ModelPricingService.
-# No configuration needed — costs are calculated automatically when jobs complete.
-
 # Example project configuration:
 # projects:
 #   - name: MyProject

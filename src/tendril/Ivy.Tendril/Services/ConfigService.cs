@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Ivy.Tendril.Services;
 
 public record RepoConfig
@@ -152,6 +154,9 @@ public class ConfigService : IConfigService
             try
             {
                 var yaml = File.ReadAllText(_configPath);
+                // Quote unquoted %VAR% patterns that YAML rejects (% is a directive indicator)
+                yaml = Regex.Replace(yaml, @"(?m)(?<=:\s+)(%\w+%.*)$", "'$1'");
+                yaml = Regex.Replace(yaml, @"(?m)^(\s*-\s+)(%\w+%.*)$", "$1'$2'");
                 _settings = YamlHelper.Deserializer.Deserialize<TendrilSettings>(yaml) ?? new TendrilSettings();
                 MigrateProjectColors();
                 NeedsOnboarding = false;

@@ -959,6 +959,24 @@ public class PlanDatabaseService : IPlanDatabaseService, IDisposable
         }
     }
 
+    public void PurgeOldJobs(int keepCount = 500)
+    {
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                DELETE FROM Jobs
+                WHERE Id NOT IN (
+                    SELECT Id FROM Jobs
+                    ORDER BY CompletedAt DESC
+                    LIMIT @keepCount
+                )
+                """;
+            cmd.Parameters.AddWithValue("@keepCount", keepCount);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
     public long GetDatabaseSize()
     {
         lock (_lock)

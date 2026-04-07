@@ -48,6 +48,7 @@ public class PlanDatabaseSyncService : IDisposable
                 SyncPlanRecommendations(plan);
             }
 
+            _database.PurgeOldJobs();
             _database.SetLastSyncTime(DateTime.UtcNow);
             _isInitialSyncComplete = true;
 

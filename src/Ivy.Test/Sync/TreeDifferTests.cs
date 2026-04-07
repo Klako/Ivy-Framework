@@ -67,43 +67,11 @@ namespace Ivy.Test.Sync
                             var newWidget = ApplyDiff(children[nestedUpdate.Index], nestedUpdate.Update);
                             children = children.SetItem(nestedUpdate.Index, newWidget);
                         }
-                        else if (change is WidgetListAdd add)
+                        else if (change is WidgetListSplice splice)
                         {
-                            var convertedWidget = SerializedWidget.FromWidget(add.Widget);
-                            children = children.Insert(add.Index, convertedWidget);
-                        }
-                        else if (change is WidgetListAddRange addRange)
-                        {
-                            var convertedWidgets = addRange.Widgets
-                                .Select(SerializedWidget.FromWidget);
-                            children = children.InsertRange(addRange.Index, convertedWidgets);
-                        }
-                        else if (change is WidgetListReplace replace)
-                        {
-                            if (replace.Widget == null)
-                            {
-                                children = children.RemoveAt(replace.Index);
-                            }
-                            else
-                            {
-                                var convertedWidget = SerializedWidget.FromWidget(replace.Widget);
-                                children = children.SetItem(replace.Index, convertedWidget);
-                            }
-                        }
-                        else if (change is WidgetListReplaceRange replaceRange)
-                        {
-                            var length = replaceRange.EndIndex - replaceRange.StartIndex + 1;
-                            if (replaceRange.Widgets == null)
-                            {
-                                children = children.RemoveRange(replaceRange.StartIndex, length);
-                            }
-                            else
-                            {
-                                var convertedWidgets = replaceRange.Widgets
-                                    .Select(SerializedWidget.FromWidget);
-                                children = children.RemoveRange(replaceRange.StartIndex, length);
-                                children = children.InsertRange(replaceRange.StartIndex, convertedWidgets);
-                            }
+                            var convertedWidgets = splice.Widgets.Select(SerializedWidget.FromWidget);
+                            children = children.RemoveRange(splice.Index, splice.Length);
+                            children = children.InsertRange(splice.Index, convertedWidgets);
                         }
                     }
                     widget = widget with { Children = children };

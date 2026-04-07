@@ -51,8 +51,7 @@ namespace Ivy.Core.Sync
                 if (value == null)
                 {
                     writer.WriteNil();
-                }
-                else
+                } else
                 {
                     writer.Write(CleanTypeName(value));
                 }
@@ -84,10 +83,7 @@ namespace Ivy.Core.Sync
     }
 
     [Union(0, typeof(WidgetListUpdate))]
-    [Union(1, typeof(WidgetListAdd))]
-    [Union(2, typeof(WidgetListAddRange))]
-    [Union(3, typeof(WidgetListReplace))]
-    [Union(4, typeof(WidgetListReplaceRange))]
+    [Union(1, typeof(WidgetListSplice))]
     public interface IWidgetListOperation
     {
         [IgnoreMember()]
@@ -114,30 +110,12 @@ namespace Ivy.Core.Sync
     }
 
     [MessagePackObject]
-    public record WidgetListAdd : IWidgetListOperation
+    public record WidgetListSplice : IWidgetListOperation
     {
-        public WidgetListAdd(int index, IWidget widget)
+        public WidgetListSplice(int index, int length, IEnumerable<IWidget> widgets)
         {
             Index = index;
-            Widget = widget;
-        }
-
-        [Key(0)]
-        public int Index { get; init; }
-        
-        [Key(1)]
-        public IWidget Widget { get; init; }
-
-        [IgnoreMember()]
-        public int SortIndex { get => Index; }
-    }
-
-    [MessagePackObject]
-    public record WidgetListAddRange : IWidgetListOperation
-    {
-        public WidgetListAddRange(int index, IWidget[] widgets)
-        {
-            Index = index;
+            Length = length;
             Widgets = widgets;
         }
 
@@ -145,52 +123,20 @@ namespace Ivy.Core.Sync
         public int Index { get; init; }
 
         [Key(1)]
-        public IWidget[] Widgets { get; init; }
-
-        [IgnoreMember()]
-        public int SortIndex { get => Index; }
-    }
-
-    [MessagePackObject]
-    public record WidgetListReplace : IWidgetListOperation
-    {
-        public WidgetListReplace(int index, IWidget? widget)
-        {
-            Index = index;
-            Widget = widget;
-        }
-
-        [Key(0)]
-        public int Index { get; init; }
-
-        [Key(1)]
-        public IWidget? Widget { get; init; }
-
-        [IgnoreMember()]
-        public int SortIndex { get => Index; }
-    }
-
-    [MessagePackObject]
-    public record WidgetListReplaceRange : IWidgetListOperation
-    {
-        public WidgetListReplaceRange(int startIndex, int endIndex, IWidget[]? widgets)
-        {
-            StartIndex = startIndex;
-            EndIndex = endIndex;
-            Widgets = widgets;
-        }
-
-        [Key(0)]
-        public int StartIndex { get; init; }
-
-        [Key(1)]
-        public int EndIndex { get; init; }
+        public int Length { get; init; }
 
         [Key(2)]
-        public IWidget[]? Widgets { get; init; }
+        public IEnumerable<IWidget> Widgets { get; init; }
 
-        [IgnoreMember()]
-        public int SortIndex { get => StartIndex; }
+        [IgnoreMember]
+        public int SortIndex => Index;
+
+        public static WidgetListSplice Add(int index, IWidget widget) => new(index, 0, [widget]);
+        public static WidgetListSplice AddRange(int index, IEnumerable<IWidget> widgets) => new(index, 0, widgets);
+        public static WidgetListSplice Remove(int index) => new(index, 1, []);
+        public static WidgetListSplice RemoveRange(int index, int length) => new(index, length, []);
+        public static WidgetListSplice Replace(int index, IWidget widget) => new(index, 1, [widget]);
+        public static WidgetListSplice ReplaceRange(int index, int length, IEnumerable<IWidget> widgets) => new(index, length, widgets);
     }
 
     [Union(0, typeof(WidgetListMove))]

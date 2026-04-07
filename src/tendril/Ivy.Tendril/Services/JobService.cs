@@ -18,6 +18,7 @@ public class JobService : IJobService
     private readonly ModelPricingService? _modelPricingService;
     private readonly ITelemetryService? _telemetryService;
     private readonly IPlanWatcherService? _planWatcherService;
+    private readonly IPlanDatabaseService? _database;
     private readonly TimeSpan _jobTimeout;
     private readonly TimeSpan _staleOutputTimeout;
     private readonly int _maxConcurrentJobs;
@@ -51,7 +52,8 @@ public class JobService : IJobService
         ModelPricingService? modelPricingService = null,
         IPlanReaderService? planReaderService = null,
         ITelemetryService? telemetryService = null,
-        IPlanWatcherService? planWatcherService = null)
+        IPlanWatcherService? planWatcherService = null,
+        IPlanDatabaseService? database = null)
     {
         _syncContext = SynchronizationContext.Current;
         _configService = configService;
@@ -59,6 +61,7 @@ public class JobService : IJobService
         _planReaderService = planReaderService;
         _telemetryService = telemetryService;
         _planWatcherService = planWatcherService;
+        _database = database;
         _jobTimeout = TimeSpan.FromMinutes(configService.Settings.JobTimeout);
         _staleOutputTimeout = TimeSpan.FromMinutes(configService.Settings.StaleOutputTimeout);
         _maxConcurrentJobs = configService.Settings.MaxConcurrentJobs;
@@ -66,6 +69,7 @@ public class JobService : IJobService
             ? new SemaphoreSlim(_maxConcurrentJobs, _maxConcurrentJobs)
             : new SemaphoreSlim(0, 1);
         _inboxPath = Path.Combine(configService.TendrilHome, "Inbox");
+        LoadHistoricalJobs();
     }
 
     public JobService(
@@ -86,6 +90,29 @@ public class JobService : IJobService
         _inboxPath = inboxPath;
         _planReaderService = planReaderService;
         _telemetryService = telemetryService;
+    }
+
+    private void LoadHistoricalJobs()
+    {
+        if (_database == null) return;
+        try
+        {
+            var historicalJobs = _database.GetRecentJobs(100);
+            foreach (var job in historicalJobs)
+            {
+                _jobs.TryAdd(job.Id, job);
+            }
+        }
+        catch { /* Best-effort — don't block startup */ }
+    }
+
+    private void PersistJob(JobItem job)
+    {
+        try
+        {
+            _database?.UpsertJob(job);
+        }
+        catch { /* Best-effort persistence */ }
     }
 
     private void RaiseJobsChanged()
@@ -580,6 +607,7 @@ public class JobService : IJobService
                         {
                             j.Cost = (decimal)costCalc.TotalCost;
                             j.Tokens = costCalc.TotalTokens;
+                            PersistJob(j);
                             RaiseJobsChanged();
                         }
 
@@ -592,6 +620,9 @@ public class JobService : IJobService
                 catch { /* Best-effort cost tracking */ }
             });
         }
+
+        // Persist completed job to SQLite
+        PersistJob(job);
 
         RaiseJobsChanged();
 

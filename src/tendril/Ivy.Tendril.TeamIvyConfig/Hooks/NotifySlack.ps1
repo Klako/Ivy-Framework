@@ -51,18 +51,6 @@ if (Test-Path $configPath) {
         $slackEmoji = $projectConfig.meta.slackEmoji
     }
 }
-
-# Check for custom PR options (slackComment)
-$slackComment = ""
-$customOptionsPath = Join-Path $planFolder ".custom-pr-options.yaml"
-if (Test-Path $customOptionsPath) {
-    $optionsContent = Get-Content $customOptionsPath -Raw
-    $options = ConvertFrom-Yaml $optionsContent
-    if ($options.slackComment) {
-        $slackComment = $options.slackComment
-    }
-}
-
 # Build PR links for Slack
 $prLinks = @()
 foreach ($pr in $prs) {
@@ -98,9 +86,6 @@ if (Test-Path $screenshotsDir) {
 
 # Build message text
 $messageText = "*Title:* $title`n*Project:* $projectDisplay`n*PR:* $prLinksText"
-if ($slackComment) {
-    $messageText += "`n$slackComment"
-}
 
 if ($screenshotUrl) {
     # Block Kit JSON with image accessory

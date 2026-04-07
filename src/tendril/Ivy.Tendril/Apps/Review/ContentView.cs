@@ -303,7 +303,7 @@ public class ContentView(
                         )
                     { IsHeader = true }
                 );
-                foreach (var pr in _selectedPlan.Prs)
+                foreach (var pr in _selectedPlan.Prs.Where(PullRequestApp.IsValidUrl))
                 {
                     var prCapture = pr;
                     prsTable |= new TableRow(

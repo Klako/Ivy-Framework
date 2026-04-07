@@ -208,6 +208,172 @@ public class PlanDatabaseService : IPlanDatabaseService
         }
     }
 
+    public DashboardStats GetDashboardData(string? projectFilter)
+    {
+        lock (_lock)
+        {
+            var cutoff = DateTime.UtcNow.Date.AddDays(-6).ToString("yyyy-MM-dd");
+            var pf = projectFilter != null ? " AND Project = @project" : "";
+            var pfAlias = projectFilter != null ? " AND p.Project = @project" : "";
+
+            void BindParams(SqliteCommand cmd)
+            {
+                cmd.Parameters.AddWithValue("@cutoff", cutoff);
+                if (projectFilter != null) cmd.Parameters.AddWithValue("@project", projectFilter);
+            }
+
+            // 1. Status counts
+            int totalCount, draftCount, inProgressCount, reviewCount, completedCount, failedCount;
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    SELECT
+                        COUNT(*) AS TotalCount,
+                        SUM(CASE WHEN State IN ('Draft', 'Blocked') THEN 1 ELSE 0 END),
+                        SUM(CASE WHEN State IN ('Building', 'Executing', 'Updating') THEN 1 ELSE 0 END),
+                        SUM(CASE WHEN State = 'ReadyForReview' THEN 1 ELSE 0 END),
+                        SUM(CASE WHEN State = 'Completed' THEN 1 ELSE 0 END),
+                        SUM(CASE WHEN State = 'Failed' THEN 1 ELSE 0 END)
+                    FROM Plans WHERE 1=1 {pf}
+                    """;
+                if (projectFilter != null) cmd.Parameters.AddWithValue("@project", projectFilter);
+                using var r = cmd.ExecuteReader();
+                r.Read();
+                totalCount = r.GetInt32(0);
+                draftCount = r.GetInt32(1);
+                inProgressCount = r.GetInt32(2);
+                reviewCount = r.GetInt32(3);
+                completedCount = r.GetInt32(4);
+                failedCount = r.GetInt32(5);
+            }
+
+            // 2. Avg cost (across completed/failed/review plans)
+            decimal avgCost = 0;
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    SELECT COALESCE(SUM(c.Cost), 0), COUNT(DISTINCT p.Id)
+                    FROM Costs c
+                    JOIN Plans p ON p.Id = c.PlanId
+                    WHERE p.State IN ('Completed', 'Failed', 'ReadyForReview') {pfAlias}
+                    """;
+                if (projectFilter != null) cmd.Parameters.AddWithValue("@project", projectFilter);
+                using var r = cmd.ExecuteReader();
+                if (r.Read())
+                {
+                    var total = Convert.ToDecimal(r.GetValue(0), CultureInfo.InvariantCulture);
+                    var count = r.GetInt32(1);
+                    avgCost = count > 0 ? total / count : 0;
+                }
+            }
+
+            // 3. Daily created counts
+            var dailyCreated = new Dictionary<string, int>();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    SELECT DATE(Created), COUNT(*)
+                    FROM Plans
+                    WHERE Created >= @cutoff {pf}
+                    GROUP BY DATE(Created)
+                    """;
+                BindParams(cmd);
+                using var r = cmd.ExecuteReader();
+                while (r.Read()) dailyCreated[r.GetString(0)] = r.GetInt32(1);
+            }
+
+            // 4. Daily completed/failed (by Updated date)
+            var dailyCompleted = new Dictionary<string, int>();
+            var dailyFailed = new Dictionary<string, int>();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    SELECT DATE(Updated), State, COUNT(*)
+                    FROM Plans
+                    WHERE Updated >= @cutoff AND State IN ('Completed', 'Failed') {pf}
+                    GROUP BY DATE(Updated), State
+                    """;
+                BindParams(cmd);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    var state = r.GetString(1);
+                    if (state == "Completed") dailyCompleted[r.GetString(0)] = r.GetInt32(2);
+                    else dailyFailed[r.GetString(0)] = r.GetInt32(2);
+                }
+            }
+
+            // 5. Daily PRs merged (completed plans)
+            var dailyPrs = new Dictionary<string, int>();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    SELECT DATE(p.Updated), COUNT(*)
+                    FROM PullRequests pr
+                    JOIN Plans p ON p.Id = pr.PlanId
+                    WHERE p.Updated >= @cutoff AND p.State = 'Completed' {pfAlias}
+                    GROUP BY DATE(p.Updated)
+                    """;
+                BindParams(cmd);
+                using var r = cmd.ExecuteReader();
+                while (r.Read()) dailyPrs[r.GetString(0)] = r.GetInt32(1);
+            }
+
+            // 6. Daily costs/tokens
+            var dailyCosts = new Dictionary<string, decimal>();
+            var dailyTokens = new Dictionary<string, int>();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    SELECT DATE(p.Updated), SUM(c.Cost), SUM(c.Tokens)
+                    FROM Costs c
+                    JOIN Plans p ON p.Id = c.PlanId
+                    WHERE p.Updated >= @cutoff
+                      AND p.State IN ('Completed', 'Failed', 'ReadyForReview') {pfAlias}
+                    GROUP BY DATE(p.Updated)
+                    """;
+                BindParams(cmd);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    var day = r.GetString(0);
+                    dailyCosts[day] = Convert.ToDecimal(r.GetValue(1), CultureInfo.InvariantCulture);
+                    dailyTokens[day] = Convert.ToInt32(r.GetValue(2), CultureInfo.InvariantCulture);
+                }
+            }
+
+            // Build daily stats for last 7 days
+            var dailyStats = new List<DashboardDayStats>();
+            for (var i = 0; i < 7; i++)
+            {
+                var day = DateTime.UtcNow.Date.AddDays(-i);
+                var key = day.ToString("yyyy-MM-dd");
+                dailyStats.Add(new DashboardDayStats(
+                    day,
+                    dailyCreated.GetValueOrDefault(key),
+                    dailyCompleted.GetValueOrDefault(key),
+                    dailyPrs.GetValueOrDefault(key),
+                    dailyFailed.GetValueOrDefault(key),
+                    dailyCosts.GetValueOrDefault(key),
+                    dailyTokens.GetValueOrDefault(key)
+                ));
+            }
+
+            // 7. Project counts (always unfiltered for the stacked progress bar)
+            var projectCounts = new List<ProjectCount>();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT Project, COUNT(*) FROM Plans GROUP BY Project ORDER BY COUNT(*) DESC";
+                using var r = cmd.ExecuteReader();
+                while (r.Read()) projectCounts.Add(new ProjectCount(r.GetString(0), r.GetInt32(1)));
+            }
+
+            return new DashboardStats(
+                totalCount, draftCount, inProgressCount, reviewCount, completedCount, failedCount,
+                avgCost, dailyStats, projectCounts);
+        }
+    }
+
     public decimal GetPlanTotalCost(int planId)
     {
         lock (_lock)

@@ -27,7 +27,7 @@ public class PullRequestApp : ViewBase
             var cost = costValue > 0 ? $"${costValue:F2}" : "";
             var tokenValue = planService.GetPlanTotalTokens(plan.FolderPath);
             var tokens = tokenValue > 0 ? FormatHelper.FormatTokens(tokenValue) : "";
-            return plan.Prs.Select((pr, i) => new PrRow
+            return plan.Prs.Where(IsValidUrl).Select((pr, i) => new PrRow
             {
                 Id = $"{plan.Id}-{i}",
                 PlanId = $"{plan.Id:D5}",
@@ -145,6 +145,10 @@ public class PullRequestApp : ViewBase
     ///     Extracts "owner/repo" from a GitHub PR URL.
     ///     E.g. "https://github.com/owner/repo/pull/123" -> "owner/repo"
     /// </summary>
+    internal static bool IsValidUrl(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
     internal static string ExtractRepo(string prUrl)
     {
         try

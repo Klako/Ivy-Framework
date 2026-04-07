@@ -1,4 +1,3 @@
-using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Apps;
@@ -15,83 +14,41 @@ public class DashboardApp : ViewBase
 
         var selectedProject = UseState<string?>(null);
 
-        var plans = planService.GetPlans();
-
-        // Filter by selected project
-        var filteredPlans = selectedProject.Value != null
-            ? plans.Where(p => p.Project == selectedProject.Value).ToList()
-            : plans;
+        var stats = planService.GetDashboardData(selectedProject.Value);
 
         // Statistics cards
-        var totalCount = filteredPlans.Count;
-        var draftCount = filteredPlans.Count(p => p.Status is PlanStatus.Draft or PlanStatus.Blocked);
-        var inProgressCount = filteredPlans.Count(p =>
-            p.Status is PlanStatus.Building or PlanStatus.Executing or PlanStatus.Updating);
-        var reviewCount = filteredPlans.Count(p => p.Status == PlanStatus.ReadyForReview);
-        var completedCount = filteredPlans.Count(p => p.Status == PlanStatus.Completed);
-        var failedCount = filteredPlans.Count(p => p.Status == PlanStatus.Failed);
-
-        var completedOrFailedPlans = filteredPlans
-            .Where(p => p.Status is PlanStatus.Completed or PlanStatus.Failed or PlanStatus.ReadyForReview)
-            .ToList();
-
-        // Pre-compute costs and tokens once per plan to avoid duplicate I/O
-        var costCache = completedOrFailedPlans
-            .ToDictionary(p => p.FolderPath, p => planService.GetPlanTotalCost(p.FolderPath));
-        var tokenCache = completedOrFailedPlans
-            .ToDictionary(p => p.FolderPath, p => planService.GetPlanTotalTokens(p.FolderPath));
-
-        var totalCost = costCache.Values.Sum();
-        var avgCost = completedOrFailedPlans.Count > 0
-            ? totalCost / completedOrFailedPlans.Count
-            : 0;
-
         var statsRow = Layout.Horizontal().Gap(2).Padding(2)
-                       | BuildStatCard(totalCount.ToString(), "Total Plans")
-                       | BuildStatCard(draftCount.ToString(), "Draft")
-                       | BuildStatCard(inProgressCount.ToString(), "In Progress")
-                       | BuildStatCard(reviewCount.ToString(), "Ready for Review")
-                       | BuildStatCard(completedCount.ToString(), "Completed")
-                       | BuildStatCard(failedCount.ToString(), "Failed")
-                       | BuildStatCard(FormatHelper.FormatCost(avgCost), "Avg Cost/Plan");
+                       | BuildStatCard(stats.TotalCount.ToString(), "Total Plans")
+                       | BuildStatCard(stats.DraftCount.ToString(), "Draft")
+                       | BuildStatCard(stats.InProgressCount.ToString(), "In Progress")
+                       | BuildStatCard(stats.ReviewCount.ToString(), "Ready for Review")
+                       | BuildStatCard(stats.CompletedCount.ToString(), "Completed")
+                       | BuildStatCard(stats.FailedCount.ToString(), "Failed")
+                       | BuildStatCard(FormatHelper.FormatCost(stats.AvgCostPerPlan), "Avg Cost/Plan");
 
         var today = DateTime.UtcNow.Date;
-        var days = Enumerable.Range(0, 7).Select(i => today.AddDays(-i)).ToList();
 
-        var rows = days.Select(day =>
+        var rows = stats.DailyStats.Select(d =>
         {
-            var dayLabel = day == today ? "Today"
-                : day == today.AddDays(-1) ? "Yesterday"
-                : day.ToString("MMM dd");
+            var dayLabel = d.Date == today ? "Today"
+                : d.Date == today.AddDays(-1) ? "Yesterday"
+                : d.Date.ToString("MMM dd");
 
-            var createdCount = filteredPlans.Count(p => p.Created.Date == day);
-            var dayCompletedCount = filteredPlans.Count(p => p.Status == PlanStatus.Completed && p.Updated.Date == day);
-            var prsMerged = filteredPlans.Where(p => p.Status == PlanStatus.Completed && p.Updated.Date == day)
-                .Sum(p => p.Prs.Count);
-            var dayFailedCount = filteredPlans.Count(p => p.Status == PlanStatus.Failed && p.Updated.Date == day);
-
-            var completedOrFailedPlans = filteredPlans
-                .Where(p => p.Updated.Date == day &&
-                            p.Status is PlanStatus.Completed or PlanStatus.Failed or PlanStatus.ReadyForReview)
-                .ToList();
-
-            var dayCost = completedOrFailedPlans.Sum(p => costCache.GetValueOrDefault(p.FolderPath, 0m));
-            var dayTokens = completedOrFailedPlans.Sum(p => tokenCache.GetValueOrDefault(p.FolderPath, 0));
-            var costPerPlan = dayCompletedCount > 0 && dayCost > 0
-                ? FormatHelper.FormatCost(dayCost / dayCompletedCount)
+            var costPerPlan = d is { Completed: > 0, Cost: > 0 }
+                ? FormatHelper.FormatCost(d.Cost / d.Completed)
                 : "";
 
             return new DashboardDayRow
             {
                 Date = dayLabel,
-                SortDate = day,
-                Created = createdCount,
-                Completed = dayCompletedCount,
-                PrsMerged = prsMerged,
-                Failed = dayFailedCount,
-                Cost = dayCost > 0 ? FormatHelper.FormatCost(dayCost) : "",
+                SortDate = d.Date,
+                Created = d.Created,
+                Completed = d.Completed,
+                PrsMerged = d.PrsMerged,
+                Failed = d.Failed,
+                Cost = d.Cost > 0 ? FormatHelper.FormatCost(d.Cost) : "",
                 CostPerPlan = costPerPlan,
-                Tokens = dayTokens > 0 ? FormatHelper.FormatTokens(dayTokens) : ""
+                Tokens = d.Tokens > 0 ? FormatHelper.FormatTokens(d.Tokens) : ""
             };
         }).ToList();
 
@@ -130,22 +87,18 @@ public class DashboardApp : ViewBase
                 c.BatchSize = 7;
             });
 
-        // Per-project breakdown chart
-        var projectData = plans
-            .GroupBy(p => p.Project)
-            .Select(g => new { Project = g.Key, Count = g.Count() })
-            .OrderByDescending(g => g.Count)
-            .ToArray();
+        // Per-project breakdown (always shows all projects)
+        var projectData = stats.ProjectCounts;
 
         var projectProgress = new StackedProgress(
                 projectData.Select(p => new ProgressSegment(
                     p.Count,
                     configService.GetProjectColor(p.Project),
-                    $"{p.Project}"
+                    p.Project
                 )).ToArray()
             )
             .Selected(selectedProject.Value != null
-                ? Array.FindIndex(projectData, p => p.Project == selectedProject.Value)
+                ? projectData.FindIndex(p => p.Project == selectedProject.Value)
                 : null)
             .OnSelect(e =>
             {

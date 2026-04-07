@@ -12,6 +12,7 @@ public interface IPlanDatabaseService : IDisposable
 
     // Aggregates
     PlanReaderService.PlanCountSnapshot ComputePlanCounts();
+    DashboardStats GetDashboardData(string? projectFilter);
 
     // Costs and tokens
     decimal GetPlanTotalCost(int planId);

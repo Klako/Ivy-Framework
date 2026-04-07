@@ -404,6 +404,84 @@ public class PlanReaderService(
     }
 
     /// <summary>
+    ///     Returns pre-aggregated dashboard data. Delegates to database when available,
+    ///     otherwise falls back to in-memory computation over all plans.
+    /// </summary>
+    public DashboardStats GetDashboardData(string? projectFilter)
+    {
+        if (_useDatabaseForReads && _database != null)
+            try
+            {
+                return _database.GetDashboardData(projectFilter);
+            }
+            catch
+            {
+                // Fall back to in-memory computation
+            }
+
+        return ComputeDashboardDataFromPlans(projectFilter);
+    }
+
+    private DashboardStats ComputeDashboardDataFromPlans(string? projectFilter)
+    {
+        var plans = GetPlans();
+        var filtered = projectFilter != null
+            ? plans.Where(p => p.Project == projectFilter).ToList()
+            : plans;
+
+        var totalCount = filtered.Count;
+        var draftCount = filtered.Count(p => p.Status is PlanStatus.Draft or PlanStatus.Blocked);
+        var inProgressCount = filtered.Count(p =>
+            p.Status is PlanStatus.Building or PlanStatus.Executing or PlanStatus.Updating);
+        var reviewCount = filtered.Count(p => p.Status == PlanStatus.ReadyForReview);
+        var completedCount = filtered.Count(p => p.Status == PlanStatus.Completed);
+        var failedCount = filtered.Count(p => p.Status == PlanStatus.Failed);
+
+        var completedOrFailed = filtered
+            .Where(p => p.Status is PlanStatus.Completed or PlanStatus.Failed or PlanStatus.ReadyForReview)
+            .ToList();
+
+        var costCache = completedOrFailed
+            .ToDictionary(p => p.FolderPath, p => GetPlanTotalCost(p.FolderPath));
+        var tokenCache = completedOrFailed
+            .ToDictionary(p => p.FolderPath, p => GetPlanTotalTokens(p.FolderPath));
+
+        var totalCost = costCache.Values.Sum();
+        var avgCost = completedOrFailed.Count > 0 ? totalCost / completedOrFailed.Count : 0;
+
+        var today = DateTime.UtcNow.Date;
+        var dailyStats = Enumerable.Range(0, 7).Select(i =>
+        {
+            var day = today.AddDays(-i);
+            var dayCompletedOrFailed = filtered
+                .Where(p => p.Updated.Date == day &&
+                            p.Status is PlanStatus.Completed or PlanStatus.Failed or PlanStatus.ReadyForReview)
+                .ToList();
+
+            return new DashboardDayStats(
+                day,
+                filtered.Count(p => p.Created.Date == day),
+                filtered.Count(p => p.Status == PlanStatus.Completed && p.Updated.Date == day),
+                filtered.Where(p => p.Status == PlanStatus.Completed && p.Updated.Date == day)
+                    .Sum(p => p.Prs.Count),
+                filtered.Count(p => p.Status == PlanStatus.Failed && p.Updated.Date == day),
+                dayCompletedOrFailed.Sum(p => costCache.GetValueOrDefault(p.FolderPath, 0m)),
+                dayCompletedOrFailed.Sum(p => tokenCache.GetValueOrDefault(p.FolderPath, 0))
+            );
+        }).ToList();
+
+        var projectCounts = plans
+            .GroupBy(p => p.Project)
+            .Select(g => new ProjectCount(g.Key, g.Count()))
+            .OrderByDescending(g => g.Count)
+            .ToList();
+
+        return new DashboardStats(
+            totalCount, draftCount, inProgressCount, reviewCount, completedCount, failedCount,
+            avgCost, dailyStats, projectCounts);
+    }
+
+    /// <summary>
     ///     Calculates the total cost for a plan. Delegates to database when available,
     ///     otherwise parses costs.csv with a short cache to reduce file I/O.
     /// </summary>

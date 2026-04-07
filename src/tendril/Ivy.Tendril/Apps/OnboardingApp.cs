@@ -117,22 +117,48 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
                | (checkResults.Value != null
                    ? (Layout.Vertical()
                       | Text.H3("Results")
-                      | (checkResults.Value["gh"]
-                          ? Text.Success("\u2713 GitHub CLI is installed")
-                          : Text.Danger("\u2717 GitHub CLI not found - Install from https://cli.github.com/"))
-                      | (checkResults.Value["claude"]
-                          ? Text.Success("\u2713 Claude CLI is installed")
-                          : Text.Danger("\u2717 Claude CLI not found - Install from https://docs.anthropic.com/en/docs/claude-code"))
-                      | (checkResults.Value["git"]
-                          ? Text.Success("\u2713 Git is installed")
-                          : Text.Danger("\u2717 Git not found - Install from https://git-scm.com/downloads"))
-                      | (checkResults.Value["powershell"]
-                          ? Text.Success("\u2713 PowerShell is installed")
-                          : Text.Danger("\u2717 PowerShell not found - Install PowerShell Core from https://github.com/PowerShell/PowerShell"))
-                      | Text.H3("Optional")
-                      | (checkResults.Value["pandoc"]
-                          ? Text.Success("\u2713 Pandoc is installed")
-                          : Text.Muted("\u24d8 Pandoc not found - Install from https://pandoc.org/installing.html for PDF export"))
+                      | new Table(
+                          new TableRow(
+                              new TableCell("Software").IsHeader(),
+                              new TableCell("Status").IsHeader(),
+                              new TableCell("Notes").IsHeader()
+                          ).IsHeader(),
+                          new TableRow(
+                              new TableCell("GitHub CLI"),
+                              new TableCell(checkResults.Value["gh"] ? "\u2713 Installed" : "\u2717 Not Found"),
+                              checkResults.Value["gh"]
+                                  ? new TableCell("")
+                                  : new TableCell("Install from https://cli.github.com/")
+                          ),
+                          new TableRow(
+                              new TableCell("Claude CLI"),
+                              new TableCell(checkResults.Value["claude"] ? "\u2713 Installed" : "\u2717 Not Found"),
+                              checkResults.Value["claude"]
+                                  ? new TableCell("")
+                                  : new TableCell("Install from https://docs.anthropic.com/en/docs/claude-code")
+                          ),
+                          new TableRow(
+                              new TableCell("Git"),
+                              new TableCell(checkResults.Value["git"] ? "\u2713 Installed" : "\u2717 Not Found"),
+                              checkResults.Value["git"]
+                                  ? new TableCell("")
+                                  : new TableCell("Install from https://git-scm.com/downloads")
+                          ),
+                          new TableRow(
+                              new TableCell("PowerShell"),
+                              new TableCell(checkResults.Value["powershell"] ? "\u2713 Installed" : "\u2717 Not Found"),
+                              checkResults.Value["powershell"]
+                                  ? new TableCell("")
+                                  : new TableCell("Install from https://github.com/PowerShell/PowerShell")
+                          ),
+                          new TableRow(
+                              new TableCell("Pandoc (Optional)"),
+                              new TableCell(checkResults.Value["pandoc"] ? "\u2713 Installed" : "\u24d8 Not Found"),
+                              checkResults.Value["pandoc"]
+                                  ? new TableCell("")
+                                  : new TableCell("Install from https://pandoc.org/installing.html")
+                          )
+                      ).Width(Size.Full())
                      )
                    : null!)
                | (checkResults.Value == null

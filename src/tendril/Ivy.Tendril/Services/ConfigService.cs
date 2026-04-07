@@ -110,6 +110,7 @@ public class ConfigService : IConfigService
     private string _tendrilHome;
     private string? _pendingTendrilHome;
     private ProjectConfig? _pendingProject;
+    private List<VerificationConfig>? _pendingVerificationDefinitions;
     private string[]? _levelNamesCache;
 
     internal ConfigService(TendrilSettings settings, string tendrilHome = "")
@@ -290,6 +291,16 @@ public class ConfigService : IConfigService
     public ProjectConfig? GetPendingProject()
     {
         return _pendingProject;
+    }
+
+    public void SetPendingVerificationDefinitions(List<VerificationConfig> definitions)
+    {
+        _pendingVerificationDefinitions = definitions;
+    }
+
+    public List<VerificationConfig>? GetPendingVerificationDefinitions()
+    {
+        return _pendingVerificationDefinitions;
     }
 
     internal void SetTendrilHome(string tendrilHome)

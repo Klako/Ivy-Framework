@@ -72,6 +72,7 @@ export interface YAxisProps {
   width?: number;
   hideTickLabels?: boolean;
   tickFormatter?: string | null;
+  tickFormatterType?: "Auto" | "Number" | "Date" | null;
   timeZone?: string | null;
 }
 
@@ -101,6 +102,7 @@ export interface XAxisProps {
   unit?: string | null;
   hideTickLabels?: boolean;
   tickFormatter?: string | null;
+  tickFormatterType?: "Auto" | "Number" | "Date" | null;
   timeZone?: string | null;
 }
 

@@ -170,11 +170,11 @@ public class DashboardApp : ViewBase
                     ],
                     XAxis =
                     [
-                        new XAxis().TickFormatter("MM/dd HH").Hide()
+                        new XAxis().TickFormatter("MM/dd HH", TickFormatterType.Date).Hide()
                     ],
                     YAxis =
                     [
-                        new YAxis("Cost ($)").TickFormatter("C2").Hide(),
+                        new YAxis("Cost ($)").TickFormatter("C2", TickFormatterType.Number).Hide(),
                         new YAxis("Tokens").Orientation(YAxis.Orientations.Right).Hide(),
                     ]
                 })

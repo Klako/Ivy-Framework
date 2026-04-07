@@ -59,6 +59,41 @@ describe("formatTickLabel - date formats", () => {
   });
 });
 
+describe("formatTickLabel - explicit formatterType", () => {
+  const testDate = Date.UTC(2026, 3, 7, 13, 30, 45);
+
+  it("with Number type, skips date detection and formats C2 as currency", () => {
+    const result = formatTickLabel(1234.5, "C2", null, "Number");
+    expect(result).toContain("1,234.50");
+  });
+
+  it("with Number type, formats P0 as percent", () => {
+    const result = formatTickLabel(50, "P0", null, "Number");
+    expect(result).toContain("50%");
+  });
+
+  it("with Date type, skips numeric prefix checks and formats as date", () => {
+    const result = formatTickLabel(testDate, "MM/dd HH", null, "Date");
+    expect(result).toBe("04/07 13");
+  });
+
+  it("with Date type, returns string value for non-date-pattern format", () => {
+    // "C2" is not a date pattern, so Date type returns String(value)
+    const result = formatTickLabel(1234.5, "C2", null, "Date");
+    expect(result).toBe("1234.5");
+  });
+
+  it("with Auto type, preserves current behavior", () => {
+    expect(formatTickLabel(1234.5, "C2", null, "Auto")).toContain("1,234.50");
+    expect(formatTickLabel(testDate, "MM/dd HH", null, "Auto")).toBe("04/07 13");
+  });
+
+  it("with undefined type, preserves current behavior (same as Auto)", () => {
+    expect(formatTickLabel(1234.5, "C2")).toContain("1,234.50");
+    expect(formatTickLabel(testDate, "MM/dd HH")).toBe("04/07 13");
+  });
+});
+
 describe("generateYAxis", () => {
   describe("multi-axis charts skip largeSpread", () => {
     const multiYAxis = [

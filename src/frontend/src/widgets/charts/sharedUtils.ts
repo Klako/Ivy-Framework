@@ -70,50 +70,79 @@ export const getAxisDomainBound = (
   };
 };
 
-export const formatTickLabel = (value: number | string, formatter?: string | null, timeZone?: string | null) => {
+export const formatTickLabel = (
+  value: number | string,
+  formatter?: string | null,
+  timeZone?: string | null,
+  formatterType?: "Auto" | "Number" | "Date" | null,
+) => {
   if (!formatter) return String(value);
 
-  if (formatter.startsWith("C")) {
-    const parts = formatter.split(":");
-    const currency = parts.length > 1 ? parts[1] : "USD";
-    const fractionDigits = parseInt(parts[0].substring(1));
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: isNaN(fractionDigits) ? 0 : fractionDigits,
-    }).format(Number(value));
-  }
-  if (formatter.startsWith("P")) {
-    const fractionDigits = parseInt(formatter.substring(1));
-    return new Intl.NumberFormat(undefined, {
-      style: "percent",
-      maximumFractionDigits: isNaN(fractionDigits) ? 0 : fractionDigits,
-    }).format(Number(value) / 100);
-  }
-  if (formatter.startsWith("N") || formatter.startsWith("F")) {
-    const fractionDigits = parseInt(formatter.substring(1));
-    return new Intl.NumberFormat(undefined, {
-      maximumFractionDigits: isNaN(fractionDigits) ? 2 : fractionDigits,
-    }).format(Number(value));
-  }
-  if (formatter === "#,##0,,M") {
-    return (Number(value) / 1000000).toFixed(0) + "M";
-  }
-  if (formatter === "#,##0,K") {
-    return (Number(value) / 1000).toFixed(0) + "K";
-  }
-  if (/(?:^|[^a-zA-Z])(?:yyyy|yy|MMMM|MMM|MM|dd|d|HH|hh|mm|ss)(?:[^a-zA-Z]|$)/.test(formatter)) {
-    try {
-      const tz = timeZone === "local" ? Intl.DateTimeFormat().resolvedOptions().timeZone : (timeZone || "UTC");
-      const date = new TZDate(new Date(value), tz);
-      if (!isNaN(date.getTime())) {
-        return dateFnsFormat(date, formatter);
-      }
-    } catch {
-      // Fall through to String(value)
+  const type = formatterType ?? "Auto";
+
+  // Number formatting helpers
+  const tryNumberFormat = (): string | null => {
+    if (formatter.startsWith("C")) {
+      const parts = formatter.split(":");
+      const currency = parts.length > 1 ? parts[1] : "USD";
+      const fractionDigits = parseInt(parts[0].substring(1));
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: isNaN(fractionDigits) ? 0 : fractionDigits,
+      }).format(Number(value));
     }
+    if (formatter.startsWith("P")) {
+      const fractionDigits = parseInt(formatter.substring(1));
+      return new Intl.NumberFormat(undefined, {
+        style: "percent",
+        maximumFractionDigits: isNaN(fractionDigits) ? 0 : fractionDigits,
+      }).format(Number(value) / 100);
+    }
+    if (formatter.startsWith("N") || formatter.startsWith("F")) {
+      const fractionDigits = parseInt(formatter.substring(1));
+      return new Intl.NumberFormat(undefined, {
+        maximumFractionDigits: isNaN(fractionDigits) ? 2 : fractionDigits,
+      }).format(Number(value));
+    }
+    if (formatter === "#,##0,,M") {
+      return (Number(value) / 1000000).toFixed(0) + "M";
+    }
+    if (formatter === "#,##0,K") {
+      return (Number(value) / 1000).toFixed(0) + "K";
+    }
+    return null;
+  };
+
+  // Date formatting helper
+  const tryDateFormat = (): string | null => {
+    if (/(?:^|[^a-zA-Z])(?:yyyy|yy|MMMM|MMM|MM|dd|d|HH|hh|mm|ss)(?:[^a-zA-Z]|$)/.test(formatter)) {
+      try {
+        const tz =
+          timeZone === "local"
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone
+            : timeZone || "UTC";
+        const date = new TZDate(new Date(value), tz);
+        if (!isNaN(date.getTime())) {
+          return dateFnsFormat(date, formatter);
+        }
+      } catch {
+        // Fall through
+      }
+    }
+    return null;
+  };
+
+  if (type === "Number") {
+    return tryNumberFormat() ?? String(value);
   }
-  return String(value);
+
+  if (type === "Date") {
+    return tryDateFormat() ?? String(value);
+  }
+
+  // Auto: try number first, then date (original behavior)
+  return tryNumberFormat() ?? tryDateFormat() ?? String(value);
 };
 
 export const generateDataProps = (data: Record<string, unknown>[]) => {
@@ -367,7 +396,7 @@ export const generateXAxis = (
       formatter: isVertical
         ? (value: string | number) => {
             const formatted = axis.tickFormatter
-              ? formatTickLabel(value, axis.tickFormatter, axis.timeZone)
+              ? formatTickLabel(value, axis.tickFormatter, axis.timeZone, axis.tickFormatterType)
               : String(value).length > 10
                 ? String(value)
                     .match(/.{1,10}/g)
@@ -378,7 +407,12 @@ export const generateXAxis = (
         : (value: number | string) => {
             let formatted: string;
             if (axis.tickFormatter) {
-              formatted = formatTickLabel(value, axis.tickFormatter, axis.timeZone);
+              formatted = formatTickLabel(
+                value,
+                axis.tickFormatter,
+                axis.timeZone,
+                axis.tickFormatterType,
+              );
             } else {
               const numVal = Number(value);
               if (Math.abs(numVal) >= 1e9) formatted = (numVal / 1e9).toFixed(0) + "B";
@@ -461,7 +495,12 @@ export const generateYAxis = (
         formatter: (value: number) => {
           let formatted: string | number;
           if (axis.tickFormatter) {
-            formatted = formatTickLabel(value, axis.tickFormatter, axis.timeZone);
+            formatted = formatTickLabel(
+              value,
+              axis.tickFormatter,
+              axis.timeZone,
+              axis.tickFormatterType,
+            );
           } else if (effectiveLargeSpread) {
             const unscaled = Math.sign(value) * (10 ** Math.abs(value) - 1);
             if (Math.abs(unscaled) >= 1e9) formatted = (unscaled / 1e9).toFixed(0) + "B";

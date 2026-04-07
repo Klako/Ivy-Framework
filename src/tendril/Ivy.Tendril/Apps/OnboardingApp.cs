@@ -222,8 +222,8 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
             {
                 var proc = Process.Start(new ProcessStartInfo
                 {
-                    FileName = fileName,
-                    Arguments = arguments,
+                    FileName = OperatingSystem.IsWindows() ? "cmd.exe" : fileName,
+                    Arguments = OperatingSystem.IsWindows() ? $"/c {fileName} {arguments}" : arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -266,8 +266,8 @@ public class CodingAgentStepView(IState<int> stepperIndex) : ViewBase
                 | new Button("Continue").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
                    .OnClick(() =>
                    {
-                       
-                       
+
+
                        config.Settings.CodingAgent = selectedAgent.Value;
                        stepperIndex.Set(stepperIndex.Value + 1);
                    });
@@ -489,7 +489,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                                      Color = "Green",
                                      Repos = repoPaths.Value.Select(p => new RepoRef { Path = p, PrRule = "default" })
                                          .ToList(),
-                                      Context = projectContext.Value.Trim(),
+                                     Context = projectContext.Value.Trim(),
                                      Verifications = validVerifications.Select(v => new ProjectVerificationRef
                                      {
                                          Name = v.Name,

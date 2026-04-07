@@ -301,7 +301,7 @@ const generateScatterSeries = (
             shadowColor: "rgba(0, 0, 0, 0.3)",
           },
         },
-        animation: scatter.animated !== false,
+        animation: scatter.animated === true,
         animationDuration: 800,
         markPoint: index === 0 ? markPoint : undefined,
         markLine: index === 0 ? markLine : undefined,

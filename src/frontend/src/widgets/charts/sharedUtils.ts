@@ -569,7 +569,7 @@ export const generateEChartToolbox = (toolbox?: ToolboxProps) => {
 
   const features: ToolboxFeatures = {};
 
-  if (box.dataView !== false) {
+  if (box.dataView === true) {
     const cardBg = getComputedStyle(document.documentElement).getPropertyValue("--card").trim();
     const foreground = getComputedStyle(document.documentElement)
       .getPropertyValue("--foreground")
@@ -589,14 +589,14 @@ export const generateEChartToolbox = (toolbox?: ToolboxProps) => {
     };
   }
 
-  if (box.magicType !== false) {
+  if (box.magicType === true) {
     features.magicType = {
       show: true,
       type: ["line", "bar"],
     };
   }
 
-  if (box.saveAsImage !== false) {
+  if (box.saveAsImage === true) {
     features.saveAsImage = {
       show: true,
     };

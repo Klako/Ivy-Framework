@@ -222,8 +222,8 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
             {
                 var proc = Process.Start(new ProcessStartInfo
                 {
-                    FileName = fileName,
-                    Arguments = arguments,
+                    FileName = OperatingSystem.IsWindows() ? "cmd.exe" : fileName,
+                    Arguments = OperatingSystem.IsWindows() ? $"/c {fileName} {arguments}" : arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,

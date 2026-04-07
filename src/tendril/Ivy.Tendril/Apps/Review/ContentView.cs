@@ -86,6 +86,9 @@ public class ContentView(
             {
                 return await Task.Run(() =>
                 {
+                    if (_selectedPlan is null)
+                        return new PlanContentData(new(), null, new(), new(), new(), new());
+
                     // Recommendations
                     var recsPath = Path.Combine(folderPath, "artifacts", "recommendations.yaml");
                     var recs = File.Exists(recsPath)

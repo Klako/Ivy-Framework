@@ -17,3 +17,16 @@
   line-height: 1.5;
   min-height: 1.5em;
 }
+
+/* Word wrap support */
+.diff-wrap .diff-code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.diff-wrap .diff-code-text {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}

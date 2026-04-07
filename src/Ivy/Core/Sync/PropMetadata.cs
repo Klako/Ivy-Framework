@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using static Ivy.Core.Sync.WidgetMetadata;
@@ -18,6 +19,8 @@ namespace Ivy.Core.Sync
 
         private PropertyInfo propInfo;
 
+        private Func<IWidget, object> getter;
+
         public PropMetadata(PropertyInfo propInfo, PropAttribute attribute, object? defaultValue)
         {
             AlwaysSerialize = attribute.AlwaysSerialize;
@@ -25,6 +28,14 @@ namespace Ivy.Core.Sync
             DefaultValue = defaultValue;
             Attribute = attribute;
             this.propInfo = propInfo;
+
+            var targetType = propInfo.DeclaringType!;
+            var exInstance = Expression.Parameter(typeof(IWidget), "t");
+            var exConvertToType = Expression.Convert(exInstance, targetType);
+            var exMemberAccess = Expression.MakeMemberAccess(exConvertToType, propInfo);       // t.PropertyName
+            var exConvertToObject = Expression.Convert(exMemberAccess, typeof(object));     // Convert(t.PropertyName, typeof(object))
+            var lambda = Expression.Lambda<Func<IWidget, object>>(exConvertToObject, exInstance);
+            getter = lambda.Compile();
         }
 
         public object? GetValue(IWidget widget)
@@ -49,7 +60,7 @@ namespace Ivy.Core.Sync
                 return attachedValues;
             }
 
-            return propInfo.GetValue(widget);
+            return getter(widget);
         }
     }
 }

@@ -135,7 +135,11 @@ public static class TendrilServer
                 appVersion,
                 configService.Settings.Projects.Count,
                 configService.Settings.Llm?.ApiKey != null));
-            _ = Task.Run(async () => await telemetryService.FlushAsync());
+            _ = Task.Run(async () =>
+            {
+                await telemetryService.IdentifyAsync(appVersion);
+                await telemetryService.FlushAsync();
+            });
             app.UseAssets(server.Args, app.Services.GetRequiredService<ILogger<Server>>(), "Assets", "tendril/assets");
         });
 

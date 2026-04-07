@@ -24,9 +24,15 @@ public class TelemetryService : ITelemetryService, IAsyncDisposable
         try
         {
             // Public key — safe to expose (like a website tracking snippet)
+            var sessionId = Guid.NewGuid().ToString();
             _client = new PostHogClient(new PostHogOptions
             {
-                ProjectApiKey = "phc_uHeJHFURzThFPnizzGMzLEimLWnRAuqy8DunK8N3oYcd"
+                ProjectApiKey = "phc_uHeJHFURzThFPnizzGMzLEimLWnRAuqy8DunK8N3oYcd",
+                HostUrl = new Uri("https://eu.i.posthog.com"),
+                SuperProperties = new Dictionary<string, object>
+                {
+                    ["$session_id"] = sessionId
+                }
             });
             _distinctId = GetOrCreateAnonymousId();
             _logger?.LogDebug("TelemetryService initialized with anonymous ID: {DistinctId}", _distinctId);
@@ -51,6 +57,32 @@ public class TelemetryService : ITelemetryService, IAsyncDisposable
             {
                 _logger?.LogError(ex, "Error during telemetry service disposal");
             }
+    }
+
+    public async Task IdentifyAsync(string appVersion)
+    {
+        if (_client == null) return;
+
+        try
+        {
+            await _client.IdentifyAsync(
+                _distinctId,
+                personPropertiesToSet: new Dictionary<string, object>
+                {
+                    ["app_version"] = appVersion,
+                    ["os"] = Environment.OSVersion.Platform.ToString()
+                },
+                personPropertiesToSetOnce: new Dictionary<string, object>
+                {
+                    ["first_seen"] = DateTime.UtcNow.ToString("o")
+                },
+                cancellationToken: default);
+            _logger?.LogDebug("Identified anonymous user with person properties");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to identify user in PostHog");
+        }
     }
 
     public void TrackAppStarted(AppStartContext context)

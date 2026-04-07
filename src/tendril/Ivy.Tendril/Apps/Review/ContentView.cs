@@ -57,6 +57,73 @@ public class ContentView(
         );
         var selectedTab = UseState(0);
 
+        var planContentQuery = UseQuery<PlanContentData, string>(
+            _selectedPlan?.FolderPath ?? "",
+            async (folderPath, ct) =>
+            {
+                return await Task.Run(() =>
+                {
+                    // Recommendations
+                    var recsPath = Path.Combine(folderPath, "artifacts", "recommendations.yaml");
+                    var recs = File.Exists(recsPath)
+                        ? YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
+                            FileHelper.ReadAllText(recsPath)) ?? new()
+                        : new List<RecommendationYaml>();
+
+                    // Summary
+                    var summPath = Path.Combine(folderPath, "artifacts", "summary.md");
+                    var summaryMd = File.Exists(summPath) ? FileHelper.ReadAllText(summPath) : null;
+
+                    // Artifacts
+                    var artifacts = GetArtifacts(folderPath);
+
+                    // Commit rows
+                    var repoPaths = _selectedPlan!.GetEffectiveRepoPaths(_config);
+                    var commitRows = _selectedPlan.Commits.Select(commit =>
+                    {
+                        var title = repoPaths
+                            .Select(repo => _gitService.GetCommitTitle(repo, commit))
+                            .FirstOrDefault(t => t != null) ?? "";
+                        var shortHash = commit.Length > 7 ? commit[..7] : commit;
+                        return new CommitRow(commit, shortHash, title);
+                    }).ToList();
+
+                    // Verification report existence
+                    var verReports = _selectedPlan.Verifications.ToDictionary(
+                        v => v.Name,
+                        v => File.Exists(Path.Combine(folderPath, "verification", $"{v.Name}.md")));
+
+                    // Review action conditions
+                    var projectConfig = _config.GetProject(_selectedPlan.Project);
+                    var reviewActions = projectConfig?.ReviewActions ?? new();
+                    var actionStates = reviewActions.Select(action =>
+                    {
+                        if (string.IsNullOrEmpty(action.Condition)) return (action.Name, true);
+                        try
+                        {
+                            var psi = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "pwsh",
+                                Arguments = $"-NoProfile -Command \"if ({action.Condition}) {{ exit 0 }} else {{ exit 1 }}\"",
+                                WorkingDirectory = folderPath,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+                            var proc = System.Diagnostics.Process.Start(psi);
+                            proc?.WaitForExit(5000);
+                            return (action.Name, proc?.ExitCode == 0);
+                        }
+                        catch { return (action.Name, false); }
+                    }).ToList();
+
+                    return new PlanContentData(recs, summaryMd, artifacts, commitRows, verReports, actionStates);
+                }, ct);
+            },
+            initialValue: new PlanContentData(new(), null, new(), new(), new(), new())
+        );
+
         UseEffect(() =>
         {
             selectedTab.Set(0);
@@ -95,232 +162,194 @@ public class ContentView(
         var content = Layout.Vertical();
         object Cap(object inner) => Layout.Vertical().Width(Size.Auto().Max(Size.Units(200))) | inner;
 
-        // Recommendations
-        var recommendationsPath = Path.Combine(_selectedPlan.FolderPath, "artifacts", "recommendations.yaml");
-        var recommendations = new List<RecommendationYaml>();
-        if (File.Exists(recommendationsPath))
-        {
-            recommendations = YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
-                FileHelper.ReadAllText(recommendationsPath)) ?? new();
-        }
+        var planData = planContentQuery.Value;
 
-        // Summary tab content
-        var summaryPath = Path.Combine(_selectedPlan.FolderPath, "artifacts", "summary.md");
-        var hasSummary = File.Exists(summaryPath);
-        object summaryTabContent;
-        if (hasSummary)
-        {
-            var summaryLayout = Layout.Vertical().Gap(2);
-            summaryLayout |= new Markdown(FileHelper.ReadAllText(summaryPath)).DangerouslyAllowLocalFiles();
-            summaryTabContent = summaryLayout;
-        }
-        else
-        {
-            summaryTabContent = Text.Muted("No summary available.");
-        }
-
-        // Verifications tab content
-        var verificationsTable = new Table(
-            new TableRow(
-                new TableCell("Status").IsHeader(),
-                new TableCell("Name").IsHeader()
-            )
-            { IsHeader = true }
-        );
-        foreach (var v in _selectedPlan.Verifications)
-        {
-            var verificationPath = Path.Combine(_selectedPlan.FolderPath, "verification", $"{v.Name}.md");
-            var hasReport = File.Exists(verificationPath);
-            var nameCapture = v.Name;
-            object nameCell = hasReport
-                ? new Button(v.Name).Inline().OnClick(() => openVerification.Set(nameCapture))
-                : (object)Text.Block(v.Name);
-
-            verificationsTable |= new TableRow(
-                new TableCell(new Badge(v.Status).Variant(
-                    StatusMappings.VerificationStatusBadgeVariants.TryGetValue(v.Status, out var variant)
-                        ? variant
-                        : BadgeVariant.Outline)),
-                new TableCell(nameCell)
-            );
-        }
-
-        // Commits tab content
-        var repoPaths = _selectedPlan.GetEffectiveRepoPaths(_config);
-        var commitRows = _selectedPlan.Commits.Select(commit =>
-        {
-            var title = repoPaths
-                .Select(repo => _gitService.GetCommitTitle(repo, commit))
-                .FirstOrDefault(t => t != null) ?? "";
-            var shortHash = commit.Length > 7 ? commit[..7] : commit;
-            return new CommitRow(commit, shortHash, title);
-        }).ToList();
-
-        var commitsTable = new Table(
-            new TableRow(
-                new TableCell("Commit").IsHeader(),
-                new TableCell("Message").IsHeader()
-            )
-            { IsHeader = true }
-        );
-        foreach (var row in commitRows)
-        {
-            commitsTable |= new TableRow(
-                new TableCell(new Button(row.ShortHash).Inline().OnClick(() => openCommit.Set(row.Hash))),
-                new TableCell(row.Title)
-            );
-        }
-
-        // PRs tab content
-        object prsContent;
-        if (_selectedPlan.Prs.Count > 0)
-        {
-            var prsTable = new Table(
-                new TableRow(
-                    new TableCell("Repository").IsHeader(),
-                    new TableCell("PR").IsHeader()
-                )
-                { IsHeader = true }
-            );
-            foreach (var pr in _selectedPlan.Prs)
-            {
-                var prCapture = pr;
-                prsTable |= new TableRow(
-                    new TableCell(PullRequestApp.ExtractRepo(pr)),
-                    new TableCell(new Button(pr).Link().OnClick(() => client.OpenUrl(prCapture)))
-                );
-            }
-            prsContent = prsTable;
-        }
-        else
-        {
-            prsContent = new Empty();
-        }
-
-        // Artifacts tab content
-        var artifacts = GetArtifacts(_selectedPlan.FolderPath);
-        var artifactsLayout = Layout.Vertical().Gap(2);
-
-        if (artifacts.TryGetValue("screenshots", out var screenshotFiles))
-        {
-            var screenshotsLayout = Layout.Horizontal().Gap(2).Wrap();
-            foreach (var file in screenshotFiles)
-            {
-                var imageUrl = $"/ivy/local-file?path={Uri.EscapeDataString(file)}";
-                screenshotsLayout |= new Image(imageUrl) { ObjectFit = ImageFit.Contain, Alt = Path.GetFileName(file), Overlay = true }
-                    .Height(Size.Units(15)).Width(Size.Units(22))
-                    .BorderColor(Colors.Neutral)
-                    .BorderStyle(BorderStyle.Solid)
-                    .BorderThickness(1)
-                    .BorderRadius(BorderRadius.Rounded);
-            }
-            artifactsLayout |= screenshotsLayout;
-        }
-
-        var totalArtifacts = (artifacts.GetValueOrDefault("screenshots")?.Count ?? 0)
-            + (artifacts.ContainsKey("sample") ? 1 : 0);
-
-        // Plan tab content
+        // Plan tab content (not dependent on query — uses in-memory data)
         var planTabContent = new Markdown(MarkdownHelper.AnnotateBrokenFileLinks(_selectedPlan.LatestRevisionContent))
             .DangerouslyAllowLocalFiles()
             .OnLinkClick(FileLinkHelper.CreateFileLinkClickHandler(openFile));
 
-        // Review actions
-        var projectConfig = _config.GetProject(_selectedPlan.Project);
-        var reviewActions = projectConfig?.ReviewActions ?? new();
-        if (reviewActions.Count > 0)
+        if (planContentQuery.Loading)
         {
-            var actionsBar = Layout.Horizontal().Gap(2).Padding(1);
-            foreach (var action in reviewActions)
-            {
-                var conditionMet = false;
-                if (!string.IsNullOrEmpty(action.Condition))
-                {
-                    try
-                    {
-                        var psi = new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "pwsh",
-                            Arguments = $"-NoProfile -Command \"if ({action.Condition}) {{ exit 0 }} else {{ exit 1 }}\"",
-                            WorkingDirectory = _selectedPlan.FolderPath,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        };
-                        var proc = System.Diagnostics.Process.Start(psi);
-                        proc?.WaitForExit(5000);
-                        conditionMet = proc?.ExitCode == 0;
-                    }
-                    catch
-                    {
-                        conditionMet = false;
-                    }
-                }
-                else
-                {
-                    conditionMet = true;
-                }
-
-                var btn = new Button(action.Name).Icon(Icons.Play).Outline();
-                if (!conditionMet)
-                {
-                    btn = btn.Disabled();
-                }
-                else
-                {
-                    var actionCapture = action;
-                    btn = btn.OnClick(() =>
-                    {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "pwsh",
-                            Arguments = $"-NoProfile -Command \"{actionCapture.Action}\"",
-                            WorkingDirectory = _selectedPlan.FolderPath,
-                            UseShellExecute = true
-                        });
-                    });
-                }
-                actionsBar |= btn;
-            }
-            content |= actionsBar;
-        }
-
-        // Recommendations tab content
-        var recommendationsLayout = Layout.Vertical().Gap(4).Padding(2);
-        if (recommendations.Count == 0)
-        {
-            recommendationsLayout |= Text.Muted("No recommendations.");
+            content |= Layout.Vertical().AlignContent(Align.Center).Height(Size.Full())
+                | Text.Muted("Loading...");
         }
         else
         {
-            foreach (var rec in recommendations)
+            // Summary tab content
+            object summaryTabContent;
+            if (planData.SummaryMarkdown is { } summaryMd)
             {
-                var card = Layout.Vertical().Gap(1)
-                    | Text.Block(rec.Title).Bold()
-                    | new Markdown(rec.Description).DangerouslyAllowLocalFiles();
-                recommendationsLayout |= card;
-                recommendationsLayout |= new Separator();
+                var summaryLayout = Layout.Vertical().Gap(2);
+                summaryLayout |= new Markdown(summaryMd).DangerouslyAllowLocalFiles();
+                summaryTabContent = summaryLayout;
             }
+            else
+            {
+                summaryTabContent = Text.Muted("No summary available.");
+            }
+
+            // Verifications tab content
+            var verificationsTable = new Table(
+                new TableRow(
+                    new TableCell("Status").IsHeader(),
+                    new TableCell("Name").IsHeader()
+                )
+                { IsHeader = true }
+            );
+            foreach (var v in _selectedPlan.Verifications)
+            {
+                var hasReport = planData.VerificationReports.TryGetValue(v.Name, out var exists) && exists;
+                var nameCapture = v.Name;
+                object nameCell = hasReport
+                    ? new Button(v.Name).Inline().OnClick(() => openVerification.Set(nameCapture))
+                    : (object)Text.Block(v.Name);
+
+                verificationsTable |= new TableRow(
+                    new TableCell(new Badge(v.Status).Variant(
+                        StatusMappings.VerificationStatusBadgeVariants.TryGetValue(v.Status, out var variant)
+                            ? variant
+                            : BadgeVariant.Outline)),
+                    new TableCell(nameCell)
+                );
+            }
+
+            // Commits tab content
+            var commitsTable = new Table(
+                new TableRow(
+                    new TableCell("Commit").IsHeader(),
+                    new TableCell("Message").IsHeader()
+                )
+                { IsHeader = true }
+            );
+            foreach (var row in planData.CommitRows)
+            {
+                commitsTable |= new TableRow(
+                    new TableCell(new Button(row.ShortHash).Inline().OnClick(() => openCommit.Set(row.Hash))),
+                    new TableCell(row.Title)
+                );
+            }
+
+            // PRs tab content
+            object prsContent;
+            if (_selectedPlan.Prs.Count > 0)
+            {
+                var prsTable = new Table(
+                    new TableRow(
+                        new TableCell("Repository").IsHeader(),
+                        new TableCell("PR").IsHeader()
+                    )
+                    { IsHeader = true }
+                );
+                foreach (var pr in _selectedPlan.Prs)
+                {
+                    var prCapture = pr;
+                    prsTable |= new TableRow(
+                        new TableCell(PullRequestApp.ExtractRepo(pr)),
+                        new TableCell(new Button(pr).Link().OnClick(() => client.OpenUrl(prCapture)))
+                    );
+                }
+                prsContent = prsTable;
+            }
+            else
+            {
+                prsContent = new Empty();
+            }
+
+            // Artifacts tab content
+            var artifactsLayout = Layout.Vertical().Gap(2);
+
+            if (planData.Artifacts.TryGetValue("screenshots", out var screenshotFiles))
+            {
+                var screenshotsLayout = Layout.Horizontal().Gap(2).Wrap();
+                foreach (var file in screenshotFiles)
+                {
+                    var imageUrl = $"/ivy/local-file?path={Uri.EscapeDataString(file)}";
+                    screenshotsLayout |= new Image(imageUrl) { ObjectFit = ImageFit.Contain, Alt = Path.GetFileName(file), Overlay = true }
+                        .Height(Size.Units(15)).Width(Size.Units(22))
+                        .BorderColor(Colors.Neutral)
+                        .BorderStyle(BorderStyle.Solid)
+                        .BorderThickness(1)
+                        .BorderRadius(BorderRadius.Rounded);
+                }
+                artifactsLayout |= screenshotsLayout;
+            }
+
+            var totalArtifacts = (planData.Artifacts.GetValueOrDefault("screenshots")?.Count ?? 0)
+                + (planData.Artifacts.ContainsKey("sample") ? 1 : 0);
+
+            // Review actions
+            var reviewActionStates = planData.ReviewActionStates;
+            var projectConfig = _config.GetProject(_selectedPlan.Project);
+            var reviewActions = projectConfig?.ReviewActions ?? new();
+            if (reviewActions.Count > 0)
+            {
+                var actionsBar = Layout.Horizontal().Gap(2).Padding(1);
+                for (var i = 0; i < reviewActions.Count; i++)
+                {
+                    var action = reviewActions[i];
+                    var conditionMet = i < reviewActionStates.Count && reviewActionStates[i].ConditionMet;
+
+                    var btn = new Button(action.Name).Icon(Icons.Play).Outline();
+                    if (!conditionMet)
+                    {
+                        btn = btn.Disabled();
+                    }
+                    else
+                    {
+                        var actionCapture = action;
+                        btn = btn.OnClick(() =>
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "pwsh",
+                                Arguments = $"-NoProfile -Command \"{actionCapture.Action}\"",
+                                WorkingDirectory = _selectedPlan.FolderPath,
+                                UseShellExecute = true
+                            });
+                        });
+                    }
+                    actionsBar |= btn;
+                }
+                content |= actionsBar;
+            }
+
+            // Recommendations tab content
+            var recommendationsLayout = Layout.Vertical().Gap(4).Padding(2);
+            if (planData.Recommendations.Count == 0)
+            {
+                recommendationsLayout |= Text.Muted("No recommendations.");
+            }
+            else
+            {
+                foreach (var rec in planData.Recommendations)
+                {
+                    var card = Layout.Vertical().Gap(1)
+                        | Text.Block(rec.Title).Bold()
+                        | new Markdown(rec.Description).DangerouslyAllowLocalFiles();
+                    recommendationsLayout |= card;
+                    recommendationsLayout |= new Separator();
+                }
+            }
+
+            // Build tabs
+            var tabs = new TabsLayout(
+                onSelect: e => selectedTab.Set(e.Value),
+                onClose: null,
+                onRefresh: null,
+                onReorder: null,
+                selectedIndex: selectedTab.Value,
+                new Tab("Summary", Cap(summaryTabContent)),
+                new Tab("Verifications", Cap(verificationsTable)).Badge(_selectedPlan.Verifications.Count.ToString()),
+                new Tab("Commits", Cap(commitsTable)).Badge(_selectedPlan.Commits.Count.ToString()),
+                new Tab("PRs", Cap(prsContent)).Badge(_selectedPlan.Prs.Count.ToString()),
+                new Tab("Artifacts", Cap(artifactsLayout)).Badge(totalArtifacts.ToString()),
+                new Tab("Recommendations", Cap(recommendationsLayout)).Badge(planData.Recommendations.Count.ToString()),
+                new Tab("Plan", Cap(planTabContent))
+            ).Variant(TabsVariant.Content);
+
+            content |= tabs;
         }
-
-        // Build tabs
-        var tabs = new TabsLayout(
-            onSelect: e => selectedTab.Set(e.Value),
-            onClose: null,
-            onRefresh: null,
-            onReorder: null,
-            selectedIndex: selectedTab.Value,
-            new Tab("Summary", Cap(summaryTabContent)),
-            new Tab("Verifications", Cap(verificationsTable)).Badge(_selectedPlan.Verifications.Count.ToString()),
-            new Tab("Commits", Cap(commitsTable)).Badge(_selectedPlan.Commits.Count.ToString()),
-            new Tab("PRs", Cap(prsContent)).Badge(_selectedPlan.Prs.Count.ToString()),
-            new Tab("Artifacts", Cap(artifactsLayout)).Badge(totalArtifacts.ToString()),
-            new Tab("Recommendations", Cap(recommendationsLayout)).Badge(recommendations.Count.ToString()),
-            new Tab("Plan", Cap(planTabContent))
-        ).Variant(TabsVariant.Content);
-
-        content |= tabs;
 
         // Sheet modals (outside TabsLayout so they render as overlays)
         if (openVerification.Value is { } verName)
@@ -518,4 +547,12 @@ public class ContentView(
     }
 
     private record CommitRow(string Hash, string ShortHash, string Title);
+
+    private record PlanContentData(
+        List<RecommendationYaml> Recommendations,
+        string? SummaryMarkdown,
+        Dictionary<string, List<string>> Artifacts,
+        List<CommitRow> CommitRows,
+        Dictionary<string, bool> VerificationReports,
+        List<(string Name, bool ConditionMet)> ReviewActionStates);
 }

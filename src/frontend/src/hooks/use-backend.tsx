@@ -20,6 +20,48 @@ type UpdateMessage = Array<{
   treeHash?: string;
 }>;
 
+type WidgetUpdate = [
+  type: string | null,
+  id: string | null,
+  props: {
+    [key: string]: unknown;
+  } | null,
+  events: string[] | null,
+  children: WidgetListDiff | null,
+];
+
+type CompactWidgetNode = [
+  type: string,
+  id: string,
+  props: {
+    [key: string]: unknown;
+  },
+  events: string[],
+  children: CompactWidgetNode[],
+];
+
+type WidgetListDiff = [
+  complexChanges: WidgetListComplexOperation[] | null,
+  changes: WidgetListOperation[] | null,
+];
+
+enum DiffOperationType {
+  Update = 0,
+  Splice = 1,
+}
+
+type WidgetListOperation =
+  | [type: DiffOperationType.Update, WidgetListUpdate]
+  | [type: DiffOperationType.Splice, WidgetListSplice];
+
+type WidgetListUpdate = [index: number, update: WidgetUpdate];
+
+type WidgetListSplice = [index: number, length: number, widgets: CompactWidgetNode[]];
+
+type WidgetListComplexOperation = [type: 0, WidgetListMove];
+
+type WidgetListMove = [fromIndex: number, toIndex: number];
+
 type RefreshMessage = {
   widgets: WidgetNode;
   externalWidgets?: ExternalWidgetInfo[] | null;
@@ -129,6 +171,84 @@ function shallowCloneNode(node: WidgetNode, cloneChildren = false): WidgetNode {
     cloned.children = [...node.children];
   }
   return cloned;
+}
+
+function decompactWidgetNode(compactNode: CompactWidgetNode): WidgetNode {
+  let [type, id, props, events, children] = compactNode;
+  return {
+    type: type,
+    id: id,
+    props: props,
+    events: events,
+    children: children.map(decompactWidgetNode),
+  };
+}
+
+function applyWidgetUpdate(node: WidgetNode, update: WidgetUpdate) {
+  let [type, id, props, events, childrenDiff] = update;
+  return {
+    type: type ?? node.type,
+    id: id ?? node.id,
+    props: props ? { ...node.props, ...props } : node.props,
+    events: events ?? node.events,
+    children: childrenDiff ? applyWidgetListDiff(node.children ?? [], childrenDiff) : node.children,
+  };
+}
+
+function applyWidgetListDiff(nodeList: WidgetNode[], diff: WidgetListDiff): WidgetNode[] {
+  let [_complexChanges, changes] = diff;
+  if (changes == null) {
+    return nodeList;
+  }
+  let newNodeList: WidgetNode[] = [];
+  let nodeIterator = nodeList.entries();
+  let changeIterator = changes.values();
+  let currentChange = changeIterator.next();
+  let currentNode = nodeIterator.next();
+  while (!currentChange.done && !currentNode.done) {
+    if (currentChange.done) {
+      newNodeList.push(currentNode.value[1]);
+      currentNode = nodeIterator.next();
+      continue;
+    }
+    if (!currentNode.done) {
+      let [nodeIndex, node] = currentNode.value;
+      let [_, [changeIndex]] = currentChange.value;
+      if (nodeIndex < changeIndex) {
+        newNodeList.push(node);
+        currentNode = nodeIterator.next();
+        continue;
+      }
+    }
+    switch (currentChange.value[0]) {
+      case DiffOperationType.Update: {
+        let [_, update] = currentChange.value[1];
+        if (!currentNode.done) {
+          let [_, node] = currentNode.value;
+          let newWidget = applyWidgetUpdate(node, update);
+          newNodeList.push(newWidget);
+          currentNode = nodeIterator.next();
+        }
+        currentChange = changeIterator.next();
+        break;
+      }
+      case DiffOperationType.Splice: {
+        let [changeIndex, length, compactWidgets] = currentChange.value[1];
+        let newWidgets = compactWidgets.map(decompactWidgetNode);
+        newNodeList.push(...newWidgets);
+        while (!currentNode.done) {
+          let [nodeIndex, _] = currentNode.value;
+          if (nodeIndex >= changeIndex + length) {
+            break;
+          }
+          currentNode = nodeIterator.next();
+        }
+        currentChange = changeIterator.next();
+        break;
+      }
+    }
+  }
+  return newNodeList;
 }
 
 /**

@@ -553,7 +553,8 @@ public class JobService : IJobService
         WriteJobLog(job);
 
         // Notify plan watcher so the database sync picks up any new/changed plans
-        _planWatcherService?.NotifyChanged();
+        var notifyFolder = job.Args.Length > 0 ? job.Args[0] : null;
+        _planWatcherService?.NotifyChanged(Directory.Exists(notifyFolder) ? notifyFolder : null);
 
         // Calculate and log costs automatically (delayed to allow session to complete)
         if (isSuccess && _modelPricingService != null && !string.IsNullOrEmpty(job.SessionId))

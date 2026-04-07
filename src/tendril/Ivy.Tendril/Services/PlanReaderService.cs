@@ -646,6 +646,11 @@ public class PlanReaderService(IConfigService config, ILogger<PlanReaderService>
         });
     }
 
+    /// <summary>
+    /// Parses a single plan folder from the file system. Used by the sync service for incremental updates.
+    /// </summary>
+    internal PlanFile? ParseSinglePlanFolder(string folderPath) => ParsePlanFolder(folderPath);
+
     private PlanFile? ParsePlanFolder(string folderPath)
     {
         try

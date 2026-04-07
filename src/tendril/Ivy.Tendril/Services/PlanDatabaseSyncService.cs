@@ -66,20 +66,19 @@ public class PlanDatabaseSyncService : IDisposable
         }
     }
 
-    private void OnPlansChanged()
+    private void OnPlansChanged(string? changedPlanFolder)
     {
         if (!_isInitialSyncComplete) return;
 
         try
         {
-            // Read from file system for sync
-            var plans = _planReader.GetPlansFromFileSystem();
-            _database.BulkUpsertPlans(plans);
-
-            foreach (var plan in plans)
+            if (changedPlanFolder != null && Directory.Exists(changedPlanFolder))
             {
-                SyncPlanCosts(plan);
-                SyncPlanRecommendations(plan);
+                SyncSinglePlan(changedPlanFolder);
+            }
+            else
+            {
+                SyncAllPlans();
             }
 
             _database.SetLastSyncTime(DateTime.UtcNow);
@@ -87,6 +86,29 @@ public class PlanDatabaseSyncService : IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Incremental sync failed");
+        }
+    }
+
+    private void SyncSinglePlan(string planFolder)
+    {
+        var plan = _planReader.ParseSinglePlanFolder(planFolder);
+        if (plan != null)
+        {
+            _database.UpsertPlan(plan);
+            SyncPlanCosts(plan);
+            SyncPlanRecommendations(plan);
+        }
+    }
+
+    private void SyncAllPlans()
+    {
+        var plans = _planReader.GetPlansFromFileSystem();
+        _database.BulkUpsertPlans(plans);
+
+        foreach (var plan in plans)
+        {
+            SyncPlanCosts(plan);
+            SyncPlanRecommendations(plan);
         }
     }
 

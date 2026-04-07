@@ -20,7 +20,7 @@ public class ReviewApp : ViewBase
 
         UseEffect(() =>
         {
-            void OnChanged() => refreshToken.Refresh();
+            void OnChanged(string? _) => refreshToken.Refresh();
             planWatcher.PlansChanged += OnChanged;
             return Disposable.Create(() => planWatcher.PlansChanged -= OnChanged);
         });

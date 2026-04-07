@@ -16,7 +16,7 @@
     <PackageId>Ivy.Tendril</PackageId>
     <IsPackable>true</IsPackable>
     <Company>Ivy</Company>
-    <Description>Tendril — AI-powered plan management TUI built on Ivy Framework</Description>
+    <Description>Ivy Tendril — Coding Orchestrator</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Ivy-Interactive/Ivy-Framework</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Ivy-Interactive/Ivy-Framework</RepositoryUrl>
@@ -61,9 +61,6 @@
 
   <ItemGroup>
     <None Update="example.config.yaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="config.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

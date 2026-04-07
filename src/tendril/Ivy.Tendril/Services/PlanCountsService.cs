@@ -21,9 +21,11 @@ public class PlanCountsService : IPlanCountsService, IDisposable
         _jobService = jobService;
         _planWatcher = planWatcher;
         _current = ComputeCounts();
-        _planWatcher.PlansChanged += OnSourceChanged;
+        _planWatcher.PlansChanged += OnPlansSourceChanged;
         _jobService.JobsChanged += OnSourceChanged;
     }
+
+    private void OnPlansSourceChanged(string? _) => OnSourceChanged();
 
     private void OnSourceChanged()
     {
@@ -57,7 +59,7 @@ public class PlanCountsService : IPlanCountsService, IDisposable
 
     public void Dispose()
     {
-        _planWatcher.PlansChanged -= OnSourceChanged;
+        _planWatcher.PlansChanged -= OnPlansSourceChanged;
         _jobService.JobsChanged -= OnSourceChanged;
     }
 }

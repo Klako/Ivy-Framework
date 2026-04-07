@@ -13,6 +13,8 @@ searchHints:
 Tendril is a TUI-based agent orchestration platform for managing AI-driven development plans. Built on the Ivy Framework, it orchestrates Claude-based agents through a structured lifecycle — from plan creation and expansion to execution, verification, and PR generation.
 </Ingress>
 
+<Embed Url="https://www.youtube.com/watch?v=PLACEHOLDER"/>
+
 Tendril gives you full visibility into your AI-assisted development workflow. It tracks jobs, costs, tokens, and verification results, and presents everything in a terminal UI that lets you stay in control.
 
 ## Key Features

@@ -4,8 +4,9 @@ public class PlanWatcherService : IPlanWatcherService, IDisposable
 {
     private readonly FileSystemWatcher? _watcher;
     private readonly System.Timers.Timer _debounceTimer;
+    private string? _pendingPlanFolder;
 
-    public event Action? PlansChanged;
+    public event Action<string?>? PlansChanged;
 
     public PlanWatcherService(IConfigService config)
     {
@@ -13,7 +14,9 @@ public class PlanWatcherService : IPlanWatcherService, IDisposable
         _debounceTimer.AutoReset = false;
         _debounceTimer.Elapsed += (_, _) =>
         {
-            PlansChanged?.Invoke();
+            var folder = _pendingPlanFolder;
+            _pendingPlanFolder = null;
+            PlansChanged?.Invoke(folder);
         };
 
         var planFolder = config.PlanFolder;
@@ -30,7 +33,7 @@ public class PlanWatcherService : IPlanWatcherService, IDisposable
         _watcher.Changed += OnFileEvent;
         _watcher.Created += OnFileEvent;
         _watcher.Deleted += OnFileEvent;
-        _watcher.Renamed += (_, _) => ScheduleDebounce();
+        _watcher.Renamed += (_, _) => ScheduleDebounce(null);
     }
 
     private static readonly HashSet<string> WatchedFiles = new(StringComparer.OrdinalIgnoreCase)
@@ -48,24 +51,58 @@ public class PlanWatcherService : IPlanWatcherService, IDisposable
         // New plan folder created at top level
         if (e.ChangeType == WatcherChangeTypes.Created && parentFolder == Path.GetFileName(_watcher!.Path))
         {
-            ScheduleDebounce();
+            ScheduleDebounce(null); // full rescan for new plan
             return;
         }
 
         // plan.yaml changed, or files in revisions/logs/verification
         if (WatchedFiles.Contains(fileName) || WatchedFolders.Contains(parentFolder))
         {
-            ScheduleDebounce();
+            var planFolder = ResolvePlanFolder(e.FullPath);
+            ScheduleDebounce(planFolder);
         }
     }
 
-    public void NotifyChanged()
+    /// <summary>
+    /// Walk up from the changed file path to find the plan folder (direct child of the plans directory).
+    /// </summary>
+    private string? ResolvePlanFolder(string changedPath)
     {
-        ScheduleDebounce();
+        if (_watcher == null) return null;
+
+        var plansRoot = _watcher.Path;
+        var dir = Path.GetDirectoryName(changedPath);
+        while (dir != null && !string.Equals(Path.GetDirectoryName(dir), plansRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        return dir;
     }
 
-    private void ScheduleDebounce()
+    public void NotifyChanged(string? changedPlanFolder = null)
     {
+        ScheduleDebounce(changedPlanFolder);
+    }
+
+    private void ScheduleDebounce(string? planFolder)
+    {
+        // If we already have a pending folder and a different one arrives, escalate to full rescan
+        if (_pendingPlanFolder != null && planFolder != null
+            && !string.Equals(_pendingPlanFolder, planFolder, StringComparison.OrdinalIgnoreCase))
+        {
+            _pendingPlanFolder = null; // null = full rescan
+        }
+        else if (_pendingPlanFolder == null && planFolder != null && !_debounceTimer.Enabled)
+        {
+            _pendingPlanFolder = planFolder;
+        }
+        // If planFolder is null (full rescan requested), override any specific folder
+        else if (planFolder == null)
+        {
+            _pendingPlanFolder = null;
+        }
+
         _debounceTimer.Stop();
         _debounceTimer.Start();
     }

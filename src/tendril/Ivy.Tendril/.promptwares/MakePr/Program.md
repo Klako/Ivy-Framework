@@ -108,6 +108,9 @@ cd <original-repo-path>
 git pull origin <default-branch>
 ```
 
+> **Note:** If `--merge` fails with "Merge commits are not allowed", retry with `--squash` instead.
+
+
 **If `default`:** PR stays open for manual review.
 
 ### 5. Clean Up Worktrees

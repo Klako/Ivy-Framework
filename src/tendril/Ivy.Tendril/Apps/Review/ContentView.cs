@@ -62,9 +62,12 @@ public class ContentView(
             async (name, ct) =>
             {
                 if (string.IsNullOrEmpty(name) || _selectedPlan is null) return "";
-                var path = Path.Combine(_selectedPlan.FolderPath, "verification", $"{name}.md");
+                var verificationDir = Path.GetFullPath(Path.Combine(_selectedPlan.FolderPath, "verification"));
+                var resolvedPath = Path.GetFullPath(Path.Combine(verificationDir, $"{name}.md"));
+                if (!resolvedPath.StartsWith(verificationDir, StringComparison.OrdinalIgnoreCase))
+                    return "Access denied: file is outside the verification folder.";
                 return await Task.Run(() =>
-                    File.Exists(path) ? FileHelper.ReadAllText(path) : $"No report found for {name}.", ct);
+                    File.Exists(resolvedPath) ? FileHelper.ReadAllText(resolvedPath) : $"No report found for {name}.", ct);
             },
             initialValue: ""
         );
@@ -574,6 +577,13 @@ public class ContentView(
         var artifactsDir = Path.GetFullPath(Path.Combine(planFolderPath, "artifacts"));
         var resolvedPath = Path.GetFullPath(filePath);
         return resolvedPath.StartsWith(artifactsDir, StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static bool ValidateVerificationPath(string name, string planFolderPath)
+    {
+        var verificationDir = Path.GetFullPath(Path.Combine(planFolderPath, "verification"));
+        var resolvedPath = Path.GetFullPath(Path.Combine(verificationDir, $"{name}.md"));
+        return resolvedPath.StartsWith(verificationDir, StringComparison.OrdinalIgnoreCase);
     }
 
     private static Dictionary<string, List<string>> GetArtifacts(string folderPath)

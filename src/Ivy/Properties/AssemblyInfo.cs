@@ -7,5 +7,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Ivy.XamlBuilder")]
 [assembly: InternalsVisibleTo("Ivy.XamlBuilder.Test")]
 [assembly: InternalsVisibleTo("Ivy.Tendril")]
+[assembly: InternalsVisibleTo("Ivy.Agent.Test.Studio")]
 // [assembly: InternalsVisibleTo("Ivy.Docs.Shared")]
 // [assembly: InternalsVisibleTo("Ivy.Samples.Shared")]

@@ -528,7 +528,16 @@ public class PlanDatabaseService : IPlanDatabaseService
                                  """;
             ftsCmd.Parameters.AddWithValue("@query", query);
 
-            var plans = ExecuteSearchQuery(ftsCmd);
+            List<PlanFile> plans;
+            try
+            {
+                plans = ExecuteSearchQuery(ftsCmd);
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException)
+            {
+                // FTS5 syntax error (e.g. special characters like '/') — fall through to LIKE
+                plans = [];
+            }
 
             // If FTS5 returns no results, fall back to LIKE for substring matching
             if (plans.Count == 0)
@@ -541,7 +550,7 @@ public class PlanDatabaseService : IPlanDatabaseService
                                       FROM Plans
                                       WHERE Title LIKE @search OR LatestRevisionContent LIKE @search
                                             OR CAST(Id AS TEXT) LIKE @search OR Project LIKE @search
-                                            OR SourceUrl LIKE @search
+                                            OR SourceUrl LIKE @search OR InitialPrompt LIKE @search
                                       ORDER BY Id
                                       """;
                 likeCmd.Parameters.AddWithValue("@search", search);

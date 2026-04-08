@@ -995,7 +995,10 @@ public class PlanReaderService(
                     CreateNoWindow = true
                 };
                 using var process = Process.Start(psi);
-                process?.WaitForExit(10000);
+                if (process is not null && !process.WaitForExit(10000))
+                {
+                    try { process.Kill(entireProcessTree: true); } catch { /* already exited */ }
+                }
             }
             catch
             {

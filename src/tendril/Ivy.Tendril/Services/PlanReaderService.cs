@@ -17,6 +17,12 @@ public class PlanReaderService(
 
     private readonly ILogger<PlanReaderService> _logger = logger;
 
+    private readonly TimeCache<Dictionary<string, DashboardStats>> _dashboardCache =
+        new(TimeSpan.FromSeconds(10));
+
+    private readonly TimeCache<Dictionary<string, List<HourlyTokenBurn>>> _hourlyBurnCache =
+        new(TimeSpan.FromSeconds(10));
+
     private readonly TimeCache<Dictionary<string, (decimal Cost, int Tokens)>> _planCostCache =
         new(TimeSpan.FromSeconds(90));
 
@@ -410,7 +416,17 @@ public class PlanReaderService(
     public DashboardStats GetDashboardData(string? projectFilter)
     {
         if (_useDatabaseForReads && _database != null)
-            return _database.GetDashboardData(projectFilter);
+        {
+            var cache = _dashboardCache.GetOrCompute(() => new Dictionary<string, DashboardStats>());
+            var key = projectFilter ?? "__all__";
+            if (!cache.TryGetValue(key, out var stats))
+            {
+                stats = _database.GetDashboardData(projectFilter);
+                cache[key] = stats;
+            }
+
+            return stats;
+        }
 
         return new DashboardStats(0, 0, 0, 0, 0, 0, 0, [], []);
     }
@@ -468,7 +484,17 @@ public class PlanReaderService(
     public List<HourlyTokenBurn> GetHourlyTokenBurn(int days = 7, string? projectFilter = null)
     {
         if (_useDatabaseForReads && _database != null)
-            return _database.GetHourlyTokenBurn(days, projectFilter);
+        {
+            var cache = _hourlyBurnCache.GetOrCompute(() => new Dictionary<string, List<HourlyTokenBurn>>());
+            var key = $"{days}_{projectFilter ?? "__all__"}";
+            if (!cache.TryGetValue(key, out var result))
+            {
+                result = _database.GetHourlyTokenBurn(days, projectFilter);
+                cache[key] = result;
+            }
+
+            return result;
+        }
 
         return [];
     }
@@ -577,6 +603,8 @@ public class PlanReaderService(
         _planCountsCache.Invalidate();
         _recommendationsCache.Invalidate();
         _planCostCache.Invalidate();
+        _dashboardCache.Invalidate();
+        _hourlyBurnCache.Invalidate();
     }
 
     /// <summary>

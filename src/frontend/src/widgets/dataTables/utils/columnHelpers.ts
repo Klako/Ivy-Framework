@@ -1,6 +1,10 @@
 import { GridColumn, GridColumnIcon } from "@glideapps/glide-data-grid";
 import type { DataColumn } from "../types/types";
-import { estimateHeaderWidth } from "../dataTableContext/utils/parseSize";
+import {
+  estimateHeaderWidth,
+  parseSizeGrow,
+  parseSizeMin,
+} from "../dataTableContext/utils/parseSize";
 
 /**
  * Maps column icon names or types to appropriate icons
@@ -119,31 +123,35 @@ export function convertToGridColumns(
   return orderedColumns.map((col, index) => {
     const originalIndex = columns.indexOf(col);
     const baseWidth = columnWidths[originalIndex.toString()] || col.width;
-    // Ensure width is always a number
     let numericBaseWidth = typeof baseWidth === "string" ? parseFloat(baseWidth) : baseWidth;
 
-    // Fix NaN width - use header-based width if parsing fails
     if (isNaN(numericBaseWidth) || !numericBaseWidth) {
       numericBaseWidth = estimateHeaderWidth(col.header || col.name);
     }
 
-    // Make the last column fill the remaining space using grow (avoids gap from
-    // manual width calc; grid handles scrollbar space internally)
-    if (index === orderedColumns.length - 1 && containerWidth > 0) {
-      return {
-        title: col.header || col.name,
-        width: numericBaseWidth,
-        grow: 1,
-        group: showGroups ? col.group : undefined,
-        icon: showColumnTypeIcons ? mapColumnIcon(col) : undefined,
-      };
+    // Apply min constraint from Size string (e.g., "Fraction:0.5,Px:100,Px:500" → min 100px)
+    const minWidth = parseSizeMin(col.originalWidth);
+    if (minWidth && minWidth > numericBaseWidth) {
+      numericBaseWidth = minWidth;
     }
 
-    return {
+    const grow = parseSizeGrow(col.originalWidth);
+    const isLastColumn = index === orderedColumns.length - 1 && containerWidth > 0;
+
+    const gridCol: GridColumn = {
       title: col.header || col.name,
       width: numericBaseWidth,
       group: showGroups ? col.group : undefined,
       icon: showColumnTypeIcons ? mapColumnIcon(col) : undefined,
     };
+
+    // Apply grow factor from Size type, or default last column to grow: 1
+    if (grow !== undefined) {
+      gridCol.grow = grow;
+    } else if (isLastColumn) {
+      gridCol.grow = 1;
+    }
+
+    return gridCol;
   });
 }

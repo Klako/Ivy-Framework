@@ -151,7 +151,10 @@ const VariantComponents = {
           onClick={(e) => e.stopPropagation()}
           role="presentation"
         >
-          <DivWithTooltip tooltipText={invalid} className={cn(description && "mt-1.5", "flex shrink-0")}>
+          <DivWithTooltip
+            tooltipText={invalid}
+            className={cn(description && "mt-1.5", "flex shrink-0")}
+          >
             {checkboxElement}
           </DivWithTooltip>
           <InputLabel id={id} label={label} description={description} />
@@ -203,7 +206,10 @@ const VariantComponents = {
           onClick={(e) => e.stopPropagation()}
           role="presentation"
         >
-          <DivWithTooltip tooltipText={invalid} className={cn(description && "mt-1.5", "flex shrink-0")}>
+          <DivWithTooltip
+            tooltipText={invalid}
+            className={cn(description && "mt-1.5", "flex shrink-0")}
+          >
             {switchElement}
           </DivWithTooltip>
           <InputLabel id={id} label={label} description={description} />
@@ -257,7 +263,10 @@ const VariantComponents = {
           onClick={(e) => e.stopPropagation()}
           role="presentation"
         >
-          <DivWithTooltip tooltipText={invalid} className={cn(description && "mt-1.5", "flex shrink-0")}>
+          <DivWithTooltip
+            tooltipText={invalid}
+            className={cn(description && "mt-1.5", "flex shrink-0")}
+          >
             {toggleElement}
           </DivWithTooltip>
           <InputLabel id={id} label={label} description={description} />

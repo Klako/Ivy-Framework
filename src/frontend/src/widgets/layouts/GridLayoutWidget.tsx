@@ -12,6 +12,7 @@ import {
   getAlignSelf,
   getGridAlign,
 } from "../../lib/styles";
+import { type Responsive, useBreakpoint, resolveResponsive } from "@/hooks/use-responsive";
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -34,6 +35,9 @@ interface GridLayoutWidgetProps {
   childRowSpan?: (number | undefined)[];
   childAlignSelf?: (Align | undefined)[];
   className?: string;
+  responsiveColumns?: Responsive<number>;
+  responsiveRowGap?: Responsive<number>;
+  responsiveColumnGap?: Responsive<number>;
 }
 
 interface GridLayoutCellProps {
@@ -92,19 +96,35 @@ export const GridLayoutWidget: React.FC<GridLayoutWidgetProps> = ({
   childRowSpan = EMPTY_ARRAY,
   childAlignSelf = EMPTY_ARRAY,
   className = "",
+  responsiveColumns,
+  responsiveRowGap,
+  responsiveColumnGap,
 }) => {
+  const bp = useBreakpoint();
+
+  // Resolve responsive values
+  const resolvedColumns = responsiveColumns
+    ? resolveResponsive(responsiveColumns, bp, columns)
+    : columns;
+  const resolvedRowGap = responsiveRowGap
+    ? resolveResponsive(responsiveRowGap, bp, rowGap)
+    : rowGap;
+  const resolvedColumnGap = responsiveColumnGap
+    ? resolveResponsive(responsiveColumnGap, bp, columnGap)
+    : columnGap;
+
   const styles: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: columnWidths
       ? columnWidths.map(convertSizeToGridValue).join(" ")
-      : `repeat(${columns}, minmax(0, 1fr))`,
+      : `repeat(${resolvedColumns}, minmax(0, 1fr))`,
     gridTemplateRows: rowHeights
       ? rowHeights.map(convertSizeToGridValue).join(" ")
       : `repeat(${rows}, minmax(0, 1fr))`,
     gridAutoFlow: autoFlow?.toLowerCase() || "row",
     ...getPadding(padding),
-    ...getRowGap(rowGap),
-    ...getColumnGap(columnGap),
+    ...getRowGap(resolvedRowGap),
+    ...getColumnGap(resolvedColumnGap),
     ...getWidth(width),
     ...getHeight(height),
     ...getGridAlign(alignContent),

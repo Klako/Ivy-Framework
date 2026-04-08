@@ -46,6 +46,14 @@ internal record StackLayout : WidgetBase<StackLayout>
 
     [Prop] public Scroll Scroll { get; set; } = Scroll.None;
 
+    [Prop] public Responsive<Orientation?>? ResponsiveOrientation { get; set; }
+
+    [Prop] public Responsive<int?>? ResponsiveRowGap { get; set; }
+
+    [Prop] public Responsive<int?>? ResponsiveColumnGap { get; set; }
+
+    [Prop] public Responsive<Thickness?>? ResponsivePadding { get; set; }
+
     [Prop(attached: nameof(StackLayoutExtensions.AlignSelf))] public Align?[] ChildAlignSelf { get; set; } = null!;
 }
 

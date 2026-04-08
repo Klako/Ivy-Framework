@@ -269,6 +269,30 @@ public class JobServiceDependencyAutoRetryTests : IDisposable
         Assert.Equal(activeId, executePlanJobs[0].Id);
     }
 
+    [Fact]
+    public void RetryBlockedDependents_WhenBlockedJobExistsAndDepsNowMet_DoesNotCreateDuplicate()
+    {
+        var planB = CreatePlanFolder("03100-PlanB", "Completed");
+        var planA = CreatePlanFolder("03101-PlanA", "Blocked", ["03100-PlanB"]);
+
+        var service = CreateService();
+
+        // Create a Blocked ExecutePlan job for planA (simulating StartJob that found unmet deps earlier)
+        var blockedId = service.CreateTestJob("ExecutePlan", planA);
+        service.GetJob(blockedId)!.Status = JobStatus.Blocked;
+
+        // Trigger RetryBlockedDependents by completing a CreateIssue job for PlanB
+        var id = service.StartJob("CreateIssue", planB, "-Repo", "owner/repo", "-Assignee", "", "-Labels", "");
+        service.CompleteJob(id, 0);
+
+        // Should have at most one ExecutePlan job for planA (not two)
+        var executePlanJobs = service.GetJobs()
+            .Where(j => j.Type == "ExecutePlan" && j.Args.Length > 0 && j.Args[0] == planA)
+            .ToList();
+        Assert.True(executePlanJobs.Count <= 1,
+            $"Expected at most 1 ExecutePlan job for planA, found {executePlanJobs.Count}");
+    }
+
     private class StubPlanReaderService : IPlanReaderService
     {
         public StubPlanReaderService(string plansDirectory)

@@ -136,4 +136,25 @@ public class ContentViewTests
         Assert.False(ReviewContentView.ValidateArtifactPath(
             "C:/Windows/System32/config", "D:/plans/001"));
     }
+
+    [Fact]
+    public void ValidateVerificationPath_WithValidName_ReturnsTrue()
+    {
+        Assert.True(ReviewContentView.ValidateVerificationPath(
+            "DotnetBuild", "D:/plans/001"));
+    }
+
+    [Fact]
+    public void ValidateVerificationPath_WithTraversalName_ReturnsFalse()
+    {
+        Assert.False(ReviewContentView.ValidateVerificationPath(
+            "../../plan", "D:/plans/001"));
+    }
+
+    [Fact]
+    public void ValidateVerificationPath_WithPathSeparator_ReturnsFalse()
+    {
+        Assert.False(ReviewContentView.ValidateVerificationPath(
+            "../secrets/key", "D:/plans/001"));
+    }
 }

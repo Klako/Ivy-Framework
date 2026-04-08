@@ -482,6 +482,14 @@ Don't use `?chrome=false` when testing sidebar labels or navigation items.
 - ✅ Test beacon discovery (`UseNavigationBeacon` returns non-null)
 - ✅ Test target apps by navigating directly: `page.goto(\`http://localhost:\${port}/app-id?chrome=false\`)`
 
+### App ID Generation Rules
+- Auto-generated from `namespace/classname` in kebab-case, with **"App" suffix stripped** from class name
+  - `StackedProgressTest.BasicApp` → `stacked-progress-test/basic`
+  - `StackedProgressTest.EdgeCasesApp` → `stacked-progress-test/edge-cases`
+- ❌ **`[App("My Title")]` with explicit title** — creates IDs with spaces (e.g., `My Title`), which causes URL routing issues
+- ✅ **`[App(icon: Icons.X)]` without title** — auto-generates clean kebab-case IDs from namespace/classname
+📝 Use `dotnet run -- --describe` to verify exact registered app IDs.
+
 ### Beacon AppId Must Match Full Registered ID
 ❌ `AppId: "customer-details"` → ✅ `AppId: "my-namespace/customer-details"`
 📝 Use `dotnet run -- --describe` to find exact registered app ID.

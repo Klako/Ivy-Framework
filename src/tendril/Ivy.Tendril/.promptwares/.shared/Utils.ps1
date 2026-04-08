@@ -571,6 +571,7 @@ function GetAgentCommand {
     $allowedTools = @()
     $codingAgent = "claude"
     $model = ""
+    $effort = ""
 
     if (Test-Path $configPath) {
         try {
@@ -598,6 +599,16 @@ function GetAgentCommand {
                         $allowedTools += $resolvedTool
                     }
                 }
+
+                # Apply effort override
+                if ($pwConfig.effort) {
+                    $effort = $pwConfig.effort
+                }
+            }
+
+            # Fall back to defaultEffort if no per-promptware effort set
+            if (-not $effort -and $config.defaultEffort) {
+                $effort = $config.defaultEffort
             }
         }
         catch {
@@ -617,6 +628,11 @@ function GetAgentCommand {
     if ($model) {
         $raw = $raw -replace '--model\s+\S+', ''
         $raw += " --model $model"
+    }
+
+    # Apply effort level if set (claude only)
+    if ($effort -and $codingAgent -eq "claude") {
+        $raw += " --effort $effort"
     }
 
     # Build args with quote-aware parsing
@@ -647,6 +663,7 @@ function GetAgentCommand {
         Args         = $cmdArgs
         CodingAgent  = $codingAgent
         Model        = $model
+        Effort       = $effort
         AllowedTools = $allowedTools
     }
 }

@@ -586,6 +586,26 @@ Setting only `videoElement.playbackRate` in useEffect was reset during media loa
 ### WidgetSerializer Default Enum Value Stripping (FIXED)
 Number columns had `type: undefined` because `ColType.Number` (enum 0) was stripped. Fixed with null guards in `calculateAutoWidth.ts` and `cellContent.ts`. See "Ongoing Pattern" in Serialization section for remaining guard needs.
 
+## Responsive Design System — Widget-Level Props Not Consumed
+
+### HideOn/ShowOn on Individual Widgets Has No Effect
+❌ **`new Badge("X").HideOn(Breakpoint.Mobile)`** — Badge remains visible at all viewports
+❌ **`new Button("X").ShowOn(Breakpoint.Wide)`** — Button always visible regardless of viewport
+✅ **Layout-level responsive props work**: `Layout.Grid().Columns(responsive)`, `Layout.Horizontal().Orientation(responsive)`, `Layout.Vertical().Gap(responsive)`
+📝 **Why**: Only `StackLayoutWidget.tsx` and `GridLayoutWidget.tsx` consume `responsiveVisible`, `responsiveWidth`, `responsiveHeight`, `responsiveDensity`. No common widget wrapper (widgetRenderer.tsx, ivy-widget) handles these props. Individual widget components (Badge, Button, Box, etc.) receive the props but don't process them.
+
+### ResponsiveWidth/Height on Individual Widgets Not Effective
+❌ **`new Box(...).Width(Size.Full().At(Breakpoint.Mobile).And(Breakpoint.Desktop, Size.Half()))`** — Box ignores `responsiveWidth`
+✅ **`Layout.Vertical().Width(responsive)`** — StackLayout handles responsive width
+📝 Only StackLayout consumes `responsiveWidth`/`responsiveHeight` on the frontend.
+
+### ResponsiveDensity Not Consumed Anywhere
+❌ **`new Button("X").Density(Density.Large.At(Breakpoint.Mobile).And(Breakpoint.Desktop, Density.Small))`** — no frontend component handles `responsiveDensity`
+📝 Prop is serialized but silently ignored by all widget components.
+
+### Mobile-First Cascading May Surprise with HideOn
+📝 `HideOn(Breakpoint.Mobile)` creates `{ default: true, mobile: false }`. With mobile-first cascading, `false` cascades to tablet, desktop, and wide — effectively hiding at ALL viewports. The API name suggests "hide only on mobile" but the cascading behavior produces "hide everywhere."
+
 ## Future Gotchas
 
 As we encounter more issues, add them with:

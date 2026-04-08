@@ -1,3 +1,4 @@
+using Ivy.Tendril.Apps.Onboarding.Dialogs;
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Apps.Onboarding;
@@ -19,9 +20,6 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
 
         // Dialog state for editing verifications
         var editIndex = UseState<int?>(-1); // -1 = closed, null = new, >= 0 = editing index
-        var editName = UseState("");
-        var editPrompt = UseState("");
-        var editRequired = UseState(false);
 
         var reposLayout = Layout.Vertical().Gap(2);
         var currentRepos = repoPaths.Value;
@@ -64,9 +62,6 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                                    | new Button().Icon(Icons.Pencil).Ghost().Small().OnClick(() =>
                                    {
                                        editIndex.Set(vi);
-                                       editName.Set(verifications.Value[vi].Name);
-                                       editPrompt.Set(verifications.Value[vi].Prompt);
-                                       editRequired.Set(verifications.Value[vi].Required);
                                    })
                                    | new Button().Icon(Icons.Trash).Ghost().Small().OnClick(() =>
                                    {
@@ -76,112 +71,77 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                                    });
         }
 
-        var content = Layout.Vertical().Gap(4)
-                      | Text.H2("Project Setup")
-                      | Text.Muted("Set up your first project. You can add more projects later in Settings.")
-                      | (error.Value != null ? Text.Danger(error.Value) : null!)
-                      | projectName.ToTextInput("Project name...").WithField().Label("Project Name")
-                      | projectContext.ToTextareaInput("Project context or prompt for AI agents (optional)...")
-                          .Rows(4)
-                          .WithField()
-                          .Label("Context / Prompt (Optional)")
-                      | (Layout.Vertical().Gap(2)
-                         | Text.Block("Repositories").Bold()
-                         | Text.Muted("Add at least one repository path for this project.")
-                         | reposLayout)
-                      | (Layout.Vertical().Gap(2)
-                         | Text.Block("Verifications").Bold()
-                         | Text.Muted("Define verifications to run for this project.")
-                         | verificationsLayout
-                         | new Button("Add Verification").Icon(Icons.Plus).Outline().Small().OnClick(() =>
-                         {
-                             editIndex.Set(null);
-                             editName.Set("");
-                             editPrompt.Set("");
-                             editRequired.Set(false);
-                         }))
-                      | (Layout.Horizontal().Gap(2)
-                         | new Button("Skip for now").Outline().Large()
-                             .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1))
-                         | new Button("Next").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
-                             .OnClick(() =>
-                             {
-                                 if (string.IsNullOrWhiteSpace(projectName.Value))
-                                 {
-                                     error.Set("Please enter a project name.");
-                                     return;
-                                 }
+        return Layout.Vertical().Gap(4)
+               | Text.H2("Project Setup")
+               | Text.Muted("Set up your first project. You can add more projects later in Settings.")
+               | (error.Value != null ? Text.Danger(error.Value) : null!)
+               | projectName.ToTextInput("Project name...").WithField().Label("Project Name")
+               | projectContext.ToTextareaInput("Project context or prompt for AI agents (optional)...")
+                   .Rows(4)
+                   .WithField()
+                   .Label("Context / Prompt (Optional)")
+               | (Layout.Vertical().Gap(2)
+                  | Text.Block("Repositories").Bold()
+                  | Text.Muted("Add at least one repository path for this project.")
+                  | reposLayout)
+               | (Layout.Vertical().Gap(2)
+                  | Text.Block("Verifications").Bold()
+                  | Text.Muted("Define verifications to run for this project.")
+                  | verificationsLayout
+                  | new Button("Add Verification").Icon(Icons.Plus).Outline().Small().OnClick(() =>
+                  {
+                      editIndex.Set(null);
+                  }))
+               | (Layout.Horizontal().Gap(2)
+                  | new Button("Skip for now").Outline().Large()
+                      .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1))
+                  | new Button("Next").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
+                      .OnClick(() =>
+                      {
+                          if (string.IsNullOrWhiteSpace(projectName.Value))
+                          {
+                              error.Set("Please enter a project name.");
+                              return;
+                          }
 
-                                 if (repoPaths.Value.Count == 0)
-                                 {
-                                     error.Set("Please add at least one repository path.");
-                                     return;
-                                 }
+                          if (repoPaths.Value.Count == 0)
+                          {
+                              error.Set("Please add at least one repository path.");
+                              return;
+                          }
 
-                                 var validVerifications = verifications.Value
-                                     .Where(v => !string.IsNullOrWhiteSpace(v.Name))
-                                     .ToList();
+                          var validVerifications = verifications.Value
+                              .Where(v => !string.IsNullOrWhiteSpace(v.Name))
+                              .ToList();
 
-                                 var project = new ProjectConfig
-                                 {
-                                     Name = projectName.Value.Trim(),
-                                     Color = "Green",
-                                     Repos = repoPaths.Value.Select(p => new RepoRef { Path = p, PrRule = "default" })
-                                         .ToList(),
-                                     Context = projectContext.Value.Trim(),
-                                     Verifications = validVerifications.Select(v => new ProjectVerificationRef
-                                     {
-                                         Name = v.Name,
-                                         Required = v.Required
-                                     }).ToList()
-                                 };
+                          var project = new ProjectConfig
+                          {
+                              Name = projectName.Value.Trim(),
+                              Color = "Green",
+                              Repos = repoPaths.Value.Select(p => new RepoRef { Path = p, PrRule = "default" })
+                                  .ToList(),
+                              Context = projectContext.Value.Trim(),
+                              Verifications = validVerifications.Select(v => new ProjectVerificationRef
+                              {
+                                  Name = v.Name,
+                                  Required = v.Required
+                              }).ToList()
+                          };
 
-                                 config.SetPendingProject(project);
-                                 config.SetPendingVerificationDefinitions(validVerifications
-                                     .Select(v => new VerificationConfig
-                                     {
-                                         Name = v.Name,
-                                         Prompt = v.Prompt
-                                     }).ToList());
+                          config.SetPendingProject(project);
+                          config.SetPendingVerificationDefinitions(validVerifications
+                              .Select(v => new VerificationConfig
+                              {
+                                  Name = v.Name,
+                                  Prompt = v.Prompt
+                              }).ToList());
 
-                                 error.Set(null);
-                                 stepperIndex.Set(stepperIndex.Value + 1);
-                             })
-                      );
-
-        // Verification edit dialog
-        if (editIndex.Value != -1)
-        {
-            var isNew = editIndex.Value == null;
-            content |= new Dialog(
-                _ => editIndex.Set(-1),
-                new DialogHeader(isNew ? "Add Verification" : "Edit Verification"),
-                new DialogBody(
-                    Layout.Vertical().Gap(2)
-                    | editName.ToTextInput("Verification name...").WithField().Label("Name")
-                    | editPrompt.ToTextareaInput("Verification prompt...").Rows(6).WithField().Label("Prompt")
-                    | editRequired.ToBoolInput("Required")
-                ),
-                new DialogFooter(
-                    new Button("Cancel").Outline().OnClick(() => editIndex.Set(-1)),
-                    new Button(isNew ? "Add" : "Save").Primary().OnClick(() =>
-                    {
-                        if (string.IsNullOrWhiteSpace(editName.Value)) return;
-                        var list = new List<VerificationEntry>(verifications.Value);
-                        if (isNew)
-                            list.Add(new VerificationEntry(editName.Value, editPrompt.Value, editRequired.Value));
-                        else
-                            list[editIndex.Value!.Value] =
-                                new VerificationEntry(editName.Value, editPrompt.Value, editRequired.Value);
-                        verifications.Set(list);
-                        editIndex.Set(-1);
-                    })
-                )
-            ).Width(Size.Rem(35));
-        }
-
-        return content;
+                          error.Set(null);
+                          stepperIndex.Set(stepperIndex.Value + 1);
+                      })
+               )
+               | new EditOnboardingVerificationDialog(editIndex, verifications);
     }
-
-    private record VerificationEntry(string Name, string Prompt, bool Required);
 }
+
+internal record VerificationEntry(string Name, string Prompt, bool Required);

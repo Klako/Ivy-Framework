@@ -6,7 +6,6 @@ import {
   parseSizeMin,
   estimateHeaderWidth,
   estimateContentWidth,
-  estimateHeaderWidth,
   getSizeMode,
 } from "./parseSize";
 

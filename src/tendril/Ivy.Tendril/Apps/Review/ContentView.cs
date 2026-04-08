@@ -231,24 +231,21 @@ public class ContentView(
             header |= new Button(_selectedPlan.SourceUrl.Contains("/pull/") ? "PR" : "Issue")
                 .Icon(Icons.ExternalLink).Ghost().OnClick(() => client.OpenUrl(_selectedPlan.SourceUrl));
 
-        header |= new Spacer().Width(Size.Grow())
-                     | Text.Rich()
+        header |= new Spacer().Width(Size.Grow());
+        
+        header |= Text.Rich()
                          .Bold($"{currentIndex + 1}/{_allPlans.Count}", word: true)
-                         .Muted("plans", word: true)
-                     | new Button("Make PR").Icon(Icons.GitPullRequest).Primary().OnClick(() =>
-                     {
-                         _jobService.StartJob("MakePr", _selectedPlan.FolderPath);
-                         _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Building);
-                         _refreshPlans();
-                     }).ShortcutKey("m").WithConfetti(AnimationTrigger.Click);
+                         .Muted("plans", word: true);
+        
+        header |= new Button("Make PR").Icon(Icons.GitPullRequest).Primary().OnClick(() =>
+        {
+            _jobService.StartJob("MakePr", _selectedPlan.FolderPath);
+            _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Building);
+            _refreshPlans();
+        }).ShortcutKey("m").WithConfetti(AnimationTrigger.Click);
 
         // Content sections
         var content = Layout.Vertical();
-
-        object Cap(object inner)
-        {
-            return Layout.Vertical().Width(Size.Auto().Max(Size.Units(200))) | inner;
-        }
 
         var planData = planContentQuery.Value;
 
@@ -591,6 +588,11 @@ public class ContentView(
                 content
             ).Size(Size.Full())
         ).Scroll(Scroll.None).Size(Size.Full()).Key(_selectedPlan.Id);
+
+        object Cap(object inner)
+        {
+            return Layout.Vertical().Width(Size.Auto().Max(Size.Units(200))) | inner;
+        }
     }
 
     internal static bool ValidateArtifactPath(string filePath, string planFolderPath)

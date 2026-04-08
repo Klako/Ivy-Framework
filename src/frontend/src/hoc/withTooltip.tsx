@@ -20,7 +20,7 @@ function withTooltip<P extends React.JSX.IntrinsicAttributes>(Component: Compone
         style={style}
         aria-label={ariaLabel}
         ref={ref}
-        {...(restProps as P)}
+        {...(restProps as unknown as P)}
       />
     );
 

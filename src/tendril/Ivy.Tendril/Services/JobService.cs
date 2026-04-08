@@ -669,7 +669,10 @@ public class JobService : IJobService
                     };
                     using var condProc = Process.Start(condPsi);
                     var condOutput = condProc?.StandardOutput.ReadToEnd().Trim() ?? "";
-                    condProc?.WaitForExit(10000);
+                    if (condProc is not null && !condProc.WaitForExit(10000))
+                    {
+                        try { condProc.Kill(entireProcessTree: true); } catch { /* already exited */ }
+                    }
 
                     if (condProc?.ExitCode != 0 ||
                         condOutput.Equals("False", StringComparison.OrdinalIgnoreCase))
@@ -699,7 +702,10 @@ public class JobService : IJobService
                 using var actionProc = Process.Start(actionPsi);
                 var output = actionProc?.StandardOutput.ReadToEnd().Trim() ?? "";
                 var stderr = actionProc?.StandardError.ReadToEnd().Trim() ?? "";
-                actionProc?.WaitForExit(30000);
+                if (actionProc is not null && !actionProc.WaitForExit(30000))
+                {
+                    try { actionProc.Kill(entireProcessTree: true); } catch { /* already exited */ }
+                }
 
                 if (!string.IsNullOrEmpty(output))
                     job.OutputLines.Enqueue($"[hook:{hook.Name}] {output}");
@@ -1058,9 +1064,12 @@ public class JobService : IJobService
                             UseShellExecute = false,
                             CreateNoWindow = true
                         };
-                        var proc = Process.Start(psi);
+                        using var proc = Process.Start(psi);
                         var output = proc?.StandardOutput.ReadToEnd().Trim() ?? "";
-                        proc?.WaitForExit(10000);
+                        if (proc is not null && !proc.WaitForExit(10000))
+                        {
+                            try { proc.Kill(entireProcessTree: true); } catch { /* already exited */ }
+                        }
 
                         if (!output.Equals("MERGED", StringComparison.OrdinalIgnoreCase))
                             return (false, $"Dependency '{dep}' PR {prUrl} is '{output}', not MERGED");

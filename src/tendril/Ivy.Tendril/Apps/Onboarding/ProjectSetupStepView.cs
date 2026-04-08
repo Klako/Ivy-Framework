@@ -28,7 +28,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
             var ri = i;
             reposLayout |= Layout.Horizontal().Gap(2).AlignContent(Align.Center)
                            | Text.Block(currentRepos[ri]).Width(Size.Grow())
-                           | new Button().Icon(Icons.Trash).Ghost().Small().OnClick(() =>
+                           | new Button().Icon(Icons.Trash).Ghost().OnClick(() =>
                            {
                                var list = new List<string>(repoPaths.Value);
                                list.RemoveAt(ri);
@@ -39,7 +39,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
         reposLayout |= Layout.Horizontal().Gap(2).AlignContent(Align.Center)
                        | newRepoPath.ToFolderInput("Select repository folder...", mode: FolderInputMode.FullPath)
                            .Width(Size.Grow())
-                       | new Button("Add").Outline().Small().OnClick(() =>
+                       | new Button("Add").Outline().OnClick(() =>
                        {
                            if (!string.IsNullOrWhiteSpace(newRepoPath.Value))
                            {
@@ -59,11 +59,11 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
             verificationsLayout |= Layout.Horizontal().Gap(2).AlignContent(Align.Center)
                                    | Text.Block(v.Name).Width(Size.Grow())
                                    | (v.Required ? new Badge("Required") : null!)
-                                   | new Button().Icon(Icons.Pencil).Ghost().Small().OnClick(() =>
+                                   | new Button().Icon(Icons.Pencil).Ghost().OnClick(() =>
                                    {
                                        editIndex.Set(vi);
                                    })
-                                   | new Button().Icon(Icons.Trash).Ghost().Small().OnClick(() =>
+                                   | new Button().Icon(Icons.Trash).Ghost().OnClick(() =>
                                    {
                                        var list = new List<VerificationEntry>(verifications.Value);
                                        list.RemoveAt(vi);
@@ -88,7 +88,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                   | Text.Block("Verifications").Bold()
                   | Text.Muted("Define verifications to run for this project.")
                   | verificationsLayout
-                  | new Button("Add Verification").Icon(Icons.Plus).Outline().Small().OnClick(() =>
+                  | new Button("Add Verification").Icon(Icons.Plus).Outline().OnClick(() =>
                   {
                       editIndex.Set(null);
                   }))

@@ -12,7 +12,7 @@ public record TrashFileInfo(
     string Project,
     string Content);
 
-[App(title: "Trash", icon: Icons.Trash2, group: new[] { "Tools" }, order: MenuOrder.Trash, isVisible: false)]
+[App(title: "Trash", icon: Icons.Trash2, group: ["Apps"], order: MenuOrder.Trash, isVisible: false)]
 public class TrashApp : ViewBase
 {
     public override object Build()
@@ -47,7 +47,7 @@ public class TrashApp : ViewBase
         var filteredList = filteredFiles.ToList();
 
         // Auto-select first file if selection is invalid
-        if (selectedFile.Value is { } sel && !filteredList.Any(f => f.FilePath == sel))
+        if (selectedFile.Value is { } sel && filteredList.All(f => f.FilePath != sel))
             selectedFile.Set(filteredList.FirstOrDefault()?.FilePath);
 
         var selected = filteredList.FirstOrDefault(f => f.FilePath == selectedFile.Value);

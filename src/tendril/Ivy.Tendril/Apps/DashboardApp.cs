@@ -2,7 +2,7 @@ using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Apps;
 
-[App(title: "Dashboard", icon: Icons.ChartBar, group: ["Tools"], order: MenuOrder.Dashboard)]
+[App(title: "Dashboard", icon: Icons.ChartBar, group: ["Apps"], order: MenuOrder.Dashboard)]
 public class DashboardApp : ViewBase
 {
     public override object Build()

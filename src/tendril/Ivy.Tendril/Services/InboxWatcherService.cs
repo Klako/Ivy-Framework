@@ -93,60 +93,53 @@ public class InboxWatcherService : IInboxWatcherService
             if (!File.Exists(filePath))
                 return;
 
-            var content = await FileHelper.ReadAllTextAsync(filePath);
-            var (project, description, sourcePath) = ParseContent(content);
-
-            if (string.IsNullOrWhiteSpace(description))
-            {
-                Console.Error.WriteLine($"Skipping inbox file '{filePath}' — empty description.");
-                return;
-            }
-
-            // Rename to .processing so the watcher/poller ignores it while the job runs
-            var processingPath = filePath + ".processing";
-            File.Move(filePath, processingPath);
-
-            var args = new List<string> { "-Description", description, "-Project", project };
-            if (!string.IsNullOrEmpty(sourcePath))
-                args.AddRange(["-SourcePath", sourcePath]);
-            _jobService.StartJob("MakePlan", args.ToArray(), processingPath);
-        }
-        catch (Exception ex)
-        {
-            // Retry once after a short delay
             try
             {
-                await Task.Delay(1000);
-                if (!File.Exists(filePath))
-                    return;
-
-                var content = await FileHelper.ReadAllTextAsync(filePath);
-                var (project, description, sourcePath) = ParseContent(content);
-
-                if (string.IsNullOrWhiteSpace(description))
-                {
-                    Console.Error.WriteLine($"Skipping inbox file '{filePath}' — empty description.");
-                    return;
-                }
-
-                var processingPath = filePath + ".processing";
-                File.Move(filePath, processingPath);
-
-                var args = new List<string> { "-Description", description, "-Project", project };
-                if (!string.IsNullOrEmpty(sourcePath))
-                    args.AddRange(["-SourcePath", sourcePath]);
-                _jobService.StartJob("MakePlan", args.ToArray(), processingPath);
+                await ProcessInboxFileAsync(filePath);
             }
-            catch (Exception retryEx)
+            catch (Exception ex)
             {
-                Console.Error.WriteLine(
-                    $"Failed to process inbox file '{filePath}' after retry. Initial error: {ex.Message}. Retry error: {retryEx.Message}");
+                // Retry once after a short delay
+                await Task.Delay(1000);
+                try
+                {
+                    await ProcessInboxFileAsync(filePath);
+                }
+                catch (Exception retryEx)
+                {
+                    Console.Error.WriteLine(
+                        $"Failed to process inbox file '{filePath}' after retry. Initial error: {ex.Message}. Retry error: {retryEx.Message}");
+                }
             }
         }
         finally
         {
             _processing.TryRemove(filePath, out _);
         }
+    }
+
+    private async Task ProcessInboxFileAsync(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return;
+
+        var content = await FileHelper.ReadAllTextAsync(filePath);
+        var (project, description, sourcePath) = ParseContent(content);
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            Console.Error.WriteLine($"Skipping inbox file '{filePath}' — empty description.");
+            return;
+        }
+
+        // Rename to .processing so the watcher/poller ignores it while the job runs
+        var processingPath = filePath + ".processing";
+        File.Move(filePath, processingPath);
+
+        var args = new List<string> { "-Description", description, "-Project", project };
+        if (!string.IsNullOrEmpty(sourcePath))
+            args.AddRange(["-SourcePath", sourcePath]);
+        _jobService.StartJob("MakePlan", args.ToArray(), processingPath);
     }
 
     internal static (string project, string description, string? sourcePath) ParseContent(string content)

@@ -1094,8 +1094,13 @@ public class JobService : IJobService
                 if (!planYaml.State.Equals("Blocked", StringComparison.OrdinalIgnoreCase)) continue;
                 if (!planYaml.DependsOn.Contains(completedFolderName, StringComparer.OrdinalIgnoreCase)) continue;
 
-                // Skip if there's already an active job for this plan
-                if (HasActiveJobForPlan(dir)) continue;
+                // Skip if there's already a blocked or active job for this plan
+                var hasExistingJob = _jobs.Values.Any(j =>
+                    j.Type == "ExecutePlan" &&
+                    j.Status is JobStatus.Blocked or JobStatus.Running or JobStatus.Queued or JobStatus.Pending &&
+                    j.Args.Length > 0 &&
+                    j.Args[0].Equals(dir, StringComparison.OrdinalIgnoreCase));
+                if (hasExistingJob) continue;
 
                 var (allMet, _) = CheckDependencies(dir);
                 if (allMet)

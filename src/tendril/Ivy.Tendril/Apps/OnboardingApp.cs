@@ -18,10 +18,10 @@ public class OnboardingApp : ViewBase
         return
         [
             new("1", selectedIndex > 0 ? Icons.Check : null, "Welcome"),
-            new("2", selectedIndex > 1 ? Icons.Check : null, "Software Check"),
+            new("2", selectedIndex > 1 ? Icons.Check : null, "Software"),
             new("3", selectedIndex > 2 ? Icons.Check : null, "Coding Agent"),
-            new("4", selectedIndex > 3 ? Icons.Check : null, "Tendril Home"),
-            new("5", selectedIndex > 4 ? Icons.Check : null, "Project Setup"),
+            new("4", selectedIndex > 3 ? Icons.Check : null, "Storage"),
+            new("5", selectedIndex > 4 ? Icons.Check : null, "Project"),
             new("6", selectedIndex > 5 ? Icons.Check : null, "Complete")
         ];
     }
@@ -70,7 +70,7 @@ public class WelcomeStepView(IState<int> stepperIndex) : ViewBase
                | Text.Markdown(
                    """
                    >[!NOTE]
-                   >Ivy Tendril is a coding orchestrator powered by agents like Claude Code, Codex, or Gemini. It’s designed to help you complete large amounts of work quickly—often much faster than traditional workflows. Because of this speed, Tendril can also use credits rapidly.
+                   >Ivy Tendril is a coding orchestrator powered by agents like Claude Code, Codex, or Gemini. It’s designed to help you complete large amounts of work quickly. Be aware that Tendril will consume lots of tokens rapidly.
                    """)
                | new Button("Get Started").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
                    .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1));
@@ -223,7 +223,6 @@ public class CodingAgentStepView(IState<int> stepperIndex, IReadOnlyDictionary<s
     public override object Build()
     {
         var config = UseService<IConfigService>();
-        var selectedAgent = UseState("");
 
         var installedOptions = AgentOptions.Where(a => checkResults.ContainsKey(a.Name) && checkResults[a.Name]).ToArray();
         if (installedOptions.Length == 0) installedOptions = AgentOptions;
@@ -232,14 +231,10 @@ public class CodingAgentStepView(IState<int> stepperIndex, IReadOnlyDictionary<s
             ? installedOptions.First(a => a.Name == config.Settings.CodingAgent).Label
             : installedOptions.First().Label;
 
-        if (selectedAgent.Value == "") selectedAgent.Set(defaultLabel);
+        var selectedAgent = UseState(defaultLabel);
 
         return Layout.Vertical()
                 | Text.H2("Choose Your Coding Agent")
-                | Text.Markdown(
-                    """
-                    Tendril supports multiple AI coding agents. Choose which one to use as your default.
-                    """)
                 | selectedAgent.ToSelectInput(installedOptions.Select(a => a.Label).ToArray())
                    .Variant(SelectInputVariant.Toggle)
                    .WithField()

@@ -376,6 +376,7 @@ promptwares:
     - Edit
   CreateIssue:
     model: sonnet
+    effort: medium
     allowedTools:
     - Read
     - Glob
@@ -385,6 +386,7 @@ promptwares:
     - Edit
   IvyFrameworkVerification:
     model: sonnet
+    effort: high
     allowedTools:
     - Read
     - Write

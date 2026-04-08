@@ -554,6 +554,27 @@ public class PlanDatabaseServiceTests : IDisposable
     }
 
     [Fact]
+    public void SearchPlans_LikeFallbackFindsSourceUrl()
+    {
+        var metadata = new PlanMetadata(
+            1500, "Tendril", "NiceToHave", "Source URL Plan", PlanStatus.Draft,
+            new List<string> { "D:\\Repos\\Test" },
+            new List<string>(), new List<string>(),
+            new List<PlanVerificationEntry>(),
+            new List<string>(), new List<string>(),
+            DateTime.UtcNow, DateTime.UtcNow, null,
+            "https://github.com/Ivy-Interactive/Ivy-Framework/issues/42"
+        );
+        var plan = new PlanFile(metadata, "# Content", "D:\\Plans\\01500-SourceUrlPlan", "state: Draft");
+        _db.UpsertPlan(plan);
+
+        // "issues/42" is a substring — FTS5 won't match, should fall back to LIKE
+        var results = _db.SearchPlans("issues/42");
+        Assert.Single(results);
+        Assert.Equal("Source URL Plan", results[0].Title);
+    }
+
+    [Fact]
     public void SearchPlans_PrefersFts5OverLike()
     {
         _db.UpsertPlan(CreateTestPlan(1500, "Widget Feature",

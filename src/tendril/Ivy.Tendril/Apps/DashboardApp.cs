@@ -91,28 +91,29 @@ public class DashboardApp : ViewBase
         var projectData = stats.ProjectCounts;
 
         var projectProgress = new StackedProgress(
-                projectData.Select(p => new ProgressSegment(
-                    p.Count,
-                    configService.GetProjectColor(p.Project),
-                    p.Project
-                )).ToArray()
-            )
-            .Selected(selectedProject.Value != null
-                ? projectData.FindIndex(p => p.Project == selectedProject.Value)
-                : null)
-            .OnSelect(e =>
-            {
-                try
-                {
-                    var clickedProject = projectData[e.Value].Project;
-                    selectedProject.Set(selectedProject.Value == clickedProject ? null : clickedProject);
-                    return ValueTask.CompletedTask;
-                }
-                catch (Exception exception)
-                {
-                    return ValueTask.FromException(exception);
-                }
-            });
+                    projectData.Select(p => new ProgressSegment(
+                        p.Count,
+                        configService.GetProjectColor(p.Project),
+                        p.Project
+                    )).ToArray()
+                )
+                .Selected(selectedProject.Value != null
+                    ? projectData.FindIndex(p => p.Project == selectedProject.Value)
+                    : null)
+            // .OnSelect(e =>
+            // {
+            //     try
+            //     {
+            //         var clickedProject = projectData[e.Value].Project;
+            //         selectedProject.Set(selectedProject.Value == clickedProject ? null : clickedProject);
+            //         return ValueTask.CompletedTask;
+            //     }
+            //     catch (Exception exception)
+            //     {
+            //         return ValueTask.FromException(exception);
+            //     }
+            // })
+            ;
 
         // Hourly cost & tokens combined bar chart
         var hourlyBurn = planService.GetHourlyTokenBurn(projectFilter: selectedProject.Value);
@@ -131,29 +132,32 @@ public class DashboardApp : ViewBase
                 .ToList();
         }
 
+        const string costMeasureName = "Cost ($)";
+        const string tokensMeasureName = "Tokens";
+
         var combinedChart = hourlyBurn.ToBarChart(
                 style: BarChartStyles.Default,
                 polish: chart => chart with
                 {
                     Bars =
                     [
-                        new Bar("Cost ($)").Radius(4).YAxisIndex(0),
-                        new Bar("Tokens").Radius(4).YAxisIndex(1)
+                        new Bar(costMeasureName).Radius(0).YAxisIndex(0),
+                        new Bar(tokensMeasureName).Radius(0).YAxisIndex(1)
                     ],
                     XAxis =
                     [
-                        new XAxis().TickFormatter("MM/dd", TickFormatterType.Date).MinTickGap(23)
+                        new XAxis().TickFormatter("MM/dd HH:mm", TickFormatterType.Date).MinTickGap(15)
                     ],
                     YAxis =
                     [
-                        new YAxis("Cost ($)").TickFormatter("C2", TickFormatterType.Number).Hide(),
-                        new YAxis("Tokens").Orientation(YAxis.Orientations.Right).Hide()
+                        new YAxis(costMeasureName).TickFormatter("C2", TickFormatterType.Number).Hide(),
+                        new YAxis(tokensMeasureName).Orientation(YAxis.Orientations.Right).Hide()
                     ]
                 })
             .FillGaps(TimeSpan.FromHours(1))
             .Dimension("Hour", e => e.Hour)
-            .Measure("Cost ($)", e => e.Sum(f => (double)f.Cost))
-            .Measure("Tokens", e => e.Sum(f => (double)f.Tokens))
+            .Measure(costMeasureName, e => e.Sum(f => (double)f.Cost))
+            .Measure(tokensMeasureName, e => e.Sum(f => (double)f.Tokens))
             .Height(Size.Px(350))
             .Width(Size.Full());
 
@@ -163,7 +167,7 @@ public class DashboardApp : ViewBase
 
         var header = Layout.Vertical()
                      | statsRow
-                     | projectProgress.WithLayout().Margin(2);
+                     | projectProgress.Width(Size.Full()).WithLayout().Margin(2);
 
         return new HeaderLayout(
             header,

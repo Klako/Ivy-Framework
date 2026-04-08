@@ -113,7 +113,7 @@ public class TendrilAppShell(AppShellSettings settings) : ViewBase
 
         // Auto-default: if there's exactly one visible app, select it and close sidebar
         var visibleApps = appRepository.GetMenuItems().FlattenWithPath().ToArray();
-        if (visibleApps.Length == 1 && visibleApps[0].Item.Tag is string singleAppId)
+        if (visibleApps is [{ Item.Tag: string singleAppId } _])
             settings = settings with
             {
                 DefaultAppId = settings.DefaultAppId ?? singleAppId,

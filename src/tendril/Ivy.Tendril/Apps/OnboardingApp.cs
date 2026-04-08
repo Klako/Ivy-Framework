@@ -26,13 +26,13 @@ public class OnboardingApp : ViewBase
         ];
     }
 
-    private static object GetStepViews(IState<int> stepperIndex)
+    private static object GetStepViews(IState<int> stepperIndex, IState<Dictionary<string, bool>?> checkResults)
     {
         return stepperIndex.Value switch
         {
             0 => new WelcomeStepView(stepperIndex),
-            1 => new SoftwareCheckStepView(stepperIndex),
-            2 => new CodingAgentStepView(stepperIndex),
+            1 => new SoftwareCheckStepView(stepperIndex, checkResults),
+            2 => new CodingAgentStepView(stepperIndex, checkResults.Value ?? new Dictionary<string, bool>()),
             3 => new TendrilHomeStepView(stepperIndex),
             4 => new ProjectSetupStepView(stepperIndex),
             5 => new CompleteStepView(stepperIndex),
@@ -43,13 +43,14 @@ public class OnboardingApp : ViewBase
     public override object Build()
     {
         var stepperIndex = UseState(0);
+        var checkResults = UseState<Dictionary<string, bool>?>(null);
         var steps = GetSteps(stepperIndex.Value);
 
         return Layout.TopCenter() |
                (Layout.Vertical().Margin(0, 20).Width(150)
                 | new Image("/tendril/assets/Tendril.svg").Width(Size.Units(20)).Height(Size.Auto())
                 | new Stepper(OnSelect, stepperIndex.Value, steps).Width(Size.Full())
-                | GetStepViews(stepperIndex)
+                | GetStepViews(stepperIndex, checkResults)
                );
 
         ValueTask OnSelect(Event<Stepper, int> e)
@@ -76,31 +77,11 @@ public class WelcomeStepView(IState<int> stepperIndex) : ViewBase
     }
 }
 
-public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
+public class SoftwareCheckStepView(IState<int> stepperIndex, IState<Dictionary<string, bool>?> checkResults) : ViewBase
 {
     public override object Build()
     {
-        var checkResults = UseState<Dictionary<string, bool>?>(null);
         var isChecking = UseState(false);
-
-        async Task CheckSoftware()
-        {
-            isChecking.Set(true);
-            var results = new Dictionary<string, bool>
-            {
-                ["gh"] = await CheckCommand("gh", "--version"),
-                ["claude"] = await CheckCommand("claude", "--version"),
-                ["codex"] = await CheckCommand("codex", "--version"),
-                ["gemini"] = await CheckCommand("gemini", "--version"),
-                ["git"] = await CheckCommand("git", "--version"),
-                ["powershell"] = await CheckCommand("pwsh", "-Version")
-                                 || await CheckCommand("powershell", "-Version"),
-                ["pandoc"] = await CheckCommand("pandoc", "--version")
-            };
-
-            checkResults.Set(results);
-            isChecking.Set(false);
-        }
 
         var hasAnyCodingAgent = checkResults.Value != null
                                 && (checkResults.Value["claude"] || checkResults.Value["codex"] ||
@@ -118,10 +99,11 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
                    """
                    Tendril requires the following software to be installed:
 
-                   - **Coding Agent** - At least one of: Claude CLI, Codex CLI, or Gemini CLI
+                   **Required:**
+                   - **Coding Agent** - At least one of: Claude Code CLI, Codex CLI, or Gemini CLI
                    - **GitHub CLI** - For PR creation and GitHub integration
                    - **Git** - For version control
-                   - **PowerShell** - For running scripts and hooks
+                   - **PowerShell** - For running promptware and hooks
 
                    **Optional:**
                    - **Pandoc** - For PDF export functionality
@@ -160,17 +142,31 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
                            .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1))
                        : Layout.Vertical()
                          | Text.Warning(
-                             "Please install missing required software before continuing. At least one coding agent (Claude, Codex, or Gemini) must be installed.")
-                         | (Layout.Horizontal().Gap(2)
+                             "Please install all required software before continuing. At least one coding agent (Claude, Codex, or Gemini), GitHub CLI, Git, and PowerShell must be installed.")
                             | new Button("Check Again")
                                 .Outline()
                                 .Icon(Icons.CheckCheck, Align.Right)
                                 .OnClick(async () => await CheckSoftware())
-                            | new Button("Skip Anyway")
-                                .Destructive()
-                                .OnClick(() => stepperIndex.Set(stepperIndex.Value + 1))
-                         )
                );
+
+        async Task CheckSoftware()
+        {
+            isChecking.Set(true);
+            var results = new Dictionary<string, bool>
+            {
+                ["gh"] = await CheckCommand("gh", "--version"),
+                ["claude"] = await CheckCommand("claude", "--version"),
+                ["codex"] = await CheckCommand("codex", "--version"),
+                ["gemini"] = await CheckCommand("gemini", "--version"),
+                ["git"] = await CheckCommand("git", "--version"),
+                ["powershell"] = await CheckCommand("pwsh", "-Version")
+                                 || await CheckCommand("powershell", "-Version"),
+                ["pandoc"] = await CheckCommand("pandoc", "--version")
+            };
+
+            checkResults.Set(results);
+            isChecking.Set(false);
+        }
     }
 
     private static TableRow MakeSoftwareRow(
@@ -220,38 +216,39 @@ public class SoftwareCheckStepView(IState<int> stepperIndex) : ViewBase
     }
 }
 
-public class CodingAgentStepView(IState<int> stepperIndex) : ViewBase
+public class CodingAgentStepView(IState<int> stepperIndex, IReadOnlyDictionary<string, bool> checkResults) : ViewBase
 {
-    private static readonly string[] AgentOptions = ["Claude Code", "Codex", "Gemini"];
+    private static readonly (string Label, string Name)[] AgentOptions = [("Claude Code", "claude"), ("Codex", "codex"), ("Gemini", "gemini")];
 
     public override object Build()
     {
         var config = UseService<IConfigService>();
-        var selectedAgent = UseState(string.IsNullOrWhiteSpace(config.Settings.CodingAgent)
-            ? "Claude"
-            : config.Settings.CodingAgent);
+
+        var installedOptions = AgentOptions.Where(a => checkResults.ContainsKey(a.Name) && checkResults[a.Name]).ToArray();
+        if (installedOptions.Length == 0) installedOptions = AgentOptions;
+
+        var defaultLabel = installedOptions.Any(a => a.Name == config.Settings.CodingAgent)
+            ? installedOptions.First(a => a.Name == config.Settings.CodingAgent).Label
+            : installedOptions.First().Label;
+
+        var selectedAgent = UseState(defaultLabel);
 
         return Layout.Vertical()
                 | Text.H2("Choose Your Coding Agent")
                 | Text.Markdown(
                     """
                     Tendril supports multiple AI coding agents. Choose which one to use as your default.
-
-                    You can change this later in Settings.
                     """)
-                | selectedAgent.ToSelectInput(AgentOptions)
+                | selectedAgent.ToSelectInput(installedOptions.Select(a => a.Label).ToArray())
                    .Variant(SelectInputVariant.Toggle)
                    .WithField()
                    .Label("Coding Agent")
                 | new Button("Continue").Primary().Large().Icon(Icons.ArrowRight, Align.Right)
                    .OnClick(() =>
                    {
-
-
-                       config.Settings.CodingAgent = selectedAgent.Value;
+                       config.Settings.CodingAgent = installedOptions.First(a => a.Label == selectedAgent.Value).Name;
                        stepperIndex.Set(stepperIndex.Value + 1);
                    });
-
     }
 }
 

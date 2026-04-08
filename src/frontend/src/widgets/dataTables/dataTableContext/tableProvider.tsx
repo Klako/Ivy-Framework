@@ -27,7 +27,6 @@ export const TableProvider: React.FC<TableProviderProps> = ({
     columnOrder,
     initializeColumnOrder,
     initializeColumnWidths,
-    widenColumnWidths,
     handleColumnResize,
     handleColumnReorder,
   } = useColumnManagement({
@@ -54,7 +53,6 @@ export const TableProvider: React.FC<TableProviderProps> = ({
     setError,
     initializeColumnOrder,
     initializeColumnWidths,
-    widenColumnWidths,
     initializeSortFromColumns,
   });
 

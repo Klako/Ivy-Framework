@@ -18,7 +18,6 @@ interface UseDataLoadingProps {
   setError: (error: string | null) => void;
   initializeColumnOrder: (columns: DataColumn[]) => void;
   initializeColumnWidths: (columns: DataColumn[], arrowTable?: arrow.Table | null) => void;
-  widenColumnWidths: (columns: DataColumn[], arrowTable: arrow.Table) => void;
   initializeSortFromColumns: (columns: DataColumn[]) => boolean;
 }
 
@@ -38,7 +37,6 @@ export const useDataLoading = ({
   setError,
   initializeColumnOrder,
   initializeColumnWidths,
-  widenColumnWidths,
   initializeSortFromColumns,
 }: UseDataLoadingProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -183,9 +181,6 @@ export const useDataLoading = ({
         const newRowCount = arrowTableRef.current.numRows;
         setVisibleRows(newRowCount);
         currentRowCountRef.current = newRowCount;
-
-        // Re-estimate content-based column widths from combined data (widen only)
-        widenColumnWidths(columnsProp, arrowTableRef.current);
       }
 
       setHasMoreState(result.hasMore);
@@ -204,7 +199,6 @@ export const useDataLoading = ({
     batchSize,
     config.loadAllRows,
     columnsProp,
-    widenColumnWidths,
     setVisibleRows,
     setError,
     arrowTableRef,

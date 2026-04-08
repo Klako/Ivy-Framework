@@ -110,20 +110,47 @@ For each repo listed in `plan.yaml` `repos` (or the project's repos from `config
 ```bash
 cd <repo-path>
 
-# Check for uncommitted changes (staged, unstaged, or untracked)
 if [[ -n $(git status --porcelain) ]]; then
-  echo "Found uncommitted changes in $(pwd), auto-committing..."
-  git status --short
+  echo "Found uncommitted changes in $(pwd), checking for conflicts with recent commits..."
   
-  # Stage all changes
+  CONFLICT_FOUND=false
+  
+  # Get list of dirty files (modified/added/deleted, not untracked)
+  for file in $(git diff --name-only HEAD); do
+    # Check if this file was touched in last 5 commits
+    RECENT_COMMIT=$(git log --oneline -1 -5 -- "$file" 2>/dev/null)
+    if [[ -n "$RECENT_COMMIT" ]]; then
+      # Compare: would staging this file revert the recent commit's changes?
+      # Check if the working tree version matches a pre-commit state
+      COMMIT_HASH=$(echo "$RECENT_COMMIT" | awk '{print $1}')
+      
+      # Get the file content from before that commit
+      PARENT_CONTENT=$(git show "${COMMIT_HASH}^:$file" 2>/dev/null)
+      WORKING_CONTENT=$(cat "$file" 2>/dev/null)
+      
+      if [[ "$PARENT_CONTENT" == "$WORKING_CONTENT" ]]; then
+        echo "WARNING: Dirty file '$file' matches pre-commit state of $RECENT_COMMIT"
+        echo "  Auto-committing would revert changes from that commit."
+        CONFLICT_FOUND=true
+      fi
+    fi
+  done
+  
+  # Also check untracked files (these are safe — they can't revert anything)
+  # No conflict check needed for untracked files
+  
+  if [[ "$CONFLICT_FOUND" == "true" ]]; then
+    echo "ERROR: Auto-commit aborted — dirty files would revert recent commits."
+    echo "  Please resolve manually: commit, stash, or discard the conflicting files."
+    echo "  Then re-execute the plan."
+    # Do NOT commit or push — fail the step so the user notices
+    exit 1
+  fi
+  
+  # No conflicts — safe to auto-commit
   git add -A
-  
-  # Create commit with timestamp
   git commit -m "WIP: Auto-commit before plan execution [$(date -u +%Y-%m-%dT%H:%M:%SZ)]"
-  
-  # Push to remote so worktrees created from origin/<default-branch> include these changes
   git push origin $(git branch --show-current)
-  
   echo "Changes committed and pushed successfully"
 fi
 ```
@@ -133,6 +160,7 @@ fi
 - When the PR merges and MakePr pulls main back, `git pull` would overwrite any uncommitted local changes
 - Auto-committing and pushing ensures all local work is preserved and visible to worktrees
 - The `WIP:` prefix makes auto-commits easily identifiable for later cleanup (squash/amend)
+- **Revert detection:** Before committing, each dirty tracked file is checked against the last 5 commits. If the working tree version matches the file's state *before* a recent commit, the auto-commit would silently revert that commit's changes. In this case, the auto-commit is aborted with a warning so the user can resolve manually.
 
 **Note:** This step runs in the original repo directories, before worktree creation.
 

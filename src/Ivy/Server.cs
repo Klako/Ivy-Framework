@@ -24,6 +24,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Ivy.Core.Sync;
 
 namespace Ivy;
 
@@ -585,7 +586,8 @@ public class Server
                         new JsonNodeMessagePackFormatter(),
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
-                        new JsonValueMessagePackFormatter()
+                        new JsonValueMessagePackFormatter(),
+                        new WidgetMessagePackFormatter()
                     },
                     new IFormatterResolver[] {
                         JsonNodeResolver.Instance,

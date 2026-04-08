@@ -77,14 +77,17 @@ public class EditProjectDialog(
             var repo = currentRepos[ri];
             var expandedPath = Environment.ExpandEnvironmentVariables(repo.Path);
             var pathExists = Directory.Exists(expandedPath);
+            var isGitRepo = pathExists && Path.Exists(Path.Combine(expandedPath, ".git"));
             var isEditing = editingRepoIndex.Value == ri;
 
             if (isEditing)
             {
                 reposLayout |= Layout.Horizontal().Gap(2).AlignContent(Align.Center)
-                               | (!pathExists
+                               | (!isGitRepo
                                    ? (object)new Icon(Icons.TriangleAlert, Colors.Warning).Small()
-                                       .WithTooltip($"Path does not exist: {expandedPath}")
+                                       .WithTooltip(!pathExists
+                                           ? $"Path does not exist: {expandedPath}"
+                                           : $"Not a git repository: {expandedPath}")
                                    : new Spacer().Width(Size.Units(4)))
                                | editingRepoPath
                                    .ToFolderInput("Select repository folder...", mode: FolderInputMode.FullPath)
@@ -106,6 +109,12 @@ public class EditProjectDialog(
                                        return;
                                    }
 
+                                   if (!Path.Exists(Path.Combine(expandedNewPath, ".git")))
+                                   {
+                                       editingRepoError.Set($"Directory is not a git repository: {expandedNewPath}");
+                                       return;
+                                   }
+
                                    var list = new List<RepoRef>(editRepos.Value);
                                    list[ri] = new RepoRef { Path = newPath, PrRule = repo.PrRule };
                                    editRepos.Set(list);
@@ -121,12 +130,14 @@ public class EditProjectDialog(
             else
             {
                 var pathText = Text.Block(repo.Path).Width(Size.Grow());
-                if (!pathExists) pathText = pathText.Color(Colors.Red);
+                if (!isGitRepo) pathText = pathText.Color(Colors.Red);
 
                 reposLayout |= Layout.Horizontal().Gap(2).AlignContent(Align.Center)
-                               | (!pathExists
+                               | (!isGitRepo
                                    ? (object)new Icon(Icons.TriangleAlert, Colors.Warning).Small()
-                                       .WithTooltip($"Path does not exist: {expandedPath}")
+                                       .WithTooltip(!pathExists
+                                           ? $"Path does not exist: {expandedPath}"
+                                           : $"Not a git repository: {expandedPath}")
                                    : new Spacer().Width(Size.Units(4)))
                                | pathText
                                | new Badge(repo.PrRule).Variant(BadgeVariant.Outline)
@@ -164,6 +175,12 @@ public class EditProjectDialog(
                                if (!Directory.Exists(expandedNewPath))
                                {
                                    repoPathError.Set($"Directory does not exist: {expandedNewPath}");
+                                   return;
+                               }
+
+                               if (!Path.Exists(Path.Combine(expandedNewPath, ".git")))
+                               {
+                                   repoPathError.Set($"Directory is not a git repository: {expandedNewPath}");
                                    return;
                                }
 

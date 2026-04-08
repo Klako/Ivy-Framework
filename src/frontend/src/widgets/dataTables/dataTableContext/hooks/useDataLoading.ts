@@ -93,6 +93,8 @@ export const useDataLoading = ({
           const parsedWidth = parseSize(propCol.width);
           return {
             ...propCol,
+            // Preserve original Size string for grow factor extraction in convertToGridColumns
+            originalWidth: typeof propCol.width === "string" ? propCol.width : undefined,
             // Use parsed width from prop, or calculated width from Arrow, or default
             width: parsedWidth || parseSize(arrowCol?.width) || 150,
             // IMPORTANT: Keep type from propCol, never override with Arrow's inferred type

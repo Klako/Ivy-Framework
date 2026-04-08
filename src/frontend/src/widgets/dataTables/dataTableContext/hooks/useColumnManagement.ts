@@ -70,11 +70,8 @@ export const useColumnManagement = ({
       mergedColumns.forEach((col, index) => {
         const explicitWidth = parseSize(col.width);
         const headerMinWidth = estimateHeaderWidth(col.header || col.name);
-        // Use explicit width if set, otherwise use header-based width
-        // If explicit width is the default (150), use the larger of explicit and header-based
-        widths[index.toString()] = col.width
-          ? explicitWidth
-          : Math.max(explicitWidth, headerMinWidth);
+        // For grow/fraction/auto/etc types, parseSize returns 0 — use header width as minimum
+        widths[index.toString()] = Math.max(explicitWidth, headerMinWidth);
       });
       return widths;
     });

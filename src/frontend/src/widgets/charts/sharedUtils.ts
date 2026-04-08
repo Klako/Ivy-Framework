@@ -211,7 +211,7 @@ export function generateEChartGrid(
     right: allYAxesHidden ? 0 : "4%",
     top: hasToolbox ? 40 : 15,
     bottom: allXAxesHidden ? 10 : 50, // Reduce bottom padding when X axis is hidden
-    containLabel: true,
+    containLabel: !allYAxesHidden,
     borderWidth: 0, // Ensure no border is drawn
   };
 

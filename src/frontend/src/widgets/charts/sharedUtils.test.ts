@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTickLabel, generateXAxis, generateYAxis } from "./sharedUtils";
+import { formatTickLabel, generateEChartGrid, generateXAxis, generateYAxis } from "./sharedUtils";
 import type { XAxisProps, YAxisProps } from "./chartTypes";
 
 describe("formatTickLabel - date formats", () => {
@@ -306,5 +306,26 @@ describe("generateXAxis", () => {
     const result = callGenerateXAxis({ unit: "kg" });
     const formatted = result.axisLabel.formatter(500);
     expect(formatted).toBe("500kg");
+  });
+});
+
+describe("generateEChartGrid", () => {
+  it("returns containLabel: true when Y axes are visible", () => {
+    const yAxis: YAxisProps[] = [{ hide: false }];
+    const result = generateEChartGrid(undefined, false, yAxis);
+    expect(result).toHaveProperty("containLabel", true);
+  });
+
+  it("returns containLabel: false and left/right: 0 when all Y axes are hidden", () => {
+    const yAxis: YAxisProps[] = [{ hide: true }, { hide: true }];
+    const result = generateEChartGrid(undefined, false, yAxis);
+    expect(result).toHaveProperty("containLabel", false);
+    expect(result).toHaveProperty("left", 0);
+    expect(result).toHaveProperty("right", 0);
+  });
+
+  it("returns containLabel: true when yAxis is empty array", () => {
+    const result = generateEChartGrid(undefined, false, []);
+    expect(result).toHaveProperty("containLabel", true);
   });
 });

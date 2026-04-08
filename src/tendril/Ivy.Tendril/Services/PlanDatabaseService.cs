@@ -541,6 +541,7 @@ public class PlanDatabaseService : IPlanDatabaseService
                                       FROM Plans
                                       WHERE Title LIKE @search OR LatestRevisionContent LIKE @search
                                             OR CAST(Id AS TEXT) LIKE @search OR Project LIKE @search
+                                            OR SourceUrl LIKE @search
                                       ORDER BY Id
                                       """;
                 likeCmd.Parameters.AddWithValue("@search", search);

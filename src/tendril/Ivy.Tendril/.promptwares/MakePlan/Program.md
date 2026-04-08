@@ -193,10 +193,16 @@ The `## Tests` section MUST include two parts:
    
    To determine scope:
    - Identify the namespaces/classes being modified
-   - Search for existing test classes that cover those areas  
-   - Write a filter expression, e.g.: `FullyQualifiedName~Ivy.Tests.Widgets.ButtonTests`
-   
-   If the change is so broad that all tests are genuinely needed, explicitly state: "Run all tests (broad cross-cutting change)."
+   - Search for existing test classes that cover those areas
+   - **Filters MUST target specific test classes, not broad namespaces.** 
+     - Good: `FullyQualifiedName~Ivy.Console.Test.CommandParserTests`
+     - Good: `FullyQualifiedName~Ivy.Test.Helpers.StringHelperTests|FullyQualifiedName~Ivy.Test.ValidationHelperTests`
+     - Bad: `FullyQualifiedName~Ivy.Console` (matches entire project including E2E)
+     - Bad: `FullyQualifiedName~Ivy.Test` (matches hundreds of unrelated tests)
+   - **Exclude E2E/integration test classes** unless the plan specifically changes E2E-level behavior. E2E tests are environment-dependent and should only run when explicitly needed.
+   - When multiple test classes are relevant, combine with `|` operator: `FullyQualifiedName~ClassA|FullyQualifiedName~ClassB`
+   - If no existing tests cover the changed code, state: "No existing test coverage for this area."
+   - If the change is so broad that all tests are genuinely needed, explicitly state: "Run all tests (broad cross-cutting change)." and justify why.
    
    Never leave test scope unspecified — this causes the full suite to run unnecessarily.
 

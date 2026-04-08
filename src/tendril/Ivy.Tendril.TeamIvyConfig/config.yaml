@@ -336,6 +336,7 @@ promptwares:
     - WebSearch
   ExpandPlan:
     model: sonnet
+    effort: high
     allowedTools:
     - Read
     - Glob
@@ -345,6 +346,7 @@ promptwares:
     - Edit
   MakePr:
     model: sonnet
+    effort: medium
     allowedTools:
     - Read
     - Glob
@@ -354,6 +356,7 @@ promptwares:
     - Edit
   UpdatePlan:
     model: sonnet
+    effort: high
     allowedTools:
     - Read
     - Glob
@@ -363,6 +366,7 @@ promptwares:
     - Edit
   SplitPlan:
     model: sonnet
+    effort: medium
     allowedTools:
     - Read
     - Glob

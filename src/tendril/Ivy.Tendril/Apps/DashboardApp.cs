@@ -10,10 +10,8 @@ public class DashboardApp : ViewBase
         var planService = UseService<IPlanReaderService>();
         var configService = UseService<IConfigService>();
         var refreshToken = UseRefreshToken();
-        var pollInterval = planService.IsDatabaseReady
-            ? TimeSpan.FromSeconds(60)
-            : TimeSpan.FromSeconds(2);
-        UseInterval(() => { refreshToken.Refresh(); }, pollInterval);
+        UseInterval(() => { refreshToken.Refresh(); },
+            planService.IsDatabaseReady ? TimeSpan.FromSeconds(60) : TimeSpan.FromSeconds(2));
 
         var selectedProject = UseState<string?>(null);
 

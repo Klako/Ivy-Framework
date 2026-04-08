@@ -12,6 +12,7 @@ using Ivy.Core.Server.Middleware;
 using Ivy.Core.Server.Formatters;
 using MessagePack;
 using MessagePack.Resolvers;
+using MessagePack.Formatters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http; //do not remove - used in RELEASE
@@ -23,6 +24,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Ivy.Core.Sync;
 
 namespace Ivy;
 
@@ -663,16 +665,17 @@ public class Server
         {
             options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(
                 CompositeResolver.Create(
-                    [
+                    new IMessagePackFormatter[] {
                         new JsonNodeMessagePackFormatter(),
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
-                        new JsonValueMessagePackFormatter()
-                    ],
-                    [
+                        new JsonValueMessagePackFormatter(),
+                        new WidgetMessagePackFormatter()
+                    },
+                    new IFormatterResolver[] {
                         JsonNodeResolver.Instance,
                         ContractlessStandardResolver.Instance
-                    ]
+                    }
                 )
             );
         });

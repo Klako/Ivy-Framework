@@ -9,12 +9,14 @@
     <UserSecretsId>a8f3c2e1-4b7d-4e9f-a1c3-8d6e2f5b9a7c</UserSecretsId>
     <MinVerTagPrefix>tendril/v</MinVerTagPrefix>
     <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>tendril</ToolCommandName>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>Ivy.Tendril</PackageId>
     <IsPackable>true</IsPackable>
     <Company>Ivy</Company>
-    <Description>Ivy Tendril — Core Library</Description>
+    <Description>Ivy Tendril — Multi-host AI Tool (CLI)</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Ivy-Interactive/Ivy-Framework</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Ivy-Interactive/Ivy-Framework</RepositoryUrl>
@@ -39,18 +41,21 @@
     <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
     <PackageReference Include="PostHog" Version="1.0.8" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
   </ItemGroup>
   <ItemGroup Condition="'$(IvySource)' == 'true'">
     <ProjectReference Include="../../Ivy/Ivy.csproj" />
     <ProjectReference Include="../../Ivy.Hooks.Pty/Ivy.Hooks.Pty.csproj" />
     <ProjectReference Include="../../widgets/Ivy.Widgets.Xterm/Ivy.Widgets.Xterm.csproj" />
     <ProjectReference Include="../../widgets/Ivy.Widgets.DiffView/Ivy.Widgets.DiffView.csproj" />
+    <ProjectReference Include="../../Ivy.Desktop/Ivy.Desktop.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(IvySource)' != 'true'">
     <PackageReference Include="Ivy" Version="1.2.37-pre-20260408144108" />
     <PackageReference Include="Ivy.Hooks.Pty" Version="1.2.37-pre-20260408144108" />
     <PackageReference Include="Ivy.Widgets.Xterm" Version="1.2.37-pre-20260408144108" />
     <PackageReference Include="Ivy.Widgets.DiffView" Version="1.2.37-pre-20260408144108" />
+    <PackageReference Include="Ivy.Desktop" Version="1.2.37-pre-20260408144108" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../Ivy.Analyser/Ivy.Analyser.csproj">

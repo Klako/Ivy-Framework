@@ -55,41 +55,40 @@ public class LevelsSettingsView : ViewBase
                           editBadge.Set("Outline");
                       });
 
-        if (editIndex.Value != -1)
-        {
-            var isNew = editIndex.Value == null;
-            content |= new Dialog(
-                _ => { editIndex.Set(-1); },
-                new DialogHeader(isNew ? "Add Level" : "Edit Level"),
-                new DialogBody(
-                    Layout.Vertical().Gap(2)
-                    | editName.ToTextInput("Level name...").WithField().Label("Name")
-                    | editBadge.ToSelectInput(badgeOptions).WithField().Label("Badge Variant")
-                ),
-                new DialogFooter(
-                    new Button("Cancel").Outline().OnClick(() => editIndex.Set(-1)),
-                    new Button(isNew ? "Add" : "Save").Primary().OnClick(() =>
+        if (editIndex.Value == -1) return content;
+        
+        var isNew = editIndex.Value == null;
+        content |= new Dialog(
+            _ => { editIndex.Set(-1); },
+            new DialogHeader(isNew ? "Add Level" : "Edit Level"),
+            new DialogBody(
+                Layout.Vertical().Gap(2)
+                | editName.ToTextInput("Level name...").WithField().Label("Name")
+                | editBadge.ToSelectInput(badgeOptions).WithField().Label("Badge Variant")
+            ),
+            new DialogFooter(
+                new Button("Cancel").Outline().OnClick(() => editIndex.Set(-1)),
+                new Button(isNew ? "Add" : "Save").Primary().OnClick(() =>
+                {
+                    if (string.IsNullOrWhiteSpace(editName.Value)) return;
+                    if (isNew)
                     {
-                        if (string.IsNullOrWhiteSpace(editName.Value)) return;
-                        if (isNew)
-                        {
-                            levels.Add(new LevelConfig { Name = editName.Value, Badge = editBadge.Value });
-                        }
-                        else
-                        {
-                            var level = levels[editIndex.Value!.Value];
-                            level.Name = editName.Value;
-                            level.Badge = editBadge.Value;
-                        }
+                        levels.Add(new LevelConfig { Name = editName.Value, Badge = editBadge.Value });
+                    }
+                    else
+                    {
+                        var level = levels[editIndex.Value!.Value];
+                        level.Name = editName.Value;
+                        level.Badge = editBadge.Value;
+                    }
 
-                        config.SaveSettings();
-                        editIndex.Set(-1);
-                        refreshToken.Refresh();
-                        client.Toast("Level saved", "Saved");
-                    })
-                )
-            ).Width(Size.Rem(25));
-        }
+                    config.SaveSettings();
+                    editIndex.Set(-1);
+                    refreshToken.Refresh();
+                    client.Toast("Level saved", "Saved");
+                })
+            )
+        ).Width(Size.Rem(25));
 
         return content;
     }

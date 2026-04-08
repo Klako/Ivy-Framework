@@ -17,6 +17,7 @@ public class JobsApp : ViewBase
         var refreshToken = UseRefreshToken();
         var showPlan = UseState<string?>(null);
         var showOutput = UseState<string?>(null);
+        var showPrompt = UseState<string?>(null);
         var openFile = UseState<string?>(null);
         var config = UseService<IConfigService>();
         UseEffect(() =>
@@ -176,6 +177,7 @@ public class JobsApp : ViewBase
             })
             .RowActions(
                 new MenuItem("View Plan", Icon: Icons.FileText, Tag: "view-plan").Tooltip("Open the associated plan"),
+                new MenuItem("Show Prompt", Icon: Icons.MessageSquare, Tag: "show-prompt").Tooltip("Show the full prompt text"),
                 new MenuItem("Stop", Icon: Icons.Square, Tag: "stop-job").Tooltip("Stop this running job"),
                 new MenuItem("Rerun", Icon: Icons.RotateCw, Tag: "rerun-job").Tooltip("Rerun this job"),
                 new MenuItem("Delete", Icon: Icons.Trash, Tag: "delete-job").Tooltip("Delete this job")
@@ -196,6 +198,12 @@ public class JobsApp : ViewBase
                             if (Directory.Exists(fullPath))
                                 showPlan.Set(fullPath);
                         }
+                    }
+                    else if (tag == "show-prompt")
+                    {
+                        var fullPrompt = GetFullPrompt(job);
+                        if (!string.IsNullOrEmpty(fullPrompt))
+                            showPrompt.Set(fullPrompt);
                     }
                     else if (tag == "stop-job")
                     {
@@ -299,7 +307,30 @@ public class JobsApp : ViewBase
             return layout | new Fragment(dataTable, outputSheet);
         }
 
+        if (showPrompt.Value is { } promptText)
+        {
+            var promptSheet = new Sheet(
+                () => showPrompt.Set(null),
+                new Markdown($"```\n{promptText}\n```"),
+                "Full Prompt"
+            ).Width(Size.Half()).Resizable();
+
+            return layout | new Fragment(dataTable, promptSheet);
+        }
+
         return layout | dataTable;
+    }
+
+    private static string? GetFullPrompt(JobItem job)
+    {
+        if (job.Type == "MakePlan")
+        {
+            for (var i = 0; i < job.Args.Length - 1; i++)
+                if (job.Args[i].Equals("-Description", StringComparison.OrdinalIgnoreCase))
+                    return job.Args[i + 1];
+        }
+
+        return job.PlanFile;
     }
 
     private static string ExtractPlanId(string planFile)

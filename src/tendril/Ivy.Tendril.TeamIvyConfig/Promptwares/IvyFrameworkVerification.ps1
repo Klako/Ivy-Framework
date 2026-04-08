@@ -50,10 +50,49 @@ if ($killed -gt 0) {
 # Set ARTIFACTS_DIR so Playwright tests can write directly to plan artifacts
 $env:ARTIFACTS_DIR = $artifactsDir
 
+# --- Pre-build: resolve framework path and build frontend/Ivy.dll ---
+$repoName = "Ivy-Framework"
+$mainRepoPath = Join-Path $env:REPOS_HOME $repoName
+$worktreePath = Join-Path $PlanPath "worktrees/$repoName"
+$frameworkPath = if (Test-Path $worktreePath) { $worktreePath } else { $mainRepoPath }
+$frontendDir = Join-Path $frameworkPath "src/frontend"
+
+# Check if worktree has frontend (.ts/.tsx) changes requiring a rebuild
+$needsFrontendRebuild = $false
+if (Test-Path $worktreePath) {
+    $tsChanges = git -C $worktreePath diff --name-only HEAD~1 -- "*.ts" "*.tsx" 2>$null
+    $needsFrontendRebuild = ($tsChanges.Count -gt 0)
+}
+
+if ($needsFrontendRebuild) {
+    Write-Host "Pre-building frontend from $frontendDir..." -ForegroundColor Cyan
+    Push-Location $frontendDir
+    npx vite build --outDir dist
+    if (-not (Test-Path "dist/index.html")) {
+        Write-Warning "Frontend build produced no index.html!"
+    }
+    # Create build stamp to prevent MSBuild re-trigger
+    New-Item -Path "dist/.build-stamp" -ItemType File -Force | Out-Null
+    Pop-Location
+
+    # Clean Ivy obj and rebuild to embed fresh assets
+    $ivyCsprojDir = Join-Path $frameworkPath "src/Ivy"
+    Remove-Item -Path (Join-Path $ivyCsprojDir "obj") -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Building Ivy.csproj with fresh frontend assets..." -ForegroundColor Cyan
+    dotnet build (Join-Path $ivyCsprojDir "Ivy.csproj") --no-incremental
+}
+
+$env:IVY_FRAMEWORK_PATH = $frameworkPath
+
+# Pre-install Playwright browser (cached globally, makes agent's install a no-op)
+Write-Host "Ensuring Playwright Chromium is installed..." -ForegroundColor Cyan
+npx playwright install chromium 2>$null
+
 InvokePromptwareAgent $PSScriptRoot $programFolder $logFile @{
-    Args            = $PlanPath
-    PlanFolder      = $PlanPath
-    Project         = $planInfo.Project
-    VerificationDir = $verificationDir
-    ArtifactsDir    = $artifactsDir
+    Args             = $PlanPath
+    PlanFolder       = $PlanPath
+    Project          = $planInfo.Project
+    VerificationDir  = $verificationDir
+    ArtifactsDir     = $artifactsDir
+    IvyFrameworkPath = $frameworkPath
 } -PlanPath $PlanPath -Action "IvyFrameworkVerification" -Promptware "IvyFrameworkVerification"

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Ivy.Tendril.Services;
 
 public class OnboardingSetupService(IConfigService config, IServiceProvider services) : IOnboardingSetupService

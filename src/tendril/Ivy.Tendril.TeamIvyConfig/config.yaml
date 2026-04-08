@@ -217,14 +217,17 @@ verifications:
   prompt: >
     Run dotnet tests in the project repo.
     1. Read the plan revision's **## Tests** section for test scope instructions.
-    2. If the plan specifies specific test classes, namespaces, or filter expressions, run:
+    2. If the plan specifies a `dotnet test --filter` expression, run:
        `dotnet test --filter "<filter from plan>"`
        Common filter examples:
        - By class: `dotnet test --filter "FullyQualifiedName~MyTestClass"`
        - By namespace: `dotnet test --filter "Namespace~MyNamespace"`
        - Multiple: `dotnet test --filter "FullyQualifiedName~TestA|FullyQualifiedName~TestB"`
-    3. If the plan does not specify any test scope, run `dotnet test` (all tests).
-    4. Verify all executed tests pass.
+    3. If the plan says "No existing test coverage" or "No dotnet tests needed", skip with Pass.
+    4. If the plan says "Run all tests (broad cross-cutting change)", run `dotnet test` (all tests).
+    5. If the plan does NOT specify any test scope at all, FAIL the verification with message:
+       "No test filter specified in plan. Plans must specify a dotnet test --filter expression in the ## Tests section."
+    6. Verify all executed tests pass.
 - name: DotnetFormat
   prompt: Run `dotnet format` in the project repo, scoped to only the files changed by this plan's commits. Get the list of changed .cs files with `git diff --name-only --diff-filter=ACM HEAD~<N> -- '*.cs'` (where N is the number of commits in this execution), then run `dotnet format --include <files>`. If it modifies any files, stage and commit them. If no .cs files were changed, skip this verification.
 - name: FrontendLint
@@ -297,7 +300,7 @@ planTemplate: >
 
   **Test scope (dotnet test --filter):**
 
-  (specify filter expression to limit DotnetTest to relevant tests, e.g. `FullyQualifiedName~Namespace.TestClass`)
+  `FullyQualifiedName~Namespace.SpecificTestClass` (or "No existing test coverage" / "Run all tests — <justification>")
 
   ## Verification
 editor:

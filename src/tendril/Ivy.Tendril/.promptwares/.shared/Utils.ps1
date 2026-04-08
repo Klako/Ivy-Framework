@@ -442,7 +442,10 @@ function InvokePromptwareAgent {
     # Create raw output log
     $rawLogFile = [System.IO.Path]::ChangeExtension($LogFile, ".raw.jsonl")
 
-    Write-Host "Starting Agent ($codingAgent)..."
+    $agentInfo = $codingAgent
+    if ($agent.Model) { $agentInfo += ", model=$($agent.Model)" }
+    if ($agent.Effort) { $agentInfo += ", effort=$($agent.Effort)" }
+    Write-Host "Starting Agent ($agentInfo)..."
     if ($Action) { SendStatusMessage "Running $Action" }
     Push-Location $WorkDir
     $heartbeat = Start-Heartbeat

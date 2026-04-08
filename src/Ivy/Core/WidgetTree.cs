@@ -6,14 +6,40 @@ using System.Text.Json.Nodes;
 using Ivy.Core.Helpers;
 using Ivy.Core.Hooks;
 using Ivy.NativeJsonDiff;
+using Ivy.Core.Sync;
 
 namespace Ivy.Core;
 
-public class WidgetTreeChanged(string viewId, int[] indices, JsonNode patch, int iteration, string? treeHash)
+public interface IWidgetTreePatch
+{
+    public string Type { get; }
+}
+
+[MessagePackObject]
+public record WidgetJsonPatch : IWidgetTreePatch
+{
+    [Key("type")]
+    public string Type { get; } = "jsonpatch";
+    [Key("patches")]
+    public required JsonNode Patches { get; init; }
+}
+
+[MessagePackObject]
+public record WidgetNewPatch : IWidgetTreePatch
+{
+    [Key("type")]
+    public string Type { get; } = "new";
+    [Key("op")]
+    public required string Op { get; init; }
+    [Key("update")]
+    public required object udpdate { get; init; }
+}
+
+public class WidgetTreeChanged(string viewId, int[] indices, IWidgetTreePatch patch, int iteration, string? treeHash)
 {
     public string ViewId { get; } = viewId;
     public int[] Indices { get; } = indices;
-    public JsonNode Patch { get; } = patch;
+    public IWidgetTreePatch Patch { get; } = patch;
     public int Iteration { get; set; } = iteration;
     public string? TreeHash { get; } = treeHash;
 }
@@ -174,8 +200,17 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             var parentId = node.ParentId;
 
             var indices = node.GetWidgetTreeIndices();
+            JsonNode? previousJSON = null;
+            IWidget? previousTree = null;
 
-            var previous = node.GetSerializedWidgetTree();
+            if (Environment.GetEnvironmentVariable("DIFF_TYPE") == "jsonpatch")
+            {
+                previousJSON = node.GetSerializedWidgetTree();
+            }
+            else
+            {
+                previousTree = node.GetWidgetTree();
+            }
 
             var partial = BuildView(node.View!, node.ParentTreePath.Clone(), node.Index, parentId, node.AncestorContext, isRefreshingView: true, isHotReload);
 
@@ -207,52 +242,96 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
                 }
             }
 
-            var update = partial.GetSerializedWidgetTree();
-
-            var previousId = previous?["id"]?.GetValue<string>();
-            var updateId = update?["id"]?.GetValue<string>();
-
-            JsonNode? patch;
-
-            if (previousId != null && updateId != null && previousId != updateId)
+            if (Environment.GetEnvironmentVariable("DIFF_TYPE") == "jsonpatch")
             {
-                patch = new JsonArray(new JsonObject
+                var update = partial.GetSerializedWidgetTree();
+
+                var previousId = previousJSON?["id"]?.GetValue<string>();
+                var updateId = update?["id"]?.GetValue<string>();
+
+                JsonNode? patch;
+
+                if (previousId != null && updateId != null && previousId != updateId)
                 {
-                    ["op"] = "replace",
-                    ["path"] = "",
-                    ["value"] = update?.DeepClone()
-                });
-            }
-            else if (update != null && previous != null)
-            {
-                // [Native Patch Integration] Execute mathematically independent zero-allocation diffing via C/Rust!
-                var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(previous);
-                var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(update);
-                patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
+                    patch = new JsonArray(new JsonObject
+                    {
+                        ["op"] = "replace",
+                        ["path"] = "",
+                        ["value"] = update?.DeepClone()
+                    });
+                }
+                else if (update != null && previousJSON != null)
+                {
+                    // [Native Patch Integration] Execute mathematically independent zero-allocation diffing via C/Rust!
+                    var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(previousJSON);
+                    var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(update);
+                    patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
+                }
+                else
+                {
+                    patch = null;
+                }
+
+                if (patch == null || patch.AsArray().Count == 0)
+                {
+                    return null!;
+                }
+
+                _iteration += 1;
+                string? hash = null;
+
+#if DEBUG
+                DebugHelpers.CheckIfIdUsedMultipleTimes(NodeTree);
+                hash = DebugHelpers.CalculateTreeHash(NodeTree?.GetWidgetTree()?.Serialize());
+                if (Environment.GetEnvironmentVariable("IVY_DUMP_WIDGET_TREES") == "1")
+                {
+                    stopWatch.Start();
+                    DebugHelpers.LogUpdatedTree(previousJSON, update, patch, stopWatch.ElapsedMilliseconds, _iteration, hash);
+                }
+#endif
+                return new WidgetTreeChanged(viewId, indices, new WidgetJsonPatch() { Patches = patch }, _iteration, hash);
             }
             else
             {
-                patch = null;
+                var currentTree = partial.GetWidgetTree();
+
+                var diff = TreeDiffer.ComputeDiff(previousTree!, currentTree!);
+
+                if (diff == null)
+                {
+                    return null;
+                }
+
+                _iteration += 1;
+
+                string? hash = null;
+
+                string? op = null;
+                if (diff is IWidget widget)
+                {
+                    op = "replace";
+                }
+                else if (diff is WidgetUpdate update)
+                {
+                    op = "update";
+                }
+
+                if (op == null)
+                {
+                    return null;
+                }
+
+                var patch = new WidgetNewPatch()
+                {
+                    Op = op,
+                    udpdate = diff
+                };
+
+                return new WidgetTreeChanged(viewId, indices, patch, _iteration, hash);
+
             }
 
-            if (patch == null || patch.AsArray().Count == 0)
-            {
-                return null!;
-            }
 
-            _iteration += 1;
-            string? hash = null;
-
-#if DEBUG
-            DebugHelpers.CheckIfIdUsedMultipleTimes(NodeTree);
-            hash = DebugHelpers.CalculateTreeHash(NodeTree?.GetWidgetTree()?.Serialize());
-            if (Environment.GetEnvironmentVariable("IVY_DUMP_WIDGET_TREES") == "1")
-            {
-                stopWatch.Start();
-                DebugHelpers.LogUpdatedTree(previous, update, patch, stopWatch.ElapsedMilliseconds, _iteration, hash);
-            }
-#endif
-            return new WidgetTreeChanged(viewId, indices, patch, _iteration, hash);
         }
         catch (ObjectDisposedException)
         {

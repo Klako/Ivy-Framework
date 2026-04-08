@@ -17,9 +17,25 @@ type UpdateMessage = Array<{
   iteration: number;
   viewId: string;
   indices: number[];
-  patch: Operation[];
+  patch: WidgetPatch;
   treeHash?: string;
 }>;
+
+type WidgetPatch =
+  | {
+      type: "new";
+      op: "replace";
+      widget: CompactWidgetNode;
+    }
+  | {
+      type: "new";
+      op: "update";
+      update: WidgetUpdate;
+    }
+  | {
+      type: "jsonpatch";
+      patches: Operation[];
+    };
 
 type WidgetUpdate = [
   type: string | null,
@@ -364,6 +380,45 @@ function clonePathToTarget(
   return { newTree, parent: current, targetIndex };
 }
 
+function applyPatchOnPath(node: WidgetNode, patch: WidgetPatch, indices: number[]): WidgetNode {
+  if (indices.length == 0) {
+    if (patch.type == "new") {
+      if (patch.op == "replace") {
+        return decompactWidgetNode(patch.widget);
+      } else if (patch.op == "update") {
+        return applyWidgetUpdate(node, patch.update);
+      } else {
+        return node;
+      }
+    } else if (patch.type == "jsonpatch") {
+      if (
+        patch.patches.length == 1 &&
+        patch.patches[0].op == "replace" &&
+        patch.patches[0].path == ""
+      ) {
+        // patch is a single replacement on the current node
+        return patch.patches[0].value as WidgetNode;
+      } else {
+        // need to clone target before mutating
+        let newNode = deepCloneNode(node);
+        applyPatch(newNode, patch.patches);
+        return newNode;
+      }
+    } else {
+      return node;
+    }
+  } else {
+    let childIndex = indices[0];
+    let newChild = applyPatchOnPath(node.children![childIndex], patch, indices.slice(1));
+    let newChildren = [...node.children!];
+    newChildren.splice(childIndex, 1, newChild);
+    return {
+      ...node,
+      children: newChildren,
+    };
+  }
+}
+
 /**
  * Pure function that applies updates to the widget tree using structural sharing.
  * Only the path to changed nodes is cloned - unchanged subtrees keep their references.
@@ -373,44 +428,8 @@ function clonePathToTarget(
  */
 function applyUpdateMessage(tree: WidgetNode, updates: UpdateMessage): WidgetNode | null {
   let newTree = tree;
-
   for (const update of updates) {
-    const firstPatch = update.patch[0];
-    const isFullReplacement =
-      update.patch.length === 1 && firstPatch.op === "replace" && firstPatch.path === "";
-
-    if (isFullReplacement) {
-      // Full node replacement - just swap in the new value
-      const newValue = (firstPatch as { value: unknown }).value as WidgetNode;
-
-      if (update.indices.length === 0) {
-        // Replacing entire tree
-        newTree = newValue;
-      } else {
-        // Clone path to target and replace
-        const result = clonePathToTarget(newTree, update.indices);
-        if (!result) continue;
-        newTree = result.newTree;
-        result.parent.children![result.targetIndex] = newValue;
-      }
-    } else {
-      // Patch operation - need to clone target before mutating
-      if (update.indices.length === 0) {
-        // Patching root - deep clone since patch may affect nested props
-        newTree = deepCloneNode(newTree);
-        applyPatch(newTree, update.patch);
-      } else {
-        // Clone path to target
-        const result = clonePathToTarget(newTree, update.indices);
-        if (!result) continue;
-        newTree = result.newTree;
-
-        // Deep clone the target node before applying patch (patch mutates in place)
-        const targetClone = deepCloneNode(result.parent.children![result.targetIndex]);
-        result.parent.children![result.targetIndex] = targetClone;
-        applyPatch(targetClone, update.patch);
-      }
-    }
+    newTree = applyPatchOnPath(newTree, update.patch, update.indices);
 
     if (update.treeHash) {
       // Verify tree integrity in DEBUG mode

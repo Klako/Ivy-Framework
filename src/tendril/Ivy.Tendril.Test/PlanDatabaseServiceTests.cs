@@ -422,6 +422,76 @@ public class PlanDatabaseServiceTests : IDisposable
     }
 
     [Fact]
+    public void GetDashboardData_FilteredStats_ReturnsCorrectCounts()
+    {
+        // Arrange: plans across two projects with varied statuses
+        _db.UpsertPlan(CreateTestPlan(1900, "Draft Tendril", status: PlanStatus.Draft, project: "Tendril"));
+        _db.UpsertPlan(CreateTestPlan(1901, "Completed Tendril", status: PlanStatus.Completed, project: "Tendril"));
+        _db.UpsertPlan(CreateTestPlan(1902, "Failed Tendril", status: PlanStatus.Failed, project: "Tendril"));
+        _db.UpsertPlan(CreateTestPlan(1903, "Review Framework", status: PlanStatus.ReadyForReview,
+            project: "Framework"));
+        _db.UpsertPlan(CreateTestPlan(1904, "InProgress Tendril", status: PlanStatus.Executing, project: "Tendril"));
+
+        // Add costs for avg cost calculation
+        _db.UpsertCosts(1901, [new("ExecutePlan", 50000, 2.00m, DateTime.UtcNow)]);
+        _db.UpsertCosts(1902, [new("ExecutePlan", 30000, 1.00m, DateTime.UtcNow)]);
+
+        // Act: filter to Tendril project
+        var stats = _db.GetDashboardData("Tendril");
+
+        // Assert
+        Assert.Equal(4, stats.TotalCount);
+        Assert.Equal(1, stats.DraftCount);
+        Assert.Equal(1, stats.CompletedCount);
+        Assert.Equal(1, stats.FailedCount);
+        Assert.Equal(1, stats.InProgressCount);
+        Assert.Equal(0, stats.ReviewCount);
+        // Avg cost: (2.00 + 1.00) / 2 plans = 1.50
+        Assert.Equal(1.50m, stats.AvgCostPerPlan);
+    }
+
+    [Fact]
+    public void GetDashboardData_DailyStats_Returns7DayWindow()
+    {
+        // Arrange: create plans with explicit Created/Updated dates
+        var today = DateTime.UtcNow.Date;
+
+        // Plan created today, completed today (Updated=today)
+        var todayPlan = new PlanFile(
+            new PlanMetadata(2000, "Tendril", "NiceToHave", "Today Plan", PlanStatus.Completed,
+                [], [], [], [], [], [],
+                today, today, null, null),
+            "# Content", "D:\\Plans\\02000-TodayPlan", "state: Completed");
+        _db.UpsertPlan(todayPlan);
+
+        // Plan created 2 days ago, still draft
+        var twoDaysAgoPlan = new PlanFile(
+            new PlanMetadata(2001, "Tendril", "NiceToHave", "Two Days Ago", PlanStatus.Draft,
+                [], [], [], [], [], [],
+                today.AddDays(-2), today.AddDays(-2), null, null),
+            "# Content", "D:\\Plans\\02001-TwoDaysAgo", "state: Draft");
+        _db.UpsertPlan(twoDaysAgoPlan);
+
+        // Act
+        var stats = _db.GetDashboardData(null);
+
+        // Assert: daily stats should have 7 entries
+        Assert.Equal(7, stats.DailyStats.Count);
+
+        // Today's entry should have 1 created and 1 completed
+        var todayStats = stats.DailyStats.First(d => d.Date == today);
+        Assert.True(todayStats.Created >= 1);
+        Assert.True(todayStats.Completed >= 1);
+
+        // 2 days ago should have 1 created
+        var twoDaysAgoStats = stats.DailyStats.First(d => d.Date == today.AddDays(-2));
+        Assert.True(twoDaysAgoStats.Created >= 1);
+
+        // All unfiltered, so project counts should include Tendril
+        Assert.Contains(stats.ProjectCounts, pc => pc.Project == "Tendril");
+    }
+
+    [Fact]
     public void Constructor_DetectsAndHandlesCorruptedDatabase()
     {
         var corruptDbPath = Path.Combine(Path.GetTempPath(), $"tendril-corrupt-{Guid.NewGuid()}.db");

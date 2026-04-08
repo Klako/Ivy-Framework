@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Ivy.Tendril.Services;
 
 public class OnboardingSetupService(IConfigService config, IServiceProvider services) : IOnboardingSetupService
@@ -81,11 +79,6 @@ public class OnboardingSetupService(IConfigService config, IServiceProvider serv
         }
 
         // Initialize database and start background services now that TendrilHome is set
-        services.GetRequiredService<IPlanWatcherService>();
-        services.GetRequiredService<IInboxWatcherService>();
-        services.GetRequiredService<WorktreeCleanupService>().Start();
-
-        var syncService = services.GetRequiredService<PlanDatabaseSyncService>();
-        _ = Task.Run(syncService.PerformInitialSync);
+        BackgroundServiceActivator.Start(services);
     }
 }

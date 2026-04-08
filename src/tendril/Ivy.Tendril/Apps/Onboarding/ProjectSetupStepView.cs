@@ -107,6 +107,20 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
                               return;
                           }
 
+                          var invalidRepo = filledRepos.FirstOrDefault(p =>
+                          {
+                              var expanded = Environment.ExpandEnvironmentVariables(p);
+                              return !Directory.Exists(expanded) || !Path.Exists(Path.Combine(expanded, ".git"));
+                          });
+                          if (invalidRepo != null)
+                          {
+                              var expanded = Environment.ExpandEnvironmentVariables(invalidRepo);
+                              error.Set(!Directory.Exists(expanded)
+                                  ? $"Directory does not exist: {expanded}"
+                                  : $"Directory is not a git repository: {expanded}");
+                              return;
+                          }
+
                           var validVerifications = verifications.Value
                               .Where(v => !string.IsNullOrWhiteSpace(v.Name))
                               .ToList();

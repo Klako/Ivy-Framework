@@ -60,7 +60,7 @@ $frontendDir = Join-Path $frameworkPath "src/frontend"
 # Check if worktree has frontend (.ts/.tsx) changes requiring a rebuild
 $needsFrontendRebuild = $false
 if (Test-Path $worktreePath) {
-    $tsChanges = git -C $worktreePath diff --name-only HEAD~1 -- "*.ts" "*.tsx" 2>$null
+    $tsChanges = git -C $worktreePath diff --name-only origin/main...HEAD -- "*.ts" "*.tsx" 2>$null
     $needsFrontendRebuild = ($tsChanges.Count -gt 0)
 }
 

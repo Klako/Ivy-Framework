@@ -121,14 +121,7 @@ public class PlanReaderService(
     public List<PlanFile> GetPlans(PlanStatus? statusFilter = null)
     {
         if (_useDatabaseForReads && _database != null)
-            try
-            {
-                return _database.GetPlans(statusFilter);
-            }
-            catch
-            {
-                // Fall back to file system on database errors
-            }
+            return _database.GetPlans(statusFilter);
 
         return GetPlansFromFileSystem(statusFilter);
     }
@@ -140,14 +133,7 @@ public class PlanReaderService(
     public PlanFile? GetPlanByFolder(string folderPath)
     {
         if (_useDatabaseForReads && _database != null)
-            try
-            {
-                return _database.GetPlanByFolder(folderPath);
-            }
-            catch
-            {
-                // Fall back to file system
-            }
+            return _database.GetPlanByFolder(folderPath);
 
         if (!Directory.Exists(folderPath)) return null;
         return ParsePlanFolder(folderPath);

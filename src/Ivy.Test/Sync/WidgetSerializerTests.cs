@@ -12,7 +12,7 @@ namespace Ivy.Test.Sync
     public class WidgetSerializerTests
     {
         private static MessagePackSerializerOptions _serializerOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new WidgetSerializer()], [StandardResolver.Instance]));
+            new MessagePackSerializerOptions(CompositeResolver.Create([new WidgetMessagePackFormatter()], [StandardResolver.Instance]));
 
         [Fact]
         public void TestWidget_BasicValues()

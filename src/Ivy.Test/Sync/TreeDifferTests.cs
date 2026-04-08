@@ -14,7 +14,7 @@ namespace Ivy.Test.Sync
     public class TreeDifferTests
     {
         private static MessagePackSerializerOptions _serializerOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetSerializer()], [StandardResolver.Instance]));
+            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
 
 
         private SerializedWidget ApplyDiff(SerializedWidget source, WidgetUpdate update)

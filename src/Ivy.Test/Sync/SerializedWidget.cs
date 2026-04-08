@@ -43,7 +43,7 @@ namespace Ivy.Test.Sync
         public IImmutableList<SerializedWidget> Children { get; init; }
 
         private static MessagePackSerializerOptions _serializerOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetSerializer()], [StandardResolver.Instance]));
+            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
 
         public static SerializedWidget FromWidget(IWidget widget)
         {

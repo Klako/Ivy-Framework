@@ -1,15 +1,11 @@
 ﻿using MessagePack;
 using MessagePack.Formatters;
-using System;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+
 
 namespace Ivy.Core.Sync
 {
-    public class WidgetSerializer : IMessagePackFormatter<IWidget>
+    public class WidgetMessagePackFormatter : IMessagePackFormatter<IWidget>
     {
         public void Serialize(ref MessagePackWriter writer, IWidget widget, MessagePackSerializerOptions options)
         {

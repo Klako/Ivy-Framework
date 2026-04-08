@@ -40,7 +40,7 @@ namespace Ivy.Benchmark.Sync
             );
 
         MessagePackSerializerOptions _newDiff2MsgPackOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetSerializer()], [StandardResolver.Instance]));
+            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
 
         private static string[] texts = [
                 "Five foxes four fairies",

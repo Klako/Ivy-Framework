@@ -29,7 +29,7 @@ namespace Ivy.Test.Sync
         }
 
         private static MessagePackSerializerOptions _serializerOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetSerializer()], [StandardResolver.Instance]));
+            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
 
         [Fact]
         public void WidgetUpdate_SerializeResult()

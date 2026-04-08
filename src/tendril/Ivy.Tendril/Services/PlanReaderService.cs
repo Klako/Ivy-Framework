@@ -699,7 +699,7 @@ public class PlanReaderService(
         var topLevelKeys = new HashSet<string>(StringComparer.Ordinal)
         {
             "state", "project", "level", "title", "sessionId",
-            "repos", "created", "updated", "initialPrompt",
+            "repos", "created", "updated", "initialPrompt", "sourceUrl",
             "prs", "commits", "verifications", "relatedPlans", "dependsOn"
         };
         var listKeys = new HashSet<string>(StringComparer.Ordinal)
@@ -998,7 +998,8 @@ public class PlanReaderService(
                 planYaml.DependsOn ?? [],
                 planYaml.Created,
                 planYaml.Updated,
-                planYaml.InitialPrompt
+                planYaml.InitialPrompt,
+                planYaml.SourceUrl
             );
             var latestContent = ReadLatestRevisionFromFileSystem(folderName);
 

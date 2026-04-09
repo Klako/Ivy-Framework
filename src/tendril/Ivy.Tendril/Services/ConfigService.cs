@@ -82,6 +82,7 @@ public record EditorConfig
 public record PromptwareConfig
 {
     public string Model { get; set; } = "";
+    public string Effort { get; set; } = "";
     public List<string> AllowedTools { get; set; } = new();
 }
 
@@ -98,6 +99,7 @@ public class TendrilSettings
     public int JobTimeout { get; set; } = 30;
     public int StaleOutputTimeout { get; set; } = 10;
     public int MaxConcurrentJobs { get; set; } = 5;
+    public string DefaultEffort { get; set; } = "high";
     public List<ProjectConfig> Projects { get; set; } = new();
     public List<VerificationConfig> Verifications { get; set; } = new();
     public string PlanTemplate { get; set; } = "";
@@ -379,12 +381,16 @@ public class ConfigService : IConfigService
             Settings.Editor.Label = VariableExpansion.ExpandVariables(Settings.Editor.Label, TendrilHome);
         }
 
+        // Expand default effort
+        Settings.DefaultEffort = VariableExpansion.ExpandVariables(Settings.DefaultEffort, TendrilHome);
+
         // Expand promptware configs
         if (Settings.Promptwares != null)
             foreach (var kvp in Settings.Promptwares.ToList())
             {
                 var config = kvp.Value;
                 config.Model = VariableExpansion.ExpandVariables(config.Model, TendrilHome);
+                config.Effort = VariableExpansion.ExpandVariables(config.Effort, TendrilHome);
 
                 if (config.AllowedTools != null)
                     for (var i = 0; i < config.AllowedTools.Count; i++)

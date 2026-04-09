@@ -14,7 +14,7 @@
     <PackageId>Ivy.Tendril</PackageId>
     <IsPackable>true</IsPackable>
     <Company>Ivy</Company>
-    <Description>Ivy Tendril — Multi-host AI Tool (CLI)</Description>
+    <Description>Ivy Tendril</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Ivy-Interactive/Ivy-Framework</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Ivy-Interactive/Ivy-Framework</RepositoryUrl>

@@ -380,7 +380,7 @@ export const FileInputWidget: React.FC<FileInputWidgetProps> = ({
                     ? fileList.length === 1
                       ? fileList[0].fileName
                       : `${fileList.length} files selected`
-                    : (placeholder || `Select ${multiple ? "files" : "file"}`)}
+                    : placeholder || `Select ${multiple ? "files" : "file"}`}
                 </span>
               </Button>
               {invalid && (

@@ -170,6 +170,19 @@ public class OnboardingSetupServiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CompleteSetupAsync_InitializesPlanCounter()
+    {
+        var (service, _) = CreateService();
+
+        await service.CompleteSetupAsync(_tempDir);
+
+        var counterPath = Path.Combine(_tempDir, "Plans", ".counter");
+        Assert.True(File.Exists(counterPath));
+        var content = (await File.ReadAllTextAsync(counterPath)).Trim();
+        Assert.Equal("1", content);
+    }
+
+    [Fact]
     public async Task CompleteSetupAsync_PersistsEnvironmentVariable_Windows()
     {
         if (!OperatingSystem.IsWindows())

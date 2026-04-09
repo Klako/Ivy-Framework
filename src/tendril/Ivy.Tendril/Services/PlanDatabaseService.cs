@@ -23,6 +23,9 @@ public class PlanDatabaseService : IPlanDatabaseService
     public PlanDatabaseService(string databasePath, ILogger<PlanDatabaseService> logger)
     {
         _logger = logger;
+        var directory = Path.GetDirectoryName(databasePath);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
         _connection = new SqliteConnection($"Data Source={databasePath};Mode=ReadWriteCreate");
         _connection.Open();
 

@@ -1,12 +1,11 @@
 ﻿using Ivy.Core;
+using Ivy.Core.Server.Formatters;
 using Ivy.Core.Sync;
 using MessagePack;
 using MessagePack.Resolvers;
-using Microsoft.Extensions.AI;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
+using System.Text.Json.JsonDiffPatch;
+using System.Text.Json.Nodes;
 
 namespace Ivy.Test.Sync
 {
@@ -16,13 +15,13 @@ namespace Ivy.Test.Sync
         public SerializedWidget(
             string type,
             string id,
-            IImmutableDictionary<string, object>? props = null,
+            IImmutableDictionary<string, JsonNode>? props = null,
             string[]? events = null,
             IImmutableList<SerializedWidget>? children = null)
         {
             Type = type;
             Id = id;
-            Props = props ?? ImmutableDictionary<string, object>.Empty;
+            Props = props ?? ImmutableDictionary<string, JsonNode>.Empty;
             Events = events ?? [];
             Children = children ?? ImmutableArray<SerializedWidget>.Empty;
         }
@@ -34,7 +33,7 @@ namespace Ivy.Test.Sync
         public string Id { get; init; }
 
         [Key(2)]
-        public IImmutableDictionary<string, object> Props { get; init; }
+        public IImmutableDictionary<string, JsonNode> Props { get; init; }
 
         [Key(3)]
         public string[] Events { get; init; }
@@ -42,13 +41,54 @@ namespace Ivy.Test.Sync
         [Key(4)]
         public IImmutableList<SerializedWidget> Children { get; init; }
 
-        private static MessagePackSerializerOptions _serializerOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
+        public static void AssertEqual(SerializedWidget expected, SerializedWidget actual)
+        {
+            Assert.Equal(expected.Type, actual.Type);
+            Assert.Equal(expected.Id, actual.Id);
+            foreach (var entry in expected.Props)
+            {
+                Assert.Contains(entry.Key, actual.Props);
+                var actualValue = actual.Props[entry.Key];
+                Assert.True(entry.Value.DeepEquals(actualValue), $"Expected {entry.Value.ToString()}\nActual {actualValue}");
+            }
+            foreach (var entry in actual.Props)
+            {
+                Assert.Contains(entry.Key, expected.Props);
+            }
+            Assert.Equivalent(expected.Events, actual.Events);
+            Assert.Equal(expected.Children.Count, actual.Children.Count);
+            foreach (var (expectedChild, actualChild) in expected.Children.Zip(actual.Children))
+            {
+                AssertEqual(expectedChild, actualChild);
+            }
+        }
+
+        internal static MessagePackSerializerOptions SerializeOptions { get; } =
+            new MessagePackSerializerOptions(
+               CompositeResolver.Create([
+                        new JsonNodeMessagePackFormatter(),
+                        new JsonObjectMessagePackFormatter(),
+                        new JsonArrayMessagePackFormatter(),
+                        new JsonValueMessagePackFormatter(),
+                        new WidgetMessagePackFormatter()
+                    ],
+                    [
+                        JsonNodeResolver.Instance,
+                        WidgetMessagePackResolver.Instance,
+                        StandardResolver.Instance
+                    ]
+                ));
+
+        internal static MessagePackSerializerOptions DeserializeOptions { get; } =
+            new MessagePackSerializerOptions(
+                CompositeResolver.Create(
+                    JsonNodeResolver.Instance,
+                    StandardResolver.Instance));
 
         public static SerializedWidget FromWidget(IWidget widget)
         {
-            var data = MessagePackSerializer.Serialize<IWidget>(widget, _serializerOptions);
-            return MessagePackSerializer.Deserialize<SerializedWidget>(data, _serializerOptions);
+            var data = MessagePackSerializer.Serialize(widget, SerializeOptions);
+            return MessagePackSerializer.Deserialize<SerializedWidget>(data, DeserializeOptions);
         }
     }
 }

@@ -42,7 +42,10 @@ namespace Ivy.Core.Sync
             PropMetadatas = allProperties
                 .Select(p => (Property: p, Attribute: p.GetCustomAttribute<PropAttribute>()))
                 .Where(x => x.Attribute != null)
-                .Select(x => new PropMetadata(x.Property, x.Attribute!, x.Property.GetValue(defaultInstance)))
+                .Select(x => {
+                    var defaultValue = defaultInstance != null ? x.Property.GetValue(defaultInstance) : null;
+                    return new PropMetadata(x.Property, x.Attribute!, defaultValue);
+                    })
                 .ToDictionary(x => x.CamelCaseName);
 
             eventProperties = allProperties

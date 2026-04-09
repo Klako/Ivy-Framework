@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Ivy.Core;
 using Ivy.Helpers;
 using Ivy.Tendril.Apps.Plans;
@@ -165,38 +164,7 @@ public class ContentView(
                             actionStates[i] = (action.Name, true);
                             return;
                         }
-                        try
-                        {
-                            var psi = new ProcessStartInfo
-                            {
-                                FileName = "pwsh",
-                                Arguments =
-                                    $"-NoProfile -Command \"if ({action.Condition}) {{ exit 0 }} else {{ exit 1 }}\"",
-                                WorkingDirectory = folderPath,
-                                RedirectStandardOutput = true,
-                                RedirectStandardError = true,
-                                UseShellExecute = false,
-                                CreateNoWindow = true
-                            };
-                            using var proc = Process.Start(psi);
-                            if (proc is not null)
-                            {
-                                if (!proc.WaitForExitOrKill(5000))
-                                {
-                                    actionStates[i] = (action.Name, false);
-                                    return;
-                                }
-                                actionStates[i] = (action.Name, proc.ExitCode == 0);
-                                return;
-                            }
-                            actionStates[i] = (action.Name, false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.Error.WriteLine(
-                                $"Failed to evaluate review action '{action.Name}' for plan '{_selectedPlan.FolderName}': {ex.Message}");
-                            actionStates[i] = (action.Name, false);
-                        }
+                        actionStates[i] = (action.Name, PlatformHelper.EvaluatePowerShellCondition(action.Condition, folderPath));
                     });
 
                     return new PlanContentData(recs, summaryMd, artifacts, commitRows, verReports, actionStates.ToList());
@@ -401,13 +369,10 @@ public class ContentView(
                         var actionCapture = action;
                         btn = btn.OnClick(() =>
                         {
-                            Process.Start(new ProcessStartInfo
+                            if (!PlatformHelper.RunPowerShellAction(actionCapture.Action, _selectedPlan.FolderPath))
                             {
-                                FileName = "pwsh",
-                                Arguments = $"-NoProfile -Command \"{actionCapture.Action}\"",
-                                WorkingDirectory = _selectedPlan.FolderPath,
-                                UseShellExecute = true
-                            });
+                                Console.Error.WriteLine($"Failed to run review action '{actionCapture.Name}': pwsh not found");
+                            }
                         });
                     }
 

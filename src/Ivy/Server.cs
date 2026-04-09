@@ -674,6 +674,7 @@ public class Server
                     },
                     new IFormatterResolver[] {
                         JsonNodeResolver.Instance,
+                        WidgetMessagePackResolver.Instance,
                         ContractlessStandardResolver.Instance
                     }
                 )

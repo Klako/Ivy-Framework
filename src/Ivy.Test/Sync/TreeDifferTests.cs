@@ -13,10 +13,6 @@ namespace Ivy.Test.Sync
 {
     public class TreeDifferTests
     {
-        private static MessagePackSerializerOptions _serializerOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
-
-
         private SerializedWidget ApplyDiff(SerializedWidget source, WidgetUpdate update)
         {
             var widget = source;
@@ -99,7 +95,7 @@ namespace Ivy.Test.Sync
             Assert.IsType<WidgetUpdate>(update);
 
             var computedTarget = ApplyDiff(convertedSource, (WidgetUpdate)update);
-            Assert.Equivalent(expectedTarget, computedTarget, true);
+            SerializedWidget.AssertEqual(expectedTarget, computedTarget);
         }
 
         [Fact]
@@ -128,7 +124,7 @@ namespace Ivy.Test.Sync
                 ]
             };
             var convertedSource = SerializedWidget.FromWidget(source);
-            var convertedTarget = SerializedWidget.FromWidget(target);
+            var expectedTarget = SerializedWidget.FromWidget(target);
 
             var update = TreeDiffer.ComputeDiff(source, target);
 
@@ -136,7 +132,7 @@ namespace Ivy.Test.Sync
 
             var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
 
-            Assert.Equivalent(convertedTarget, updatedSource);
+            SerializedWidget.AssertEqual(expectedTarget, updatedSource);
 
         }
 
@@ -181,7 +177,7 @@ namespace Ivy.Test.Sync
 
             var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
 
-            Assert.Equivalent(convertedTarget, updatedSource);
+            SerializedWidget.AssertEqual(convertedTarget, updatedSource);
         }
     }
 }

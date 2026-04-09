@@ -311,6 +311,25 @@ public class ContentView(
             }
 
             // Commits tab content
+            var commitsLayout = Layout.Vertical().Gap(2);
+
+            var problematicCommits = planData.CommitRows
+                .Where(r => string.IsNullOrEmpty(r.Title) || r.FileCount == 0)
+                .ToList();
+
+            if (problematicCommits.Count > 0)
+            {
+                var warnings = problematicCommits.Select(r =>
+                {
+                    if (string.IsNullOrEmpty(r.Title))
+                        return $"`{r.ShortHash}` — commit not found or has no message";
+                    return $"`{r.ShortHash}` — commit has no file changes";
+                });
+                commitsLayout |= Callout.Warning(
+                    string.Join("\n", warnings),
+                    "Potentially corrupted commits");
+            }
+
             var commitsTable = new Table(
                 new TableRow(
                         new TableCell("Commit").IsHeader(),
@@ -323,6 +342,8 @@ public class ContentView(
                     new TableCell(new Button(row.ShortHash).Inline().OnClick(() => openCommit.Set(row.Hash))),
                     new TableCell(row.Title)
                 );
+
+            commitsLayout |= commitsTable;
 
             // PRs tab content
             object prsContent;
@@ -419,7 +440,7 @@ public class ContentView(
                 selectedTab.Value,
                 new Tab("Summary", Cap(summaryTabContent)),
                 new Tab("Verifications", Cap(verificationsTable)).Badge(_selectedPlan.Verifications.Count.ToString()),
-                new Tab("Commits", Cap(commitsTable)).Badge(_selectedPlan.Commits.Count.ToString()),
+                new Tab("Commits", Cap(commitsLayout)).Badge(_selectedPlan.Commits.Count.ToString()),
                 new Tab("PRs", Cap(prsContent)).Badge(_selectedPlan.Prs.Count.ToString()),
                 new Tab("Artifacts", Cap(artifactsLayout)).Badge(totalArtifacts.ToString()),
                 new Tab("Recommendations", Cap(recommendationsLayout)).Badge(planData.Recommendations.Count.ToString()),

@@ -21,6 +21,11 @@ public class HelpApp : ViewBase
                       .Large()
                       .Icon(Icons.Bug, Align.Right)
                       .OnClick(() => client.OpenUrl("https://github.com/Ivy-Interactive/Ivy-Framework/issues/new?title=%28tendril%29%20"))
+                  | Text.Muted("Join our Discord to talk directly with the team.")
+                  | new Button("Join Discord")
+                      .Large()
+                      .Icon(Icons.Discord, Align.Right)
+                      .OnClick(() => client.OpenUrl("https://discord.gg/FHgxkDga3y"))
                );
     }
 }

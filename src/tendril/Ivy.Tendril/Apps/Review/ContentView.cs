@@ -124,10 +124,19 @@ public class ContentView(
 
                     // Recommendations
                     var recsPath = Path.Combine(folderPath, "artifacts", "recommendations.yaml");
-                    var recs = File.Exists(recsPath)
-                        ? YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
-                            FileHelper.ReadAllText(recsPath)) ?? new List<RecommendationYaml>()
-                        : new List<RecommendationYaml>();
+                    List<RecommendationYaml> recs;
+                    try
+                    {
+                        recs = File.Exists(recsPath)
+                            ? YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
+                                FileHelper.ReadAllText(recsPath)) ?? new List<RecommendationYaml>()
+                            : new List<RecommendationYaml>();
+                    }
+                    catch
+                    {
+                        // Malformed YAML must not crash the process — file may be partially written by a promptware.
+                        recs = new List<RecommendationYaml>();
+                    }
 
                     // Summary
                     var summPath = Path.Combine(folderPath, "artifacts", "summary.md");

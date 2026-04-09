@@ -42,12 +42,26 @@ public class InboxWatcherService : IInboxWatcherService
 
     private void OnFileCreated(object sender, FileSystemEventArgs e)
     {
-        _ = ProcessFileAsync(e.FullPath);
+        try
+        {
+            _ = ProcessFileAsync(e.FullPath);
+        }
+        catch (Exception ex)
+        {
+            Program.WriteCrashLog($"[{DateTime.UtcNow:O}] InboxWatcher.OnFileCreated exception: {ex}");
+        }
     }
 
     private void OnPollTimer(object? state)
     {
-        ProcessExistingFiles();
+        try
+        {
+            ProcessExistingFiles();
+        }
+        catch (Exception ex)
+        {
+            Program.WriteCrashLog($"[{DateTime.UtcNow:O}] InboxWatcher.OnPollTimer exception: {ex}");
+        }
     }
 
     internal void RecoverProcessingFiles()

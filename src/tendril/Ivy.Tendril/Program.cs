@@ -100,6 +100,10 @@ public class Program
         return Path.Combine(logDir, "crash.log");
     }
 
+    internal static string CrashLogPath { get; } = GetCrashLogPath();
+
+    internal static void WriteCrashLog(string message) => WriteCrashLog(CrashLogPath, message);
+
     private static void WriteCrashLog(string path, string message)
     {
         try

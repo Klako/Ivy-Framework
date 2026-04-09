@@ -65,22 +65,29 @@ public class PlanWatcherService : IPlanWatcherService
 
     private void OnFileEvent(object sender, FileSystemEventArgs e)
     {
-        // Only react to plan-relevant changes, not worktree/temp/artifact churn
-        var fileName = Path.GetFileName(e.FullPath);
-        var parentFolder = Path.GetFileName(Path.GetDirectoryName(e.FullPath) ?? "");
-
-        // New plan folder created at top level
-        if (e.ChangeType == WatcherChangeTypes.Created && parentFolder == Path.GetFileName(_watcher!.Path))
+        try
         {
-            ScheduleDebounce(null); // full rescan for new plan
-            return;
+            // Only react to plan-relevant changes, not worktree/temp/artifact churn
+            var fileName = Path.GetFileName(e.FullPath);
+            var parentFolder = Path.GetFileName(Path.GetDirectoryName(e.FullPath) ?? "");
+
+            // New plan folder created at top level
+            if (e.ChangeType == WatcherChangeTypes.Created && parentFolder == Path.GetFileName(_watcher!.Path))
+            {
+                ScheduleDebounce(null); // full rescan for new plan
+                return;
+            }
+
+            // plan.yaml changed, or files in watched folders (revisions/logs/verification/artifacts)
+            if (WatchedFiles.Contains(fileName) || WatchedFolders.Contains(parentFolder))
+            {
+                var planFolder = ResolvePlanFolder(e.FullPath);
+                ScheduleDebounce(planFolder);
+            }
         }
-
-        // plan.yaml changed, or files in watched folders (revisions/logs/verification/artifacts)
-        if (WatchedFiles.Contains(fileName) || WatchedFolders.Contains(parentFolder))
+        catch (Exception ex)
         {
-            var planFolder = ResolvePlanFolder(e.FullPath);
-            ScheduleDebounce(planFolder);
+            Program.WriteCrashLog($"[{DateTime.UtcNow:O}] PlanWatcher.OnFileEvent exception: {ex}");
         }
     }
 

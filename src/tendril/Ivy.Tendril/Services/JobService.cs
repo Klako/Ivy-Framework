@@ -677,16 +677,25 @@ public class JobService : IJobService
 
         Task.Run(async () =>
         {
-            if (await process.WaitForExitOrKillAsync(cts.Token))
+            try
             {
-                if (_jobs.TryGetValue(id, out var j) && j.StaleOutputDetected)
-                    CompleteJob(id, null, timedOut: true, staleOutput: true);
+                if (await process.WaitForExitOrKillAsync(cts.Token))
+                {
+                    if (_jobs.TryGetValue(id, out var j) && j.StaleOutputDetected)
+                        CompleteJob(id, null, timedOut: true, staleOutput: true);
+                    else
+                        CompleteJob(id, process.ExitCode);
+                }
                 else
-                    CompleteJob(id, process.ExitCode);
+                {
+                    CompleteJob(id, null, timedOut: true);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                CompleteJob(id, null, timedOut: true);
+                // CompleteJob failures are non-recoverable — the job will appear stuck
+                // but the process survives.
+                Program.WriteCrashLog($"[{DateTime.UtcNow:O}] JobService process monitor exception for job {id}: {ex}");
             }
         });
 

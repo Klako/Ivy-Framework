@@ -394,12 +394,21 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
         mutedForeground: themeColors.mutedForeground,
         fontSans: themeColors.fontSans,
       }),
-      tooltip: generateTooltip(tooltip, "item", {
-        foreground: themeColors.foreground,
-        fontSans: themeColors.fontSans,
-        background: themeColors.background,
-        mutedForeground: themeColors.mutedForeground,
-      }),
+      tooltip: generateTooltip(
+        tooltip,
+        "item",
+        {
+          foreground: themeColors.foreground,
+          fontSans: themeColors.fontSans,
+          background: themeColors.background,
+          mutedForeground: themeColors.mutedForeground,
+        },
+        {
+          formatter: yAxis?.[0]?.tickFormatter,
+          formatterType: yAxis?.[0]?.tickFormatterType,
+          timeZone: yAxis?.[0]?.timeZone,
+        },
+      ),
       toolbox: generateEChartToolbox(toolbox),
       legend: generateEChartLegend(legend, {
         foreground: themeColors.foreground,

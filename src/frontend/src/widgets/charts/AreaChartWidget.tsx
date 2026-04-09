@@ -192,12 +192,21 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
     () => ({
       grid: generateEChartGrid(cartesianGrid, !!toolbox && toolbox.enabled !== false, yAxis, xAxis),
       color: chartColors,
-      tooltip: generateTooltip(tooltip, "cross", {
-        foreground: themeColors.foreground,
-        fontSans: themeColors.fontSans,
-        background: themeColors.background,
-        mutedForeground: themeColors.mutedForeground,
-      }),
+      tooltip: generateTooltip(
+        tooltip,
+        "cross",
+        {
+          foreground: themeColors.foreground,
+          fontSans: themeColors.fontSans,
+          background: themeColors.background,
+          mutedForeground: themeColors.mutedForeground,
+        },
+        {
+          formatter: (isVertical ? xAxis?.[0] : yAxis?.[0])?.tickFormatter,
+          formatterType: (isVertical ? xAxis?.[0] : yAxis?.[0])?.tickFormatterType,
+          timeZone: (isVertical ? xAxis?.[0] : yAxis?.[0])?.timeZone,
+        },
+      ),
       legend: generateEChartLegend(legend, {
         foreground: themeColors.foreground,
         fontSans: themeColors.fontSans,

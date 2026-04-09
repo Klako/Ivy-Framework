@@ -98,12 +98,21 @@ const LineChartWidget: React.FC<LineChartWidgetProps> = ({
         },
         cartesianGrid,
       ),
-      tooltip: generateTooltip(tooltip, "shadow", {
-        foreground: themeColors.foreground,
-        fontSans: themeColors.fontSans,
-        background: themeColors.background,
-        mutedForeground: themeColors.mutedForeground,
-      }),
+      tooltip: generateTooltip(
+        tooltip,
+        "shadow",
+        {
+          foreground: themeColors.foreground,
+          fontSans: themeColors.fontSans,
+          background: themeColors.background,
+          mutedForeground: themeColors.mutedForeground,
+        },
+        {
+          formatter: (isVertical ? xAxis?.[0] : yAxis?.[0])?.tickFormatter,
+          formatterType: (isVertical ? xAxis?.[0] : yAxis?.[0])?.tickFormatterType,
+          timeZone: (isVertical ? xAxis?.[0] : yAxis?.[0])?.timeZone,
+        },
+      ),
       toolbox: generateEChartToolbox(toolbox),
       legend: generateEChartLegend(legend, {
         foreground: themeColors.foreground,

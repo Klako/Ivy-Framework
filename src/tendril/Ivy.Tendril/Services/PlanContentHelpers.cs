@@ -6,7 +6,7 @@ namespace Ivy.Tendril.Services;
 
 public static class PlanContentHelpers
 {
-    public record CommitRow(string Hash, string ShortHash, string Title);
+    public record CommitRow(string Hash, string ShortHash, string Title, int? FileCount);
 
     public record CommitDetailData(
         string Title,
@@ -45,7 +45,12 @@ public static class PlanContentHelpers
                 .Select(repo => gitService.GetCommitTitle(repo, commit))
                 .FirstOrDefault(t => t != null) ?? "";
             var shortHash = commit.Length > 7 ? commit[..7] : commit;
-            return new CommitRow(commit, shortHash, title);
+            var files = repoPaths
+                .AsParallel()
+                .Select(repo => gitService.GetCommitFiles(repo, commit))
+                .FirstOrDefault(f => f != null);
+            var fileCount = files?.Count;
+            return new CommitRow(commit, shortHash, title, fileCount);
         }).ToList();
     }
 

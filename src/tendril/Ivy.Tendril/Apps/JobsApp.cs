@@ -105,7 +105,7 @@ public class JobsApp : ViewBase
             .Help(t => t.Status, "Blocked = waiting for dependencies · Failed = error during execution · Timeout = exceeded time limit · Queued = waiting for a job slot")
             .Header(t => t.Type, "Type")
             .Header(t => t.PlanId, "Plan")
-            .Header(t => t.Plan, "Prompt")
+            .Header(t => t.Plan, "Prompt/Title")
             .Header(t => t.Project, "Project")
             .Header(t => t.Timer, "Timer")
             .Header(t => t.Cost, "Cost")

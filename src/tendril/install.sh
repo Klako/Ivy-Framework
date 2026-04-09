@@ -34,7 +34,7 @@ if command -v dotnet &> /dev/null && dotnet --version | grep -q "^10\."; then
     echo -e "${GREEN}✓ .NET 10 SDK is already installed.${NC}"
 else
     echo -e "Installing .NET 10 SDK..."
-    curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0 --quality preview
+    curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0
     
     # Export for current session
     export DOTNET_ROOT="$HOME/.dotnet"

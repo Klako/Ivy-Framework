@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.JsonDiffPatch;
+using System.Text.Json.Nodes;
 
 namespace Ivy.Core.Sync
 {
@@ -18,7 +20,7 @@ namespace Ivy.Core.Sync
 
             string? id = null;
 
-            if (id != target.Id)
+            if (source.Id != target.Id)
             {
                 id = target.Id;
             }
@@ -28,14 +30,14 @@ namespace Ivy.Core.Sync
 
             // Compare props
 
-            var propUpdates = new Dictionary<string, object?>();
+            var propUpdates = new Dictionary<string, JsonNode?>();
 
             foreach (var (name, propMetadata) in metadata.PropMetadatas)
             {
-                var sourceValue = propMetadata.GetValue(source);
-                var targetValue = propMetadata.GetValue(target);
+                var sourceValue = propMetadata.GetValueAsJson(source);
+                var targetValue = propMetadata.GetValueAsJson(target);
 
-                if (!StructuralComparisons.StructuralEqualityComparer.Equals(sourceValue, targetValue))
+                if (!sourceValue.DeepEquals(targetValue))
                 {
                     propUpdates.Add(name, targetValue);
                 }
@@ -48,7 +50,7 @@ namespace Ivy.Core.Sync
             var sourceEvents = metadata.GetEvents(source);
             var targetEvents = metadata.GetEvents(target);
 
-            if (!StructuralComparisons.StructuralEqualityComparer.Equals(sourceEvents, targetEvents))
+            if (!sourceEvents.SequenceEqual(targetEvents))
             {
                 eventsUpdate = targetEvents.ToArray();
             }
@@ -60,7 +62,7 @@ namespace Ivy.Core.Sync
             if (id != null
                 || propUpdates.Count > 0
                 || eventsUpdate != null
-                || childrenChanges.Changes != null && childrenChanges.Changes.Length > 0)
+                || childrenChanges != null)
             {
                 return new WidgetUpdate(
                     id: id,
@@ -72,7 +74,7 @@ namespace Ivy.Core.Sync
             return null;
         }
 
-        private static WidgetListDiff ChildrenNaiveDiff(IWidget source, IWidget target)
+        private static WidgetListDiff? ChildrenNaiveDiff(IWidget source, IWidget target)
         {
             var changes = new List<IWidgetListOperation>(Math.Max(source.Children.Length, target.Children.Length));
 
@@ -105,6 +107,11 @@ namespace Ivy.Core.Sync
                     .Cast<IWidget>()
                     .ToArray();
                 changes.Add(WidgetListSplice.AddRange(source.Children.Length, widgetsToAdd));
+            }
+
+            if (changes.Count == 0)
+            {
+                return null;
             }
 
             return new WidgetListDiff(changes: changes.ToArray());

@@ -37,7 +37,7 @@ namespace Ivy.Test.Sync
             var source = new List(GenerateTexts(100)) { Id = "pokqwd" };
             var target = new List(GenerateTexts(100)) { Id = "pokqwd" };
             var update = TreeDiffer.ComputeDiff(source, target);
-            var serialized = MessagePackSerializer.Serialize(update, _serializerOptions);
+            var serialized = MessagePackSerializer.Serialize(update, SerializedWidget.SerializeOptions);
         }
     }
 }

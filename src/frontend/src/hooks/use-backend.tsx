@@ -238,10 +238,12 @@ function applyWidgetListDiff(nodeList: WidgetNode[], diff: WidgetListDiff): Widg
   let changeIterator = changes.values();
   let currentChange = changeIterator.next();
   let currentNode = nodeIterator.next();
-  while (!currentChange.done && !currentNode.done) {
+  while (!currentChange.done || !currentNode.done) {
     if (currentChange.done) {
-      newNodeList.push(currentNode.value[1]);
-      currentNode = nodeIterator.next();
+      if (!currentNode.done) {
+        newNodeList.push(currentNode.value[1]);
+        currentNode = nodeIterator.next();
+      }
       continue;
     }
     if (!currentNode.done) {
@@ -303,6 +305,7 @@ function deepCloneNode(node: WidgetNode): WidgetNode {
  * @param indices - Path to the target node (array of child indices)
  * @returns Object containing the new tree root and the parent of the target node, or null on error
  */
+// @ts-ignore
 function clonePathToTarget(
   tree: WidgetNode,
   indices: number[],

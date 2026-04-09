@@ -32,7 +32,7 @@ public record WidgetNewPatch : IWidgetTreePatch
     [Key("op")]
     public required string Op { get; init; }
     [Key("update")]
-    public required object udpdate { get; init; }
+    public required object Update { get; init; }
 }
 
 public class WidgetTreeChanged(string viewId, int[] indices, IWidgetTreePatch patch, int iteration, string? treeHash)
@@ -324,7 +324,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
                 var patch = new WidgetNewPatch()
                 {
                     Op = op,
-                    udpdate = diff
+                    Update = diff
                 };
 
                 return new WidgetTreeChanged(viewId, indices, patch, _iteration, hash);

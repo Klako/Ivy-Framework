@@ -1,6 +1,9 @@
 ﻿using MessagePack;
 using MessagePack.Formatters;
 using System.Collections;
+using System.Text.Json;
+using System.Text.Json.JsonDiffPatch;
+using System.Text.Json.Nodes;
 
 
 namespace Ivy.Core.Sync
@@ -21,16 +24,16 @@ namespace Ivy.Core.Sync
 
             // Serialize props
 
-            var props = new List<(string, object)>(metadata.PropMetadatas.Count);
+            var props = new List<(string, JsonNode?)>(metadata.PropMetadatas.Count);
 
             foreach (var (name, propMetadata) in metadata.PropMetadatas)
             {
-                var value = propMetadata.GetValue(widget);
+                var value = propMetadata.GetValueAsJson(widget);
 
                 // Skip properties that match their default values (unless AlwaysSerialize is set)
-                if (!propMetadata.AlwaysSerialize && propMetadata.DefaultValue != null)
+                if (!propMetadata.AlwaysSerialize && propMetadata.DefaultJsonValue != null)
                 {
-                    if (StructuralComparisons.StructuralEqualityComparer.Equals(value, propMetadata.DefaultValue))
+                    if (value.DeepEquals(propMetadata.DefaultJsonValue))
                         continue;
                 }
                 if (value != null)
@@ -43,7 +46,7 @@ namespace Ivy.Core.Sync
             foreach (var (propName, propValue) in props)
             {
                 writer.Write(propName);
-                MessagePackSerializer.Serialize(propValue.GetType(), ref writer, propValue, options);
+                MessagePackSerializer.Serialize(ref writer, propValue, options);
             }
 
             // Serialize events

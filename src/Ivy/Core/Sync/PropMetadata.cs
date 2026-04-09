@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Ivy.Core.Helpers;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using static Ivy.Core.Sync.WidgetMetadata;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Ivy.Core.Sync
 {
@@ -14,6 +13,8 @@ namespace Ivy.Core.Sync
         public string CamelCaseName { get; }
 
         public object? DefaultValue { get; }
+
+        public JsonNode? DefaultJsonValue { get; }
 
         public PropAttribute Attribute { get; }
 
@@ -26,6 +27,7 @@ namespace Ivy.Core.Sync
             AlwaysSerialize = attribute.AlwaysSerialize;
             CamelCaseName = Utils.PascalCaseToCamelCase(propInfo.Name);
             DefaultValue = defaultValue;
+            DefaultJsonValue = JsonSerializer.SerializeToNode(defaultValue, _serializerOptions);
             Attribute = attribute;
             this.propInfo = propInfo;
 
@@ -61,6 +63,22 @@ namespace Ivy.Core.Sync
             }
 
             return getter(widget);
+        }
+
+        private static readonly JsonSerializerOptions _serializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            Converters =
+            {
+                new JsonEnumConverter(),
+                new ValueTupleConverterFactory()
+            }
+        };
+
+        public JsonNode? GetValueAsJson(IWidget widget)
+        {
+            return JsonSerializer.SerializeToNode(GetValue(widget), _serializerOptions);
         }
     }
 }

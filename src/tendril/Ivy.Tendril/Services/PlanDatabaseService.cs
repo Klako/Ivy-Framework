@@ -247,11 +247,11 @@ public class PlanDatabaseService : IPlanDatabaseService
                 cmd.CommandText = $"""
                     SELECT
                         COUNT(*) AS TotalCount,
-                        SUM(CASE WHEN State IN ('Draft', 'Blocked') THEN 1 ELSE 0 END),
-                        SUM(CASE WHEN State IN ('Building', 'Executing', 'Updating') THEN 1 ELSE 0 END),
-                        SUM(CASE WHEN State = 'ReadyForReview' THEN 1 ELSE 0 END),
-                        SUM(CASE WHEN State = 'Completed' THEN 1 ELSE 0 END),
-                        SUM(CASE WHEN State = 'Failed' THEN 1 ELSE 0 END),
+                        COALESCE(SUM(CASE WHEN State IN ('Draft', 'Blocked') THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN State IN ('Building', 'Executing', 'Updating') THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN State = 'ReadyForReview' THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN State = 'Completed' THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN State = 'Failed' THEN 1 ELSE 0 END), 0),
                         (SELECT CASE WHEN COUNT(DISTINCT p2.Id) > 0
                             THEN COALESCE(SUM(c2.Cost), 0) / COUNT(DISTINCT p2.Id) ELSE 0 END
                          FROM Costs c2 JOIN Plans p2 ON p2.Id = c2.PlanId

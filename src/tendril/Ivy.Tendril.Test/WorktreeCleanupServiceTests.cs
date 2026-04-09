@@ -220,4 +220,56 @@ public class WorktreeCleanupServiceTests : IDisposable
         Assert.False(Directory.Exists(worktreeDir), "Directory with read-only files should be force-deleted");
         Assert.False(Directory.Exists(Path.Combine(dir, "worktrees")), "Worktrees directory should be removed");
     }
+
+    [Fact]
+    public void ForceDeleteDirectory_Deletes_Normal_Directory()
+    {
+        var dir = Path.Combine(_tempDir, "force-delete-normal");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "file.txt"), "content");
+
+        WorktreeCleanupService.ForceDeleteDirectory(dir);
+
+        Assert.False(Directory.Exists(dir), "Normal directory should be deleted by ForceDeleteDirectory");
+    }
+
+    [Fact]
+    public void ForceDeleteDirectory_Deletes_ReadOnly_Directory()
+    {
+        var dir = Path.Combine(_tempDir, "force-delete-readonly");
+        var subDir = Path.Combine(dir, "sub");
+        Directory.CreateDirectory(subDir);
+
+        var roFile = Path.Combine(subDir, "readonly.dat");
+        File.WriteAllText(roFile, "locked content");
+        File.SetAttributes(roFile, FileAttributes.ReadOnly);
+
+        WorktreeCleanupService.ForceDeleteDirectory(dir);
+
+        Assert.False(Directory.Exists(dir), "Directory with read-only files should be deleted by ForceDeleteDirectory");
+    }
+
+    [Fact]
+    public void ForceDeleteDirectory_Handles_Nonexistent_Path_Gracefully()
+    {
+        var dir = Path.Combine(_tempDir, "force-delete-nonexistent");
+
+        // ForceDeleteDirectory on a nonexistent path — the first Directory.Delete will
+        // throw DirectoryNotFoundException (not IOException/UnauthorizedAccessException),
+        // so it propagates. Verify it throws rather than silently succeeding.
+        Assert.ThrowsAny<Exception>(() => WorktreeCleanupService.ForceDeleteDirectory(dir));
+    }
+
+    [Fact]
+    public void ForceDeleteDirectory_Deletes_Deeply_Nested_Directory()
+    {
+        var dir = Path.Combine(_tempDir, "force-delete-deep");
+        var deep = Path.Combine(dir, "a", "b", "c", "d");
+        Directory.CreateDirectory(deep);
+        File.WriteAllText(Path.Combine(deep, "leaf.txt"), "deep");
+
+        WorktreeCleanupService.ForceDeleteDirectory(dir);
+
+        Assert.False(Directory.Exists(dir), "Deeply nested directory should be deleted by ForceDeleteDirectory");
+    }
 }

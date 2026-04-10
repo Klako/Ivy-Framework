@@ -23,18 +23,18 @@ maxConcurrentJobs: 5  # Maximum number of jobs to run concurrently (default: 5)
 # Promptwares reference profiles by name so switching codingAgent automatically
 # picks the right model and effort without per-promptware changes.
 agents:
-- name: ClaudeCode
+- name: claude
   profiles:
   - name: deep
-    model: claude-opus-4-6
+    model: opus
     effort: max
   - name: balanced
-    model: claude-sonnet-4-6
+    model: sonnet
     effort: high
   - name: quick
-    model: claude-haiku-4-5
+    model: haiku
     effort: low
-- name: Codex
+- name: codex
   profiles:
   - name: deep
     model: gpt-5.4
@@ -45,7 +45,7 @@ agents:
   - name: quick
     model: gpt-5.3-codex
     effort: low
-- name: Gemini
+- name: gemini
   profiles:
   - name: deep
     model: gemini-3-flash-preview

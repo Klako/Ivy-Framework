@@ -20,6 +20,8 @@ public class SidebarView(
 
     public override object Build()
     {
+        var filtersOpen = UseState(false);
+
         var filteredPlans =
             PlanFilters.ApplyFilters(_plans, _projectFilter.Value, _levelFilter.Value, _textFilter.Value);
 
@@ -34,8 +36,6 @@ public class SidebarView(
             .OrderByDescending(g => g.Count())
             .Select(g => new Option<string>($"{g.Key} ({g.Count()})", g.Key))
             .ToArray<IAnyOption>();
-
-        var filtersOpen = UseState(false);
 
         var searchInput = _textFilter.ToSearchInput()
             .Placeholder("Search plans...")

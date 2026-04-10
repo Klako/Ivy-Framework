@@ -19,7 +19,7 @@ public class SidebarView(
     private readonly IState<string?> _textFilter = textFilter;
     private readonly int _totalCount = totalCount;
 
-    private object BuildHeader()
+    private object BuildHeader(IState<bool> filtersOpen)
     {
         var projectOptions = _recommendations
             .GroupBy(r => r.Project)
@@ -33,8 +33,6 @@ public class SidebarView(
             .OrderBy(s => s)
             .Select(s => new Option<string>(s.ToString(), s.ToString()))
             .ToArray<IAnyOption>();
-
-        var filtersOpen = UseState(false);
 
         var searchInput = _textFilter.ToSearchInput()
             .Placeholder("Search recommendations...")
@@ -97,6 +95,8 @@ public class SidebarView(
 
     public override object Build()
     {
-        return new HeaderLayout(BuildHeader(), BuildContent());
+        var filtersOpen = UseState(false);
+
+        return new HeaderLayout(BuildHeader(filtersOpen), BuildContent());
     }
 }

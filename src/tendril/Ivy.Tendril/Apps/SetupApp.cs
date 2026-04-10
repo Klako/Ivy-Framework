@@ -19,7 +19,8 @@ public class SetupApp : ViewBase
             new Tab("Levels", new LevelsSetupView()),
             new Tab("Verifications", new VerificationsSetupView()),
             new Tab("Promptwares", new PromptwaresSetupView()),
-            new Tab("Projects", new ProjectsSetupView())
+            new Tab("Projects", new ProjectsSetupView()),
+            new Tab("Advanced", new AdvancedSetupView())
         ).Variant(TabsVariant.Content);
     }
 }

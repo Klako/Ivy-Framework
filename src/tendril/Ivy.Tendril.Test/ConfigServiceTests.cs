@@ -657,4 +657,45 @@ promptwares:
         Assert.Equal("", profile.Effort);
         Assert.Equal("", profile.Arguments);
     }
+
+    [Fact]
+    public void SaveSettings_PersistsAdvancedSettings()
+    {
+        var yaml = @"
+jobTimeout: 30
+staleOutputTimeout: 10
+maxConcurrentJobs: 5
+editor:
+  command: code
+  label: VS Code
+";
+
+        var tempDir = CreateTempConfigFile(yaml);
+        var service = new ConfigService(new TendrilSettings());
+
+        try
+        {
+            service.SetTendrilHome(tempDir);
+
+            service.Settings.JobTimeout = 45;
+            service.Settings.StaleOutputTimeout = 15;
+            service.Settings.MaxConcurrentJobs = 8;
+            service.Settings.Editor.Command = "vim";
+            service.Settings.Editor.Label = "Vim";
+            service.SaveSettings();
+
+            var reloaded = new ConfigService(new TendrilSettings());
+            reloaded.SetTendrilHome(tempDir);
+
+            Assert.Equal(45, reloaded.Settings.JobTimeout);
+            Assert.Equal(15, reloaded.Settings.StaleOutputTimeout);
+            Assert.Equal(8, reloaded.Settings.MaxConcurrentJobs);
+            Assert.Equal("vim", reloaded.Settings.Editor.Command);
+            Assert.Equal("Vim", reloaded.Settings.Editor.Label);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

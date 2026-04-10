@@ -117,7 +117,6 @@ public class TendrilSettings
     public int JobTimeout { get; set; } = 30;
     public int StaleOutputTimeout { get; set; } = 10;
     public int MaxConcurrentJobs { get; set; } = 5;
-    public string DefaultEffort { get; set; } = "high";
     public List<ProjectConfig> Projects { get; set; } = new();
     public List<VerificationConfig> Verifications { get; set; } = new();
     public string PlanTemplate { get; set; } = "";
@@ -437,9 +436,6 @@ public class ConfigService : IConfigService
             // Validate editor command exists on PATH (non-blocking)
             Settings.Editor.IsAvailable = IsCommandAvailable(Settings.Editor.Command);
         }
-
-        // Expand default effort
-        Settings.DefaultEffort = VariableExpansion.ExpandVariables(Settings.DefaultEffort, TendrilHome);
 
         // Expand promptware configs
         if (Settings.Promptwares != null)

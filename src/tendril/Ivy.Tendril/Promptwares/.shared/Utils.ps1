@@ -461,11 +461,12 @@ function InvokePromptwareAgent {
                 default { "Claude" }
             }
 
-            Add-Content -Path $rawLogFile -Value "[tendril] Command: Invoke-CodingAgent.ps1 -Cli $cliName -Model $($agent.Model)" -Encoding UTF8
+            Add-Content -Path $rawLogFile -Value "[tendril] Command: Invoke-CodingAgent.ps1 -Cli $cliName -Model $($agent.Model) -Effort $($agent.Effort)" -Encoding UTF8
 
             $output = & $invokeCodingAgentScript `
                 -Cli $cliName `
                 -Model $agent.Model `
+                -Effort $agent.Effort `
                 -PromptFile $promptFile `
                 -AllowedTools $agent.AllowedTools `
                 -SessionId $sessionId `
@@ -654,10 +655,6 @@ function GetAgentCommand {
                 }
             }
 
-            # Fall back to defaultEffort if no per-promptware effort set
-            if (-not $effort -and $config.defaultEffort) {
-                $effort = $config.defaultEffort
-            }
         }
         catch {
             Write-Host "Warning: Could not parse config.yaml" -ForegroundColor Yellow

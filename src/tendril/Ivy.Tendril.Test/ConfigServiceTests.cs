@@ -432,35 +432,6 @@ projects:
     }
 
     [Fact]
-    public void Should_Deserialize_DefaultEffort()
-    {
-        var yaml = @"
-defaultEffort: medium
-";
-
-        var tempDir = CreateTempConfigFile(yaml);
-        var service = new ConfigService(new TendrilSettings());
-
-        try
-        {
-            service.SetTendrilHome(tempDir);
-
-            Assert.Equal("medium", service.Settings.DefaultEffort);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
-    }
-
-    [Fact]
-    public void DefaultEffort_DefaultsToHigh()
-    {
-        var settings = new TendrilSettings();
-        Assert.Equal("high", settings.DefaultEffort);
-    }
-
-    [Fact]
     public void Should_Parse_Default_Key_In_Promptwares()
     {
         var yaml = @"

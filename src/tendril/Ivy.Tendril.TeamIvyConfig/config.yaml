@@ -33,7 +33,6 @@ agents:
 jobTimeout: 30
 staleOutputTimeout: 10
 maxConcurrentJobs: 10
-defaultEffort: high
 projects:
 - name: Framework
   color: Blue

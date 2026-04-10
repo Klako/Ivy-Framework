@@ -688,6 +688,7 @@ function GetAgentCommand {
         switch ($codingAgent) {
             "claude" { $raw += " --effort $effort" }
             "codex"  { $raw += " --reasoning-effort $effort" }
+            "gemini" { Write-Warning "Effort '$effort' is configured but the Gemini CLI does not support an effort flag — ignoring." }
         }
     }
 

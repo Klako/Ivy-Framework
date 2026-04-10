@@ -343,13 +343,45 @@ public class WorktreeCleanupServiceTests : IDisposable
         {
             // Expect IOException: Directory.Delete fails because of the lock, and
             // rmdir /s /q also can't delete the file while it's held open.
-            Assert.Throws<IOException>(() =>
+            var ex = Assert.Throws<IOException>(() =>
                 WorktreeCleanupService.ForceDeleteDirectory(testDir, logger));
+            Assert.Contains("after 3 retries", ex.Message);
         }
 
         Assert.Contains(logEntries, e => e.Contains("falling back to rmdir"));
 
         // Cleanup after the stream is released.
+        if (Directory.Exists(testDir))
+            Directory.Delete(testDir, true);
+    }
+
+    [Fact]
+    public void ForceDeleteDirectory_Retries_Before_Throwing()
+    {
+        // Windows-only: keep a file locked for the entire call so every retry
+        // attempt fails. Verify retry log entries appear and the final message
+        // mentions "after 3 retries". Slow test (~3s back-off).
+        if (!OperatingSystem.IsWindows()) return;
+
+        var testDir = Path.Combine(_tempDir, "force-delete-retry");
+        Directory.CreateDirectory(testDir);
+        var lockedFile = Path.Combine(testDir, "locked.txt");
+        File.WriteAllText(lockedFile, "content");
+
+        var logEntries = new List<string>();
+        var logger = new CapturingLogger(logEntries);
+
+        using (var stream = new FileStream(lockedFile, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var ex = Assert.Throws<IOException>(() =>
+                WorktreeCleanupService.ForceDeleteDirectory(testDir, logger));
+            Assert.Contains("after 3 retries", ex.Message);
+        }
+
+        Assert.Contains(logEntries, e => e.Contains("retry 1/3"));
+        Assert.Contains(logEntries, e => e.Contains("retry 2/3"));
+        Assert.Contains(logEntries, e => e.Contains("retry 3/3"));
+
         if (Directory.Exists(testDir))
             Directory.Delete(testDir, true);
     }

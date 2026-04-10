@@ -39,35 +39,35 @@ function scrollElementWithIdIntoView(id: string, behavior: ScrollBehavior): bool
   return true;
 }
 
-/** Scroll to the URL hash, retrying until the heading exists in the DOM. */
-function scrollToHashFragment(options: {
-  behavior: ScrollBehavior;
-  maxAttempts: number;
-  intervalMs: number;
-}): { cancel: () => void } {
-  const { behavior, maxAttempts, intervalMs } = options;
-  let attempt = 0;
+/**
+ * Scroll to the URL hash, retrying on requestAnimationFrame until the heading exists
+ * (markdown may commit after the first frame).
+ */
+function scrollToHashFragment(options: { behavior: ScrollBehavior; maxFrames: number }): {
+  cancel: () => void;
+} {
+  const { behavior, maxFrames } = options;
+  let frame = 0;
   let cancelled = false;
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let rafId = 0;
 
-  const step = () => {
+  const tick = () => {
     if (cancelled) return;
     const targetId = getHashTargetId();
     if (!targetId) return;
     if (scrollElementWithIdIntoView(targetId, behavior)) return;
-    attempt++;
-    if (attempt < maxAttempts) {
-      timeoutId = setTimeout(step, intervalMs);
+    frame++;
+    if (frame < maxFrames) {
+      rafId = requestAnimationFrame(tick);
     }
   };
 
-  // Defer until after layout so markdown headings (rehype-slug ids) exist in the DOM.
-  timeoutId = setTimeout(step, 0);
+  rafId = requestAnimationFrame(tick);
 
   return {
     cancel: () => {
       cancelled = true;
-      if (timeoutId !== null) clearTimeout(timeoutId);
+      cancelAnimationFrame(rafId);
     },
   };
 }
@@ -91,14 +91,15 @@ export const ArticleWidget: React.FC<ArticleWidgetProps> = ({
   useLayoutEffect(() => {
     let cancelScroll: (() => void) | null = null;
 
-    const run = (behavior: ScrollBehavior, maxAttempts: number) => {
+    const run = (behavior: ScrollBehavior, maxFrames: number) => {
       cancelScroll?.();
-      cancelScroll = scrollToHashFragment({ behavior, maxAttempts, intervalMs: 50 }).cancel;
+      cancelScroll = scrollToHashFragment({ behavior, maxFrames }).cancel;
     };
 
-    run("auto", 60);
+    // ~3s at 60fps — enough for markdown to paint ids on headings
+    run("auto", 180);
 
-    const onHashChange = () => run("smooth", 30);
+    const onHashChange = () => run("smooth", 90);
 
     window.addEventListener("hashchange", onHashChange);
     return () => {

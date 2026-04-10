@@ -513,12 +513,12 @@ export const useBackend = (
         window.history.pushState(message.state, "", prefixedUrl);
       }
 
-      // pushState/replaceState do not fire `hashchange`. Article and other listeners rely on it for #section scrolling.
+      // pushState/replaceState do not fire `hashchange`. Double rAF runs after the next paint so listeners see the new URL.
       if (prefixedUrl.includes("#")) {
         const notifyHash = () => window.dispatchEvent(new HashChangeEvent("hashchange"));
-        queueMicrotask(notifyHash);
-        window.setTimeout(notifyHash, 100);
-        window.setTimeout(notifyHash, 400);
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(notifyHash);
+        });
       }
     } else {
       // For full URL redirects (same-origin only)

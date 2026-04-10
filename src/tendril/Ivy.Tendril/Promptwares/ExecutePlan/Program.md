@@ -296,6 +296,8 @@ if [ -n "$CHANGED_CS" ]; then
 fi
 ```
 
+If `dotnet format` fails with `Could not find a MSBuild project file or solution file`, the current working directory doesn't contain a discoverable `.slnx`/`.sln`. Pass the solution that contains the changed files as an explicit first positional argument (`dotnet format <path/to/solution.slnx> --include <files>`). Repos without a top-level solution file are common — check `Memory/` for repo-specific workspace paths.
+
 Commit messages should reference the plan ID:
 
 ```

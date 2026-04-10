@@ -1,5 +1,7 @@
 # MakePr
 
+**Note:** This promptware is stack-agnostic. Stack-specific operations (build, format, test) are defined in `config.yaml` under `verifications`. Examples in this document use multiple tech stacks for illustration.
+
 Create GitHub pull requests and apply PR rules.
 
 **!CRITICAL: ALL steps are mandatory. Do not skip PR rule application.**
@@ -152,9 +154,13 @@ When the PR status is `CONFLICTING`, resolve the conflict locally before retryin
    git commit -m "[<planId>] Resolve merge conflicts with <default-branch>"
    ```
 
-6. **Quick build check** (if C# files were involved in conflicts):
+6. **Quick build check** (if build-critical files were involved in conflicts):
    ```bash
-   dotnet build --warnaserror
+   # Run your project's build command from config.yaml verifications
+   # Examples:
+   # - .NET: dotnet build --warnaserror
+   # - JavaScript: npm run build
+   # - Go: go build ./...
    ```
    If the build fails, fix the issue and amend the merge commit.
 

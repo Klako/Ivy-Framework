@@ -498,7 +498,7 @@ promptwares:
     public void Should_Deserialize_Agents_Section_With_Profiles()
     {
         var yaml = @"
-agents:
+codingAgents:
   - name: ClaudeCode
     profiles:
       - name: deep
@@ -527,10 +527,10 @@ agents:
         {
             service.SetTendrilHome(tempDir);
 
-            Assert.NotNull(service.Settings.Agents);
-            Assert.Equal(2, service.Settings.Agents.Count);
+            Assert.NotNull(service.Settings.CodingAgents);
+            Assert.Equal(2, service.Settings.CodingAgents.Count);
 
-            var claude = service.Settings.Agents[0];
+            var claude = service.Settings.CodingAgents[0];
             Assert.Equal("ClaudeCode", claude.Name);
             Assert.Equal(3, claude.Profiles.Count);
 
@@ -544,7 +544,7 @@ agents:
             Assert.Equal("claude-sonnet-4-6", claudeBalanced.Model);
             Assert.Equal("high", claudeBalanced.Effort);
 
-            var codex = service.Settings.Agents[1];
+            var codex = service.Settings.CodingAgents[1];
             Assert.Equal("Codex", codex.Name);
             Assert.Equal(2, codex.Profiles.Count);
             Assert.Equal("gpt-5.4", codex.Profiles[0].Model);
@@ -561,7 +561,7 @@ agents:
     {
         var yaml = @"
 codingAgent: claude
-agents:
+codingAgents:
   - name: ClaudeCode
     arguments: --global-flag
     profiles:
@@ -578,10 +578,10 @@ agents:
         {
             service.SetTendrilHome(tempDir);
 
-            Assert.NotNull(service.Settings.Agents);
-            Assert.Single(service.Settings.Agents);
+            Assert.NotNull(service.Settings.CodingAgents);
+            Assert.Single(service.Settings.CodingAgents);
 
-            var agent = service.Settings.Agents[0];
+            var agent = service.Settings.CodingAgents[0];
             Assert.Equal("ClaudeCode", agent.Name);
             Assert.Equal("--global-flag", agent.Arguments);
 
@@ -637,8 +637,8 @@ promptwares:
     public void Agents_DefaultsToEmptyList()
     {
         var settings = new TendrilSettings();
-        Assert.NotNull(settings.Agents);
-        Assert.Empty(settings.Agents);
+        Assert.NotNull(settings.CodingAgents);
+        Assert.Empty(settings.CodingAgents);
     }
 
     [Fact]

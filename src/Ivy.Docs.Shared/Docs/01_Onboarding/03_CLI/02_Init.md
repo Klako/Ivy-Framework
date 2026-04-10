@@ -14,7 +14,7 @@ searchHints:
 Quickly scaffold new Ivy projects with the necessary structure, configuration files, and boilerplate code using the init command.
 </Ingress>
 
-The `ivy init` command creates a new Ivy project with the necessary structure and configuration files to get you started quickly. See [Program](../02_Concepts/01_Program.md) for how the generated entry point runs your app.
+The `ivy init` command creates a new Ivy project with the necessary structure and configuration files to get you started quickly. That layout matches the [project structure overview](../01_GettingStarted/02_Installation.md#project-structure-overview) in the Installation guide. See [Program](../02_Concepts/01_Program.md) for how the generated entry point runs your app.
 
 ## Basic Usage
 

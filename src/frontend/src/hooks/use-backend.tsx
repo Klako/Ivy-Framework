@@ -512,6 +512,14 @@ export const useBackend = (
       } else {
         window.history.pushState(message.state, "", prefixedUrl);
       }
+
+      // pushState/replaceState do not fire `hashchange`. Article and other listeners rely on it for #section scrolling.
+      if (prefixedUrl.includes("#")) {
+        const notifyHash = () => window.dispatchEvent(new HashChangeEvent("hashchange"));
+        queueMicrotask(notifyHash);
+        window.setTimeout(notifyHash, 100);
+        window.setTimeout(notifyHash, 400);
+      }
     } else {
       // For full URL redirects (same-origin only)
       window.location.href = validatedUrl;

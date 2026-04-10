@@ -215,8 +215,15 @@ describe("validateLinkUrl", () => {
       expect(validateLinkUrl("app://MyApp?param=value")).toBe("app://MyApp?param=value");
     });
 
-    it("should reject app:// URLs with fragments", () => {
-      expect(validateLinkUrl("app://path#fragment")).toBe("#");
+    it("should accept app:// URLs with fragments (article deep links)", () => {
+      expect(validateLinkUrl("app://path#fragment")).toBe("app://path#fragment");
+      expect(validateLinkUrl("app://onboarding/getting-started/installation#prerequisites")).toBe(
+        "app://onboarding/getting-started/installation#prerequisites",
+      );
+    });
+
+    it("should reject app:// URLs with invalid fragments", () => {
+      expect(validateLinkUrl("app://path#bad?query")).toBe("#");
     });
 
     it("should accept app:// URLs with ampersands in query strings", () => {

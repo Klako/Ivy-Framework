@@ -101,9 +101,12 @@ export function convertAppUrlToPath(appUrl: string): string {
     return appUrl;
   }
 
-  // Extract app ID and any existing query string using regex
-  const appId = extractAppProtocolContent(appUrl);
-  const [appPath, existingQueryString] = appId.split("?");
+  const rest = extractAppProtocolContent(appUrl);
+  const hashIdx = rest.indexOf("#");
+  const beforeHash = hashIdx >= 0 ? rest.slice(0, hashIdx) : rest;
+  const fragment = hashIdx >= 0 ? rest.slice(hashIdx) : "";
+
+  const [appPath, existingQueryString] = beforeHash.split("?");
 
   // Build the path, prepending the path base if set
   const basePath = getIvyBasePath(); // e.g. "/foo/bar"
@@ -122,6 +125,7 @@ export function convertAppUrlToPath(appUrl: string): string {
   if (finalQueryString) {
     path += `?${finalQueryString}`;
   }
+  path += fragment;
 
   return path;
 }

@@ -14,7 +14,7 @@ searchHints:
 
 Understand how Views work as the core building blocks of Ivy [apps](./10_Apps.md), similar to React components but written entirely in C#.
 
-Views are the fundamental building blocks of Ivy apps. They are similar to React components, providing a way to encapsulate UI logic and [state management](../../03_Hooks/02_Core/03_UseState.md) in a reusable way. Every view inherits from `ViewBase` and implements a `Build()` method that returns the UI structure.
+Views are the fundamental building blocks of Ivy apps. They are similar to React components, providing a way to encapsulate UI logic and [state management](../../03_Hooks/02_Core/03_UseState.md) in a reusable way. Every view inherits from `ViewBase` and implements a `Build()` method that returns the UI structure. To open another app with data, see [Navigation with arguments](./09_Navigation.md#navigation-with-arguments).
 
 ## Basic Usage
 

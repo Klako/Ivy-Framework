@@ -11,6 +11,9 @@ namespace Ivy.Test.Sync
         [Prop]
         public string TestProp1 { get; set; } = "default";
 
+        [Prop]
+        public Dictionary<string, string[]>? TestProp2 { get; set; } = null;
+
         [Event]
         public EventHandler<Event<TestWidget>>? TestEvent { get; set; }
     }

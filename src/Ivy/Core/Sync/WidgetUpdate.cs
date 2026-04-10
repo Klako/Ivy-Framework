@@ -13,7 +13,7 @@ namespace Ivy.Core.Sync
         public WidgetUpdate(
             Type? type = null,
             string? id = null,
-            IDictionary<string, JsonNode?>? props = null,
+            IDictionary<string, IPropUpdate>? props = null,
             string[]? events = null,
             WidgetListDiff? children = null)
         {
@@ -32,7 +32,7 @@ namespace Ivy.Core.Sync
         public string? Id { get; init; }
 
         [Key(2)]
-        public IDictionary<string, JsonNode?>? Props { get; init; }
+        public IDictionary<string, IPropUpdate>? Props { get; init; }
 
         [Key(3)]
         public string[]? Events { get; init; }

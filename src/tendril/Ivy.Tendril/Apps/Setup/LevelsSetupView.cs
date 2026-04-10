@@ -15,7 +15,7 @@ public class LevelsSetupView : ViewBase
         // Use levels in config.yaml order (not alphabetically sorted).
         var levels = config.Settings.Levels;
 
-        var rows = levels.Select((level, i) => new LevelRow(i, level.Name, level.Badge)).ToList();
+        var rows = levels.Select((level, i) => new LevelRow(level.Name, level.Badge, i)).ToList();
 
         var table = new TableBuilder<LevelRow>(rows)
             .Builder(t => t.Badge, f => f.Func<LevelRow, string>(badge =>
@@ -50,5 +50,5 @@ public class LevelsSetupView : ViewBase
                | new EditLevelDialog(editIndex, levels, config, client, refreshToken);
     }
 
-    private record LevelRow(int Index, string Name, string Badge);
+    private record LevelRow(string Name, string Badge, int Index);
 }

@@ -155,6 +155,7 @@ if [[ -n $(git status --porcelain) ]]; then
   # After resolving stale files, check if there are still changes to commit
   if [[ -n $(git status --porcelain) ]]; then
     git add -A
+    git reset -- '*.bak_*' 2>/dev/null || true
     git commit -m "WIP: Auto-commit before plan execution [$(date -u +%Y-%m-%dT%H:%M:%SZ)]"
     git push origin $(git branch --show-current)
     echo "Changes committed and pushed successfully"

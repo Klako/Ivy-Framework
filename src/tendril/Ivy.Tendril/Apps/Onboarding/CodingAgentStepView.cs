@@ -5,20 +5,20 @@ namespace Ivy.Tendril.Apps.Onboarding;
 public class CodingAgentStepView(
     IState<int> stepperIndex,
     IReadOnlyDictionary<string, bool> checkResults,
-    IReadOnlyDictionary<string, bool?>? healthResults) : ViewBase
+    IReadOnlyDictionary<string, HealthCheckStatus?>? healthResults) : ViewBase
 {
     private static readonly (string Label, string Name)[] AgentOptions = [("Claude Code", "claude"), ("Codex", "codex"), ("Gemini", "gemini")];
     private readonly (string Label, string Name)[] _installedOptions = GetInstalledOptions(checkResults, healthResults);
 
     private static (string Label, string Name)[] GetInstalledOptions(
         IReadOnlyDictionary<string, bool> checkResults,
-        IReadOnlyDictionary<string, bool?>? healthResults)
+        IReadOnlyDictionary<string, HealthCheckStatus?>? healthResults)
     {
         var installed = AgentOptions.Where(a => checkResults.ContainsKey(a.Name) && checkResults[a.Name]).ToArray();
 
         if (healthResults != null)
         {
-            var healthy = installed.Where(a => healthResults.TryGetValue(a.Name, out var h) && h == true).ToArray();
+            var healthy = installed.Where(a => healthResults.TryGetValue(a.Name, out var h) && h == HealthCheckStatus.Authenticated).ToArray();
             if (healthy.Length > 0)
                 return healthy;
         }

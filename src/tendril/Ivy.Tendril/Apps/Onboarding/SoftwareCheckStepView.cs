@@ -6,7 +6,7 @@ namespace Ivy.Tendril.Apps.Onboarding;
 public class SoftwareCheckStepView(
     IState<int> stepperIndex,
     IState<Dictionary<string, bool>?> checkResults,
-    IState<Dictionary<string, bool?>?> healthResults) : ViewBase
+    IState<Dictionary<string, HealthCheckStatus?>?> healthResults) : ViewBase
 {
     private static readonly Dictionary<string, string> HealthCheckHints = new()
     {
@@ -24,11 +24,11 @@ public class SoftwareCheckStepView(
                                 && (checkResults.Value["claude"] || checkResults.Value["codex"] ||
                                     checkResults.Value["gemini"]);
 
-        var ghHealthy = healthResults.Value?.GetValueOrDefault("gh") == true;
+        var ghHealthy = healthResults.Value?.GetValueOrDefault("gh") == HealthCheckStatus.Authenticated;
         var anyAgentHealthy = healthResults.Value != null
-                              && (healthResults.Value.GetValueOrDefault("claude") == true
-                                  || healthResults.Value.GetValueOrDefault("codex") == true
-                                  || healthResults.Value.GetValueOrDefault("gemini") == true);
+                              && (healthResults.Value.GetValueOrDefault("claude") == HealthCheckStatus.Authenticated
+                                  || healthResults.Value.GetValueOrDefault("codex") == HealthCheckStatus.Authenticated
+                                  || healthResults.Value.GetValueOrDefault("gemini") == HealthCheckStatus.Authenticated);
 
         var allRequiredPassed = checkResults.Value != null
                                 && checkResults.Value["gh"] && ghHealthy
@@ -122,7 +122,7 @@ public class SoftwareCheckStepView(
 
             checkResults.Set(results);
 
-            var health = new Dictionary<string, bool?>();
+            var health = new Dictionary<string, HealthCheckStatus?>();
 
             if (results["gh"])
                 health["gh"] = await CheckHealth("gh", "auth status");
@@ -150,7 +150,7 @@ public class SoftwareCheckStepView(
 
     private static TableRow MakeSoftwareRow(
         Dictionary<string, bool> results,
-        Dictionary<string, bool?>? health,
+        Dictionary<string, HealthCheckStatus?>? health,
         string displayName,
         string key,
         string installUrl,
@@ -162,18 +162,22 @@ public class SoftwareCheckStepView(
         string statusText;
         if (!installed)
             statusText = isRequired ? "❌ Not Found" : "❌ Not Installed";
-        else if (healthStatus == true)
+        else if (healthStatus == HealthCheckStatus.Authenticated)
             statusText = "✅ Ready";
-        else if (healthStatus == false)
+        else if (healthStatus == HealthCheckStatus.NotAuthenticated)
             statusText = "⚠️ Installed but not authenticated";
+        else if (healthStatus == HealthCheckStatus.CheckFailed)
+            statusText = "⚠️ Health check failed";
         else
             statusText = "✅ Installed";
 
         TableCell notesCell;
         if (!installed)
             notesCell = new TableCell(new Button("Install").Inline().Url(installUrl));
-        else if (healthStatus == false && HealthCheckHints.TryGetValue(key, out var hint))
+        else if (healthStatus == HealthCheckStatus.NotAuthenticated && HealthCheckHints.TryGetValue(key, out var hint))
             notesCell = new TableCell(hint);
+        else if (healthStatus == HealthCheckStatus.CheckFailed)
+            notesCell = new TableCell("Try clicking Recheck");
         else
             notesCell = new TableCell("");
 
@@ -192,8 +196,34 @@ public class SoftwareCheckStepView(
     private static Task<bool> CheckCommand(string fileName, string arguments)
         => CheckProcess(fileName, arguments, 10000);
 
-    private static Task<bool> CheckHealth(string fileName, string arguments)
-        => CheckProcess(fileName, arguments, 30000);
+    private static async Task<HealthCheckStatus> CheckHealth(string fileName, string arguments)
+    {
+        try
+        {
+            return await Task.Run(() =>
+            {
+                var proc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = OperatingSystem.IsWindows() ? "cmd.exe" : fileName,
+                    Arguments = OperatingSystem.IsWindows() ? $"/c \"{fileName}\" {arguments}" : arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                if (proc is null) return HealthCheckStatus.CheckFailed;
+                var exited = proc.WaitForExitOrKill(30000);
+                if (!exited) return HealthCheckStatus.CheckFailed;
+                return proc.ExitCode == 0
+                    ? HealthCheckStatus.Authenticated
+                    : HealthCheckStatus.NotAuthenticated;
+            });
+        }
+        catch
+        {
+            return HealthCheckStatus.CheckFailed;
+        }
+    }
 
     private static async Task<bool> CheckProcess(string fileName, string arguments, int timeoutMs)
     {

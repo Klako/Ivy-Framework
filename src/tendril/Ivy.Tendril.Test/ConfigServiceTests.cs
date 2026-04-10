@@ -674,8 +674,8 @@ promptwares:
     public void Agents_DefaultsToEmptyList()
     {
         var settings = new TendrilSettings();
-        Assert.NotNull(settings.Agents);
-        Assert.Empty(settings.Agents);
+        Assert.NotNull(settings.CodingAgents);
+        Assert.Empty(settings.CodingAgents);
     }
 
     [Fact]

@@ -149,7 +149,9 @@ verifications:
     3. Compare the plan's Problem and Solution sections against the actual changes
     4. Write the verification report to `<PlanFolder>/verification/CheckResult.md`
 
-# Example .NET verifications (uncomment and customize):
+# Stack-specific verification examples (uncomment and customize for your stack):
+
+# .NET:
 # - name: DotnetBuild
 #   prompt: Run `dotnet build --warnaserror` in the plan's worktree directory and verify it succeeds.
 # - name: DotnetFormat
@@ -160,6 +162,26 @@ verifications:
 #   prompt: >
 #     Run dotnet tests using the filter from the plan's **## Tests** section.
 #     If plan specifies `dotnet test --filter <expression>`, run it. Verify all tests pass.
+
+# JavaScript/TypeScript:
+# - name: NpmBuild
+#   prompt: Run `npm run build` in the plan's worktree directory and verify it succeeds.
+# - name: NpmLint
+#   prompt: Run `npm run lint` on changed files and fix any errors.
+# - name: NpmTest
+#   prompt: Run `npm test` with the filter from the plan's **## Tests** section.
+
+# Python:
+# - name: PythonLint
+#   prompt: Run `black --check .` and `flake8` on changed .py files.
+# - name: PythonTest
+#   prompt: Run `pytest <files>` with the filter from the plan's **## Tests** section.
+
+# Go:
+# - name: GoBuild
+#   prompt: Run `go build ./...` and verify it succeeds.
+# - name: GoTest
+#   prompt: Run `go test <packages>` with the filter from the plan's **## Tests** section.
 
 levels:
   - name: Bug
@@ -202,6 +224,6 @@ planTemplate: >
 
   **Test scope:**
 
-  Specify which tests to run (e.g., test file patterns, test names, or "No existing test coverage" / "Run all tests — <justification>")
+  Specify which tests to run using your test framework's syntax (e.g., `dotnet test --filter "..."`, `jest --testPathPattern=...`, `pytest tests/specific/`, or "No existing test coverage" / "Run all tests — <justification>")
 
   ## Verification

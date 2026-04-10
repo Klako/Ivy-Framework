@@ -1,5 +1,7 @@
 # ExecutePlan
 
+**Note:** This promptware is stack-agnostic. Stack-specific operations (build, format, test) are defined in `config.yaml` under `verifications`. Examples in this document use multiple tech stacks for illustration.
+
 Execute an approved plan in isolated git worktrees.
 
 ## Context
@@ -208,7 +210,9 @@ git worktree add "<PlanFolder>/worktrees/<RepoName>" -b "plan-<PlanId>-<RepoName
 
 **Important:** Always branch from `origin/<default-branch>`, not local HEAD. This ensures the PR only contains the plan's commits, not any unpushed local work.
 
-### 2.5. Setup Frontend Dependencies
+### 2.5. Setup Frontend Dependencies (JavaScript/TypeScript Projects Only)
+
+**Note:** This section applies only to projects using npm/pnpm. Skip if not applicable.
 
 **!CRITICAL: Frontend builds in worktrees have known issues with npm package module resolution that cause 15-25 minute timeouts. Follow this workaround to avoid them.**
 
@@ -267,7 +271,7 @@ If the plan **modifies frontend code** (adding/editing `.tsx`, `.ts`, `.css` fil
 
 ### 3. Handle Cross-Repo References
 
-Projects may reference other repos via absolute paths in `.csproj` files (e.g. `<ProjectReference Include="/path/to/other-repo/src/Project.csproj" />`).
+Projects may reference other repos via absolute paths in project files (e.g. `.csproj`, `go.mod`, `package.json`).
 
 These paths point to the original repos, not the worktree copies. Since we only modify files in the worktree, this is usually fine — the build references the original (stable) code.
 
@@ -285,25 +289,22 @@ Work exclusively in the worktree directories. Follow the plan's latest revision:
 
 Make logically grouped commits in the worktree(s). Each commit should be a coherent unit of work.
 
-Before each commit, run formatting/linting as defined by the project's verifications in `config.yaml`. Common patterns:
+Before each commit, run formatting/linting as defined by the project's verifications in `config.yaml`. The exact commands depend on your stack's verification definitions.
 
-**Frontend files** (in directories containing `package.json`):
-
-```bash
-cd <frontend-dir> && npm run format && npm run lint:fix && cd <back-to-root>
-```
-
-**C# files**:
+**Example patterns** (actual commands come from config.yaml verifications):
 
 ```bash
-# Get changed .cs files from this execution's commits
-CHANGED_CS=$(git diff --name-only --diff-filter=ACM HEAD~1 -- '*.cs' | tr '\n' ' ')
-if [ -n "$CHANGED_CS" ]; then
-  dotnet format --include $CHANGED_CS
-fi
+# Get changed files from this execution's commits
+CHANGED_FILES=$(git diff --name-only --diff-filter=ACM HEAD~1)
+
+# Run your formatter on changed files (examples):
+# - .NET: dotnet format --include <files>
+# - JavaScript: npm run format <files>
+# - Python: black <files>
+# - Go: gofmt -w <files>
 ```
 
-If `dotnet format` fails with `Could not find a MSBuild project file or solution file`, the current working directory doesn't contain a discoverable `.slnx`/`.sln`. Pass the solution that contains the changed files as an explicit first positional argument (`dotnet format <path/to/solution.slnx> --include <files>`). Repos without a top-level solution file are common — check `Memory/` for repo-specific workspace paths.
+If your formatter requires a workspace/solution file that isn't in the current directory, pass it as an explicit argument. Check `Memory/` for repo-specific workspace paths.
 
 Commit messages should reference the plan ID:
 

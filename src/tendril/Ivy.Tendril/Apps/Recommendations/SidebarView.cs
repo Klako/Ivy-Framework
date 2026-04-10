@@ -34,16 +34,30 @@ public class SidebarView(
             .Select(s => new Option<string>(s.ToString(), s.ToString()))
             .ToArray<IAnyOption>();
 
-        return Layout.Vertical()
-               | _textFilter.ToSearchInput().Placeholder("Search recommendations...")
-               | new Expandable(
-                   "Filters",
-                   Layout.Vertical()
-                   | _projectFilter.ToSelectInput(projectOptions).Placeholder("All Projects").Nullable().WithField()
-                       .Label("Project")
-                   | _planStatusFilter.ToSelectInput(statusOptions).Placeholder("All Statuses").Nullable().WithField()
-                       .Label("Plan Status")
-               ).Open(false).Ghost();
+        var filtersOpen = UseState(false);
+
+        var searchInput = _textFilter.ToSearchInput()
+            .Placeholder("Search recommendations...")
+            .Suffix(
+                new Button()
+                    .Icon(filtersOpen.Value ? Icons.ChevronUp : Icons.ChevronDown)
+                    .Ghost()
+                    .Small()
+                    .OnClick(() => filtersOpen.Set(!filtersOpen.Value))
+            );
+
+        var header = Layout.Vertical() | searchInput;
+
+        if (filtersOpen.Value)
+        {
+            header |= Layout.Vertical()
+                      | _projectFilter.ToSelectInput(projectOptions).Placeholder("All Projects").Nullable()
+                          .WithField().Label("Project")
+                      | _planStatusFilter.ToSelectInput(statusOptions).Placeholder("All Statuses").Nullable()
+                          .WithField().Label("Plan Status");
+        }
+
+        return header;
     }
 
     private object BuildContent()

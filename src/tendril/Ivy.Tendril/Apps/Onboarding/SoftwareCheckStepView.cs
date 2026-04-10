@@ -127,6 +127,13 @@ public class SoftwareCheckStepView(
             if (results["gh"])
                 health["gh"] = await CheckHealth("gh", "auth status");
 
+            // --max-turns 1 caps Claude at a single agentic turn so the process exits cleanly.
+            // Without it, `claude -p` still starts an interactive session on some versions and
+            // blocks until the 30 s timeout fires, falsely reporting "not authenticated".
+            // NOTE: --max-turns is undocumented in `claude --help` (Claude Code 2.1.100) and
+            // could be silently removed in a future release — exactly what happened to Gemini CLI
+            // in 0.37.1+ (see plan 00030). If this check starts failing without auth changes,
+            // verify --max-turns is still a recognized flag (`claude --help | grep max-turns`).
             if (results["claude"])
                 health["claude"] = await CheckHealth("claude", "-p \"ping\" --max-turns 1");
 

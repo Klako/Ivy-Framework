@@ -25,20 +25,7 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
         for (var i = 0; i < currentRepos.Count; i++)
         {
             var ri = i;
-            reposLayout |= Layout.Horizontal().Gap(2).AlignContent(Align.Center)
-                           | new FolderInput
-                           {
-                               Value = currentRepos[ri],
-                               Placeholder = "Select repository folder...",
-                               Mode = FolderInputMode.FullPath,
-                               OnChange = new(e =>
-                               {
-                                   var list = new List<string>(repoPaths.Value);
-                                   list[ri] = e.Value ?? "";
-                                   repoPaths.Set(list);
-                                   return ValueTask.CompletedTask;
-                               })
-                           }.Width(Size.Grow());
+            reposLayout |= new RepoPathInputView(repoPaths, ri);
         }
 
         reposLayout |= new Button("Add").Outline().OnClick(() =>
@@ -158,3 +145,20 @@ public class ProjectSetupStepView(IState<int> stepperIndex) : ViewBase
 }
 
 internal record VerificationEntry(string Name, string Prompt, bool Required);
+
+internal class RepoPathInputView(IState<List<string>> repoPaths, int index) : ViewBase
+{
+    public override object Build()
+    {
+        var repoPath = UseState(repoPaths.Value[index]);
+        UseEffect(() =>
+        {
+            var list = new List<string>(repoPaths.Value);
+            list[index] = repoPath.Value ?? "";
+            repoPaths.Set(list);
+        }, repoPath);
+
+        return repoPath.ToTextInput("Select repository folder...")
+            .Width(Size.Grow());
+    }
+}

@@ -205,7 +205,7 @@ public class SoftwareCheckStepView(
                 var proc = Process.Start(new ProcessStartInfo
                 {
                     FileName = OperatingSystem.IsWindows() ? "cmd.exe" : fileName,
-                    Arguments = OperatingSystem.IsWindows() ? $"/c \"{fileName}\" {arguments}" : arguments,
+                    Arguments = OperatingSystem.IsWindows() ? $"/S /c \"{fileName} {arguments}\"" : arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -234,7 +234,7 @@ public class SoftwareCheckStepView(
                 var proc = Process.Start(new ProcessStartInfo
                 {
                     FileName = OperatingSystem.IsWindows() ? "cmd.exe" : fileName,
-                    Arguments = OperatingSystem.IsWindows() ? $"/c \"{fileName}\" {arguments}" : arguments,
+                    Arguments = OperatingSystem.IsWindows() ? $"/S /c \"{fileName} {arguments}\"" : arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,

@@ -41,7 +41,7 @@ type WidgetUpdate = [
   type: string | null,
   id: string | null,
   props: {
-    [key: string]: unknown;
+    [key: string]: PropUpdate;
   } | null,
   events: string[] | null,
   children: WidgetListDiff | null,
@@ -51,7 +51,7 @@ type CompactWidgetNode = [
   type: string,
   id: string,
   props: {
-    [key: string]: unknown;
+    [key: string]: PropUpdate;
   },
   events: string[],
   children: CompactWidgetNode[],
@@ -78,6 +78,36 @@ type WidgetListSplice = [index: number, length: number, widgets: CompactWidgetNo
 type WidgetListComplexOperation = [type: 0, WidgetListMove];
 
 type WidgetListMove = [fromIndex: number, toIndex: number];
+
+enum PropUpdateType {
+  Object = 0,
+  Array = 1,
+  Value = 2,
+}
+
+type PropUpdate = PropObjectDiff | PropArrayDiff | PropValueDiff;
+
+type PropObjectDiff = [type: PropUpdateType.Object, changes: PropObjectOperation[]];
+
+enum PropObjectOperationType {
+  Update = 0,
+  Set = 1,
+  Remove = 2,
+}
+
+type PropObjectOperation =
+  | [key: string, type: PropObjectOperationType.Update, update: PropUpdate]
+  | [key: string, type: PropObjectOperationType.Set, newValue: unknown]
+  | [key: string, type: PropObjectOperationType.Remove];
+
+type PropArrayDiff = [
+  type: PropUpdateType.Array,
+  changes: Array<[index: number, update: PropUpdate]>,
+  appends: unknown[],
+  removals: number,
+];
+
+type PropValueDiff = [type: PropUpdateType.Value, newValue: unknown];
 
 type RefreshMessage = {
   widgets: WidgetNode;
@@ -219,10 +249,18 @@ function decompactWidgetNode(compactNode: CompactWidgetNode): WidgetNode {
 
 function applyWidgetUpdate(node: WidgetNode, update: WidgetUpdate) {
   let [type, id, props, events, childrenDiff] = update;
+  let newProps = node.props;
+  if (props) {
+    newProps = { ...node.props };
+    for (let key in props) {
+      let propUpdate = props[key];
+      newProps[key] = applyWidgetPropUpdate(newProps[key], propUpdate);
+    }
+  }
   return {
     type: type ?? node.type,
     id: id ?? node.id,
-    props: props ? { ...node.props, ...props } : node.props,
+    props: newProps,
     events: events ?? node.events,
     children: childrenDiff ? applyWidgetListDiff(node.children ?? [], childrenDiff) : node.children,
   };
@@ -284,6 +322,57 @@ function applyWidgetListDiff(nodeList: WidgetNode[], diff: WidgetListDiff): Widg
     }
   }
   return newNodeList;
+}
+
+function applyWidgetPropUpdate(oldValue: unknown, update: PropUpdate) {
+  switch (update[0]) {
+    case PropUpdateType.Value: {
+      let [_, newValue] = update;
+      return newValue;
+    }
+    case PropUpdateType.Object: {
+      let [_, changes] = update;
+      let newValue: { [key: string]: unknown } = { ...(oldValue as object) };
+      for (let change of changes) {
+        switch (change[1]) {
+          case PropObjectOperationType.Update: {
+            let [key, _, fieldUpdate] = change;
+            let oldFieldValue = newValue[key];
+            newValue[key] = applyWidgetPropUpdate(oldFieldValue, fieldUpdate);
+            break;
+          }
+          case PropObjectOperationType.Set: {
+            let [key, _, newFieldValue] = change;
+            newValue[key] = newFieldValue;
+            break;
+          }
+          case PropObjectOperationType.Remove: {
+            let [key, _] = change;
+            delete newValue[key];
+            break;
+          }
+        }
+      }
+      return newValue;
+    }
+    case PropUpdateType.Array: {
+      let [_, changes, appends, removals] = update;
+      let newValue: unknown[] = [...(oldValue as any[])];
+      for (let change of changes) {
+        let [index, update] = change;
+        let oldElementValue = newValue[index];
+        newValue[index] = applyWidgetPropUpdate(oldElementValue, update);
+      }
+      if (removals > 0) {
+        let firstIndexToRemove = newValue.length - removals;
+        newValue.splice(firstIndexToRemove, removals);
+      }
+      for (let newElement of appends) {
+        newValue.push(newElement);
+      }
+      return newValue;
+    }
+  }
 }
 
 /**

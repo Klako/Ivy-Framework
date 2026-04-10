@@ -36,7 +36,7 @@ namespace Ivy.Test.Sync
                 "Ivy.Test.Sync.TestWidget",
                 "greoij")
             {
-                Props = ImmutableDictionary<string, JsonNode>.Empty
+                Props = ImmutableDictionary<string, JsonNode?>.Empty
                     .Add("testProp1", "nondefault"),
                 Events = ["TestEvent"],
                 Children = []
@@ -60,18 +60,18 @@ namespace Ivy.Test.Sync
             var expected = new SerializedWidget("Ivy.Test.Sync.TestWidget", "greoij")
             {
                 Events = [],
-                Props = ImmutableDictionary<string, JsonNode>.Empty,
+                Props = ImmutableDictionary<string, JsonNode?>.Empty,
                 Children =
                 [
                     new SerializedWidget("Ivy.Test.Sync.TestWidget", "diojwef"){
                         Events = [],
-                        Props = ImmutableDictionary<string, JsonNode>.Empty
+                        Props = ImmutableDictionary<string, JsonNode?>.Empty
                             .Add("testProp1", "nondefault"),
                         Children = []
                     },
                     new SerializedWidget("Ivy.Test.Sync.TestWidget", "diojwef"){
                         Events = [],
-                        Props = ImmutableDictionary<string, JsonNode>.Empty,
+                        Props = ImmutableDictionary<string, JsonNode?>.Empty,
                         Children = []
                     }
                 ]

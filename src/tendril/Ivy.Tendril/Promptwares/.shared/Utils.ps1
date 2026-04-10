@@ -585,6 +585,7 @@ function GetAgentCommand {
     $codingAgent = "claude"
     $model = ""
     $effort = ""
+    $extraArgs = @()
 
     if (Test-Path $configPath) {
         try {
@@ -628,7 +629,7 @@ function GetAgentCommand {
                 }
             }
 
-            # Resolve model and effort from agent profile if profile is specified
+            # Resolve model, effort, and arguments from agent profile if profile is specified
             if ($pwConfig -and $pwConfig.profile -and $config.agents) {
                 $agentEntry = $config.agents | Where-Object {
                     ($_.name -eq "ClaudeCode" -and $codingAgent -eq "claude") -or
@@ -637,10 +638,18 @@ function GetAgentCommand {
                     ($_.name.ToLower() -eq $codingAgent)
                 } | Select-Object -First 1
                 if ($agentEntry) {
+                    # Base args from agent entry (applied to all profiles)
+                    if ($agentEntry.arguments) {
+                        $extraArgs += ($agentEntry.arguments -split '\s+' | Where-Object { $_ })
+                    }
                     $profile = $agentEntry.profiles | Where-Object { $_.name -eq $pwConfig.profile } | Select-Object -First 1
                     if ($profile) {
                         if ($profile.model) { $model = $profile.model }
                         if ($profile.effort) { $effort = $profile.effort }
+                        # Per-profile args appended after base args (can override/extend)
+                        if ($profile.arguments) {
+                            $extraArgs += ($profile.arguments -split '\s+' | Where-Object { $_ })
+                        }
                     }
                 }
             }
@@ -702,6 +711,11 @@ function GetAgentCommand {
         $cmdArgs += ($allowedTools -join ",")
     }
 
+    # Append extra arguments from agent/profile config (base args + per-profile args)
+    if ($extraArgs.Count -gt 0) {
+        $cmdArgs += $extraArgs
+    }
+
     return @{
         Executable   = $parts[0]
         Args         = $cmdArgs
@@ -709,6 +723,7 @@ function GetAgentCommand {
         Model        = $model
         Effort       = $effort
         AllowedTools = $allowedTools
+        Arguments    = $extraArgs
     }
 }
 

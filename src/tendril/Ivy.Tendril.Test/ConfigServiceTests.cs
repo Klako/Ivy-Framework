@@ -623,6 +623,48 @@ agents:
     }
 
     [Fact]
+    public void Should_Deserialize_AgentConfig_Arguments()
+    {
+        var yaml = @"
+codingAgent: claude
+agents:
+  - name: ClaudeCode
+    arguments: --global-flag
+    profiles:
+      - name: deep
+        model: claude-opus-4-6
+        effort: max
+        arguments: --temperature 0.2
+";
+
+        var tempDir = CreateTempConfigFile(yaml);
+        var service = new ConfigService(new TendrilSettings());
+
+        try
+        {
+            service.SetTendrilHome(tempDir);
+
+            Assert.NotNull(service.Settings.Agents);
+            Assert.Single(service.Settings.Agents);
+
+            var agent = service.Settings.Agents[0];
+            Assert.Equal("ClaudeCode", agent.Name);
+            Assert.Equal("--global-flag", agent.Arguments);
+
+            Assert.Single(agent.Profiles);
+            var deep = agent.Profiles[0];
+            Assert.Equal("deep", deep.Name);
+            Assert.Equal("claude-opus-4-6", deep.Model);
+            Assert.Equal("max", deep.Effort);
+            Assert.Equal("--temperature 0.2", deep.Arguments);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
     public void Should_Deserialize_PromptwareConfig_Profile_Field()
     {
         var yaml = @"

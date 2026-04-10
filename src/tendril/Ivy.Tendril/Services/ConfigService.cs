@@ -374,9 +374,16 @@ public class ConfigService : IConfigService
         // Load config if it exists at the new path
         if (File.Exists(ConfigPath))
         {
-            var yaml = FileHelper.ReadAllText(ConfigPath);
-            var loadedSettings = YamlHelper.Deserializer.Deserialize<TendrilSettings>(yaml);
-            if (loadedSettings != null) Settings = loadedSettings;
+            try
+            {
+                var yaml = FileHelper.ReadAllText(ConfigPath);
+                var loadedSettings = YamlHelper.Deserializer.Deserialize<TendrilSettings>(yaml);
+                if (loadedSettings != null) Settings = loadedSettings;
+            }
+            catch
+            {
+                // Malformed config.yaml — keep existing settings rather than crashing.
+            }
         }
 
         MigrateProjectColors();

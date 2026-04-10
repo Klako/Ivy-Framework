@@ -46,6 +46,8 @@ Before processing, read `plan.yaml` and check the `state` field:
 Check `<PlanFolder>/worktrees/` for each repo worktree.
 
 > **Worktree already removed:** If the worktrees/ directory is empty (worktree was already cleaned up), fall back to `plan.yaml` to get the repo path and branch name (format: `plan-<planId>-<repo-folder-name>`). The commit objects may still exist in the original repo's object store. Use `git cat-file -t <sha>` to verify, then create or force-update the local branch: `git branch -f <branch-name> <sha>` (use `-f` because the branch may already exist from a WIP auto-commit) and push from the original repo path.
+>
+> **Commit lost (object GC'd):** If `git cat-file -t <sha>` fails, the commit was garbage-collected after worktree removal. In this case: (1) check if the change is already on main, (2) if not, recreate the change from the plan revision — create a new branch from main, apply the changes as described in the revision, commit with the standard `[<planId>] <title>` message, and push. Update `plan.yaml` commits list with the new commit hash.
 
 For each worktree:
 
@@ -55,6 +57,8 @@ For each worktree:
 4. `git push -u origin <branch>`
 
 > **Stale remote tracking refs warning:** A ref appearing in `git branch -a` as `remotes/origin/<branch>` does NOT guarantee the branch exists on GitHub. Always verify with `gh api repos/<owner>/<repo>/branches/<branch>` or `git ls-remote origin <branch>` before assuming the push succeeded.
+>
+> **Push rejected (non-fast-forward) with diverged history:** If `git push` fails with non-fast-forward and the remote branch contains commits from a different plan (plan ID reuse or prior aborted execution), **force-push** with `git push -f -u origin <branch>`. This is safe because the plan branch is private to this plan's execution and any diverged remote state is stale.
 
 ### 2.5. Upload Artifacts
 

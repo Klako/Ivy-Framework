@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using Ivy.Core;
-using Ivy.Helpers;
 using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Apps.Review.Dialogs;
 using Ivy.Tendril.Services;
@@ -124,10 +122,19 @@ public class ContentView(
 
                     // Recommendations
                     var recsPath = Path.Combine(folderPath, "artifacts", "recommendations.yaml");
-                    var recs = File.Exists(recsPath)
-                        ? YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
-                            FileHelper.ReadAllText(recsPath)) ?? new List<RecommendationYaml>()
-                        : new List<RecommendationYaml>();
+                    List<RecommendationYaml> recs;
+                    try
+                    {
+                        recs = File.Exists(recsPath)
+                            ? YamlHelper.Deserializer.Deserialize<List<RecommendationYaml>>(
+                                FileHelper.ReadAllText(recsPath)) ?? new List<RecommendationYaml>()
+                            : new List<RecommendationYaml>();
+                    }
+                    catch
+                    {
+                        // Malformed YAML must not crash the process — file may be partially written by a promptware.
+                        recs = new List<RecommendationYaml>();
+                    }
 
                     // Summary
                     var summPath = Path.Combine(folderPath, "artifacts", "summary.md");
@@ -156,38 +163,7 @@ public class ContentView(
                             actionStates[i] = (action.Name, true);
                             return;
                         }
-                        try
-                        {
-                            var psi = new ProcessStartInfo
-                            {
-                                FileName = "pwsh",
-                                Arguments =
-                                    $"-NoProfile -Command \"if ({action.Condition}) {{ exit 0 }} else {{ exit 1 }}\"",
-                                WorkingDirectory = folderPath,
-                                RedirectStandardOutput = true,
-                                RedirectStandardError = true,
-                                UseShellExecute = false,
-                                CreateNoWindow = true
-                            };
-                            using var proc = Process.Start(psi);
-                            if (proc is not null)
-                            {
-                                if (!proc.WaitForExitOrKill(5000))
-                                {
-                                    actionStates[i] = (action.Name, false);
-                                    return;
-                                }
-                                actionStates[i] = (action.Name, proc.ExitCode == 0);
-                                return;
-                            }
-                            actionStates[i] = (action.Name, false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.Error.WriteLine(
-                                $"Failed to evaluate review action '{action.Name}' for plan '{_selectedPlan.FolderName}': {ex.Message}");
-                            actionStates[i] = (action.Name, false);
-                        }
+                        actionStates[i] = (action.Name, PlatformHelper.EvaluatePowerShellCondition(action.Condition, folderPath));
                     });
 
                     return new PlanContentData(recs, summaryMd, artifacts, commitRows, verReports, actionStates.ToList());
@@ -302,6 +278,25 @@ public class ContentView(
             }
 
             // Commits tab content
+            var commitsLayout = Layout.Vertical().Gap(2);
+
+            var problematicCommits = planData.CommitRows
+                .Where(r => string.IsNullOrEmpty(r.Title) || r.FileCount == 0)
+                .ToList();
+
+            if (problematicCommits.Count > 0)
+            {
+                var warnings = problematicCommits.Select(r =>
+                {
+                    if (string.IsNullOrEmpty(r.Title))
+                        return $"`{r.ShortHash}` — commit not found or has no message";
+                    return $"`{r.ShortHash}` — commit has no file changes";
+                });
+                commitsLayout |= Callout.Warning(
+                    string.Join("\n", warnings),
+                    "Potentially corrupted commits");
+            }
+
             var commitsTable = new Table(
                 new TableRow(
                         new TableCell("Commit").IsHeader(),
@@ -314,6 +309,8 @@ public class ContentView(
                     new TableCell(new Button(row.ShortHash).Inline().OnClick(() => openCommit.Set(row.Hash))),
                     new TableCell(row.Title)
                 );
+
+            commitsLayout |= commitsTable;
 
             // PRs tab content
             object prsContent;
@@ -371,13 +368,10 @@ public class ContentView(
                         var actionCapture = action;
                         btn = btn.OnClick(() =>
                         {
-                            Process.Start(new ProcessStartInfo
+                            if (!PlatformHelper.RunPowerShellAction(actionCapture.Action, _selectedPlan.FolderPath))
                             {
-                                FileName = "pwsh",
-                                Arguments = $"-NoProfile -Command \"{actionCapture.Action}\"",
-                                WorkingDirectory = _selectedPlan.FolderPath,
-                                UseShellExecute = true
-                            });
+                                Console.Error.WriteLine($"Failed to run review action '{actionCapture.Name}': pwsh not found");
+                            }
                         });
                     }
 
@@ -410,7 +404,7 @@ public class ContentView(
                 selectedTab.Value,
                 new Tab("Summary", Cap(summaryTabContent)),
                 new Tab("Verifications", Cap(verificationsTable)).Badge(_selectedPlan.Verifications.Count.ToString()),
-                new Tab("Commits", Cap(commitsTable)).Badge(_selectedPlan.Commits.Count.ToString()),
+                new Tab("Commits", Cap(commitsLayout)).Badge(_selectedPlan.Commits.Count.ToString()),
                 new Tab("PRs", Cap(prsContent)).Badge(_selectedPlan.Prs.Count.ToString()),
                 new Tab("Artifacts", Cap(artifactsLayout)).Badge(totalArtifacts.ToString()),
                 new Tab("Recommendations", Cap(recommendationsLayout)).Badge(planData.Recommendations.Count.ToString()),
@@ -455,7 +449,7 @@ public class ContentView(
         {
             var fileRepoPaths = _selectedPlan.GetEffectiveRepoPaths(_config);
             var fileLinkSheet =
-                FileLinkHelper.BuildFileLinkSheet(openFile.Value, () => openFile.Set(null), fileRepoPaths);
+                FileLinkHelper.BuildFileLinkSheet(openFile.Value, () => openFile.Set(null), fileRepoPaths, _config);
             if (fileLinkSheet != null) content |= fileLinkSheet;
         }
 
@@ -470,7 +464,7 @@ public class ContentView(
 
         // Action bar
         var actionBar = Layout.Horizontal().AlignContent(Align.Center).Gap(2).Padding(1)
-                        | new Button("Rerun").Icon(Icons.RotateCw).Outline().OnClick(() =>
+                        | new Button("Rerun").Icon(Icons.RotateCw).Outline().ShortcutKey("r").OnClick(() =>
                         {
                             _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Building);
                             _jobService.StartJob("ExecutePlan", _selectedPlan.FolderPath, "-Note",
@@ -481,7 +475,7 @@ public class ContentView(
                         {
                             suggestChangesOpen.Set(true);
                         }).ShortcutKey("d")
-                        | new Button("Discard").Icon(Icons.Trash).Outline().OnClick(() =>
+                        | new Button("Discard").Icon(Icons.Trash).Outline().ShortcutKey("Delete").OnClick(() =>
                         {
                             discardDialogOpen.Set(true);
                         })

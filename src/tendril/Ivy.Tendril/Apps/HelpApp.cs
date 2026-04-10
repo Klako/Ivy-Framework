@@ -10,22 +10,24 @@ public class HelpApp : ViewBase
         return Layout.TopCenter()
                | (Layout.Vertical().Margin(0, 20).Width(150).Gap(3)
                   | Text.H1("Help")
-                  | Text.Muted("View documentation at https://tendril.ivy.app or submit an issue on GitHub.")
-                  | new Button("Open Documentation")
-                      .Primary()
-                      .Large()
-                      .Icon(Icons.ExternalLink, Align.Right)
-                      .OnClick(() => client.OpenUrl("https://tendril.ivy.app"))
+                  | Text.Muted("View documentation at https://tendril.ivy.app or join us on Discord for help.")
+                  | (Layout.Horizontal()
+                     | new Button("Open Documentation")
+                         .Secondary()
+                         .Icon(Icons.ExternalLink, Align.Right)
+                         .OnClick(() => client.OpenUrl("https://tendril.ivy.app"))
+                     | new Button("Join Discord")
+                         .Secondary()
+                         .Icon(Icons.Discord, Align.Right)
+                         .OnClick(() => client.OpenUrl("https://discord.gg/FHgxkDga3y")))
+                  | Text.Muted("View documentation at https://tendril.ivy.app or join us on Discord for help.")
                   | new Button("Submit Issue")
-                      .Outline()
-                      .Large()
+                      .Secondary()
                       .Icon(Icons.Bug, Align.Right)
-                      .OnClick(() => client.OpenUrl("https://github.com/Ivy-Interactive/Ivy-Framework/issues/new?title=%28tendril%29%20"))
-                  | Text.Muted("Join our Discord to talk directly with the team.")
-                  | new Button("Join Discord")
-                      .Large()
-                      .Icon(Icons.Discord, Align.Right)
-                      .OnClick(() => client.OpenUrl("https://discord.gg/FHgxkDga3y"))
+                      .OnClick(() =>
+                          client.OpenUrl(
+                              "https://github.com/Ivy-Interactive/Ivy-Framework/issues/new?title=%28tendril%29%20"))
                );
     }
 }
+

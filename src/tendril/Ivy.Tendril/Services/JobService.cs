@@ -217,7 +217,7 @@ public class JobService : IJobService
 
         // Flush telemetry events to ensure they reach PostHog
         if (_telemetryService != null)
-            _ = Task.Run(async () => await _telemetryService.FlushAsync());
+            _ = Task.Run(async () => { try { await _telemetryService.FlushAsync(); } catch { /* best-effort */ } });
 
         CleanupInboxFile(job);
         WriteJobLog(job);
@@ -618,7 +618,7 @@ public class JobService : IJobService
         RunHooks("before", type, planFolderForHooks, job.Project, job);
 
         // Launch process
-        var processArgs = new List<string> { "-NoProfile", "-File", scriptPath };
+        var processArgs = new List<string> { "-NoProfile", "-NonInteractive", "-File", scriptPath };
         processArgs.AddRange(args);
 
         var workingDirectory = Path.GetFullPath(
@@ -630,6 +630,7 @@ public class JobService : IJobService
             WorkingDirectory = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
             StandardOutputEncoding = Encoding.UTF8,
@@ -651,18 +652,32 @@ public class JobService : IJobService
         var process = new Process { StartInfo = psi };
         process.OutputDataReceived += (_, e) =>
         {
-            if (e.Data != null)
+            try
             {
-                job.LastOutputAt = DateTime.UtcNow;
-                if (!e.Data.Contains("\"type\":\"heartbeat\"")) job.EnqueueOutput(e.Data);
+                if (e.Data != null)
+                {
+                    job.LastOutputAt = DateTime.UtcNow;
+                    if (!e.Data.Contains("\"type\":\"heartbeat\"")) job.EnqueueOutput(e.Data);
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.WriteCrashLog($"[{DateTime.UtcNow:O}] OutputDataReceived exception for job {id}: {ex}");
             }
         };
         process.ErrorDataReceived += (_, e) =>
         {
-            if (e.Data != null)
+            try
             {
-                job.EnqueueOutput($"[stderr] {e.Data}");
-                job.LastOutputAt = DateTime.UtcNow;
+                if (e.Data != null)
+                {
+                    job.EnqueueOutput($"[stderr] {e.Data}");
+                    job.LastOutputAt = DateTime.UtcNow;
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.WriteCrashLog($"[{DateTime.UtcNow:O}] ErrorDataReceived exception for job {id}: {ex}");
             }
         };
 
@@ -677,16 +692,25 @@ public class JobService : IJobService
 
         Task.Run(async () =>
         {
-            if (await process.WaitForExitOrKillAsync(cts.Token))
+            try
             {
-                if (_jobs.TryGetValue(id, out var j) && j.StaleOutputDetected)
-                    CompleteJob(id, null, timedOut: true, staleOutput: true);
+                if (await process.WaitForExitOrKillAsync(cts.Token))
+                {
+                    if (_jobs.TryGetValue(id, out var j) && j.StaleOutputDetected)
+                        CompleteJob(id, null, timedOut: true, staleOutput: true);
+                    else
+                        CompleteJob(id, process.ExitCode);
+                }
                 else
-                    CompleteJob(id, process.ExitCode);
+                {
+                    CompleteJob(id, null, timedOut: true);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                CompleteJob(id, null, timedOut: true);
+                // CompleteJob failures are non-recoverable — the job will appear stuck
+                // but the process survives.
+                Program.WriteCrashLog($"[{DateTime.UtcNow:O}] JobService process monitor exception for job {id}: {ex}");
             }
         });
 
@@ -717,10 +741,11 @@ public class JobService : IJobService
                     var condPsi = new ProcessStartInfo
                     {
                         FileName = "pwsh",
-                        Arguments = $"-NoProfile -EncodedCommand {EncodeForPowerShell(hook.Condition)}",
+                        Arguments = $"-NoProfile -NonInteractive -EncodedCommand {EncodeForPowerShell(hook.Condition)}",
                         WorkingDirectory = string.IsNullOrEmpty(planFolder) ? "." : planFolder,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
+                        RedirectStandardInput = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
                     };
@@ -740,10 +765,11 @@ public class JobService : IJobService
                 var actionPsi = new ProcessStartInfo
                 {
                     FileName = "pwsh",
-                    Arguments = $"-NoProfile -EncodedCommand {EncodeForPowerShell(hook.Action)}",
+                    Arguments = $"-NoProfile -NonInteractive -EncodedCommand {EncodeForPowerShell(hook.Action)}",
                     WorkingDirectory = string.IsNullOrEmpty(planFolder) ? "." : planFolder,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
+                    RedirectStandardInput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
@@ -1259,7 +1285,8 @@ public class JobService : IJobService
                 var psi = new ProcessStartInfo
                 {
                     FileName = "pwsh",
-                    Arguments = $"-NoProfile -Command \"New-BurntToastNotification -Text '{title}', '{body}'\"",
+                    Arguments = $"-NoProfile -NonInteractive -Command \"New-BurntToastNotification -Text '{title}', '{body}'\"",
+                    RedirectStandardInput = true,
                     CreateNoWindow = true,
                     UseShellExecute = false
                 };

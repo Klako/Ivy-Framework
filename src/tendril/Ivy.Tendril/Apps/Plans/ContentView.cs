@@ -280,6 +280,11 @@ public class ContentView(
                     new TableCell(row.Title)
                 );
 
+            var commitWarning = PlanContentHelpers.BuildCommitWarningCallout(planData.CommitRows);
+            object commitsContent = commitWarning != null
+                ? Layout.Vertical().Gap(2) | commitWarning | commitsTable
+                : commitsTable;
+
             // PRs tab content
             object prsContent;
             if (_selectedPlan.Prs.Count > 0)
@@ -320,7 +325,7 @@ public class ContentView(
                 new Tab("Plan", Cap(planTabContent)),
                 new Tab("Summary", Cap(summaryTabContent)),
                 new Tab("Verifications", Cap(verificationsTable)).Badge(_selectedPlan.Verifications.Count.ToString()),
-                new Tab("Commits", Cap(commitsTable)).Badge(_selectedPlan.Commits.Count.ToString()),
+                new Tab("Commits", Cap(commitsContent)).Badge(_selectedPlan.Commits.Count.ToString()),
                 new Tab("PRs", Cap(prsContent)).Badge(_selectedPlan.Prs.Count.ToString()),
                 new Tab("Artifacts", Cap(artifactsLayout)).Badge(totalArtifacts.ToString())
             ).Variant(TabsVariant.Content);
@@ -423,7 +428,7 @@ public class ContentView(
 
         var repoPaths = _selectedPlan.GetEffectiveRepoPaths(_config);
         var fileLinkSheet = FileLinkHelper.BuildFileLinkSheet(
-            openFile.Value, () => openFile.Set(null), repoPaths, _config.Editor.Command, _config.Editor.Label);
+            openFile.Value, () => openFile.Set(null), repoPaths, _config);
         if (fileLinkSheet is not null)
             elements.Add(fileLinkSheet);
 

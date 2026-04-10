@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.Eventing.Reader;
 using System.Text;
+using System.Text.Json.Nodes;
 
 namespace Ivy.Test.Sync
 {
@@ -29,15 +30,17 @@ namespace Ivy.Test.Sync
 
             if (update.Props != null)
             {
-                foreach (var (name, newValue) in update.Props)
+                foreach (var (name, propUpdate) in update.Props)
                 {
-                    if (newValue == null)
+                    widget.Props.TryGetValue(name, out var oldNode);
+                    var newNode = ApplyPropDiff(oldNode, propUpdate);
+                    if (newNode == null)
                     {
                         widget = widget with { Props = widget.Props.Remove(name) };
                     }
                     else
                     {
-                        widget = widget with { Props = widget.Props.SetItem(name, newValue) };
+                        widget = widget with { Props = widget.Props.SetItem(name, newNode) };
                     }
                 }
             }
@@ -75,6 +78,57 @@ namespace Ivy.Test.Sync
             }
 
             return widget;
+        }
+
+        private static JsonNode? ApplyPropDiff(JsonNode? source, IPropUpdate? update)
+        {
+            if (update is PropValueDiff valueDiff)
+            {
+                return valueDiff.NewValue?.DeepClone();
+            }
+            else if (update is PropObjectDiff objectDiff)
+            {
+                Assert.NotNull(source);
+                Assert.True(source.GetValueKind() == System.Text.Json.JsonValueKind.Object);
+                var sourceObject = source.AsObject();
+                foreach (var (key, change) in objectDiff.Changes)
+                {
+                    if (change is PropObjectUpdate fieldUpdate)
+                    {
+                        sourceObject[key] = ApplyPropDiff(sourceObject[key], fieldUpdate.Update);
+                    }
+                    else if (change is PropObjectSet fieldSet)
+                    {
+                        sourceObject[key] = fieldSet.NewValue?.DeepClone();
+                    }
+                    else if (change is PropObjectRemove fieldRemove)
+                    {
+                        sourceObject.Remove(key);
+                    }
+                }
+                return sourceObject.DeepClone();
+            }
+            else if (update is PropArrayDiff arrayDiff)
+            {
+                Assert.NotNull(source);
+                Assert.True(source.GetValueKind() == System.Text.Json.JsonValueKind.Array);
+                var sourceArray = source.AsArray();
+                foreach (var (index, change) in arrayDiff.Changes)
+                {
+                    sourceArray[index] = ApplyPropDiff(sourceArray[index], change);
+                }
+                if (arrayDiff.Removals > 0)
+                {
+                    var fromIndex = sourceArray.Count - arrayDiff.Removals;
+                    sourceArray.RemoveRange(fromIndex, arrayDiff.Removals);
+                }
+                foreach (var jsonNode in arrayDiff.Appends)
+                {
+                    sourceArray.Add(jsonNode?.DeepClone());
+                }
+                return sourceArray.DeepClone();
+            }
+            return source?.DeepClone();
         }
 
         private static string CleanTypeName(Type t)
@@ -167,6 +221,41 @@ namespace Ivy.Test.Sync
             source.Id = "dwqpokqwd";
             var target = GenerateBinaryTree(new Random(), (int)Math.Log2(100));
             target.Id = "dwqpokqwd";
+
+            var convertedSource = SerializedWidget.FromWidget(source);
+            var convertedTarget = SerializedWidget.FromWidget(target);
+
+            var update = TreeDiffer.ComputeDiff(source, target);
+
+            Assert.IsType<WidgetUpdate>(update);
+
+            var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
+
+            SerializedWidget.AssertEqual(convertedTarget, updatedSource);
+        }
+
+        [Fact]
+        public void TreeDiffer_ComplexPropChange()
+        {
+            var source = new TestWidget()
+            {
+                Id = "diqjwdqw",
+                TestProp2 = new()
+                {
+                    {"Foo", ["Biz", "Baz", "Bar"]},
+                    {"Zoo", ["Mis"]},
+                }
+            };
+            var target = new TestWidget()
+            {
+                Id = "diqjwdqw",
+                TestProp2 = new()
+                {
+                    {"Foo", ["Biz", "Raz"] },
+                    {"Zoo", ["Mis", "Mas", "Mar"]},
+                    {"Roo", [] }
+                }
+            };
 
             var convertedSource = SerializedWidget.FromWidget(source);
             var convertedTarget = SerializedWidget.FromWidget(target);

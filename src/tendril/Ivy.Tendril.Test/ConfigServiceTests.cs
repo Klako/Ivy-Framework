@@ -351,6 +351,42 @@ projects:
     }
 
     [Fact]
+    public void ExpandVariables_NormalizesMixedPathSeparators()
+    {
+        var result = VariableExpansion.ExpandVariables(@"D:/Repos/Mixed\Path", "");
+        if (Path.DirectorySeparatorChar == '\\')
+            Assert.Equal(@"D:\Repos\Mixed\Path", result);
+        else
+            Assert.Equal("D:/Repos/Mixed/Path", result);
+    }
+
+    [Fact]
+    public void ExpandVariables_NormalizesForwardSlashesOnWindows()
+    {
+        var result = VariableExpansion.ExpandVariables("D:/Repos/ForwardSlash", "");
+        if (Path.DirectorySeparatorChar == '\\')
+            Assert.Equal(@"D:\Repos\ForwardSlash", result);
+        else
+            Assert.Equal("D:/Repos/ForwardSlash", result);
+    }
+
+    [Fact]
+    public void ExpandVariables_ExpandsEnvironmentVariables()
+    {
+        var tempValue = $"test-{Guid.NewGuid()}";
+        Environment.SetEnvironmentVariable("IVY_TEST_VAR", tempValue);
+        try
+        {
+            var result = VariableExpansion.ExpandVariables("%IVY_TEST_VAR%", "");
+            Assert.Equal(tempValue, result);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("IVY_TEST_VAR", null);
+        }
+    }
+
+    [Fact]
     public void GetRepoRef_ReturnsMatchingRepo()
     {
         var project = new ProjectConfig

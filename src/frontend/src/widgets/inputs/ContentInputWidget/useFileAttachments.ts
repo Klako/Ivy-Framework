@@ -50,7 +50,20 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent) => {
-      if (disabled || !uploadUrl) return;
+      if (disabled) return;
+      if (!uploadUrl) {
+        // Only show toast if there are actually file items being pasted
+        const items = e.clipboardData?.items;
+        const hasFiles = items && Array.from(items).some((item) => item.kind === "file");
+        if (hasFiles) {
+          toast({
+            title: "Upload not available",
+            description: "File uploads are not configured for this input.",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
       const items = e.clipboardData?.items;
       if (!items) return;
 
@@ -101,11 +114,19 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
       e.stopPropagation();
       setIsDragging(false);
       if (disabled) return;
+      if (!uploadUrl) {
+        toast({
+          title: "Upload not available",
+          description: "File uploads are not configured for this input.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const files = Array.from(e.dataTransfer.files);
       await uploadFiles(files);
     },
-    [disabled, uploadFiles],
+    [disabled, uploadUrl, uploadFiles],
   );
 
   const openFilePicker = useCallback(() => {

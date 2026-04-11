@@ -28,7 +28,6 @@ import type { CalendarWidgetProps, CalendarView, CalendarEvent } from "./types";
 import { Densities } from "@/types/density";
 import { CALENDAR_DENSITY_CONFIG } from "./constants";
 import { cn } from "@/lib/utils";
-import { Densities } from "@/types/density";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 

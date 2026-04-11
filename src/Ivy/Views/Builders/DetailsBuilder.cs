@@ -47,7 +47,7 @@ public class DetailsBuilder<TModel> : ViewBase, IStateless
     private bool _removeEmpty;
     private readonly Dictionary<string, Item> _items;
     private readonly TModel _model;
-    private Density _density = Density.Medium;
+    private Density _density = Ivy.Density.Medium;
 
     public DetailsBuilder(TModel model)
     {

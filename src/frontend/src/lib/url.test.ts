@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
+  extractAnchorId,
   getFullUrl,
   validateEmbedUrl,
   validateRedirectUrl,
@@ -10,6 +11,40 @@ import {
   validateMediaUrl,
   _getCurrentOriginRef,
 } from "./url";
+
+describe("extractAnchorId", () => {
+  it("returns text after hash for anchor-only URLs", () => {
+    expect(extractAnchorId("#introduction")).toBe("introduction");
+    expect(extractAnchorId("#section-with-dashes")).toBe("section-with-dashes");
+  });
+
+  it("returns empty string when there is no hash prefix", () => {
+    expect(extractAnchorId("app://x")).toBe("");
+    expect(extractAnchorId("/path#x")).toBe("");
+  });
+});
+
+describe("validateLinkUrl (app:// fragments)", () => {
+  it("accepts app:// URLs with slug fragments for doc deep links", () => {
+    expect(validateLinkUrl("app://onboarding/getting-started/installation#prerequisites")).toBe(
+      "app://onboarding/getting-started/installation#prerequisites",
+    );
+    expect(validateLinkUrl("app://docs#introduction")).toBe("app://docs#introduction");
+  });
+
+  it("rejects fragments that look like queries or nested hashes", () => {
+    expect(validateLinkUrl("app://path#bad?query")).toBe("#");
+    expect(validateLinkUrl("app://path#bad&evil")).toBe("#");
+  });
+
+  it("rejects protocol injection after app://", () => {
+    expect(validateLinkUrl("app://evil://host")).toBe("#");
+  });
+
+  it("rejects colon used as protocol injection in app path (not in fragment)", () => {
+    expect(validateLinkUrl("app://path:extra:colons")).toBe("#");
+  });
+});
 
 describe("getFullUrl", () => {
   let metaElement: HTMLMetaElement | null = null;

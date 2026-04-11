@@ -200,4 +200,54 @@ public class ValidationHelperTests
     }
 
     #endregion
+
+    #region IsSafeUrlFragment
+
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("", true)]
+    [InlineData("introduction", true)]
+    [InlineData("getting-started", true)]
+    [InlineData("section_2", true)]
+    [InlineData("a", true)]
+    [InlineData("Ab12_x-y", true)]
+    public void IsSafeUrlFragment_ValidSlugs_ReturnsTrue(string? fragment, bool expected)
+    {
+        Assert.Equal(expected, ValidationHelper.IsSafeUrlFragment(fragment));
+    }
+
+    [Theory]
+    [InlineData("has space")]
+    [InlineData("dot.notation")]
+    [InlineData("slash/path")]
+    [InlineData("has#hash")]
+    [InlineData("has?query")]
+    [InlineData("unicode-я")]
+    [InlineData("percent%20")]
+    public void IsSafeUrlFragment_InvalidCharacters_ReturnsFalse(string fragment)
+    {
+        Assert.False(ValidationHelper.IsSafeUrlFragment(fragment));
+    }
+
+    [Fact]
+    public void IsSafeUrlFragment_TooLong_ReturnsFalse()
+    {
+        var fragment = new string('a', 513);
+        Assert.False(ValidationHelper.IsSafeUrlFragment(fragment));
+    }
+
+    [Fact]
+    public void IsSafeUrlFragment_MaxLength_ReturnsTrue()
+    {
+        var fragment = new string('a', 512);
+        Assert.True(ValidationHelper.IsSafeUrlFragment(fragment));
+    }
+
+    [Fact]
+    public void IsSafeUrlFragment_ControlCharacter_ReturnsFalse()
+    {
+        Assert.False(ValidationHelper.IsSafeUrlFragment("a\nb"));
+    }
+
+    #endregion
 }

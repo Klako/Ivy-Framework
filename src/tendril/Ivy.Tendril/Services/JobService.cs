@@ -68,6 +68,7 @@ public class JobService : IJobService
     private readonly TimeSpan _staleOutputTimeout;
     private readonly SynchronizationContext? _syncContext;
     private readonly ITelemetryService? _telemetryService;
+    private readonly IWorktreeLifecycleLogger? _worktreeLifecycleLogger;
     private int _counter;
 
     public JobService(
@@ -76,7 +77,8 @@ public class JobService : IJobService
         IPlanReaderService? planReaderService = null,
         ITelemetryService? telemetryService = null,
         IPlanWatcherService? planWatcherService = null,
-        IPlanDatabaseService? database = null)
+        IPlanDatabaseService? database = null,
+        IWorktreeLifecycleLogger? worktreeLifecycleLogger = null)
     {
         _syncContext = SynchronizationContext.Current;
         _configService = configService;
@@ -85,6 +87,7 @@ public class JobService : IJobService
         _telemetryService = telemetryService;
         _planWatcherService = planWatcherService;
         _database = database;
+        _worktreeLifecycleLogger = worktreeLifecycleLogger;
         _jobTimeout = TimeSpan.FromMinutes(configService.Settings.JobTimeout);
         _staleOutputTimeout = TimeSpan.FromMinutes(configService.Settings.StaleOutputTimeout);
         _maxConcurrentJobs = configService.Settings.MaxConcurrentJobs;
@@ -1122,7 +1125,7 @@ public class JobService : IJobService
         }
     }
 
-    private static void ScheduleWorktreeCleanup(JobItem job)
+    private void ScheduleWorktreeCleanup(JobItem job)
     {
         if (job.Type != "ExecutePlan") return;
 
@@ -1132,13 +1135,14 @@ public class JobService : IJobService
         var worktreesDir = Path.Combine(planFolder, "worktrees");
         if (!Directory.Exists(worktreesDir)) return;
 
-        // Clean up immediately after failure — no grace period needed since the plan just failed
+        var lifecycleLogger = _worktreeLifecycleLogger;
+
         Task.Run(async () =>
         {
             await Task.Delay(TimeSpan.FromSeconds(30));
             try
             {
-                PlanReaderService.RemoveWorktrees(planFolder);
+                PlanReaderService.RemoveWorktrees(planFolder, lifecycleLogger: lifecycleLogger);
 
                 if (Directory.Exists(worktreesDir) && Directory.GetDirectories(worktreesDir).Length == 0)
                     Directory.Delete(worktreesDir, false);

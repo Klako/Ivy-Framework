@@ -17,12 +17,14 @@ public class WorktreeCleanupService : IStartable, IDisposable
 
     private readonly string _plansDirectory;
     private readonly ILogger<WorktreeCleanupService> _logger;
+    private readonly IWorktreeLifecycleLogger? _lifecycleLogger;
     private Timer? _timer;
 
-    public WorktreeCleanupService(string plansDirectory, ILogger<WorktreeCleanupService> logger)
+    public WorktreeCleanupService(string plansDirectory, ILogger<WorktreeCleanupService> logger, IWorktreeLifecycleLogger? lifecycleLogger = null)
     {
         _plansDirectory = plansDirectory;
         _logger = logger;
+        _lifecycleLogger = lifecycleLogger;
     }
 
     public void Start()
@@ -49,7 +51,7 @@ public class WorktreeCleanupService : IStartable, IDisposable
             {
                 try
                 {
-                    CleanupPlanWorktrees(dir);
+                    CleanupPlanWorktrees(dir, _logger, _lifecycleLogger);
                 }
                 catch (Exception ex)
                 {
@@ -111,7 +113,7 @@ public class WorktreeCleanupService : IStartable, IDisposable
         }
     }
 
-    internal static void CleanupPlanWorktrees(string planFolderPath, ILogger? logger = null)
+    internal static void CleanupPlanWorktrees(string planFolderPath, ILogger? logger = null, IWorktreeLifecycleLogger? lifecycleLogger = null)
     {
         var worktreesDir = Path.Combine(planFolderPath, "worktrees");
         if (!Directory.Exists(worktreesDir)) return;
@@ -140,15 +142,19 @@ public class WorktreeCleanupService : IStartable, IDisposable
 
         if (DateTime.UtcNow - planYaml.Updated < GracePeriod) return;
 
+        var planId = WorktreeLifecycleLogger.ExtractPlanId(planFolderPath);
+
         logger?.LogInformation("Cleaning up worktrees for plan {PlanFolder} (state: {State}, updated: {Updated})",
             Path.GetFileName(planFolderPath), planYaml.State, planYaml.Updated.ToString("o", CultureInfo.InvariantCulture));
 
-        PlanReaderService.RemoveWorktrees(planFolderPath, logger);
+        PlanReaderService.RemoveWorktrees(planFolderPath, logger, lifecycleLogger);
 
         foreach (var wtDir in Directory.GetDirectories(worktreesDir))
         {
             var gitFile = Path.Combine(wtDir, ".git");
-            if (!File.Exists(gitFile))
+            var gitFileExists = File.Exists(gitFile);
+
+            if (!gitFileExists)
             {
                 var dirAge = DateTime.UtcNow - new DirectoryInfo(wtDir).CreationTimeUtc;
                 logger?.LogWarning(
@@ -156,12 +162,16 @@ public class WorktreeCleanupService : IStartable, IDisposable
                     dirAge, Path.GetFileName(wtDir));
             }
 
+            lifecycleLogger?.LogCleanupAttempt(planId, wtDir, $"TerminalState({planYaml.State})", gitFileExists);
+
             try
             {
                 ForceDeleteDirectory(wtDir, logger);
+                lifecycleLogger?.LogCleanupSuccess(planId, wtDir);
             }
             catch (Exception ex)
             {
+                lifecycleLogger?.LogCleanupFailed(planId, wtDir, ex.Message);
                 logger?.LogWarning(ex, "Failed to force-delete worktree directory {Dir}", Path.GetFileName(wtDir));
             }
         }
@@ -264,6 +274,6 @@ public class WorktreeCleanupService : IStartable, IDisposable
 
     private void CleanupPlanWorktrees(string planFolderPath)
     {
-        CleanupPlanWorktrees(planFolderPath, _logger);
+        CleanupPlanWorktrees(planFolderPath, _logger, _lifecycleLogger);
     }
 }

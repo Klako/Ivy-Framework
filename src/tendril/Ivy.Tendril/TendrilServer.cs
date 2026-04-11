@@ -47,12 +47,19 @@ public static class TendrilServer
         server.Services.AddSingleton<IGithubService>(sp => sp.GetRequiredService<GithubService>());
         server.Services.AddSingleton<GitService>();
         server.Services.AddSingleton<IGitService>(sp => sp.GetRequiredService<GitService>());
+        server.Services.AddSingleton<IWorktreeLifecycleLogger>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfigService>();
+            return new WorktreeLifecycleLogger(
+                string.IsNullOrEmpty(config.TendrilHome) ? "." : config.TendrilHome);
+        });
         server.Services.AddSingleton<PlanReaderService>(sp =>
         {
             var planService = new PlanReaderService(
                 sp.GetRequiredService<IConfigService>(),
                 sp.GetRequiredService<ILogger<PlanReaderService>>(),
-                sp.GetRequiredService<ITelemetryService>());
+                sp.GetRequiredService<ITelemetryService>(),
+                sp.GetRequiredService<IWorktreeLifecycleLogger>());
             planService.RepairPlans();
             planService.RecoverStuckPlans();
             return planService;
@@ -95,7 +102,8 @@ public static class TendrilServer
                 sp.GetRequiredService<IPlanReaderService>(),
                 sp.GetRequiredService<ITelemetryService>(),
                 sp.GetRequiredService<IPlanWatcherService>(),
-                string.IsNullOrEmpty(cfg.TendrilHome) ? null : sp.GetRequiredService<IPlanDatabaseService>());
+                string.IsNullOrEmpty(cfg.TendrilHome) ? null : sp.GetRequiredService<IPlanDatabaseService>(),
+                sp.GetRequiredService<IWorktreeLifecycleLogger>());
         });
         server.Services.AddSingleton<IJobService>(sp => sp.GetRequiredService<JobService>());
         server.Services.AddSingleton<PlanWatcherService>(sp =>
@@ -123,7 +131,8 @@ public static class TendrilServer
         {
             var config = sp.GetRequiredService<IConfigService>();
             var logger = sp.GetRequiredService<ILogger<WorktreeCleanupService>>();
-            return new WorktreeCleanupService(config.PlanFolder, logger);
+            var lifecycleLogger = sp.GetRequiredService<IWorktreeLifecycleLogger>();
+            return new WorktreeCleanupService(config.PlanFolder, logger, lifecycleLogger);
         });
         server.Services.AddSingleton<IStartable>(sp => sp.GetRequiredService<WorktreeCleanupService>());
         server.Services.AddSingleton<PrStatusSyncService>(sp =>

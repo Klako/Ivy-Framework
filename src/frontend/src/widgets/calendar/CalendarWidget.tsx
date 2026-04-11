@@ -75,7 +75,11 @@ const Toolbar: React.FC<ToolbarProps> = ({ currentDate, view, onNavigate, onView
       <div className="flex items-center gap-1">
         <button
           onClick={() => onNavigate("today")}
-          className={cn(dc.toolbarButtonPadding, dc.toolbarButtonText, "font-medium rounded-md border border-border bg-background hover:bg-accent transition-colors")}
+          className={cn(
+            dc.toolbarButtonPadding,
+            dc.toolbarButtonText,
+            "font-medium rounded-md border border-border bg-background hover:bg-accent transition-colors",
+          )}
         >
           Today
         </button>
@@ -729,7 +733,9 @@ const TimeGrid: React.FC<TimeGridProps> = ({
       {/* All-day row */}
       {hasAnyAllDay && (
         <div className="flex border-b border-border flex-shrink-0">
-          <div className={cn(dc.timeGutterWidth, "flex-shrink-0 flex items-center justify-end pr-2")}>
+          <div
+            className={cn(dc.timeGutterWidth, "flex-shrink-0 flex items-center justify-end pr-2")}
+          >
             <span className="text-[10px] text-muted-foreground">all-day</span>
           </div>
           {days.map((day) => {
@@ -880,7 +886,10 @@ const AgendaDateGroup: React.FC<AgendaDateGroupProps> = ({ dayEvents, onEventCli
               <button
                 key={event.id}
                 ref={setItemRef(idx)}
-                className={cn("flex items-center gap-3 rounded-md hover:bg-accent transition-colors w-full text-left", dc.agendaRowPadding)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md hover:bg-accent transition-colors w-full text-left",
+                  dc.agendaRowPadding,
+                )}
                 onClick={() => onEventClick(event.id)}
                 tabIndex={getTabIndex(idx)}
                 onKeyDown={(e) => onKeyDown(e, idx)}

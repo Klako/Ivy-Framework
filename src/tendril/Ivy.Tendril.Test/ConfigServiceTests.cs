@@ -351,71 +351,39 @@ projects:
     }
 
     [Fact]
-    public void LoadSettings_NormalizesRepoPathSeparators()
-    {
-        var yaml = @"
-projects:
-  - name: TestProject
-    repos:
-      - path: D:/Repos/Mixed\Path
-";
-
-        var tempDir = CreateTempConfigFile(yaml);
-        var service = new ConfigService(new TendrilSettings());
-
-        try
-        {
-            service.SetTendrilHome(tempDir);
-
-            var repo = service.Settings.Projects[0].Repos[0];
-            if (Path.DirectorySeparatorChar == '\\')
-                Assert.Equal(@"D:\Repos\Mixed\Path", repo.Path);
-            else
-                Assert.Equal("D:/Repos/Mixed/Path", repo.Path);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
-    }
-
-    [Fact]
-    public void LoadSettings_NormalizesForwardSlashPaths()
-    {
-        var yaml = @"
-projects:
-  - name: TestProject
-    repos:
-      - path: D:/Repos/ForwardSlash
-";
-
-        var tempDir = CreateTempConfigFile(yaml);
-        var service = new ConfigService(new TendrilSettings());
-
-        try
-        {
-            service.SetTendrilHome(tempDir);
-
-            var repo = service.Settings.Projects[0].Repos[0];
-            if (Path.DirectorySeparatorChar == '\\')
-                Assert.Equal(@"D:\Repos\ForwardSlash", repo.Path);
-            else
-                Assert.Equal("D:/Repos/ForwardSlash", repo.Path);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
-    }
-
-    [Fact]
-    public void VariableExpansion_NormalizesPathSeparators()
+    public void ExpandVariables_NormalizesMixedPathSeparators()
     {
         var result = VariableExpansion.ExpandVariables(@"D:/Repos/Mixed\Path", "");
         if (Path.DirectorySeparatorChar == '\\')
             Assert.Equal(@"D:\Repos\Mixed\Path", result);
         else
             Assert.Equal("D:/Repos/Mixed/Path", result);
+    }
+
+    [Fact]
+    public void ExpandVariables_NormalizesForwardSlashesOnWindows()
+    {
+        var result = VariableExpansion.ExpandVariables("D:/Repos/ForwardSlash", "");
+        if (Path.DirectorySeparatorChar == '\\')
+            Assert.Equal(@"D:\Repos\ForwardSlash", result);
+        else
+            Assert.Equal("D:/Repos/ForwardSlash", result);
+    }
+
+    [Fact]
+    public void ExpandVariables_ExpandsEnvironmentVariables()
+    {
+        var tempValue = $"test-{Guid.NewGuid()}";
+        Environment.SetEnvironmentVariable("IVY_TEST_VAR", tempValue);
+        try
+        {
+            var result = VariableExpansion.ExpandVariables("%IVY_TEST_VAR%", "");
+            Assert.Equal(tempValue, result);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("IVY_TEST_VAR", null);
+        }
     }
 
     [Fact]

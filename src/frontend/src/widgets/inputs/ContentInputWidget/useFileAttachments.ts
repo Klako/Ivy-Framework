@@ -136,10 +136,19 @@ export function useFileAttachments(options: UseFileAttachmentsOptions) {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const fileList = e.target.files;
       if (!fileList || fileList.length === 0) return;
+      if (!uploadUrl) {
+        toast({
+          title: "Upload not available",
+          description: "File uploads are not configured for this input.",
+          variant: "destructive",
+        });
+        e.target.value = "";
+        return;
+      }
       await uploadFiles(Array.from(fileList));
       e.target.value = "";
     },
-    [uploadFiles],
+    [uploadUrl, uploadFiles],
   );
 
   const dragHandlers = {

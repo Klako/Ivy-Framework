@@ -12,6 +12,24 @@ interface TableOfContentsProps {
 
 const EMPTY_HEADINGS: HeadingNode[] = [];
 
+function getLocationHashId(): string | null {
+  const raw = window.location.hash;
+  if (!raw || raw === "#") return null;
+  const withoutHash = raw.slice(1);
+  try {
+    return decodeURIComponent(withoutHash.replace(/\+/g, " "));
+  } catch {
+    return withoutHash;
+  }
+}
+
+function replaceUrlHashForActiveSection(headingId: string) {
+  if (getLocationHashId() === headingId) return;
+  const u = new URL(window.location.href);
+  u.hash = headingId;
+  window.history.replaceState(null, "", `${u.pathname}${u.search}${u.hash}`);
+}
+
 /** Find the element that actually scrolls (has overflow and scrollable content). */
 function getScrollParent(el: HTMLElement | null): HTMLElement | Window {
   if (!el) return window;
@@ -111,6 +129,12 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
   useEffect(() => {
     computeActiveIdRef.current = computeActiveId;
   }, [computeActiveId]);
+
+  // Keep the URL fragment in sync with the visible section (scroll position), not only on link click.
+  useEffect(() => {
+    if (!activeId || isUserNavigating) return;
+    replaceUrlHashForActiveSection(activeId);
+  }, [activeId, isUserNavigating]);
 
   // Handle active heading highlighting with debounce to avoid jank during fast scroll
   useEffect(() => {
@@ -238,6 +262,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
               // Scroll to the target element with error handling
               const targetElement = document.getElementById(heading.id);
               if (targetElement) {
+                replaceUrlHashForActiveSection(heading.id);
                 targetElement.scrollIntoView({
                   behavior: "smooth",
                 });

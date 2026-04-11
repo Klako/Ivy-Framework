@@ -168,6 +168,63 @@ describe("useFileAttachments", () => {
     });
   });
 
+  describe("handleFileInputChange guards", () => {
+    it("should show toast when uploadUrl is missing for file input", () => {
+      const handleFileInputChangeIndex = source.indexOf("const handleFileInputChange");
+      expect(handleFileInputChangeIndex).toBeGreaterThan(-1);
+
+      const handleFileInputChangeBlock = source.slice(
+        handleFileInputChangeIndex,
+        source.indexOf("\n  const", handleFileInputChangeIndex + 1),
+      );
+      expect(handleFileInputChangeBlock).toContain("!uploadUrl");
+      expect(handleFileInputChangeBlock).toContain("toast(");
+      expect(handleFileInputChangeBlock).toContain('"Upload not available"');
+    });
+
+    it("should not call uploadFiles when uploadUrl is missing", () => {
+      const handleFileInputChangeIndex = source.indexOf("const handleFileInputChange");
+      expect(handleFileInputChangeIndex).toBeGreaterThan(-1);
+
+      const handleFileInputChangeBlock = source.slice(
+        handleFileInputChangeIndex,
+        source.indexOf("\n  const", handleFileInputChangeIndex + 1),
+      );
+      // The !uploadUrl check should appear before uploadFiles call, with a return
+      const uploadUrlCheckIndex = handleFileInputChangeBlock.indexOf("!uploadUrl");
+      const returnIndex = handleFileInputChangeBlock.indexOf("return;", uploadUrlCheckIndex);
+      const uploadFilesIndex = handleFileInputChangeBlock.indexOf("await uploadFiles");
+      expect(uploadUrlCheckIndex).toBeGreaterThan(-1);
+      expect(returnIndex).toBeGreaterThan(-1);
+      expect(returnIndex).toBeLessThan(uploadFilesIndex);
+    });
+
+    it("should reset e.target.value even when uploadUrl is missing", () => {
+      const handleFileInputChangeIndex = source.indexOf("const handleFileInputChange");
+      expect(handleFileInputChangeIndex).toBeGreaterThan(-1);
+
+      const handleFileInputChangeBlock = source.slice(
+        handleFileInputChangeIndex,
+        source.indexOf("\n  const", handleFileInputChangeIndex + 1),
+      );
+      // There should be two e.target.value = "" assignments (one in guard, one after upload)
+      const matches = handleFileInputChangeBlock.match(/e\.target\.value\s*=\s*""/g);
+      expect(matches).not.toBeNull();
+      expect(matches!.length).toBe(2);
+    });
+
+    it("should include uploadUrl in handleFileInputChange dependency array", () => {
+      const handleFileInputChangeIndex = source.indexOf("const handleFileInputChange");
+      expect(handleFileInputChangeIndex).toBeGreaterThan(-1);
+
+      const handleFileInputChangeBlock = source.slice(
+        handleFileInputChangeIndex,
+        source.indexOf("\n  const", handleFileInputChangeIndex + 1),
+      );
+      expect(handleFileInputChangeBlock).toContain("[uploadUrl, uploadFiles],");
+    });
+  });
+
   describe("openFilePicker guard", () => {
     it("should contain !disabled && fileInputRef.current guard", () => {
       expect(source).toContain("!disabled && fileInputRef.current");

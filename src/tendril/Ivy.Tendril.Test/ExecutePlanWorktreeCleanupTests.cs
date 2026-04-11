@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Test;
 
@@ -13,7 +14,7 @@ public class ExecutePlanWorktreeCleanupTests : IDisposable
         Directory.CreateDirectory(_tempDir);
 
         _scriptPath = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..",
+            System.AppContext.BaseDirectory, "..", "..", "..", "..",
             "Ivy.Tendril", "Promptwares", "ExecutePlan", "Tools", "Cleanup-Worktrees.ps1"));
     }
 
@@ -136,7 +137,7 @@ public class ExecutePlanWorktreeCleanupTests : IDisposable
     [Fact]
     public void GracePeriod_Is_Ten_Minutes()
     {
-        var field = typeof(Services.WorktreeCleanupService)
+        var field = typeof(WorktreeCleanupService)
             .GetField("GracePeriod", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
         Assert.NotNull(field);
         var value = (TimeSpan)field!.GetValue(null)!;

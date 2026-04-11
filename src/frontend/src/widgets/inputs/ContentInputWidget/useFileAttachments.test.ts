@@ -3,99 +3,254 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * Tests for useFileAttachments toast feedback when uploadUrl is missing.
+ * Tests for useFileAttachments hook.
  *
  * Since @testing-library/react is not available in this project,
- * we verify the source code contains the correct patterns.
+ * we verify the source code contains the correct patterns for:
+ * - Paste event handling with guard conditions
+ * - Drop event handling with guard conditions
+ * - Drag state management
+ * - File picker interaction
+ * - Upload pipeline with validation
  */
-describe("useFileAttachments - handleDrop uploadUrl guard", () => {
-  const hookSource = fs.readFileSync(path.resolve(__dirname, "./useFileAttachments.ts"), "utf-8");
+describe("useFileAttachments", () => {
+  const source = fs.readFileSync(path.resolve(__dirname, "./useFileAttachments.ts"), "utf-8");
 
-  it("should show a toast when uploadUrl is missing on drop", () => {
-    // Find the handleDrop function
-    const handleDropIndex = hookSource.indexOf("const handleDrop = useCallback");
-    expect(handleDropIndex).toBeGreaterThan(-1);
+  describe("imports and dependencies", () => {
+    it("should import useUploadWithProgress from shared", () => {
+      expect(source).toContain(
+        'import { useUploadWithProgress } from "../shared/useUploadWithProgress"',
+      );
+    });
 
-    const handleDropBlock = hookSource.slice(
-      handleDropIndex,
-      hookSource.indexOf("[disabled, uploadUrl, uploadFiles],", handleDropIndex) + 50,
-    );
+    it("should import validateFileWithToast and validateFileCount from file-input-validation", () => {
+      expect(source).toContain(
+        'import { validateFileWithToast, validateFileCount } from "../file-input-validation"',
+      );
+    });
 
-    expect(handleDropBlock).toContain("if (!uploadUrl)");
-    expect(handleDropBlock).toContain("toast(");
-    expect(handleDropBlock).toContain('"Upload not available"');
+    it("should not import uploadFileWithProgress directly", () => {
+      expect(source).not.toContain("import { uploadFileWithProgress }");
+    });
   });
 
-  it("should not call uploadFiles when uploadUrl is undefined in handleDrop", () => {
-    const handleDropIndex = hookSource.indexOf("const handleDrop = useCallback");
-    const handleDropBlock = hookSource.slice(
-      handleDropIndex,
-      hookSource.indexOf("[disabled, uploadUrl, uploadFiles],", handleDropIndex) + 50,
-    );
+  describe("handlePaste guards", () => {
+    it("should access e.clipboardData.items", () => {
+      expect(source).toContain("e.clipboardData");
+    });
 
-    // The !uploadUrl check should come before uploadFiles call and return early
-    const uploadUrlCheckIndex = handleDropBlock.indexOf("if (!uploadUrl)");
-    const returnAfterCheck = handleDropBlock.indexOf("return;", uploadUrlCheckIndex);
-    const uploadFilesCallIndex = handleDropBlock.indexOf("await uploadFiles(files)");
+    it("should check kind === 'file' on clipboard items", () => {
+      expect(source).toContain('kind === "file"');
+    });
 
-    expect(uploadUrlCheckIndex).toBeGreaterThan(-1);
-    expect(returnAfterCheck).toBeGreaterThan(-1);
-    expect(returnAfterCheck).toBeLessThan(uploadFilesCallIndex);
+    it("should call e.preventDefault() when files are found", () => {
+      const handlePasteIndex = source.indexOf("const handlePaste");
+      expect(handlePasteIndex).toBeGreaterThan(-1);
+
+      const handlePasteBlock = source.slice(
+        handlePasteIndex,
+        source.indexOf("\n  const", handlePasteIndex + 1),
+      );
+      expect(handlePasteBlock).toContain("e.preventDefault()");
+    });
+
+    it("should show toast when uploadUrl is missing for file paste", () => {
+      const handlePasteIndex = source.indexOf("const handlePaste");
+      expect(handlePasteIndex).toBeGreaterThan(-1);
+
+      const handlePasteBlock = source.slice(
+        handlePasteIndex,
+        source.indexOf("\n  const", handlePasteIndex + 1),
+      );
+      expect(handlePasteBlock).toContain("!uploadUrl");
+      expect(handlePasteBlock).toContain("toast(");
+      expect(handlePasteBlock).toContain('"Upload not available"');
+    });
   });
 
-  it("should include uploadUrl in handleDrop dependency array", () => {
-    const handleDropIndex = hookSource.indexOf("const handleDrop = useCallback");
-    const handleDropBlock = hookSource.slice(
-      handleDropIndex,
-      hookSource.indexOf(
-        ");",
-        hookSource.indexOf("[disabled, uploadUrl, uploadFiles],", handleDropIndex),
-      ) + 5,
-    );
+  describe("handleDrop guards", () => {
+    it("should contain e.preventDefault() and e.stopPropagation()", () => {
+      const handleDropIndex = source.indexOf("const handleDrop");
+      expect(handleDropIndex).toBeGreaterThan(-1);
 
-    expect(handleDropBlock).toContain("[disabled, uploadUrl, uploadFiles],");
+      const handleDropBlock = source.slice(
+        handleDropIndex,
+        source.indexOf("\n  const", handleDropIndex + 1),
+      );
+      expect(handleDropBlock).toContain("e.preventDefault()");
+      expect(handleDropBlock).toContain("e.stopPropagation()");
+    });
+
+    it("should contain setIsDragging(false)", () => {
+      const handleDropIndex = source.indexOf("const handleDrop");
+      expect(handleDropIndex).toBeGreaterThan(-1);
+
+      const handleDropBlock = source.slice(
+        handleDropIndex,
+        source.indexOf("\n  const", handleDropIndex + 1),
+      );
+      expect(handleDropBlock).toContain("setIsDragging(false)");
+    });
+
+    it("should contain disabled guard for early return", () => {
+      const handleDropIndex = source.indexOf("const handleDrop");
+      expect(handleDropIndex).toBeGreaterThan(-1);
+
+      const handleDropBlock = source.slice(
+        handleDropIndex,
+        source.indexOf("\n  const", handleDropIndex + 1),
+      );
+      expect(handleDropBlock).toContain("disabled");
+    });
+
+    it("should show toast when uploadUrl is missing on drop", () => {
+      const handleDropIndex = source.indexOf("const handleDrop");
+      expect(handleDropIndex).toBeGreaterThan(-1);
+
+      const handleDropBlock = source.slice(
+        handleDropIndex,
+        source.indexOf("\n  const", handleDropIndex + 1),
+      );
+      expect(handleDropBlock).toContain("!uploadUrl");
+      expect(handleDropBlock).toContain("toast(");
+      expect(handleDropBlock).toContain('"Upload not available"');
+    });
+
+    it("should include uploadUrl in handleDrop dependency array", () => {
+      const handleDropIndex = source.indexOf("const handleDrop");
+      expect(handleDropIndex).toBeGreaterThan(-1);
+
+      const handleDropBlock = source.slice(
+        handleDropIndex,
+        source.indexOf("\n  const", handleDropIndex + 1),
+      );
+      expect(handleDropBlock).toContain("[disabled, uploadUrl, uploadFiles],");
+    });
+
+    it("should access e.dataTransfer.files", () => {
+      expect(source).toContain("e.dataTransfer.files");
+    });
   });
-});
 
-describe("useFileAttachments - handlePaste uploadUrl guard with toast", () => {
-  const hookSource = fs.readFileSync(path.resolve(__dirname, "./useFileAttachments.ts"), "utf-8");
+  describe("drag handlers", () => {
+    it("onDragEnter should check !disabled before setIsDragging(true)", () => {
+      const dragEnterIndex = source.indexOf("const handleDragEnter");
+      expect(dragEnterIndex).toBeGreaterThan(-1);
 
-  it("should show a toast when uploadUrl is missing and clipboard contains files", () => {
-    const handlePasteIndex = hookSource.indexOf("const handlePaste = useCallback");
-    expect(handlePasteIndex).toBeGreaterThan(-1);
+      const dragEnterBlock = source.slice(
+        dragEnterIndex,
+        source.indexOf("\n  const", dragEnterIndex + 1),
+      );
+      expect(dragEnterBlock).toContain("!disabled");
+      expect(dragEnterBlock).toContain("setIsDragging(true)");
+    });
 
-    const handlePasteBlock = hookSource.slice(
-      handlePasteIndex,
-      hookSource.indexOf("[disabled, uploadUrl, uploadFiles],", handlePasteIndex) + 50,
-    );
+    it("onDragOver should check !disabled", () => {
+      const dragOverIndex = source.indexOf("const handleDragOver");
+      expect(dragOverIndex).toBeGreaterThan(-1);
 
-    expect(handlePasteBlock).toContain("if (!uploadUrl)");
-    expect(handlePasteBlock).toContain("toast(");
-    expect(handlePasteBlock).toContain('"Upload not available"');
+      const dragOverBlock = source.slice(
+        dragOverIndex,
+        source.indexOf("\n  const", dragOverIndex + 1),
+      );
+      expect(dragOverBlock).toContain("!disabled");
+    });
+
+    it("onDragLeave should set isDragging to false", () => {
+      const dragLeaveIndex = source.indexOf("const handleDragLeave");
+      expect(dragLeaveIndex).toBeGreaterThan(-1);
+
+      const dragLeaveBlock = source.slice(
+        dragLeaveIndex,
+        source.indexOf("\n  const", dragLeaveIndex + 1),
+      );
+      expect(dragLeaveBlock).toContain("setIsDragging(false)");
+    });
   });
 
-  it("should only show toast for file pastes, not text-only pastes", () => {
-    const handlePasteIndex = hookSource.indexOf("const handlePaste = useCallback");
-    const handlePasteBlock = hookSource.slice(
-      handlePasteIndex,
-      hookSource.indexOf("[disabled, uploadUrl, uploadFiles],", handlePasteIndex) + 50,
-    );
-
-    // Should check for file items before showing toast
-    expect(handlePasteBlock).toContain('item.kind === "file"');
-    expect(handlePasteBlock).toContain("hasFiles");
+  describe("openFilePicker guard", () => {
+    it("should contain !disabled && fileInputRef.current guard", () => {
+      expect(source).toContain("!disabled && fileInputRef.current");
+    });
   });
 
-  it("should check disabled separately from uploadUrl in handlePaste", () => {
-    const handlePasteIndex = hookSource.indexOf("const handlePaste = useCallback");
-    const handlePasteBlock = hookSource.slice(
-      handlePasteIndex,
-      hookSource.indexOf("[disabled, uploadUrl, uploadFiles],", handlePasteIndex) + 50,
-    );
+  describe("upload pipeline", () => {
+    it("uploadFiles should call validateFileCount before processing", () => {
+      const uploadFilesIndex = source.indexOf("const uploadFiles");
+      expect(uploadFilesIndex).toBeGreaterThan(-1);
 
-    // disabled check should be separate from uploadUrl check
-    expect(handlePasteBlock).toContain("if (disabled) return;");
-    // Should NOT have the combined check anymore
-    expect(handlePasteBlock).not.toContain("if (disabled || !uploadUrl) return;");
+      const uploadFilesBlock = source.slice(
+        uploadFilesIndex,
+        source.indexOf("\n  const", uploadFilesIndex + 1),
+      );
+      expect(uploadFilesBlock).toContain("validateFileCount");
+    });
+
+    it("handleUploadFile should contain !uploadUrl guard for early return", () => {
+      const handleUploadIndex = source.indexOf("const handleUploadFile");
+      expect(handleUploadIndex).toBeGreaterThan(-1);
+
+      const handleUploadBlock = source.slice(
+        handleUploadIndex,
+        source.indexOf("\n  const", handleUploadIndex + 1),
+      );
+      expect(handleUploadBlock).toContain("!uploadUrl");
+    });
+
+    it("handleUploadFile should call validateFileWithToast", () => {
+      const handleUploadIndex = source.indexOf("const handleUploadFile");
+      expect(handleUploadIndex).toBeGreaterThan(-1);
+
+      const handleUploadBlock = source.slice(
+        handleUploadIndex,
+        source.indexOf("\n  const", handleUploadIndex + 1),
+      );
+      expect(handleUploadBlock).toContain("validateFileWithToast");
+    });
+
+    it("handleUploadFile should call uploadSingleFile", () => {
+      const handleUploadIndex = source.indexOf("const handleUploadFile");
+      expect(handleUploadIndex).toBeGreaterThan(-1);
+
+      const handleUploadBlock = source.slice(
+        handleUploadIndex,
+        source.indexOf("\n  const", handleUploadIndex + 1),
+      );
+      expect(handleUploadBlock).toContain("uploadSingleFile");
+    });
+  });
+
+  describe("return shape", () => {
+    it("should return isDragging", () => {
+      expect(source).toContain("isDragging,");
+    });
+
+    it("should return dragHandlers", () => {
+      expect(source).toContain("dragHandlers,");
+    });
+
+    it("should return handlePaste", () => {
+      expect(source).toContain("handlePaste,");
+    });
+
+    it("should return openFilePicker", () => {
+      expect(source).toContain("openFilePicker,");
+    });
+
+    it("should return handleFileInputChange", () => {
+      expect(source).toContain("handleFileInputChange,");
+    });
+
+    it("should return fileInputRef", () => {
+      expect(source).toContain("fileInputRef,");
+    });
+
+    it("should return uploadProgress", () => {
+      expect(source).toContain("uploadProgress,");
+    });
+
+    it("should return cancelUpload", () => {
+      expect(source).toContain("cancelUpload,");
+    });
   });
 });

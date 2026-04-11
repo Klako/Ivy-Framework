@@ -223,6 +223,12 @@ public class TableBuilder<TModel> : ViewBase, IStateless
         return this;
     }
 
+    public TableBuilder<TModel> Density(Density density)
+    {
+        _density = density;
+        return this;
+    }
+
     public TableBuilder<TModel> Large()
     {
         _density = Density.Large;

@@ -173,6 +173,7 @@ fi
 - Auto-committing and pushing ensures all local work is preserved and visible to worktrees
 - The `WIP:` prefix makes auto-commits easily identifiable for later cleanup (squash/amend)
 - **Revert detection with auto-resolve:** Before committing, each dirty tracked file — whether unstaged (`git diff --name-only HEAD`) or staged (`git diff --cached --name-only`) — is checked against the last 5 commits. If the working tree version matches the file's state *before* a recent commit (i.e., it's stale), the file is automatically restored to its HEAD version via `git checkout HEAD -- <file>`. This prevents silent reverts while keeping the process fully autonomous. Any remaining non-stale dirty files are committed normally.
+- **Backup file exclusion:** After staging all changes with `git add -A`, the command `git reset -- '*.bak_*'` explicitly unstages any files matching the backup pattern. This prevents temporary backup files (created by FileHelper.ReadAllText's defensive copy mechanism in plan 03055) from being committed to version control. Backup files serve only as local recovery points and should not pollute the repository history.
 
 **Note:** This step runs in the original repo directories, before worktree creation.
 

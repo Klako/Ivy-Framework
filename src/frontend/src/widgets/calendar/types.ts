@@ -45,8 +45,8 @@ export interface CalendarWidgetProps {
   events?: string[];
   width?: string;
   height?: string;
-  density?: Densities;
   children?: React.ReactNode;
+
   slots?: {
     default?: React.ReactNode[];
   };

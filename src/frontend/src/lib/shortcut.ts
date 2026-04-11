@@ -76,12 +76,6 @@ export const keyToCode = (key: string): string => {
   return specialKeys[k] ?? key;
 };
 
-const keyDisplayNames: Record<string, string> = {
-  backspace: "⌫",
-  delete: "Del",
-  escape: "Esc",
-};
-
 /**
  * Formats a shortcut string for display as React nodes.
  * Converts modifier keys to platform-appropriate symbols (e.g., ⌘ on Mac).
@@ -116,13 +110,7 @@ export const formatShortcutForDisplay = (shortcutStr?: string): React.ReactNode[
     } else if (!isMac && part.toLowerCase() === "ctrl") {
       result.push("Ctrl");
     } else {
-      const normalized = part.toLowerCase();
-      const displayName = keyDisplayNames[normalized];
-      if (displayName) {
-        result.push(displayName);
-      } else {
-        result.push(part.charAt(0).toUpperCase() + part.slice(1));
-      }
+      result.push(part.charAt(0).toUpperCase() + part.slice(1));
     }
   });
 

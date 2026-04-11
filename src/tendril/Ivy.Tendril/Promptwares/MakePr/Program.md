@@ -211,6 +211,10 @@ If cleanup fails (e.g. locked files on Windows), log a warning but do not fail t
 
 Append each PR URL to the `prs` list in `plan.yaml`.
 
+**Update state to Completed:** If ALL repos in the plan used the `yolo` prRule (or custom options with `merge: true`) and ALL PRs were successfully merged, update the `state` field from `Building` to `Completed`. This marks the plan as fully processed.
+
+If ANY repo used the `default` prRule (or custom options with `merge: false`), do NOT update the state — the plan remains open for manual review and potential revisions.
+
 > If merge conflict resolution was performed (Step 4), the resolution commit hash should already be on the pushed branch. No additional plan.yaml update needed beyond the PR URL.
 
 ### Rules

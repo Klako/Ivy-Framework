@@ -31,6 +31,31 @@ $firmwareValues = @{
 if ($SourcePath) { $firmwareValues["SourcePath"] = $SourcePath }
 if ($Priority -ne 0) { $firmwareValues["Priority"] = $Priority }
 
+# Parse multi-project selection and aggregate repos for overlap detection
+$repos = @()
+if ($Project -ne "[Auto]") {
+    $projectNames = $Project -split ',' | ForEach-Object { $_.Trim() }
+
+    if (Test-Path $script:ConfigPath) {
+        try {
+            $config = Get-Content $script:ConfigPath -Raw | ConvertFrom-Yaml
+
+            foreach ($projName in $projectNames) {
+                $projectEntry = $config.projects | Where-Object { $_.name -eq $projName } | Select-Object -First 1
+                if ($projectEntry -and $projectEntry.repos) {
+                    $projectRepos = ExtractRepoPathsFromYaml $projectEntry.repos
+                    $repos += $projectRepos
+                }
+            }
+
+            $repos = $repos | Select-Object -Unique
+        }
+        catch {
+            Write-Warning "Failed to parse config.yaml for multi-project repos: $_"
+        }
+    }
+}
+
 # Pre-compute duplicate detection and active plans (skip duplicates if FORCE flag)
 if ($Description -notmatch '\[FORCE\]') {
     $keywords = ($Description -replace '\[.*?\]', '' -split '\s+') | Where-Object { $_.Length -ge 3 }
@@ -44,7 +69,7 @@ if ($Description -notmatch '\[FORCE\]') {
 }
 
 $activePlans = & "$programFolder/Tools/Find-ActivePlans.ps1" `
-    -PlansDirectory $script:PlansDir -Repos @()
+    -PlansDirectory $script:PlansDir -Repos $repos
 if ($activePlans) {
     $firmwareValues["ActivePlans"] = $activePlans
 }

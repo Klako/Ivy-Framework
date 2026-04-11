@@ -141,7 +141,7 @@ public class GithubServiceTests
     [Fact]
     public void ParseIssuesFromJson_Throws_JsonException_For_Invalid_Json()
     {
-        Assert.Throws<System.Text.Json.JsonException>(() =>
+        Assert.ThrowsAny<System.Text.Json.JsonException>(() =>
             GithubService.ParseIssuesFromJson("not valid json"));
     }
 

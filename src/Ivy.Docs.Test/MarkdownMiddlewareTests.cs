@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text;
 using Ivy.Docs.Helpers.Middleware;
 using Microsoft.AspNetCore.Http;
 

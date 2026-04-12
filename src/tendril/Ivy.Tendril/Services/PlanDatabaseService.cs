@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Ivy.Tendril.Apps.Jobs;
 using Ivy.Tendril.Apps.Plans;
@@ -878,8 +879,8 @@ public class PlanDatabaseService : IPlanDatabaseService
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = """
-                              INSERT OR REPLACE INTO Jobs (Id, Type, PlanFile, Project, Status, Provider, SessionId, StartedAt, CompletedAt, DurationSeconds, Cost, Tokens, StatusMessage)
-                              VALUES (@id, @type, @planFile, @project, @status, @provider, @sessionId, @startedAt, @completedAt, @durationSeconds, @cost, @tokens, @statusMessage)
+                              INSERT OR REPLACE INTO Jobs (Id, Type, PlanFile, Project, Status, Provider, SessionId, StartedAt, CompletedAt, DurationSeconds, Cost, Tokens, StatusMessage, Args)
+                              VALUES (@id, @type, @planFile, @project, @status, @provider, @sessionId, @startedAt, @completedAt, @durationSeconds, @cost, @tokens, @statusMessage, @args)
                               """;
             cmd.Parameters.AddWithValue("@id", job.Id);
             cmd.Parameters.AddWithValue("@type", job.Type);
@@ -896,6 +897,7 @@ public class PlanDatabaseService : IPlanDatabaseService
             cmd.Parameters.AddWithValue("@cost", job.Cost.HasValue ? (double)job.Cost.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("@tokens", (object?)job.Tokens ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@statusMessage", (object?)job.StatusMessage ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@args", job.Args.Length > 0 ? JsonSerializer.Serialize(job.Args) : (object)DBNull.Value);
             cmd.ExecuteNonQuery();
         }
         finally
@@ -946,7 +948,10 @@ public class PlanDatabaseService : IPlanDatabaseService
                         : reader.GetInt32(reader.GetOrdinal("Tokens")),
                     StatusMessage = reader.IsDBNull(reader.GetOrdinal("StatusMessage"))
                         ? null
-                        : reader.GetString(reader.GetOrdinal("StatusMessage"))
+                        : reader.GetString(reader.GetOrdinal("StatusMessage")),
+                    Args = reader.IsDBNull(reader.GetOrdinal("Args"))
+                        ? []
+                        : JsonSerializer.Deserialize<string[]>(reader.GetString(reader.GetOrdinal("Args"))) ?? []
                 });
             return jobs;
         }

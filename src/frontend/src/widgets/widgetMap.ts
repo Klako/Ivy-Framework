@@ -2,12 +2,10 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import {
   ArticleWidget,
   BadgeWidget,
-  ButtonWidget,
   CardWidget,
   ChatLoadingWidget,
   ChatMessageWidget,
   ChatStatusWidget,
-  ChatWidget,
   DropDownMenuWidget,
   ExpandableWidget,
   ProgressWidget,
@@ -40,7 +38,6 @@ import {
   ReadOnlyInputWidget,
   ColorInputWidget,
   IconInputWidget,
-  FeedbackInputWidget,
   AsyncSelectInputWidget,
   DateRangeInputWidget,
   FileInputWidget,
@@ -129,7 +126,11 @@ export const widgetMap = {
 
   // Widgets
   "Ivy.Article": ArticleWidget,
-  "Ivy.Button": ButtonWidget,
+  "Ivy.Button": lazyWithRetry(() =>
+    import("@/widgets/button/ButtonWidget").then((m) => ({
+      default: m.ButtonWidget,
+    })),
+  ),
   "Ivy.Progress": ProgressWidget,
   "Ivy.StackedProgress": StackedProgressWidget,
   "Ivy.Tooltip": TooltipWidget,
@@ -140,7 +141,11 @@ export const widgetMap = {
   "Ivy.Badge": BadgeWidget,
   "Ivy.Breadcrumbs": BreadcrumbsWidget,
   "Ivy.Expandable": ExpandableWidget,
-  "Ivy.Chat": ChatWidget,
+  "Ivy.Chat": lazyWithRetry(() =>
+    import("@/widgets/chat/ChatWidget").then((m) => ({
+      default: m.ChatWidget,
+    })),
+  ),
   "Ivy.ChatMessage": ChatMessageWidget,
   "Ivy.ChatLoading": ChatLoadingWidget,
   "Ivy.ChatStatus": ChatStatusWidget,
@@ -191,7 +196,11 @@ export const widgetMap = {
   "Ivy.ReadOnlyInput": ReadOnlyInputWidget,
   "Ivy.ColorInput": ColorInputWidget,
   "Ivy.IconInput": IconInputWidget,
-  "Ivy.FeedbackInput": FeedbackInputWidget,
+  "Ivy.FeedbackInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/FeedbackInputWidget").then((m) => ({
+      default: m.FeedbackInputWidget,
+    })),
+  ),
   "Ivy.AsyncSelectInput": AsyncSelectInputWidget,
   "Ivy.DateRangeInput": DateRangeInputWidget,
   "Ivy.FileInput": FileInputWidget,

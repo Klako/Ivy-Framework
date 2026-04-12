@@ -5,42 +5,6 @@ hidden: true
 
 Known cases where the agent hallucinated Ivy Framework APIs. Use this as a reference when debugging build errors in agent sessions.
 
-## Badge.Color(Colors.X) — non-existent fluent method
-
-**Hallucinated API:**
-
-```csharp
-new Badge(match.Value).Color(Colors.Green)
-new Badge("No match").Color(Colors.Red)
-```
-
-**Correct API:**
-
-```csharp
-// Via constructor variant parameter:
-new Badge(match.Value, BadgeVariant.Success)
-
-// Via fluent shortcut methods:
-new Badge(match.Value).Success()
-new Badge("No match").Destructive()
-
-// Via explicit Variant() method:
-new Badge(match.Value).Variant(BadgeVariant.Info)
-```
-
-Available `BadgeVariant` values: `Primary`, `Destructive`, `Secondary`, `Outline`, `Success`, `Warning`, `Info`. The agent confused `LabelExtensions.Color(Label, Colors)` (which exists for `Label`) with a Badge method. Badge uses `BadgeVariant`, not `Colors`.
-
-**Found In:**
-3c507fb4-71e1-4136-9d40-8eca6590250d
-ce144de9-0688-490a-bef6-b2766e323154
-642d3167-790d-48c4-a381-bfab78f928cc
-857de09c-ab87-49a5-aac4-394f7d0aa207
-86908281-cc6f-4973-a9c7-1c0186c013d2
-0c7c0b33-a500-45c2-911b-b33ca1f9662e
-6c834561-6c01-424b-b8fb-a4a473c1c86a
-c9185561-51f5-4c76-ae5b-7448f5a68a0f
-8b576f86-85cc-43b8-97e2-358bae83464a
-
 ## Details() — empty constructor instead of passing items
 
 **Hallucinated API:**
@@ -958,34 +922,6 @@ items.ToTable()
 a9ee3993-1cfb-4cba-9322-80a60b56c8d2
 cab4c6bb-be1f-4fef-9d96-96c54e5f88ff
 
-## Box.Opacity() — property used as method call
-
-**Hallucinated API:**
-
-```csharp
-new Box(content).Opacity(0.3f)
-```
-
-**Error:** `CS1955: Non-invocable member 'Box.Opacity' cannot be used like a method.`
-
-**Correct API:**
-
-```csharp
-// Use object initializer or with-expression:
-new Box(content) { Opacity = 0.3f }
-
-// Or use the Background extension which accepts an opacity parameter:
-new Box(content).Background(Colors.Muted, 0.3f)
-```
-
-`Box.Opacity` is a property (`float?`), not a method. There is no `.Opacity()` extension method on `Box`. Use object initializer syntax or the `Background(Colors, float)` extension which sets both background color and opacity. This is the same CS1955 pattern as the `Image.ObjectFit("cover")` hallucination — the agent treats a settable property as a fluent method.
-
-**Found In:**
-15313dc3-1c7d-4af9-8998-8338a837d5fb
-
-**Found In:**
-7c547408-00b3-47e1-976e-59c9357c1e74
-
 ## WithMargin(top: 4) — Named parameters don't exist
 
 **Hallucinated API:**
@@ -1558,9 +1494,10 @@ new Callout("Error message").Destructive()
 
 ```csharp
 Callout.Error("Error message")
+Callout.Destructive("Error message")  // static factory — also valid
 ```
 
-`Callout` uses static factory methods (`Callout.Info()`, `Callout.Warning()`, `Callout.Error()`, `Callout.Success()`), not a constructor + fluent style chain. `.Destructive()` is a `Button` style method — the agent confused the two APIs. No auto-fix is possible because the intent (error vs warning vs info) is ambiguous.
+`Callout` uses static factory methods (`Callout.Info()`, `Callout.Warning()`, `Callout.Error()`, `Callout.Success()`, `Callout.Destructive()`), not a constructor + fluent style chain. The instance method `.Destructive()` does not exist — the hallucination is calling it on a `new Callout(...)` instance. Use the static factory `Callout.Destructive("message")` or `Callout.Error("message")` instead.
 
 **Found In:**
 d9116efb-830e-484a-a258-fc3193769158
@@ -3019,7 +2956,7 @@ server.UseWebApplication(app =>
 await server.RunAsync();
 ```
 
-`Server` does not have `BuildAsync()` or a public `ServiceProvider` property. `ServiceProvider` exists but is `internal`. To run initialization code before the server starts, use `server.UseWebApplication(Action<WebApplication>)` which gives access to the `WebApplication` instance (and its `.Services` property) during startup. The agent confused ASP.NET Core's `WebApplicationBuilder.Build()` pattern with Ivy's `Server` API.
+`Server` does not have `BuildAsync()` and `ServiceProvider` is `internal`. However, `Server.Services` is a public `IServiceCollection` property that allows registering services before the server starts. To run initialization code with the built DI container, use `server.UseWebApplication(Action<WebApplication>)` which gives access to the `WebApplication` instance (and its resolved `.Services` property) during startup. The agent confused ASP.NET Core's `WebApplicationBuilder.Build()` pattern with Ivy's `Server` API.
 
 **Found In:**
 70f88d4c-298a-421b-8bd1-f7fc697c911e
@@ -3360,52 +3297,6 @@ table.OnRowAction(e =>
 **Found In:**
 a31113e3-0282-46f8-a78f-4bd42b9cebc2
 
-## Detail(string, object) — missing required multiline parameter
-
-**Hallucinated API:**
-
-```csharp
-new Detail("Author", post.Author.FirstName)
-new Detail("Status", post.Status)
-```
-
-**Error:** `CS7036: There is no argument given that corresponds to the required parameter 'multiline' of 'Detail.Detail(string?, object?, bool)'`
-
-**Correct API:**
-
-```csharp
-new Detail("Author", post.Author.FirstName, false)
-new Detail("Status", post.Status, false)
-// For long text content:
-new Detail("Body", post.Body, true)
-```
-
-`Detail` constructor requires three parameters: `(string? label, object? value, bool multiline)`. The `multiline` parameter is not optional. The agent omits it because most UI frameworks default boolean display options to `false`.
-
-**Found In:**
-a31113e3-0282-46f8-a78f-4bd42b9cebc2
-
-## TextInput.Grow() — Box-only extension called on TextInput
-
-**Hallucinated API:**
-
-```csharp
-new TextInput(query).Grow()
-```
-
-**Error:** `CS1929: 'TextInput' does not contain a definition for 'Grow'`
-
-**Correct API:**
-
-```csharp
-query.ToTextInput().Width(Size.Grow())
-```
-
-`Grow()` was originally defined only as a `Box`-specific extension method in `Box.cs`. It is not available on `TextInput` or other widget types. Use `.Width(Size.Grow())` directly, or note that `Grow()` has since been promoted to a generic `WidgetBase<T>` extension and is now available on all widgets.
-
-**Found In:**
-7a9aadf3
-
 ## Align.End / Align.Start — CSS-inspired enum values
 
 **Hallucinated API:**
@@ -3529,68 +3420,3 @@ UseEffect(() => { items.Set(GenerateUsers(count.Value)); }, count);
 
 This is a behavioral difference from React's `useEffect`, which fires on mount and on dependency changes. Ivy's `UseEffect` with state triggers uses `AfterChange` semantics only.
 
-## ToastVariant — non-existent enum — now supported
-
-**Hallucinated API:**
-
-```csharp
-client.Toast("Error!", ToastVariant.Destructive)
-```
-
-**Error:** `The name 'ToastVariant' does not exist in the current context`
-
-**Correct API:**
-
-```csharp
-client.Toast("Success message");       // neutral toast
-client.Toast("Done!", "Title");        // with title
-client.Error("Something went wrong."); // error toast
-```
-
-`ToastVariant` does not exist. The `IClientProvider.Toast()` method takes `(string message)` or `(string message, string title)`. For error toasts, use `client.Error(message)` instead.
-
-**Found In:**
-d90474ac-78b9-48c7-8317-3860ff36b9dd (sub-tasks 002–006, appeared in ALL sub-tasks)
-
-## SelectInputBase.Options() — chained options method — now supported
-
-**Hallucinated API:**
-
-```csharp
-defaultBehavior.ToSelectInput().Options(["Refused", "Allowed", "Ignored"])
-```
-
-**Error:** `'SelectInputBase' does not contain a definition for 'Options'`
-
-**Correct API:**
-
-```csharp
-defaultBehavior.ToSelectInput(new[] { "Refused", "Allowed", "Ignored" }.ToOptions())
-```
-
-Options are passed as `IEnumerable<IAnyOption>` to `ToSelectInput(options)`, not chained via a `.Options()` method. Use the `.ToOptions()` extension method on a string array to convert to the correct type.
-
-**Found In:**
-4eb1799f-39b2-4325-a0bd-37b769a33432
-30c1b273-c528-4496-b194-c98e0ffeaa23
-
-<https://github.com/Ivy-Interactive/Ivy-Framework/issues/2271>
-
-## IRef\<T\> — now supported
-
-`IRef<T>` was previously a hallucinated interface. It has since been added to the framework as `IRef<T> : IState<T>`. Both `UseRef<T>()` return types are now `IRef<T>`, while `UseState<T>()` continues to return `IState<T>`. The two interfaces are interchangeable — `IRef<T>` is a marker subtype used for clarity.
-
-## LayoutView.Border() — now supported
-
-LayoutView supports `.Border(color, thickness)` for adding borders. Example:
-
-```csharp
-new LayoutView()
-    .Border(Colors.Gray, 1)
-    .Padding(4)
-    .Vertical(content);
-```
-
-Individual properties are also available: `.BorderColor()`, `.BorderThickness()`, `.BorderStyle()`, `.BorderRadius()`.
-
-Note: `.Border()` expects a `Colors` enum as the first argument, not a string. Thickness accepts `int` (uniform) or `Thickness` struct — do NOT pass `Ivy.Thickness` where `int` is expected.

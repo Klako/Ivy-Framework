@@ -121,7 +121,7 @@ public class JobsApp : ViewBase
             .Width(t => t.LastOutput, Size.Px(100))
             .Width(t => t.Cost, Size.Px(100))
             .Width(t => t.Tokens, Size.Px(100))
-            .Width(t => t.StatusMessage, Size.Px(250))
+            .Width(t => t.StatusMessage, Size.Auto())
             .Renderer(t => t.Status, new LabelsDisplayRenderer
             {
                 BadgeColorMapping = StatusMappings.JobStatusColors.ToDictionary(

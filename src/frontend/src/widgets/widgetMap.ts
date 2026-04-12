@@ -31,10 +31,7 @@ import { FieldWidget } from "@/widgets/inputs/FieldWidget";
 import { TextInputWidget } from "@/widgets/inputs/TextInputWidget";
 import { BoolInputWidget } from "@/widgets/inputs/BoolInputWidget";
 import { NumberInputWidget } from "@/widgets/inputs/NumberInputWidget";
-import { NumberRangeInputWidget } from "@/widgets/inputs/NumberRangeInputWidget";
 import { ReadOnlyInputWidget } from "@/widgets/inputs/ReadOnlyInputWidget";
-import { IconInputWidget } from "@/widgets/inputs/IconInputWidget";
-import { FileInputWidget } from "@/widgets/inputs/FileInputWidget";
 import {
   StackLayoutWidget,
   GridLayoutWidget,
@@ -195,7 +192,11 @@ export const widgetMap = {
     })),
   ),
   "Ivy.NumberInput": NumberInputWidget,
-  "Ivy.NumberRangeInput": NumberRangeInputWidget,
+  "Ivy.NumberRangeInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/NumberRangeInputWidget").then((m) => ({
+      default: m.NumberRangeInputWidget,
+    })),
+  ),
   "Ivy.SelectInput": lazyWithRetry(() =>
     import("@/widgets/inputs/SelectInputWidget").then((m) => ({
       default: m.SelectInputWidget,
@@ -207,7 +208,11 @@ export const widgetMap = {
       default: m.ColorInputWidget,
     })),
   ),
-  "Ivy.IconInput": IconInputWidget,
+  "Ivy.IconInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/IconInputWidget").then((m) => ({
+      default: m.IconInputWidget,
+    })),
+  ),
   "Ivy.FeedbackInput": lazyWithRetry(() =>
     import("@/widgets/inputs/FeedbackInputWidget").then((m) => ({
       default: m.FeedbackInputWidget,
@@ -223,7 +228,11 @@ export const widgetMap = {
       default: m.DateRangeInputWidget,
     })),
   ),
-  "Ivy.FileInput": FileInputWidget,
+  "Ivy.FileInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/FileInputWidget").then((m) => ({
+      default: m.FileInputWidget,
+    })),
+  ),
   "Ivy.ContentInput": lazyWithRetry(() =>
     import("@/widgets/inputs/ContentInputWidget").then((m) => ({
       default: m.ContentInputWidget,

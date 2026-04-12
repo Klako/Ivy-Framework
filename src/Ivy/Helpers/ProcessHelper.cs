@@ -39,39 +39,37 @@ public static class ProcessHelper
 
     private static void KillProcessUsingPortWindows(int port)
     {
-        using var netstat = new Process
+        var pids = GetPidsOnPort("netstat", "-ano", output =>
         {
-            StartInfo = new ProcessStartInfo
+            var results = new List<int>();
+            var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+            var regex = new Regex(@"\s+");
+
+            foreach (var line in lines)
             {
-                FileName = "netstat",
-                Arguments = "-ano",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                if (!line.Trim().StartsWith("TCP"))
+                    continue;
+                var parts = regex.Split(line.Trim());
+                if (parts.Length < 5)
+                    continue;
+                string localAddress = parts[1];
+                string pidStr = parts[4];
+                int colonIndex = localAddress.LastIndexOf(':');
+                if (colonIndex == -1)
+                    continue;
+                if (!int.TryParse(localAddress[(colonIndex + 1)..], out int linePort) || linePort != port)
+                    continue;
+                if (int.TryParse(pidStr, out int pid) && pid != 0)
+                    results.Add(pid);
             }
-        };
-        netstat.Start();
-        string output = netstat.StandardOutput.ReadToEnd();
-        netstat.WaitForExitOrKill(10000);
 
-        var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-        var regex = new Regex(@"\s+");
+            return results;
+        });
 
-        foreach (var line in lines)
+        if (pids == null) return;
+
+        foreach (var pid in pids)
         {
-            if (!line.Trim().StartsWith("TCP"))
-                continue;
-            var parts = regex.Split(line.Trim());
-            if (parts.Length < 5)
-                continue;
-            string localAddress = parts[1];
-            string pidStr = parts[4];
-            int colonIndex = localAddress.LastIndexOf(':');
-            if (colonIndex == -1)
-                continue;
-            if (!int.TryParse(localAddress[(colonIndex + 1)..], out int linePort) || linePort != port) continue;
-            if (!int.TryParse(pidStr, out int pid)) continue;
-            if (pid == 0) continue;
             try
             {
                 using var proc = Process.GetProcessById(pid);
@@ -79,7 +77,7 @@ public static class ProcessHelper
             }
             catch (Exception)
             {
-                //ignore
+                // ignore - process may have already exited
             }
         }
     }

@@ -1,13 +1,14 @@
 import { cva } from "class-variance-authority";
+import { densityHeight } from "../density-scale";
 
 export const expandableTriggerVariant = cva(
   "w-full flex justify-between items-center cursor-pointer hover:bg-accent/50 rounded-box transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent overflow-hidden box-border shrink-0",
   {
     variants: {
       density: {
-        Small: "h-8 px-2 py-1 gap-2",
-        Medium: "h-10 px-3 py-2 gap-3",
-        Large: "h-12 px-4 py-3 gap-4",
+        Small: `${densityHeight.Small} px-2 py-1 gap-2`,
+        Medium: `${densityHeight.Medium} px-3 py-2 gap-3`,
+        Large: `${densityHeight.Large} px-4 py-3 gap-4`,
       },
     },
     defaultVariants: {

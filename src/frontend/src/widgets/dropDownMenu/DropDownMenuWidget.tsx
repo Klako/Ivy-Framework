@@ -19,6 +19,7 @@ import { MenuItem } from "@/types/widgets";
 import Icon from "@/components/Icon";
 import { camelCase } from "@/lib/utils";
 import { getColor } from "@/lib/styles";
+import { formatShortcutForDisplay } from "@/lib/shortcut";
 import { Densities } from "@/types/density";
 
 const EMPTY_ARRAY: never[] = [];
@@ -81,7 +82,9 @@ const DropDownMenuItemGroup = ({ items, onItemClick, iconSize }: DropDownMenuIte
           {item.icon && <Icon name={item.icon} size={iconSize} style={colorStyle} />}
           {item.label}
           {item.checked && <span className="ml-auto">✓</span>}
-          {item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>}
+          {item.shortcut && (
+            <DropdownMenuShortcut>{formatShortcutForDisplay(item.shortcut)}</DropdownMenuShortcut>
+          )}
         </DropdownMenuItem>
       );
     }
@@ -98,7 +101,9 @@ const DropDownMenuItemGroup = ({ items, onItemClick, iconSize }: DropDownMenuIte
           {item.icon && <Icon name={item.icon} size={iconSize} style={colorStyle} />}
           {item.label}
           {item.checked && <span className="ml-auto">●</span>}
-          {item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>}
+          {item.shortcut && (
+            <DropdownMenuShortcut>{formatShortcutForDisplay(item.shortcut)}</DropdownMenuShortcut>
+          )}
         </DropdownMenuItem>
       );
     }
@@ -110,7 +115,9 @@ const DropDownMenuItemGroup = ({ items, onItemClick, iconSize }: DropDownMenuIte
           <DropdownMenuSubTrigger disabled={item.disabled} style={colorStyle}>
             {item.icon && <Icon name={item.icon} size={iconSize} style={colorStyle} />}
             {item.label}
-            {item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>}
+            {item.shortcut && (
+              <DropdownMenuShortcut>{formatShortcutForDisplay(item.shortcut)}</DropdownMenuShortcut>
+            )}
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
             <DropdownMenuSubContent className="m-2">
@@ -135,7 +142,9 @@ const DropDownMenuItemGroup = ({ items, onItemClick, iconSize }: DropDownMenuIte
       >
         {item.icon && <Icon name={item.icon} size={iconSize} style={colorStyle} />}
         {item.label}
-        {item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>}
+        {item.shortcut && (
+          <DropdownMenuShortcut>{formatShortcutForDisplay(item.shortcut)}</DropdownMenuShortcut>
+        )}
       </DropdownMenuItem>
     );
   });

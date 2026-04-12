@@ -154,10 +154,7 @@
 }
 
 .thinking-block {
-  border-left: 3px solid color-mix(in srgb, var(--primary), transparent 50%);
-  padding-left: 0.75rem;
   color: var(--muted-foreground);
-  font-style: italic;
   font-size: 0.8125rem;
 }
 

@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useRef, useState, useCallback } from "react"
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "./claude-json-renderer.css";
-import type { EventHandler, ClaudeEvent, ContentBlock, AssistantEvent, UserEvent, ResultEvent } from "./types";
+import type { EventHandler, ClaudeEvent, ContentBlock, AssistantEvent, ResultEvent } from "./types";
 import { getWidth, getHeight } from "./styles";
 
 function contentToString(content: unknown): string {
@@ -17,6 +17,25 @@ function contentToString(content: unknown): string {
     return (obj.text ?? obj.stdout ?? obj.content ?? JSON.stringify(content)) as string;
   }
   return String(content ?? "");
+}
+
+function buildToolResultMap(events: ClaudeEvent[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const event of events) {
+    if (event.type !== "user") continue;
+    const toolResult = event.tool_use_result as Record<string, unknown> | undefined;
+    const blocks = event.message?.content ?? [];
+    for (const block of blocks) {
+      if (block.type === "tool_result" && block.tool_use_id) {
+        const text = contentToString(block.content)
+          || contentToString(toolResult?.stdout)
+          || contentToString(toolResult?.content)
+          || "";
+        map.set(block.tool_use_id, text);
+      }
+    }
+  }
+  return map;
 }
 
 type StreamSubscriber = (streamId: string, onData: (data: unknown) => void) => () => void;
@@ -50,7 +69,7 @@ function parseEvents(jsonStream: string | undefined): ClaudeEvent[] {
   return events;
 }
 
-function ToolUseCard({ name, input }: { name: string; input: Record<string, unknown> }) {
+function ToolUseCard({ name, input, result }: { name: string; input: Record<string, unknown>; result?: string }) {
   const [open, setOpen] = useState(false);
 
   let displayContent: string;
@@ -67,37 +86,32 @@ function ToolUseCard({ name, input }: { name: string; input: Record<string, unkn
     displayContent = JSON.stringify(input, null, 2);
   }
 
+  const resultPreview = result != null
+    ? (result.length > 120 ? result.slice(0, 120) + "..." : result)
+    : null;
+
   return (
     <div className="tool-card my-2">
       <div className="tool-card-header" onClick={() => setOpen(!open)}>
         <span className={`chevron ${open ? "open" : ""}`}>&#9654;</span>
-        <span className="opacity-50">Tool:</span>
         <span className="font-semibold font-mono">{name}</span>
+        {resultPreview != null && (
+          <span className="font-mono truncate opacity-60 ml-2">{resultPreview}</span>
+        )}
+        {result == null && (
+          <span className="opacity-40 ml-2">running...</span>
+        )}
       </div>
       {open && (
         <div className="tool-card-body">
+          <div className="opacity-50 text-xs mb-1">Input</div>
           <pre><code>{displayContent}</code></pre>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ToolResultCard({ toolName, content: rawContent }: { toolName?: string; content: unknown }) {
-  const [open, setOpen] = useState(false);
-  const content = contentToString(rawContent);
-  const preview = content.length > 120 ? content.slice(0, 120) + "..." : content;
-
-  return (
-    <div className="tool-card my-2">
-      <div className="tool-card-header" onClick={() => setOpen(!open)}>
-        <span className={`chevron ${open ? "open" : ""}`}>&#9654;</span>
-        <span className="opacity-50">Result{toolName ? ` (${toolName})` : ""}:</span>
-        <span className="font-mono truncate">{preview}</span>
-      </div>
-      {open && (
-        <div className="tool-card-body">
-          <pre><code>{content}</code></pre>
+          {result != null && (
+            <>
+              <div className="opacity-50 text-xs mb-1 mt-3">Output</div>
+              <pre><code>{result}</code></pre>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -135,11 +149,11 @@ function ResultSummary({ event }: { event: ResultEvent }) {
 function AssistantMessage({
   event,
   showThinking,
-  toolNames,
+  toolResults,
 }: {
   event: AssistantEvent;
   showThinking: boolean;
-  toolNames: Map<string, string>;
+  toolResults: Map<string, string>;
 }) {
   const content = event.message?.content;
   if (!Array.isArray(content)) return null;
@@ -163,51 +177,13 @@ function AssistantMessage({
           );
         }
         if (block.type === "tool_use" && block.name && block.input) {
-          if (block.id) {
-            toolNames.set(block.id, block.name);
-          }
-          return <ToolUseCard key={i} name={block.name} input={block.input} />;
+          const result = block.id ? toolResults.get(block.id) : undefined;
+          return <ToolUseCard key={i} name={block.name} input={block.input} result={result} />;
         }
         return null;
       })}
     </div>
   );
-}
-
-function UserMessage({
-  event,
-  toolNames,
-}: {
-  event: UserEvent;
-  toolNames: Map<string, string>;
-}) {
-  const toolResult = event.tool_use_result as Record<string, unknown> | undefined;
-  const resultContent = toolResult?.content ?? toolResult?.stdout;
-  const toolUseId = toolResult?.tool_use_id as string | undefined;
-  const toolName = toolUseId ? toolNames.get(toolUseId) : undefined;
-
-  if (resultContent) {
-    return <ToolResultCard toolName={toolName} content={resultContent} />;
-  }
-
-  const toolResults = (event.message?.content ?? []).filter(
-    (b: ContentBlock) => b.type === "tool_result" && b.content
-  );
-  if (toolResults.length > 0) {
-    return (
-      <>
-        {toolResults.map((block: ContentBlock, i: number) => (
-          <ToolResultCard
-            key={i}
-            toolName={block.tool_use_id ? toolNames.get(block.tool_use_id) : undefined}
-            content={block.content}
-          />
-        ))}
-      </>
-    );
-  }
-
-  return null;
 }
 
 export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
@@ -224,7 +200,6 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   showSystemEvents = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const toolNames = useMemo(() => new Map<string, string>(), []);
   const [streamedLines, setStreamedLines] = useState<string[]>([]);
 
   useEffect(() => {
@@ -247,6 +222,7 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   }, [jsonStream, streamedLines]);
 
   const parsedEvents = useMemo(() => parseEvents(combinedStream), [combinedStream]);
+  const toolResults = useMemo(() => buildToolResultMap(parsedEvents), [parsedEvents]);
 
   const handleComplete = useCallback(
     (resultJson: string) => {
@@ -277,11 +253,7 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   };
 
   if (parsedEvents.length === 0) {
-    return (
-      <div style={style} className="claude-renderer text-[var(--muted-foreground)] p-4 text-sm">
-        {stream?.id ? "Waiting for stream..." : "No events to display"}
-      </div>
-    );
+    return <div style={style} className="claude-renderer" />;
   }
 
   return (
@@ -303,13 +275,14 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
               key={index}
               event={event}
               showThinking={showThinking}
-              toolNames={toolNames}
+              toolResults={toolResults}
             />
           );
         }
 
+        // User events are now rendered inline with tool use cards -- skip them
         if (event.type === "user") {
-          return <UserMessage key={index} event={event} toolNames={toolNames} />;
+          return null;
         }
 
         if (event.type === "result") {

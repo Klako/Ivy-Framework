@@ -37,7 +37,7 @@ class ClaudeJsonRendererDemo : ViewBase
         var psi = new ProcessStartInfo
         {
             FileName = "claude",
-            Arguments = $"-p \"{escaped}\" --output-format stream-json --verbose --max-turns 3 --dangerously-skip-permissions",
+            Arguments = $"-p \"{escaped}\" --output-format stream-json --verbose --max-turns 50 --dangerously-skip-permissions",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

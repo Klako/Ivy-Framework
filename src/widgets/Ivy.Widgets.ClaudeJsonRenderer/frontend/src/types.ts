@@ -54,15 +54,15 @@ export interface UserEvent {
 export interface ResultEvent {
   type: "result";
   subtype: string;
-  cost_usd: number;
+  cost_usd?: number;
   duration_ms: number;
   duration_api_ms: number;
   is_error: boolean;
   num_turns: number;
   result: string;
   session_id: string;
-  total_cost_usd: number;
-  usage: UsageStats;
+  total_cost_usd?: number;
+  usage?: UsageStats;
 }
 
 export type ClaudeEvent = SystemEvent | AssistantEvent | UserEvent | ResultEvent;

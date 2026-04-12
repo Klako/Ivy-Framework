@@ -5,6 +5,8 @@ import "./claude-json-renderer.css";
 import type { EventHandler, ClaudeEvent, ContentBlock, AssistantEvent, UserEvent, ResultEvent } from "./types";
 import { getWidth, getHeight } from "./styles";
 
+type StreamSubscriber = (streamId: string, onData: (data: unknown) => void) => () => void;
+
 interface ClaudeJsonRendererProps {
   id: string;
   width?: string;
@@ -12,6 +14,8 @@ interface ClaudeJsonRendererProps {
   onIvyEvent: EventHandler;
   events?: string[];
   jsonStream?: string;
+  stream?: { id: string };
+  subscribeToStream?: StreamSubscriber;
   autoScroll?: boolean;
   showThinking?: boolean;
   showSystemEvents?: boolean;
@@ -101,11 +105,11 @@ function ResultSummary({ event }: { event: ResultEvent }) {
         <div className="text-sm mb-2">{event.result}</div>
       )}
       <div className="flex flex-wrap gap-4 text-xs opacity-70">
-        <span>Cost: ${event.cost_usd.toFixed(4)}</span>
+        <span>Cost: ${(event.cost_usd ?? event.total_cost_usd ?? 0).toFixed(4)}</span>
         <span>Duration: {(event.duration_ms / 1000).toFixed(1)}s</span>
         {event.usage && (
           <span>
-            Tokens: {event.usage.input_tokens.toLocaleString()} in / {event.usage.output_tokens.toLocaleString()} out
+            Tokens: {(event.usage.input_tokens ?? 0).toLocaleString()} in / {(event.usage.output_tokens ?? 0).toLocaleString()} out
           </span>
         )}
       </div>
@@ -196,14 +200,36 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   onIvyEvent,
   events: enabledEvents = [],
   jsonStream,
+  stream,
+  subscribeToStream,
   autoScroll = true,
   showThinking = false,
   showSystemEvents = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const toolNames = useMemo(() => new Map<string, string>(), []);
+  const [streamedLines, setStreamedLines] = useState<string[]>([]);
 
-  const parsedEvents = useMemo(() => parseEvents(jsonStream), [jsonStream]);
+  useEffect(() => {
+    if (!stream?.id || !subscribeToStream) return;
+
+    const unsubscribe = subscribeToStream(stream.id, (data) => {
+      if (typeof data === "string") {
+        setStreamedLines((prev) => [...prev, data]);
+      }
+    });
+
+    return unsubscribe;
+  }, [stream?.id, subscribeToStream]);
+
+  const combinedStream = useMemo(() => {
+    const parts: string[] = [];
+    if (jsonStream) parts.push(jsonStream);
+    if (streamedLines.length > 0) parts.push(streamedLines.join("\n"));
+    return parts.join("\n") || undefined;
+  }, [jsonStream, streamedLines]);
+
+  const parsedEvents = useMemo(() => parseEvents(combinedStream), [combinedStream]);
 
   const handleComplete = useCallback(
     (resultJson: string) => {
@@ -233,10 +259,10 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
     overflow: "auto",
   };
 
-  if (!jsonStream || parsedEvents.length === 0) {
+  if (parsedEvents.length === 0) {
     return (
       <div style={style} className="claude-renderer text-[var(--muted-foreground)] p-4 text-sm">
-        No events to display
+        {stream?.id ? "Waiting for stream..." : "No events to display"}
       </div>
     );
   }

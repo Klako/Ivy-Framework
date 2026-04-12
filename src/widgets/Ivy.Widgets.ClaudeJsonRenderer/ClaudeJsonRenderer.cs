@@ -1,3 +1,5 @@
+using Ivy.Hooks;
+
 namespace Ivy.Widgets.ClaudeJsonRenderer;
 
 [ExternalWidget("frontend/dist/Ivy_Widgets_ClaudeJsonRenderer.js",
@@ -12,6 +14,8 @@ public record ClaudeJsonRenderer : WidgetBase<ClaudeJsonRenderer>
 
     /// <summary>Stream of newline-delimited JSON events from Claude Code</summary>
     [Prop] public string? JsonStream { get; init; }
+
+    [Prop] public IWriteStream<string>? Stream { get; init; }
 
     /// <summary>Auto-scroll to bottom as new events arrive</summary>
     [Prop] public bool AutoScroll { get; init; } = true;
@@ -29,6 +33,9 @@ public static class ClaudeJsonRendererExtensions
 {
     public static ClaudeJsonRenderer JsonStream(this ClaudeJsonRenderer w, string jsonStream) =>
         w with { JsonStream = jsonStream };
+
+    public static ClaudeJsonRenderer Stream(this ClaudeJsonRenderer w, IWriteStream<string> stream) =>
+        w with { Stream = stream };
 
     public static ClaudeJsonRenderer AutoScroll(this ClaudeJsonRenderer w, bool autoScroll = true) =>
         w with { AutoScroll = autoScroll };

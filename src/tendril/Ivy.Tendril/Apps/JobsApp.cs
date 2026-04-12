@@ -223,27 +223,27 @@ public class JobsApp : ViewBase
                     {
                         if (job.Status is JobStatus.Failed or JobStatus.Timeout or JobStatus.Stopped)
                         {
+                            if (job.Type == "MakePlan" && !job.Args.Contains("-Description"))
+                            {
+                                client.Toast("Cannot rerun MakePlan: original description was not preserved.", "Rerun Failed");
+                                return ValueTask.CompletedTask;
+                            }
+
                             if (job.Type is "ExecutePlan" or "ExpandPlan" && job.Args.Length > 0)
                             {
                                 var folderName = Path.GetFileName(job.Args[0]);
                                 planService.TransitionState(folderName, PlanStatus.Building);
+                                planService.FlushPendingWritesAsync().GetAwaiter().GetResult();
                             }
                             else if (job.Type == "UpdatePlan" && job.Args.Length > 0)
                             {
                                 var folderName = Path.GetFileName(job.Args[0]);
                                 planService.TransitionState(folderName, PlanStatus.Updating);
+                                planService.FlushPendingWritesAsync().GetAwaiter().GetResult();
                             }
 
                             jobService.DeleteJob(job.Id);
-
-                            if (job.Type == "MakePlan" && !job.Args.Contains("-Description"))
-                            {
-                                client.Toast("Cannot rerun MakePlan: original description was not preserved.", "Rerun Failed");
-                            }
-                            else
-                            {
-                                jobService.StartJob(job.Type, job.Args);
-                            }
+                            jobService.StartJob(job.Type, job.Args);
 
                             refreshToken.Refresh();
                         }

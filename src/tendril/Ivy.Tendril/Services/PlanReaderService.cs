@@ -1223,9 +1223,9 @@ public class PlanReaderService(
     }
 
     /// <summary>
-    /// Waits for any pending background file writes to complete. For testing only.
+    /// Waits for any pending background file writes to complete.
     /// </summary>
-    internal Task FlushPendingWritesAsync() => _lastWriteTask;
+    public Task FlushPendingWritesAsync() => _lastWriteTask;
 
     private static DateTime? ExtractCompletedTimestamp(string logFilePath)
     {

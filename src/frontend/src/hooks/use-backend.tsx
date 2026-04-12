@@ -25,6 +25,22 @@ type RefreshMessage = {
   externalWidgets?: ExternalWidgetInfo[] | null;
 };
 
+/** `replaceState` with a path-only URL drops `#fragment`; keep it when the path matches. */
+function preserveHashIfSameDocument(pathAndQuery: string): string {
+  if (pathAndQuery.includes("#")) return pathAndQuery;
+  const hash = window.location.hash;
+  if (!hash || hash === "#") return pathAndQuery;
+  try {
+    const cur = new URL(window.location.href);
+    const next = new URL(pathAndQuery, window.location.origin);
+    if (next.pathname === cur.pathname && next.search === cur.search)
+      return `${pathAndQuery}${hash}`;
+  } catch {
+    /* ignore */
+  }
+  return pathAndQuery;
+}
+
 type ErrorMessage = {
   title: string;
   type: string;
@@ -507,14 +523,16 @@ export const useBackend = (
       const prefixedUrl =
         basePath && !validatedUrl.startsWith(basePath) ? basePath + validatedUrl : validatedUrl;
 
+      const urlWithHash = preserveHashIfSameDocument(prefixedUrl);
+
       if (replaceHistory) {
-        window.history.replaceState(message.state, "", prefixedUrl);
+        window.history.replaceState(message.state, "", urlWithHash);
       } else {
-        window.history.pushState(message.state, "", prefixedUrl);
+        window.history.pushState(message.state, "", urlWithHash);
       }
 
       // pushState/replaceState do not fire `hashchange`. Double rAF runs after the next paint so listeners see the new URL.
-      if (prefixedUrl.includes("#")) {
+      if (urlWithHash.includes("#")) {
         const notifyHash = () => window.dispatchEvent(new HashChangeEvent("hashchange"));
         window.requestAnimationFrame(() => {
           window.requestAnimationFrame(notifyHash);
@@ -700,10 +718,11 @@ export const useBackend = (
       signalRUrl += `&oauthLogin=${oauthLogin}`;
       // Clean up the URL by removing the oauthLogin parameter
       pageParams.delete("oauthLogin");
+      const hash = window.location.hash || "";
       const newUrl = pageParams.toString()
         ? `${window.location.pathname}?${pageParams.toString()}`
         : window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
+      window.history.replaceState({}, "", `${newUrl}${hash}`);
     }
 
     const retryPolicy = {

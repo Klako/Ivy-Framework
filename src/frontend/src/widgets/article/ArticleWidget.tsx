@@ -32,21 +32,38 @@ function getHashTargetId(): string | null {
   }
 }
 
-function scrollElementWithIdIntoView(id: string, behavior: ScrollBehavior): boolean {
-  const el = document.getElementById(id);
-  if (!el) return false;
-  el.scrollIntoView({ behavior, block: "start" });
-  return true;
+function getScrollParent(el: HTMLElement | null): HTMLElement | Window {
+  if (!el) return window;
+  let parent: HTMLElement | null = el.parentElement;
+  while (parent) {
+    const { overflowY } = getComputedStyle(parent);
+    if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") return parent;
+    parent = parent.parentElement;
+  }
+  return window;
 }
 
-/**
- * Scroll to the URL hash, retrying on requestAnimationFrame until the heading exists
- * (markdown may commit after the first frame).
- */
-function scrollToHashFragment(options: { behavior: ScrollBehavior; maxFrames: number }): {
-  cancel: () => void;
-} {
-  const { behavior, maxFrames } = options;
+function scrollHeadingIntoView(
+  el: HTMLElement,
+  articleRoot: HTMLElement | null,
+  behavior: ScrollBehavior,
+): void {
+  const scrollParent = getScrollParent(articleRoot ?? el);
+  if (scrollParent === window) {
+    el.scrollIntoView({ behavior, block: "start" });
+    return;
+  }
+  const parent = scrollParent as HTMLElement;
+  const delta = el.getBoundingClientRect().top - parent.getBoundingClientRect().top;
+  const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+  parent.scrollTo({ top: Math.max(0, parent.scrollTop + delta - margin), behavior });
+}
+
+function scrollToHashFragment(
+  articleRef: React.RefObject<HTMLElement | null>,
+  behavior: ScrollBehavior,
+  maxFrames: number,
+): () => void {
   let frame = 0;
   let cancelled = false;
   let rafId = 0;
@@ -55,20 +72,19 @@ function scrollToHashFragment(options: { behavior: ScrollBehavior; maxFrames: nu
     if (cancelled) return;
     const targetId = getHashTargetId();
     if (!targetId) return;
-    if (scrollElementWithIdIntoView(targetId, behavior)) return;
-    frame++;
-    if (frame < maxFrames) {
-      rafId = requestAnimationFrame(tick);
+    const el = document.getElementById(targetId);
+    if (el) {
+      scrollHeadingIntoView(el, articleRef.current, behavior);
+      return;
     }
+    frame++;
+    if (frame < maxFrames) rafId = requestAnimationFrame(tick);
   };
 
   rafId = requestAnimationFrame(tick);
-
-  return {
-    cancel: () => {
-      cancelled = true;
-      cancelAnimationFrame(rafId);
-    },
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(rafId);
   };
 }
 
@@ -87,23 +103,15 @@ export const ArticleWidget: React.FC<ArticleWidgetProps> = ({
   const eventHandler = useEventHandler();
   const articleRef = useRef<HTMLElement>(null);
 
-  // Deep links like /path/to/article#section-id — scroll after headings exist in the DOM.
   useLayoutEffect(() => {
-    let cancelScroll: (() => void) | null = null;
-
-    const run = (behavior: ScrollBehavior, maxFrames: number) => {
-      cancelScroll?.();
-      cancelScroll = scrollToHashFragment({ behavior, maxFrames }).cancel;
+    let cancel = scrollToHashFragment(articleRef, "auto", 300);
+    const onHashChange = () => {
+      cancel();
+      cancel = scrollToHashFragment(articleRef, "smooth", 120);
     };
-
-    // ~3s at 60fps — enough for markdown to paint ids on headings
-    run("auto", 180);
-
-    const onHashChange = () => run("smooth", 90);
-
     window.addEventListener("hashchange", onHashChange);
     return () => {
-      cancelScroll?.();
+      cancel();
       window.removeEventListener("hashchange", onHashChange);
     };
   }, [id]);
@@ -131,6 +139,7 @@ export const ArticleWidget: React.FC<ArticleWidgetProps> = ({
           )}
         </article>
         <ArticleSidebar
+          articleId={id}
           articleRef={articleRef}
           showToc={showToc}
           documentSource={documentSource}

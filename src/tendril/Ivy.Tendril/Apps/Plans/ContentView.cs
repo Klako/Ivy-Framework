@@ -170,8 +170,7 @@ public class ContentView(
                 return Layout.Vertical().AlignContent(Align.Center).Height(Size.Full()).Gap(4).Padding(8)
                        | new Icon(Icons.Feather).Large().Color(Colors.Gray)
                        | Text.H3("No draft plans")
-                       | new NewPlanButton().Width(Size.Fit())
-                       | Text.Muted("or press Ctrl+Alt+N").Small();
+                       | new NewPlanButton().Width(Size.Fit());
 
             return Layout.Vertical().AlignContent(Align.Center).Height(Size.Full())
                    | Text.Muted("Select a plan from the sidebar");

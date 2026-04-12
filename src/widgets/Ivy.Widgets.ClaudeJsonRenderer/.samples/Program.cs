@@ -15,16 +15,15 @@ class ClaudeJsonRendererDemo : ViewBase
         var stream = Context.UseStream<string>();
         var running = Context.UseState(false);
 
-        return Layout.Vertical()
-            | (Layout.Horizontal().Gap(2)
-                | prompt.ToTextInput().Placeholder("Enter a prompt for Claude...")
-                | new Button(running.Value ? "Running..." : "Run Claude").OnClick(async () =>
-                {
-                    if (running.Value) return;
-                    running.Set(true);
-                    await Task.Run(() => RunClaude(prompt.Value, stream));
-                    running.Set(false);
-                }).Disabled(running.Value))
+        return Layout.Vertical().Gap(3)
+            | prompt.ToTextInput().Placeholder("Enter a prompt for Claude...")
+            | new Button(running.Value ? "Running..." : "Run Claude").OnClick(async () =>
+            {
+                if (running.Value) return;
+                running.Set(true);
+                await Task.Run(() => RunClaude(prompt.Value, stream));
+                running.Set(false);
+            }).Disabled(running.Value)
             | new ClaudeJsonRenderer()
                 .Stream(stream)
                 .ShowThinking(true)

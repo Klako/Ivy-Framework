@@ -3186,7 +3186,7 @@ server.UseWebApplication(app =>
 await server.RunAsync();
 ```
 
-The `Server` class does not have `StartAsync()` or `WaitForShutdownAsync()`. The agent confused ASP.NET Core's `IHost.StartAsync()` / `IHost.WaitForShutdownAsync()` pattern with Ivy's `Server` API. Use `server.RunAsync()` for the full lifecycle. See also: `Server.OnReady / Server.OnStartup` and `Server.BuildAsync()` entries.
+The `Server` class does not have `StartAsync()` or `WaitForShutdownAsync()`. The agent confused ASP.NET Core's `IHost.StartAsync()` / `IHost.WaitForShutdownAsync()` pattern with Ivy's `Server` API. Use `server.RunAsync()` for the full lifecycle. For DI access, `server.Services` (public `IServiceCollection`) is available directly; for runtime service resolution, use `server.UseWebApplication(app => ...)` to access `app.Services`. See also: `Server.OnReady / Server.OnStartup` and `Server.BuildAsync()` entries.
 
 **Found In:**
 2235e1c1-ab1e-4313-be50-995daa1be1f9

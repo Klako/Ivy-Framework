@@ -88,8 +88,7 @@ public class CreateIssueDialog(
                 {
                     if (_selectedRepoState.Value is { } repo)
                     {
-                        var availableRepos = githubService.GetRepos();
-                        var selectedRepo = availableRepos.FirstOrDefault(r => r.DisplayName == repo);
+                        var selectedRepo = repos.FirstOrDefault(r => r.DisplayName == repo);
                         if (selectedRepo != null)
                         {
                             var repoPath = selectedRepo.FullName;

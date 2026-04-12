@@ -461,9 +461,19 @@ public static class DoctorCommand
         bool IsHealthy
     );
 
+    private static string? GetArgValue(string[] args, string name)
+    {
+        for (var i = 0; i < args.Length - 1; i++)
+            if (args[i].Equals(name, StringComparison.OrdinalIgnoreCase))
+                return args[i + 1];
+        return null;
+    }
+
     internal static int DoctorPlans(string[] args)
     {
-        var showOnlyUnhealthy = args.Contains("--unhealthy");
+        var showAll = args.Contains("--all");
+        var stateFilter = GetArgValue(args, "--state");
+        var worktreesOnly = args.Contains("--worktrees");
 
         var tendrilHome = Environment.GetEnvironmentVariable("TENDRIL_HOME")?.Trim();
         if (string.IsNullOrEmpty(tendrilHome))
@@ -483,9 +493,16 @@ public static class DoctorCommand
         Console.WriteLine();
 
         var allResults = ScanPlans(plansDir);
-        var results = showOnlyUnhealthy
-            ? allResults.Where(r => !r.IsHealthy).ToList()
-            : allResults;
+
+        IEnumerable<PlanHealthResult> results;
+        if (showAll)
+            results = allResults;
+        else if (stateFilter != null)
+            results = allResults.Where(r => r.State.Equals(stateFilter, StringComparison.OrdinalIgnoreCase));
+        else if (worktreesOnly)
+            results = allResults.Where(r => r.Worktrees > 0);
+        else
+            results = allResults.Where(r => !r.IsHealthy || r.State.Equals("Failed", StringComparison.OrdinalIgnoreCase));
 
         PrintPlansTable(results);
         PrintPlansSummary(allResults);
@@ -514,9 +531,13 @@ public static class DoctorCommand
             var worktreeCount = CountWorktrees(dir);
             var hasNestedWorktree = DetectNestedWorktrees(dir);
 
+            var recsError = CheckRecommendationsHealth(dir);
+
             var healthIssues = new List<string>();
             if (!yamlHealthy)
                 healthIssues.Add($"YAML:{yamlError}");
+            if (recsError != null)
+                healthIssues.Add($"Recs:{recsError}");
             if (hasNestedWorktree)
                 healthIssues.Add("NestedWorktree");
 
@@ -539,20 +560,52 @@ public static class DoctorCommand
             if (string.IsNullOrWhiteSpace(content))
                 return (false, "Empty", "Unknown");
 
-            if (!content.Contains("state:") || !content.Contains("project:"))
-                return (false, "Invalid structure", "Unknown");
+            // Try strict deserialization first
+            try
+            {
+                var plan = Services.YamlHelper.Deserializer.Deserialize<Apps.Plans.PlanYaml>(content);
+                if (plan == null)
+                    return (false, "Null after parse", "Unknown");
 
-            var state = "Unknown";
-            var stateMatch = System.Text.RegularExpressions.Regex.Match(content, @"state:\s*(\S+)");
-            if (stateMatch.Success)
-                state = stateMatch.Groups[1].Value;
+                if (string.IsNullOrWhiteSpace(plan.State))
+                    return (false, "Missing state", "Unknown");
 
-            return (true, null, state);
+                if (string.IsNullOrWhiteSpace(plan.Project))
+                    return (false, "Missing project", plan.State);
+
+                if (string.IsNullOrWhiteSpace(plan.Title))
+                    return (false, "Missing title", plan.State);
+
+                if (plan.Repos == null || plan.Repos.Count == 0)
+                    return (false, "No repos", plan.State);
+
+                return (true, null, plan.State);
+            }
+            catch
+            {
+                // Fall back to regex extraction for plans with minor schema issues
+                // (e.g. priority nested under dependsOn)
+                var state = ExtractYamlField(content, "state") ?? "Unknown";
+                var project = ExtractYamlField(content, "project");
+                var title = ExtractYamlField(content, "title");
+
+                if (string.IsNullOrWhiteSpace(project) || string.IsNullOrWhiteSpace(title))
+                    return (false, "Parse error (missing required fields)", state);
+
+                return (false, "Malformed YAML (readable)", state);
+            }
         }
         catch (Exception ex)
         {
-            return (false, $"Parse error: {ex.Message}", "Unknown");
+            return (false, $"Read error: {ex.Message}", "Unknown");
         }
+    }
+
+    private static string? ExtractYamlField(string content, string field)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(content, $@"^{field}:\s*(.+)$",
+            System.Text.RegularExpressions.RegexOptions.Multiline);
+        return match.Success ? match.Groups[1].Value.Trim().Trim('\'', '"') : null;
     }
 
     internal static int CountWorktrees(string planPath)
@@ -562,6 +615,30 @@ public static class DoctorCommand
             return 0;
 
         return Directory.GetDirectories(worktreesPath).Length;
+    }
+
+    internal static string? CheckRecommendationsHealth(string planPath)
+    {
+        var recsPath = Path.Combine(planPath, "artifacts", "recommendations.yaml");
+        if (!File.Exists(recsPath))
+            return null;
+
+        try
+        {
+            var content = File.ReadAllText(recsPath);
+            if (string.IsNullOrWhiteSpace(content))
+                return "Empty";
+
+            var recs = Services.YamlHelper.Deserializer.Deserialize<List<Apps.Plans.RecommendationYaml>>(content);
+            if (recs == null || recs.Count == 0)
+                return "Empty list";
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return $"Parse error: {ex.Message}";
+        }
     }
 
     internal static bool DetectNestedWorktrees(string planPath)

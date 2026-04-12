@@ -177,21 +177,7 @@ function manualChunks(id) {
     return "vendor-react";
   }
 
-  // 3) CodeMirror + Lezer
-  if (
-    pkg.startsWith("@codemirror/") ||
-    pkg.startsWith("@lezer/") ||
-    pkg === "@uiw/react-codemirror"
-  ) {
-    return "vendor-codemirror";
-  }
-
-  // 4) Charts
-  if (pkg === "echarts" || pkg === "echarts-for-react" || pkg === "zrender") {
-    return "vendor-echarts";
-  }
-
-  // 5) Other stable vendor boundaries (loosely coupled to the rest of the app)
+  // 3) Other stable vendor boundaries (loosely coupled to the rest of the app)
   if (pkg === "framer-motion") {
     return "vendor-framer-motion";
   }

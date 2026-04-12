@@ -94,6 +94,14 @@ describe("columnHelpers", () => {
       expect("grow" in result[3] && result[3].grow).toBe(1);
     });
 
+    it("should always expand last column with grow regardless of container measurement", () => {
+      const columnWidths = {};
+      const result = convertToGridColumns(mockColumns, [], columnWidths, false);
+
+      expect("width" in result[3] && result[3].width).toBe(120);
+      expect("grow" in result[3] && result[3].grow).toBe(1);
+    });
+
     it("should include groups when showGroups is true", () => {
       const columnsWithGroups: DataColumn[] = [
         { name: "ID", type: ColType.Number, width: 80, group: "Identity" },

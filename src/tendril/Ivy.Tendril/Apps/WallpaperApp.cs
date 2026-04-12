@@ -13,7 +13,7 @@ public class WallpaperApp : ViewBase
         var countsService = UseService<IPlanCountsService>();
         var versionService = UseService<IVersionCheckService>();
         var dialogOpen = UseState(false);
-        var lastSelectedProjects = UseState<string[]>(["[Auto]"]);
+        var lastSelectedProjects = UseState<string[]>(["Auto"]);
         var versionInfo = UseState<VersionInfo?>(null);
 
         UseEffect(() =>

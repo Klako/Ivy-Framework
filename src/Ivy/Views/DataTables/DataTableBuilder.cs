@@ -330,7 +330,6 @@ public class DataTableBuilder<TModel>(
         if (renderer is LabelsDisplayRenderer labelsRenderer)
         {
             column.Column.Color = labelsRenderer.Color;
-            column.Column.CustomColor = labelsRenderer.CustomColor;
             column.Column.BadgeColorMapping = labelsRenderer.BadgeColorMapping;
         }
 
@@ -342,14 +341,6 @@ public class DataTableBuilder<TModel>(
         var column = GetColumn(field);
         column.Column.ColType = ColType.Labels;
         column.Column.Color = color;
-        return this;
-    }
-
-    public DataTableBuilder<TModel> Badges(Expression<Func<TModel, object>> field, string customColor)
-    {
-        var column = GetColumn(field);
-        column.Column.ColType = ColType.Labels;
-        column.Column.CustomColor = customColor;
         return this;
     }
 

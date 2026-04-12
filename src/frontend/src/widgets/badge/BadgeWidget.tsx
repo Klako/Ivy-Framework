@@ -4,9 +4,20 @@ import Icon from "@/components/Icon";
 import { camelCase } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getColor } from "@/lib/styles";
 import { Densities } from "@/types/density";
 
 const EMPTY_ARRAY: never[] = [];
+
+const BADGE_VARIANT_MAP = {
+  Primary: "primary",
+  Destructive: "destructive",
+  Outline: "outline",
+  Secondary: "secondary",
+  Success: "success",
+  Warning: "warning",
+  Info: "info",
+} as const;
 
 interface BadgeWidgetProps {
   title: string;
@@ -14,7 +25,6 @@ interface BadgeWidgetProps {
   iconPosition?: "Left" | "Right";
   variant?: "Primary" | "Destructive" | "Outline" | "Secondary" | "Success" | "Warning" | "Info";
   color?: string;
-  customColor?: string;
   density?: Densities;
   id: string;
   events?: string[];
@@ -26,7 +36,6 @@ export const BadgeWidget: React.FC<BadgeWidgetProps> = ({
   iconPosition = "Left",
   variant = "Primary",
   color,
-  customColor,
   density = Densities.Medium,
   id,
   events = EMPTY_ARRAY,
@@ -63,50 +72,29 @@ export const BadgeWidget: React.FC<BadgeWidgetProps> = ({
 
   // Map backend variant names to frontend badge variants
   const getBadgeVariant = (variant: string) => {
-    switch (variant) {
-      case "Primary":
-        return "primary";
-      case "Destructive":
-        return "destructive";
-      case "Outline":
-        return "outline";
-      case "Secondary":
-        return "secondary";
-      case "Success":
-        return "success";
-      case "Warning":
-        return "warning";
-      case "Info":
-        return "info";
-      default:
-        return camelCase(variant) as
-          | "primary"
-          | "destructive"
-          | "outline"
-          | "secondary"
-          | "success"
-          | "warning"
-          | "info";
+    if (variant in BADGE_VARIANT_MAP) {
+      return BADGE_VARIANT_MAP[variant as keyof typeof BADGE_VARIANT_MAP];
     }
+    return camelCase(variant) as
+      | "primary"
+      | "destructive"
+      | "outline"
+      | "secondary"
+      | "success"
+      | "warning"
+      | "info";
   };
 
-  const effectiveColor = customColor || color;
-  const colorStyles: React.CSSProperties = effectiveColor
-    ? {
-        backgroundColor: `var(--${effectiveColor.toLowerCase()}-400)`,
-        color: `var(--${effectiveColor.toLowerCase()}-900)`,
-      }
-    : {};
-
-  const darkModeClasses = effectiveColor
-    ? `dark:bg-[var(--${effectiveColor.toLowerCase()}-800)] dark:text-[var(--${effectiveColor.toLowerCase()}-100)]`
-    : "";
+  const colorStyles: React.CSSProperties = {
+    ...getColor(color, "backgroundColor", "background"),
+    ...getColor(color, "color", "foreground"),
+  };
 
   return (
     <Badge
       variant={getBadgeVariant(variant)}
       density={density.toLowerCase() as "small" | "medium" | "large"}
-      style={effectiveColor ? colorStyles : undefined}
+      style={colorStyles}
       className={cn(
         "whitespace-nowrap gap-1",
         hasIcon &&
@@ -118,7 +106,6 @@ export const BadgeWidget: React.FC<BadgeWidgetProps> = ({
           iconPosition === "Right" &&
           (density === Densities.Small ? "pr-1" : density === Densities.Large ? "pr-2" : "pr-1.5"),
         isClickable && "cursor-pointer hover:opacity-80 transition-opacity",
-        darkModeClasses,
       )}
       onClick={isClickable ? handleClick : undefined}
       {...(isClickable

@@ -701,7 +701,8 @@ public class PlanReaderService(
         {
             "state", "project", "level", "title", "sessionId",
             "repos", "created", "updated", "initialPrompt", "sourceUrl",
-            "prs", "commits", "verifications", "relatedPlans", "dependsOn"
+            "prs", "commits", "verifications", "relatedPlans", "dependsOn",
+            "priority"
         };
         var listKeys = new HashSet<string>(StringComparer.Ordinal)
         {

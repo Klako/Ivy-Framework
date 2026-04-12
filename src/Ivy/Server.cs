@@ -593,16 +593,16 @@ public class Server
         {
             options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(
                 CompositeResolver.Create(
-                    new IMessagePackFormatter[] {
+                    [
                         new JsonNodeMessagePackFormatter(),
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
                         new JsonValueMessagePackFormatter()
-                    },
-                    new IFormatterResolver[] {
+                    ],
+                    [
                         JsonNodeResolver.Instance,
                         ContractlessStandardResolver.Instance
-                    }
+                    ]
                 )
             );
         });
@@ -726,6 +726,12 @@ public class Server
             Console.WriteLine($"Using base path: {_args.BasePath}");
             app.UsePathBase(_args.BasePath);
         }
+
+        app.Use(async (context, next) =>
+        {
+            context.Response.Headers["X-Powered-By"] = "Ivy";
+            await next();
+        });
 
         app.UseRouting(); // First routing pass - match explicit routes (gRPC, controllers)
         app.UsePathToAppId(); // Rewrite path to appId if no endpoint matched
@@ -1166,12 +1172,13 @@ public static class WebApplicationExtensions
 
     private static async Task ServeIndexHtml(HttpContext context, WebApplication app, ServerArgs serverArgs, Assembly assembly, string resourceName)
     {
-        var version = assembly.GetName().Version?.ToString();
-        if (!string.IsNullOrEmpty(version))
-        {
-            context.Response.Headers["ivy-version"] = version;
-        }
-
+        //DO NOT ADD AS THIS CAN BE USED TO TARGET IN CASE OF A SECURITY HOLE
+        // var version = assembly.GetName().Version?.ToString();
+        // if (!string.IsNullOrEmpty(version))
+        // {
+        //     context.Response.Headers["ivy-version"] = version;
+        // }
+        
         // Determine HTTP status code based on app routing
         var server = app.Services.GetRequiredService<Server>();
         var httpStatusCode = GetHttpStatusCodeForRequest(server, context);

@@ -127,6 +127,7 @@ export const GridContainer: React.FC<GridContainerProps> = ({
       >
         <DataEditor
           ref={gridRef}
+          width="100%"
           columns={columns}
           rows={rows}
           getCellContent={getCellContent}

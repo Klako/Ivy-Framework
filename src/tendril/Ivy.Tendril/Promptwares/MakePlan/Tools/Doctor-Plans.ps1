@@ -1,3 +1,4 @@
+# Reference implementation for DoctorCommand.DoctorPlans()
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS

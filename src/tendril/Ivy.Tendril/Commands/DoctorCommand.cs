@@ -31,6 +31,10 @@ public static class DoctorCommand
     public static int Handle(string[] args)
     {
         if (args.Length == 0 || args[0] != "doctor") return -1;
+
+        if (args.Length > 1 && args[1] == "plans")
+            return DoctorPlans(args.Skip(2).ToArray());
+
         return RunAsync().GetAwaiter().GetResult();
     }
 
@@ -444,5 +448,181 @@ public static class DoctorCommand
         Console.ForegroundColor = color;
         Console.WriteLine(value);
         Console.ResetColor();
+    }
+
+    // --- doctor plans subcommand ---
+
+    internal record PlanHealthResult(
+        string Id,
+        string Title,
+        string State,
+        int Worktrees,
+        string Health,
+        bool IsHealthy
+    );
+
+    internal static int DoctorPlans(string[] args)
+    {
+        var showOnlyUnhealthy = args.Contains("--unhealthy");
+
+        var tendrilHome = Environment.GetEnvironmentVariable("TENDRIL_HOME")?.Trim();
+        if (string.IsNullOrEmpty(tendrilHome))
+        {
+            Console.Error.WriteLine("TENDRIL_HOME is not set.");
+            return 1;
+        }
+
+        var plansDir = Path.Combine(tendrilHome, "Plans");
+        if (!Directory.Exists(plansDir))
+        {
+            Console.Error.WriteLine($"Plans directory not found: {plansDir}");
+            return 1;
+        }
+
+        Console.WriteLine($"Scanning plans in: {plansDir}");
+        Console.WriteLine();
+
+        var allResults = ScanPlans(plansDir);
+        var results = showOnlyUnhealthy
+            ? allResults.Where(r => !r.IsHealthy).ToList()
+            : allResults;
+
+        PrintPlansTable(results);
+        PrintPlansSummary(allResults);
+
+        return allResults.Any(r => !r.IsHealthy) ? 1 : 0;
+    }
+
+    internal static List<PlanHealthResult> ScanPlans(string plansDir)
+    {
+        var results = new List<PlanHealthResult>();
+
+        var planDirs = Directory.GetDirectories(plansDir)
+            .Where(d => System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(d), @"^\d{5}-"))
+            .OrderBy(d => Path.GetFileName(d))
+            .ToList();
+
+        foreach (var dir in planDirs)
+        {
+            var folderName = Path.GetFileName(dir);
+            var match = System.Text.RegularExpressions.Regex.Match(folderName, @"^(\d{5})-(.+)$");
+            var id = match.Success ? match.Groups[1].Value : folderName;
+            var title = match.Success ? match.Groups[2].Value : "";
+
+            var yamlPath = Path.Combine(dir, "plan.yaml");
+            var (yamlHealthy, yamlError, state) = CheckYamlHealth(yamlPath);
+            var worktreeCount = CountWorktrees(dir);
+            var hasNestedWorktree = DetectNestedWorktrees(dir);
+
+            var healthIssues = new List<string>();
+            if (!yamlHealthy)
+                healthIssues.Add($"YAML:{yamlError}");
+            if (hasNestedWorktree)
+                healthIssues.Add("NestedWorktree");
+
+            var health = healthIssues.Count == 0 ? "OK" : string.Join(",", healthIssues);
+
+            results.Add(new PlanHealthResult(id, title, state, worktreeCount, health, healthIssues.Count == 0));
+        }
+
+        return results;
+    }
+
+    internal static (bool Healthy, string? Error, string State) CheckYamlHealth(string yamlPath)
+    {
+        if (!File.Exists(yamlPath))
+            return (false, "Missing", "Unknown");
+
+        try
+        {
+            var content = File.ReadAllText(yamlPath);
+            if (string.IsNullOrWhiteSpace(content))
+                return (false, "Empty", "Unknown");
+
+            if (!content.Contains("state:") || !content.Contains("project:"))
+                return (false, "Invalid structure", "Unknown");
+
+            var state = "Unknown";
+            var stateMatch = System.Text.RegularExpressions.Regex.Match(content, @"state:\s*(\S+)");
+            if (stateMatch.Success)
+                state = stateMatch.Groups[1].Value;
+
+            return (true, null, state);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Parse error: {ex.Message}", "Unknown");
+        }
+    }
+
+    internal static int CountWorktrees(string planPath)
+    {
+        var worktreesPath = Path.Combine(planPath, "worktrees");
+        if (!Directory.Exists(worktreesPath))
+            return 0;
+
+        return Directory.GetDirectories(worktreesPath).Length;
+    }
+
+    internal static bool DetectNestedWorktrees(string planPath)
+    {
+        var worktreesPath = Path.Combine(planPath, "worktrees");
+        if (!Directory.Exists(worktreesPath))
+            return false;
+
+        foreach (var subDir in Directory.GetDirectories(worktreesPath))
+        {
+            var gitPath = Path.Combine(subDir, ".git");
+            if (File.Exists(gitPath) || Directory.Exists(gitPath))
+                return true;
+        }
+
+        return false;
+    }
+
+    internal static void PrintPlansTable(IEnumerable<PlanHealthResult> results)
+    {
+        const int idWidth = 5;
+        const int planWidth = 33;
+        const int stateWidth = 10;
+        const int wtWidth = 10;
+
+        Console.WriteLine(
+            $"{"Id".PadRight(idWidth)}  {"Plan".PadRight(planWidth)}  {"State".PadRight(stateWidth)}  {"Worktrees".PadRight(wtWidth)}  Health");
+        Console.WriteLine(
+            $"{new string('-', idWidth)}  {new string('-', planWidth)}  {new string('-', stateWidth)}  {new string('-', wtWidth)}  ------");
+
+        foreach (var r in results)
+        {
+            var truncatedTitle = r.Title.Length > planWidth
+                ? r.Title[..(planWidth - 3)] + "..."
+                : r.Title;
+
+            Console.Write($"{r.Id.PadRight(idWidth)}  {truncatedTitle.PadRight(planWidth)}  {r.State.PadRight(stateWidth)}  {r.Worktrees.ToString().PadRight(wtWidth)}  ");
+
+            if (r.IsHealthy)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("OK");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(r.Health);
+            }
+
+            Console.ResetColor();
+        }
+    }
+
+    internal static void PrintPlansSummary(List<PlanHealthResult> allResults)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Summary:");
+        Console.WriteLine($"  Total plans: {allResults.Count}");
+        Console.WriteLine($"  Healthy: {allResults.Count(r => r.IsHealthy)}");
+        Console.WriteLine($"  Unhealthy: {allResults.Count(r => !r.IsHealthy)}");
+        Console.WriteLine($"  With worktrees: {allResults.Count(r => r.Worktrees > 0)}");
+        Console.WriteLine($"  Nested worktrees: {allResults.Count(r => r.Health.Contains("NestedWorktree"))}");
     }
 }

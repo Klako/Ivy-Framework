@@ -27,19 +27,14 @@ import {
   DialogFooterWidget,
 } from "@/widgets/dialogs";
 import { FormWidget } from "@/widgets/forms";
-import {
-  FieldWidget,
-  TextInputWidget,
-  BoolInputWidget,
-  NumberInputWidget,
-  NumberRangeInputWidget,
-  ReadOnlyInputWidget,
-  ColorInputWidget,
-  IconInputWidget,
-  FileInputWidget,
-  SignatureInputWidget,
-  ContentInputWidget,
-} from "@/widgets/inputs";
+import { FieldWidget } from "@/widgets/inputs/FieldWidget";
+import { TextInputWidget } from "@/widgets/inputs/TextInputWidget";
+import { BoolInputWidget } from "@/widgets/inputs/BoolInputWidget";
+import { NumberInputWidget } from "@/widgets/inputs/NumberInputWidget";
+import { NumberRangeInputWidget } from "@/widgets/inputs/NumberRangeInputWidget";
+import { ReadOnlyInputWidget } from "@/widgets/inputs/ReadOnlyInputWidget";
+import { IconInputWidget } from "@/widgets/inputs/IconInputWidget";
+import { FileInputWidget } from "@/widgets/inputs/FileInputWidget";
 import {
   StackLayoutWidget,
   GridLayoutWidget,
@@ -207,7 +202,11 @@ export const widgetMap = {
     })),
   ),
   "Ivy.ReadOnlyInput": ReadOnlyInputWidget,
-  "Ivy.ColorInput": ColorInputWidget,
+  "Ivy.ColorInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/ColorInputWidget").then((m) => ({
+      default: m.ColorInputWidget,
+    })),
+  ),
   "Ivy.IconInput": IconInputWidget,
   "Ivy.FeedbackInput": lazyWithRetry(() =>
     import("@/widgets/inputs/FeedbackInputWidget").then((m) => ({
@@ -225,8 +224,16 @@ export const widgetMap = {
     })),
   ),
   "Ivy.FileInput": FileInputWidget,
-  "Ivy.ContentInput": ContentInputWidget,
-  "Ivy.SignatureInput": SignatureInputWidget,
+  "Ivy.ContentInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/ContentInputWidget").then((m) => ({
+      default: m.ContentInputWidget,
+    })),
+  ),
+  "Ivy.SignatureInput": lazyWithRetry(() =>
+    import("@/widgets/inputs/SignatureInputWidget").then((m) => ({
+      default: m.SignatureInputWidget,
+    })),
+  ),
 
   "Ivy.CodeInput": lazyWithRetry(() => import("@/widgets/inputs/code/CodeInputWidget")),
   "Ivy.AudioInput": lazyWithRetry(() => import("@/widgets/inputs/AudioInputWidget")),

@@ -64,7 +64,7 @@ public class GithubService(IConfigService config) : IGithubService
         return (labels, error);
     }
 
-    public async Task<Dictionary<string, string>> GetPrStatusesAsync(string owner, string repo)
+    public async Task<(Dictionary<string, string> statuses, string? error)> GetPrStatusesAsync(string owner, string repo)
     {
         return await FetchPrStatusesFromGhCliAsync(owner, repo);
     }
@@ -231,7 +231,7 @@ public class GithubService(IConfigService config) : IGithubService
         }
     }
 
-    private static async Task<Dictionary<string, string>> FetchPrStatusesFromGhCliAsync(string owner, string repo)
+    private static async Task<(Dictionary<string, string> statuses, string? error)> FetchPrStatusesFromGhCliAsync(string owner, string repo)
     {
         try
         {
@@ -247,7 +247,9 @@ public class GithubService(IConfigService config) : IGithubService
             };
 
             using var process = Process.Start(psi);
-            if (process is null) return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (process is null)
+                return (new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                        "GitHub CLI (gh) is not available. Please install it from https://cli.github.com/");
 
             var output = await process.StandardOutput.ReadToEndAsync();
             var stderr = await process.StandardError.ReadToEndAsync();
@@ -255,9 +257,11 @@ public class GithubService(IConfigService config) : IGithubService
 
             if (process.ExitCode != 0)
             {
-                Console.Error.WriteLine(
-                    $"[GithubService] gh pr list failed for {owner}/{repo}: {stderr}");
-                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                Console.Error.WriteLine($"[GithubService] gh pr list failed for {owner}/{repo}: {stderr}");
+                var errorMsg = !string.IsNullOrWhiteSpace(stderr)
+                    ? stderr.Trim()
+                    : $"GitHub CLI exited with code {process.ExitCode}";
+                return (new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase), errorMsg);
             }
 
             var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -279,13 +283,13 @@ public class GithubService(IConfigService config) : IGithubService
                 }
             }
 
-            return result;
+            return (result, null);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(
-                $"[GithubService] Failed to fetch PR statuses for {owner}/{repo}: {ex.Message}");
-            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Console.Error.WriteLine($"[GithubService] Failed to fetch PR statuses for {owner}/{repo}: {ex.Message}");
+            return (new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                    $"Failed to fetch PR statuses: {ex.Message}");
         }
     }
 

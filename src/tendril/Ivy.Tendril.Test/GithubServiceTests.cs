@@ -166,6 +166,19 @@ public class GithubServiceTests
     }
 
     [Fact]
+    public async Task GetPrStatusesAsync_Returns_Error_When_Command_Fails()
+    {
+        var configService = new ConfigService(new TendrilSettings());
+        var githubService = new GithubService(configService);
+
+        var (statuses, error) = await githubService.GetPrStatusesAsync(
+            "nonexistent-owner-xyz-000", "nonexistent-repo-xyz-000");
+
+        Assert.Empty(statuses);
+        Assert.NotNull(error);
+    }
+
+    [Fact]
     public async Task GetLabelsAsync_Returns_Error_When_Command_Fails()
     {
         var configService = new ConfigService(new TendrilSettings());

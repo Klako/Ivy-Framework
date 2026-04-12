@@ -5,6 +5,20 @@ import "./claude-json-renderer.css";
 import type { EventHandler, ClaudeEvent, ContentBlock, AssistantEvent, UserEvent, ResultEvent } from "./types";
 import { getWidth, getHeight } from "./styles";
 
+function contentToString(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((c: Record<string, unknown>) => c.text ?? c.content ?? JSON.stringify(c))
+      .join("\n");
+  }
+  if (content && typeof content === "object") {
+    const obj = content as Record<string, unknown>;
+    return (obj.text ?? obj.stdout ?? obj.content ?? JSON.stringify(content)) as string;
+  }
+  return String(content ?? "");
+}
+
 type StreamSubscriber = (streamId: string, onData: (data: unknown) => void) => () => void;
 
 interface ClaudeJsonRendererProps {
@@ -69,8 +83,9 @@ function ToolUseCard({ name, input }: { name: string; input: Record<string, unkn
   );
 }
 
-function ToolResultCard({ toolName, content }: { toolName?: string; content: string }) {
+function ToolResultCard({ toolName, content: rawContent }: { toolName?: string; content: unknown }) {
   const [open, setOpen] = useState(false);
+  const content = contentToString(rawContent);
   const preview = content.length > 120 ? content.slice(0, 120) + "..." : content;
 
   return (
@@ -126,7 +141,8 @@ function AssistantMessage({
   showThinking: boolean;
   toolNames: Map<string, string>;
 }) {
-  const content = event.message.content;
+  const content = event.message?.content;
+  if (!Array.isArray(content)) return null;
 
   return (
     <div className="my-3">
@@ -165,15 +181,16 @@ function UserMessage({
   event: UserEvent;
   toolNames: Map<string, string>;
 }) {
-  const resultContent = event.tool_use_result?.content;
-  const toolUseId = event.tool_use_result?.tool_use_id;
+  const toolResult = event.tool_use_result as Record<string, unknown> | undefined;
+  const resultContent = toolResult?.content ?? toolResult?.stdout;
+  const toolUseId = toolResult?.tool_use_id as string | undefined;
   const toolName = toolUseId ? toolNames.get(toolUseId) : undefined;
 
   if (resultContent) {
     return <ToolResultCard toolName={toolName} content={resultContent} />;
   }
 
-  const toolResults = event.message.content.filter(
+  const toolResults = (event.message?.content ?? []).filter(
     (b: ContentBlock) => b.type === "tool_result" && b.content
   );
   if (toolResults.length > 0) {
@@ -183,7 +200,7 @@ function UserMessage({
           <ToolResultCard
             key={i}
             toolName={block.tool_use_id ? toolNames.get(block.tool_use_id) : undefined}
-            content={block.content!}
+            content={block.content}
           />
         ))}
       </>

@@ -25,10 +25,10 @@ public class SoftwareCheckStepView(
                                     checkResults.Value["gemini"]);
 
         var ghHealthy = healthResults.Value?.GetValueOrDefault("gh") == HealthCheckStatus.Authenticated;
-        var anyAgentHealthy = (healthResults.Value != null
-                               && (healthResults.Value.GetValueOrDefault("claude") == HealthCheckStatus.Authenticated
-                                   || healthResults.Value.GetValueOrDefault("codex") == HealthCheckStatus.Authenticated))
-                              || (checkResults.Value != null && checkResults.Value.GetValueOrDefault("gemini"));
+        var anyAgentHealthy = healthResults.Value != null
+                              && (healthResults.Value.GetValueOrDefault("claude") == HealthCheckStatus.Authenticated
+                                  || healthResults.Value.GetValueOrDefault("codex") == HealthCheckStatus.Authenticated
+                                  || healthResults.Value.GetValueOrDefault("gemini") == HealthCheckStatus.Authenticated);
 
         var allRequiredPassed = checkResults.Value != null
                                 && checkResults.Value["gh"] && ghHealthy
@@ -133,11 +133,15 @@ public class SoftwareCheckStepView(
             // verify --max-turns is still a recognized flag (`claude --help | grep max-turns`).
             var claudeHealthTask = results["claude"] ? CheckHealth("claude", "-p \"ping\" --max-turns 1") : null;
             var codexHealthTask = results["codex"] ? CheckHealth("codex", "login status") : null;
+            // Gemini CLI has no non-interactive auth check command. Running `gemini -p` opens a browser
+            // when unauthenticated (see plan 03037). Instead, check for ~/.gemini/oauth_creds.json.
+            var geminiHealthTask = results["gemini"] ? CheckGeminiAuth() : null;
 
             var pendingTasks = new List<(string key, Task<HealthCheckStatus> task)>();
             if (ghHealthTask != null) pendingTasks.Add(("gh", ghHealthTask));
             if (claudeHealthTask != null) pendingTasks.Add(("claude", claudeHealthTask));
             if (codexHealthTask != null) pendingTasks.Add(("codex", codexHealthTask));
+            if (geminiHealthTask != null) pendingTasks.Add(("gemini", geminiHealthTask));
 
             var health = new Dictionary<string, HealthCheckStatus?>();
 
@@ -230,6 +234,32 @@ public class SoftwareCheckStepView(
         {
             return HealthCheckStatus.CheckFailed;
         }
+    }
+
+    private static Task<HealthCheckStatus> CheckGeminiAuth()
+    {
+        return Task.Run(() =>
+        {
+            try
+            {
+                var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var oauthCredsPath = Path.Combine(homeDir, ".gemini", "oauth_creds.json");
+
+                if (File.Exists(oauthCredsPath))
+                {
+                    var fileInfo = new FileInfo(oauthCredsPath);
+                    return fileInfo.Length > 0
+                        ? HealthCheckStatus.Authenticated
+                        : HealthCheckStatus.NotAuthenticated;
+                }
+
+                return HealthCheckStatus.NotAuthenticated;
+            }
+            catch
+            {
+                return HealthCheckStatus.CheckFailed;
+            }
+        });
     }
 
     private static async Task<bool> CheckProcess(string fileName, string arguments, int timeoutMs)

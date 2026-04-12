@@ -38,6 +38,7 @@ public class ContentView(
         var suggestChangesOpen = UseState(false);
         var suggestChangesText = UseState("");
         var customPrOpen = UseState(false);
+        var rerunDialogOpen = UseState(false);
 
         var githubService = UseService<IGithubService>();
         var assigneesQuery = UseQuery<string[], string>(
@@ -463,14 +464,14 @@ public class ContentView(
         // Discard confirmation dialog
         content |= new DiscardPlanDialog(discardDialogOpen, _selectedPlan, _planService, _refreshPlans);
 
+        // Rerun dialog
+        content |= new RerunDialog(rerunDialogOpen, _selectedPlan, _jobService, _planService, _refreshPlans);
+
         // Action bar
         var actionBar = Layout.Horizontal().AlignContent(Align.Center).Gap(2).Padding(1)
                         | new Button("Rerun").Icon(Icons.RotateCw).Outline().ShortcutKey("r").OnClick(() =>
                         {
-                            _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Building);
-                            _jobService.StartJob("ExecutePlan", _selectedPlan.FolderPath, "-Note",
-                                "User requested you to execute this plan another time. Go through all code, verifications and artifacts one more time.");
-                            _refreshPlans();
+                            rerunDialogOpen.Set(true);
                         })
                         | new Button("Suggest Changes").Icon(Icons.MessageSquare).Outline().OnClick(() =>
                         {

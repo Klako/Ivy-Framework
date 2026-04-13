@@ -63,27 +63,29 @@ public class TendrilAuthProviderTests
     }
 
     [Fact]
-    public async Task LoginAsync_CorrectPassword_ReturnsToken()
+    public async Task LoginAsync_CorrectPassword_ReturnsSuccess()
     {
         var auth = CreateAuthConfig("login-test");
         var provider = CreateProvider(auth);
 
-        var token = await provider.LoginAsync(null!, "anyone", "login-test", CancellationToken.None);
+        var result = await provider.LoginAsync(null!, "anyone", "login-test", CancellationToken.None);
 
-        Assert.NotNull(token);
-        Assert.False(string.IsNullOrEmpty(token.AccessToken));
-        Assert.False(string.IsNullOrEmpty(token.RefreshToken));
+        Assert.Equal(LoginStatus.Success, result.Status);
+        Assert.NotNull(result.Token);
+        Assert.False(string.IsNullOrEmpty(result.Token.AccessToken));
+        Assert.False(string.IsNullOrEmpty(result.Token.RefreshToken));
     }
 
     [Fact]
-    public async Task LoginAsync_IncorrectPassword_ReturnsNull()
+    public async Task LoginAsync_IncorrectPassword_ReturnsInvalidCredentials()
     {
         var auth = CreateAuthConfig("login-test");
         var provider = CreateProvider(auth);
 
-        var token = await provider.LoginAsync(null!, "anyone", "bad-password", CancellationToken.None);
+        var result = await provider.LoginAsync(null!, "anyone", "bad-password", CancellationToken.None);
 
-        Assert.Null(token);
+        Assert.Equal(LoginStatus.InvalidCredentials, result.Status);
+        Assert.Null(result.Token);
     }
 
     [Fact]
@@ -118,7 +120,7 @@ public class TendrilAuthProviderTests
     }
 
     [Fact]
-    public async Task LoginAsync_RateLimited_ReturnsNull()
+    public async Task LoginAsync_RateLimited_ReturnsRateLimitedWithRetryAfter()
     {
         var rateLimit = new LoginRateLimitConfig { Threshold = 1, BaseDelaySeconds = 100.0 };
         var auth = CreateAuthConfig("test-pass", rateLimit);
@@ -129,8 +131,11 @@ public class TendrilAuthProviderTests
         await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
 
         // Even correct password should be blocked
-        var token = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
-        Assert.Null(token);
+        var result = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
+        Assert.Equal(LoginStatus.RateLimited, result.Status);
+        Assert.Null(result.Token);
+        Assert.NotNull(result.RetryAfter);
+        Assert.True(result.RetryAfter.Value.TotalSeconds > 0);
     }
 
     [Fact]
@@ -142,17 +147,17 @@ public class TendrilAuthProviderTests
 
         // First 2 attempts are under threshold
         var t1 = await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
-        Assert.Null(t1);
+        Assert.Equal(LoginStatus.InvalidCredentials, t1.Status);
         var t2 = await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
-        Assert.Null(t2);
+        Assert.Equal(LoginStatus.InvalidCredentials, t2.Status);
 
         // 3rd attempt exceeds threshold — rate limited
         var t3 = await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
-        Assert.Null(t3);
+        Assert.Equal(LoginStatus.RateLimited, t3.Status);
 
         // Correct password is also blocked
         var t4 = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
-        Assert.Null(t4);
+        Assert.Equal(LoginStatus.RateLimited, t4.Status);
     }
 
     [Fact]
@@ -167,12 +172,14 @@ public class TendrilAuthProviderTests
         await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
 
         // Successful login resets counter
-        var token = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
-        Assert.NotNull(token);
+        var result = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
+        Assert.Equal(LoginStatus.Success, result.Status);
+        Assert.NotNull(result.Token);
 
         // Subsequent login should work (counter was reset)
-        var token2 = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
-        Assert.NotNull(token2);
+        var result2 = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
+        Assert.Equal(LoginStatus.Success, result2.Status);
+        Assert.NotNull(result2.Token);
     }
 
     [Fact]
@@ -185,7 +192,8 @@ public class TendrilAuthProviderTests
         // 1 failure is under threshold
         await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
         var t1 = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
-        Assert.NotNull(t1);
+        Assert.Equal(LoginStatus.Success, t1.Status);
+        Assert.NotNull(t1.Token);
 
         // After success, counter is reset. Fail again to trigger rate limit.
         await provider.LoginAsync(null!, "anyone", "wrong", CancellationToken.None);
@@ -193,6 +201,7 @@ public class TendrilAuthProviderTests
 
         // Now blocked
         var t2 = await provider.LoginAsync(null!, "anyone", "test-pass", CancellationToken.None);
-        Assert.Null(t2);
+        Assert.Equal(LoginStatus.RateLimited, t2.Status);
+        Assert.Null(t2.Token);
     }
 }

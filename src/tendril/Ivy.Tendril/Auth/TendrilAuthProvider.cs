@@ -35,24 +35,27 @@ public class TendrilAuthProvider : BasicAuthTokenHandler, IAuthProvider
         _rateLimiter = new LoginRateLimiter(auth.RateLimit ?? new LoginRateLimitConfig());
     }
 
-    public Task<AuthToken?> LoginAsync(IAuthSession authSession, string user, string password, CancellationToken cancellationToken)
+    public Task<LoginResult> LoginAsync(IAuthSession authSession, string user, string password, CancellationToken cancellationToken)
     {
         var ipAddress = _httpContextAccessor?.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "global";
 
         if (!_rateLimiter.IsLoginAllowed(ipAddress))
-            return Task.FromResult<AuthToken?>(null);
+        {
+            var retryAfter = _rateLimiter.GetRequiredDelay(ipAddress);
+            return Task.FromResult(LoginResult.RateLimited(retryAfter));
+        }
 
         if (!PasswordMatches(password))
         {
             _rateLimiter.RecordFailedAttempt(ipAddress);
-            return Task.FromResult<AuthToken?>(null);
+            return Task.FromResult(LoginResult.InvalidCredentials());
         }
 
         _rateLimiter.RecordSuccessfulLogin(ipAddress);
 
         var now = DateTimeOffset.UtcNow;
         var authToken = CreateToken("tendril", now, now.ToUnixTimeSeconds());
-        return Task.FromResult<AuthToken?>(authToken);
+        return Task.FromResult(LoginResult.Success(authToken));
     }
 
     public Task LogoutAsync(IAuthSession authSession, CancellationToken cancellationToken)

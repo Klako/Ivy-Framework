@@ -74,10 +74,6 @@ public static class ResponsiveExtensions
     // bool overloads (for visibility)
     public static Responsive<bool?> At(this bool value, Breakpoint bp) => AtCore(value, bp);
     public static Responsive<bool?> And(this Responsive<bool?> r, Breakpoint bp, bool value) => AndCore(r, bp, value);
-
-    // Thickness overloads (for padding)
-    public static Responsive<Thickness?> At(this Thickness value, Breakpoint bp) => AtCore(value, bp);
-    public static Responsive<Thickness?> And(this Responsive<Thickness?> r, Breakpoint bp, Thickness value) => AndCore(r, bp, value);
 }
 
 public class ResponsiveJsonConverterFactory : JsonConverterFactory

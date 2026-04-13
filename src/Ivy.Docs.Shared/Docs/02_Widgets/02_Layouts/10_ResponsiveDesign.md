@@ -120,72 +120,92 @@ Layout.Vertical()
         | new Card("Three"))
 ```
 
-## Common Patterns
+## Examples
 
-### Collapsing Sidebar
-
-Hide the sidebar on mobile and show it on larger screens. The main content grows to fill available space.
-
-```csharp demo-tabs
-Layout.Horizontal()
-    | new Box(Text.P("Sidebar"))
-        .Width(Size.Units(60))
-        .HideOn(Breakpoint.Mobile)
-        .Background(Colors.Muted)
-    | new Box(Text.P("Main Content"))
-        .Width(Size.Grow())
-        .Background(Colors.Primary)
-```
-
-### Mobile-First Card Grid
-
-A progressive grid that goes from 1 column on mobile up to 4 columns on wide screens:
+<Details>
+<Summary>
+Collapsing Sidebar
+</Summary>
+<Body>
+Hide the sidebar on mobile and let the main content grow to fill the row on larger screens.
 
 ```csharp demo-tabs
-Layout.Grid()
-    .Columns(1.At(Breakpoint.Mobile)
-        .And(Breakpoint.Tablet, 2)
-        .And(Breakpoint.Desktop, 3)
-        .And(Breakpoint.Wide, 4))
-    | new Card("Card 1")
-    | new Card("Card 2")
-    | new Card("Card 3")
-    | new Card("Card 4")
+public class CollapsingSidebarExample : ViewBase
+{
+    public override object? Build()
+    {
+        return Layout.Horizontal()
+            | new Box(Text.P("Sidebar"))
+                .Width(Size.Units(60))
+                .HideOn(Breakpoint.Mobile)
+                .Background(Colors.Muted)
+            | new Box(Text.P("Main Content"))
+                .Width(Size.Grow())
+                .Background(Colors.Primary);
+    }
+}
 ```
 
-### Responsive Dashboard
+</Body>
+</Details>
 
-Combine responsive grid, visibility, and orientation to build a dashboard that adapts across device sizes:
+<Details>
+<Summary>
+Responsive Dashboard
+</Summary>
+<Body>
+Combine a responsive grid, conditional visibility, and stack orientation for a layout that works across device sizes.
 
 ```csharp demo-tabs
-Layout.Vertical()
-    | new Badge("Dashboard").HideOn(Breakpoint.Mobile)
-    | (Layout.Grid()
-        .Columns(1.At(Breakpoint.Mobile)
-            .And(Breakpoint.Desktop, 3))
-        | new Card("Revenue")
-        | new Card("Users")
-        | new Card("Orders"))
-    | (Layout.Horizontal()
-        .Orientation(Orientation.Vertical.At(Breakpoint.Mobile)
-            .And(Breakpoint.Desktop, Orientation.Horizontal))
-        | new Box(Text.P("Chart Area")).Width(Size.Grow()).Background(Colors.Muted)
-        | new Box(Text.P("Activity Feed")).Width(Size.Units(60).At(Breakpoint.Desktop)).HideOn(Breakpoint.Mobile).Background(Colors.Muted))
+public class ResponsiveDashboardExample : ViewBase
+{
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            | new Badge("Dashboard").HideOn(Breakpoint.Mobile)
+            | (Layout.Grid()
+                .Columns(1.At(Breakpoint.Mobile)
+                    .And(Breakpoint.Desktop, 3))
+                | new Card("Revenue")
+                | new Card("Users")
+                | new Card("Orders"))
+            | (Layout.Horizontal()
+                .Orientation(Orientation.Vertical.At(Breakpoint.Mobile)
+                    .And(Breakpoint.Desktop, Orientation.Horizontal))
+                | new Box(Text.P("Chart Area")).Width(Size.Grow()).Background(Colors.Muted)
+                | new Box(Text.P("Activity Feed")).Width(Size.Units(60).At(Breakpoint.Desktop)).HideOn(Breakpoint.Mobile).Background(Colors.Muted));
+    }
+}
 ```
 
-### Mobile-First Form
+</Body>
+</Details>
 
-Constrain form width on larger screens and adjust spacing:
+<Details>
+<Summary>
+Mobile-First Form
+</Summary>
+<Body>
+Keep the form full width on phones and cap width plus gap on larger breakpoints.
 
 ```csharp demo-tabs
-Layout.Vertical()
-    .Width(Size.Full().At(Breakpoint.Mobile)
-        .And(Breakpoint.Desktop, Size.Fraction(0.5f)))
-    .Gap(4.At(Breakpoint.Mobile).And(Breakpoint.Desktop, 6))
-    | new Box(Text.P("Form field 1")).Background(Colors.Muted)
-    | new Box(Text.P("Form field 2")).Background(Colors.Muted)
-    | new Button("Submit")
+public class MobileFirstFormExample : ViewBase
+{
+    public override object? Build()
+    {
+        return Layout.Vertical()
+            .Width(Size.Full().At(Breakpoint.Mobile)
+                .And(Breakpoint.Desktop, Size.Fraction(0.5f)))
+            .Gap(4.At(Breakpoint.Mobile).And(Breakpoint.Desktop, 6))
+            | new Box(Text.P("Form field 1")).Background(Colors.Muted)
+            | new Box(Text.P("Form field 2")).Background(Colors.Muted)
+            | new Button("Submit");
+    }
+}
 ```
+
+</Body>
+</Details>
 
 ## API Reference
 

@@ -320,4 +320,44 @@ public class InputPrefixSuffixSlotTests
         Assert.NotNull(slot);
         Assert.Equal("USD", slot!.Children[0]);
     }
+
+    [Fact]
+    public void SelectInput_Prefix_AddsPrefixSlot()
+    {
+        var state = new MockState<string>("a");
+        var input = state.ToSelectInput().Prefix("$");
+        var slot = FindSlot(input, "Prefix");
+        Assert.NotNull(slot);
+        Assert.Equal("$", slot!.Children[0]);
+    }
+
+    [Fact]
+    public void SelectInput_Suffix_AddsSuffixSlot()
+    {
+        var state = new MockState<string>("a");
+        var input = state.ToSelectInput().Suffix(".00");
+        var slot = FindSlot(input, "Suffix");
+        Assert.NotNull(slot);
+        Assert.Equal(".00", slot!.Children[0]);
+    }
+
+    [Fact]
+    public void SelectInput_PrefixAndSuffix_Coexist()
+    {
+        var state = new MockState<string>("a");
+        var input = state.ToSelectInput().Prefix("$").Suffix("USD");
+        Assert.NotNull(FindSlot(input, "Prefix"));
+        Assert.NotNull(FindSlot(input, "Suffix"));
+    }
+
+    [Fact]
+    public void SelectInput_Prefix_AcceptsWidgetContent()
+    {
+        var state = new MockState<string>("a");
+        var button = new Button("Click");
+        var input = state.ToSelectInput().Prefix(button);
+        var slot = FindSlot(input, "Prefix");
+        Assert.NotNull(slot);
+        Assert.Same(button, slot!.Children[0]);
+    }
 }

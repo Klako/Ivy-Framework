@@ -29,7 +29,7 @@ public class PullRequestApp : ViewBase
             var cost = costValue > 0 ? $"${costValue:F2}" : "";
             var tokenValue = planService.GetPlanTotalTokens(plan.FolderPath);
             var tokens = tokenValue > 0 ? FormatHelper.FormatTokens(tokenValue) : "";
-            return plan.Prs.Where(IsValidUrl).Select((pr, i) => new PrRow
+            return plan.Prs.Where(IsValidUrl).Reverse().Select((pr, i) => new PrRow
             {
                 Id = $"{plan.Id}-{i}",
                 PlanId = $"{plan.Id:D5}",

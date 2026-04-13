@@ -142,7 +142,7 @@ Summary of all responsive-capable properties:
 Collapsing Sidebar
 </Summary>
 <Body>
-Hide the sidebar on mobile and let the main content grow to fill the row on larger screens.
+Hide the sidebar on phones only. Prefer `.ShowOn(Breakpoint.Tablet)` here: `.HideOn(Breakpoint.Mobile)` sets visibility false at `Mobile`, and that value **cascades** to tablet unless you override it—so the sidebar would stay hidden on tablet too.
 
 ```csharp demo-tabs
 public class CollapsingSidebarExample : ViewBase
@@ -150,9 +150,10 @@ public class CollapsingSidebarExample : ViewBase
     public override object? Build()
     {
         return Layout.Horizontal()
+            .Height(Size.Units(36))
             | new Box(Text.P("Sidebar"))
                 .Width(Size.Units(60))
-                .HideOn(Breakpoint.Mobile)
+                .ShowOn(Breakpoint.Tablet)
                 .Background(Colors.Muted)
             | new Box(Text.P("Main Content"))
                 .Width(Size.Grow())
@@ -201,20 +202,23 @@ public class ResponsiveDashboardExample : ViewBase
 Mobile-First Form
 </Summary>
 <Body>
-Keep the form full width on phones and cap width plus gap on larger breakpoints.
+Keep the form full width on phones and cap width plus gap on larger breakpoints. Use [`.ToForm()`](../../01_Onboarding/02_Concepts/08_Forms.md) on state so fields and validation match a real model.
 
 ```csharp demo-tabs
 public class MobileFirstFormExample : ViewBase
 {
+    public record ContactModel(string Name, string Email);
+
     public override object? Build()
     {
+        var contact = UseState(() => new ContactModel("", ""));
+
         return Layout.Vertical()
             .Width(Size.Full().At(Breakpoint.Mobile)
                 .And(Breakpoint.Desktop, Size.Fraction(0.5f)))
             .Gap(4.At(Breakpoint.Mobile).And(Breakpoint.Desktop, 6))
-            | new Box(Text.P("Form field 1")).Background(Colors.Muted)
-            | new Box(Text.P("Form field 2")).Background(Colors.Muted)
-            | new Button("Submit");
+            | contact.ToForm()
+                .Required(m => m.Name, m => m.Email);
     }
 }
 ```

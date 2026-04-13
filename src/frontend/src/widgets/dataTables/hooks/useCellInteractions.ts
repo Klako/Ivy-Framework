@@ -8,6 +8,7 @@ import * as arrow from "apache-arrow";
 
 interface UseCellInteractionsProps {
   widgetId: string;
+  events: string[];
   columns: DataColumn[];
   visibleRows: number;
   enableCellClickEvents: boolean | undefined;
@@ -20,6 +21,7 @@ interface UseCellInteractionsProps {
  */
 export const useCellInteractions = ({
   widgetId,
+  events,
   columns,
   visibleRows,
   enableCellClickEvents,
@@ -67,7 +69,7 @@ export const useCellInteractions = ({
         const cellValue = getCellValue(cellContent);
         const rowId = getHiddenKeyValue(arrowTableRef.current, cell[1]);
 
-        eventHandler("OnCellClick", widgetId, [
+        if (events.includes("OnCellClick")) eventHandler("OnCellClick", widgetId, [
           {
             rowIndex: cell[1],
             columnIndex: cell[0],
@@ -110,6 +112,7 @@ export const useCellInteractions = ({
     },
     [
       enableCellClickEvents,
+      events,
       eventHandler,
       widgetId,
       columns,
@@ -149,7 +152,7 @@ export const useCellInteractions = ({
         const rowId = getHiddenKeyValue(arrowTableRef.current, cell[1]);
 
         // Send activation event to backend as a single object matching CellClickEventArgs structure
-        eventHandler("OnCellActivated", widgetId, [
+        if (events.includes("OnCellActivated")) eventHandler("OnCellActivated", widgetId, [
           {
             rowIndex: cell[1],
             columnIndex: cell[0],
@@ -162,6 +165,7 @@ export const useCellInteractions = ({
     },
     [
       enableCellClickEvents,
+      events,
       eventHandler,
       widgetId,
       columns,

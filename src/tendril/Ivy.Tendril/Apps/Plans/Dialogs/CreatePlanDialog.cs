@@ -9,20 +9,22 @@ public class CreatePlanDialog(
     string[]? defaultProjects = null) : ViewBase
 {
     private readonly string[] _defaultProjects = defaultProjects ?? ["Auto"];
-    private readonly Action _onClose = onClose;
-    private readonly Action<string, string[], int> _onCreatePlan = onCreatePlan;
-    private readonly List<string> _projectNames = projectNames;
 
-    internal static readonly List<string> PriorityOptions = ["Normal (0)", "High (1)", "Urgent (2)"];
+    internal static readonly List<string> PriorityOptions = ["Normal", "High", "Urgent"];
 
-    internal static int ParsePriority(string option) =>
-        int.TryParse(option.AsSpan(option.LastIndexOf('(') + 1, 1), out var v) ? v : 0;
+    internal static int ParsePriority(string option) => option.ToLowerInvariant() switch
+    {
+        "normal" => 0,
+        "high" => 1,
+        "urgent" => 2,
+        _ => 0
+    };
 
     public override object Build()
     {
         var createPlanText = UseState("");
         var selectedProjects = UseState(_defaultProjects);
-        var selectedPriority = UseState("Normal (0)");
+        var selectedPriority = UseState("Normal");
 
         var exclusiveProjects = new ConvertedState<string[], string[]>(
             selectedProjects,
@@ -39,27 +41,27 @@ public class CreatePlanDialog(
         );
 
         var options = new List<string> { "Auto" };
-        options.AddRange(_projectNames);
+        options.AddRange(projectNames);
 
         return new Dialog(
-            _ => _onClose(),
+            _ => onClose(),
             new DialogHeader("Create New Plan"),
             new DialogBody(
                 Layout.Vertical()
-                | exclusiveProjects.ToSelectInput(options).Variant(SelectInputVariant.Toggle).WithLabel("Select project(s)")
-                | selectedPriority.ToSelectInput(PriorityOptions).Variant(SelectInputVariant.Toggle).WithLabel("Priority")
+                | exclusiveProjects.ToSelectInput(options).Variant(SelectInputVariant.Toggle).WithField().Label("Select project(s)")
+                | selectedPriority.ToSelectInput(PriorityOptions).Variant(SelectInputVariant.Toggle).WithField().Label("Priority")
                 | createPlanText.ToTextareaInput("Enter task description...").Rows(6).AutoFocus().WithField()
                     .Label("Describe the task for the new plan")
             ),
             new DialogFooter(
-                new Button("Cancel").Outline().OnClick(() => _onClose()),
+                new Button("Cancel").Outline().OnClick(onClose),
                 new Button("Create").Primary().ShortcutKey("Ctrl+Enter").OnClick(() =>
                 {
                     if (!string.IsNullOrWhiteSpace(createPlanText.Value))
                     {
                         var projects = selectedProjects.Value.Any() ? selectedProjects.Value : ["Auto"];
-                        _onCreatePlan(createPlanText.Value, projects, ParsePriority(selectedPriority.Value));
-                        _onClose();
+                        onCreatePlan(createPlanText.Value, projects, ParsePriority(selectedPriority.Value));
+                        onClose();
                     }
                 })
             )

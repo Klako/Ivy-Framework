@@ -84,6 +84,8 @@ priority: 0
 | `dependsOn`    | Plan folder names this plan depends on (e.g. `- 01478-WorktreeIsolation`). ExecutePlan will block until all dependencies are `Completed` and their PRs are merged. |
 | `priority`     | Integer priority (0 = normal). Higher values are executed first. Set by MakePlan launcher, not by agents. |
 
+**Do NOT add fields beyond those listed above.** Unknown fields (e.g. `tags`, `category`) will be stripped by the normalizer and may cause parse errors.
+
 ## State Lifecycle
 
 ```

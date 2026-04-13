@@ -2,6 +2,7 @@ using Ivy.Core;
 using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Apps.Review.Dialogs;
 using Ivy.Tendril.Services;
+using Ivy.Widgets.DiffView;
 using Microsoft.Extensions.Logging;
 
 namespace Ivy.Tendril.Apps.Review;
@@ -123,6 +124,19 @@ public class ContentView(
                         }
                     }
                     return null;
+                }, ct);
+            },
+            initialValue: null
+        );
+
+        var allChangesQuery = UseQuery<PlanContentHelpers.AllChangesData?, string>(
+            _selectedPlan?.FolderPath ?? "",
+            async (folderPath, ct) =>
+            {
+                return await Task.Run(() =>
+                {
+                    if (_selectedPlan is null) return null;
+                    return PlanContentHelpers.GetAllChangesData(_selectedPlan, _config, _gitService);
                 }, ct);
             },
             initialValue: null
@@ -345,6 +359,54 @@ public class ContentView(
 
             commitsLayout |= commitsTable;
 
+            // Changes tab content
+            object changesTabContent;
+            var changesData = allChangesQuery.Value;
+            var changesFileCount = 0;
+            if (allChangesQuery.Loading)
+            {
+                changesTabContent = Text.Muted("Loading...");
+            }
+            else if (changesData is null)
+            {
+                changesTabContent = Text.Muted("No commits yet.");
+            }
+            else
+            {
+                changesFileCount = changesData.Files.Count;
+                var changesLayout = Layout.Vertical().Gap(4).Padding(2);
+
+                var statsText =
+                    $"{changesData.Files.Count} files changed ({changesData.AddedCount} added, {changesData.ModifiedCount} modified, {changesData.DeletedCount} deleted)";
+                changesLayout |= Text.Block(statsText).Bold();
+
+                if (changesData.Files.Count > 0)
+                {
+                    var filesLayout = Layout.Vertical().Gap(1);
+                    foreach (var (status, filePath) in changesData.Files)
+                    {
+                        var (label, variant) = status switch
+                        {
+                            "A" => ("Added", BadgeVariant.Success),
+                            "D" => ("Deleted", BadgeVariant.Destructive),
+                            _ => ("Modified", BadgeVariant.Outline)
+                        };
+                        filesLayout |= Layout.Horizontal().Gap(2)
+                            | new Badge(label).Variant(variant).Small()
+                            | Text.Block(filePath);
+                    }
+
+                    changesLayout |= filesLayout;
+                }
+
+                if (!string.IsNullOrWhiteSpace(changesData.Diff))
+                {
+                    changesLayout |= new DiffView().Diff(changesData.Diff).Split();
+                }
+
+                changesTabContent = changesLayout;
+            }
+
             // PRs tab content
             object prsContent;
             if (_selectedPlan.Prs.Count > 0)
@@ -433,6 +495,7 @@ public class ContentView(
                 new Tab("Summary", Cap(summaryTabContent)),
                 new Tab("Verifications", Cap(verificationsTable)).Badge(_selectedPlan.Verifications.Count.ToString()),
                 new Tab("Commits", Cap(commitsLayout)).Badge(_selectedPlan.Commits.Count.ToString()),
+                new Tab("Changes", Cap(changesTabContent)).Badge(changesFileCount > 0 ? changesFileCount.ToString() : ""),
                 new Tab("PRs", Cap(prsContent)).Badge(_selectedPlan.Prs.Count.ToString()),
                 new Tab("Artifacts", Cap(artifactsLayout)).Badge(totalArtifacts.ToString()),
                 new Tab("Recommendations", Cap(recommendationsLayout)).Badge(planData.Recommendations.Count.ToString()),

@@ -290,7 +290,7 @@ Combine responsive grid, visibility, and orientation to build a dashboard that a
 
 ```csharp demo
 Layout.Vertical().Gap(4)
-    | Text.H3("Dashboard").HideOn(Breakpoint.Mobile)
+    | new Badge("Dashboard").HideOn(Breakpoint.Mobile)
     | (Layout.Grid()
         .Columns(1.At(Breakpoint.Mobile)
             .And(Breakpoint.Desktop, 3))

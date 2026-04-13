@@ -32,7 +32,8 @@ public class DoctorCommandPlansTests : IDisposable
         state: Completed
         project: TestProject
         title: Test Plan
-        repos: []
+        repos:
+        - /dummy/repo
         commits: []
         """;
 
@@ -74,7 +75,7 @@ public class DoctorCommandPlansTests : IDisposable
 
         Assert.Single(results);
         Assert.False(results[0].IsHealthy);
-        Assert.Contains("YAML:Invalid structure", results[0].Health);
+        Assert.Contains("YAML:No repos", results[0].Health);
     }
 
     [Fact]
@@ -89,7 +90,8 @@ public class DoctorCommandPlansTests : IDisposable
 
         Assert.Single(results);
         Assert.Equal(2, results[0].Worktrees);
-        Assert.True(results[0].IsHealthy);
+        Assert.False(results[0].IsHealthy);
+        Assert.Contains("StaleWorktree", results[0].Health);
     }
 
     [Fact]

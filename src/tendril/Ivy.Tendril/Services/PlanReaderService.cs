@@ -715,6 +715,7 @@ public class PlanReaderService(
         string? currentListKey = null;
         var inVerificationItem = false;
         var inBlockScalar = false;
+        var inUnknownKey = false;
 
         static bool IsBlockScalarValue(string value)
         {
@@ -763,6 +764,7 @@ public class PlanReaderService(
                 currentListKey = listKeys.Contains(key) ? key : null;
                 inVerificationItem = false;
                 inBlockScalar = false;
+                inUnknownKey = false;
 
                 if (currentListKey != null &&
                     Regex.IsMatch(normalizedTopLevelLine, @"^[A-Za-z][A-Za-z0-9]*:\s*\[\]\s*$"))
@@ -775,6 +777,13 @@ public class PlanReaderService(
                     inBlockScalar = true;
 
                 continue;
+            }
+
+            if (inUnknownKey)
+            {
+                if (line != trimmed)
+                    continue;
+                inUnknownKey = false;
             }
 
             if (inBlockScalar)
@@ -796,9 +805,32 @@ public class PlanReaderService(
                 }
                 else
                 {
-                    output.Add($"  {trimmed}");
+                    var strayKeyMatch = Regex.Match(trimmed, @"^([A-Za-z][A-Za-z0-9]+):");
+                    if (strayKeyMatch.Success && topLevelKeys.Contains(strayKeyMatch.Groups[1].Value))
+                    {
+                        var key = strayKeyMatch.Groups[1].Value;
+                        currentListKey = listKeys.Contains(key) ? key : null;
+                        inVerificationItem = false;
+                        output.Add(trimmed);
+                    }
+                    else if (strayKeyMatch.Success)
+                    {
+                        currentListKey = null;
+                        inUnknownKey = true;
+                    }
+                    else
+                    {
+                        output.Add($"  {trimmed}");
+                    }
                 }
 
+                continue;
+            }
+
+            var unknownKeyMatch = Regex.Match(trimmed, @"^([A-Za-z][A-Za-z0-9]+):");
+            if (unknownKeyMatch.Success)
+            {
+                inUnknownKey = true;
                 continue;
             }
 

@@ -19,7 +19,7 @@ public class CreatePlanDialog(
     {
         var createPlanText = UseState("");
         var selectedProjects = UseState(_defaultProjects);
-        var selectedPriority = UseState("Normal (0)");
+        var selectedPriority = UseState("Normal");
 
         var exclusiveProjects = new ConvertedState<string[], string[]>(
             selectedProjects,

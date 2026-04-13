@@ -79,6 +79,45 @@ bc53ef0b-235f-4fba-a6bf-c3a9a9946e26
 6ab76176-bc16-456e-91c9-719bd84b05a6
 7622b8e9-9662-4bcf-8c4c-e7ad0cfb4ba1
 
+## ChatMessage — ambiguous reference between Microsoft.Extensions.AI and Ivy
+
+**Hallucinated API:**
+
+```csharp
+var messages = new List<ChatMessage>
+{
+    new ChatMessage(ChatRole.System, "You are a helpful assistant."),
+    new ChatMessage(ChatRole.User, content)
+};
+```
+
+**Error:** `CS0104: 'ChatMessage' is an ambiguous reference between 'Microsoft.Extensions.AI.ChatMessage' and 'Ivy.ChatMessage'`
+
+**Correct API:**
+
+```csharp
+// Fully qualify the namespace:
+var messages = new List<Microsoft.Extensions.AI.ChatMessage>
+{
+    new(Microsoft.Extensions.AI.ChatRole.System, "You are a helpful assistant."),
+    new(Microsoft.Extensions.AI.ChatRole.User, content)
+};
+
+// Or add a using alias at the top of the file:
+using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
+using ChatRole = Microsoft.Extensions.AI.ChatRole;
+```
+
+When using `IChatClient` from `Microsoft.Extensions.AI` in an Ivy project, `ChatMessage` conflicts with `Ivy.ChatMessage` (the Chat widget's message record) which is available via global using. Always fully qualify or alias the `Microsoft.Extensions.AI` types.
+
+**Found In:**
+142f4e78-ada2-4bd6-8c9f-a8562c82afb7
+ab7c7708-b26c-49fa-83a4-176df47c5866
+f190873c-df6c-42a1-88fe-849c6b3ddbc5
+a8e15b46-41e2-4281-b570-6d46721e0425
+b73d8115-b4d2-45d5-926e-0a915c1dca63
+b16d95b1-ff2f-4db3-9c67-910e21eb0713
+
 ## AppAttribute.path — renamed to group
 
 **Hallucinated API:**
@@ -132,44 +171,7 @@ The `Button` onClick parameter is `Func<Event<Button>, ValueTask>?`. The callbac
 4874e3a3-c6d8-4be5-b1b3-bc4209408343
 bedc0ee6-b915-45b0-ab3a-433e2ac5ff4a
 80f19121-bcf0-4899-abe2-9f1c439f4101
-
-## ChatMessage — ambiguous reference between Microsoft.Extensions.AI and Ivy
-
-**Hallucinated API:**
-
-```csharp
-var messages = new List<ChatMessage>
-{
-    new ChatMessage(ChatRole.System, "You are a helpful assistant."),
-    new ChatMessage(ChatRole.User, content)
-};
-```
-
-**Error:** `CS0104: 'ChatMessage' is an ambiguous reference between 'Microsoft.Extensions.AI.ChatMessage' and 'Ivy.ChatMessage'`
-
-**Correct API:**
-
-```csharp
-// Fully qualify the namespace:
-var messages = new List<Microsoft.Extensions.AI.ChatMessage>
-{
-    new(Microsoft.Extensions.AI.ChatRole.System, "You are a helpful assistant."),
-    new(Microsoft.Extensions.AI.ChatRole.User, content)
-};
-
-// Or add a using alias at the top of the file:
-using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
-using ChatRole = Microsoft.Extensions.AI.ChatRole;
-```
-
-When using `IChatClient` from `Microsoft.Extensions.AI` in an Ivy project, `ChatMessage` conflicts with `Ivy.ChatMessage` (the Chat widget's message record) which is available via global using. Always fully qualify or alias the `Microsoft.Extensions.AI` types.
-
-**Found In:**
-142f4e78-ada2-4bd6-8c9f-a8562c82afb7
-ab7c7708-b26c-49fa-83a4-176df47c5866
-a8e15b46-41e2-4281-b570-6d46721e0425
-b73d8115-b4d2-45d5-926e-0a915c1dca63
-b16d95b1-ff2f-4db3-9c67-910e21eb0713
+6c7b9fb9-33c0-410e-b0a5-e66ff0b72c74
 
 ## ToDataTable() on List\<T\> or T[] — wrong receiver type
 
@@ -798,6 +800,31 @@ items.ToDataTable(idSelector: e => e.Id)
 a31113e3-0282-46f8-a78f-4bd42b9cebc2
 fe86750a-00a8-454f-a252-d2064382e828
 
+## TextBuilder.Icon() — extension method receiver mismatch
+
+**Hallucinated API:**
+
+```csharp
+Text.H3("Task Hub").Icon(Icons.KanbanSquare)
+```
+
+**Error:** `CS1929: 'TextBuilder' does not contain a definition for 'Icon' and the best extension method overload 'MenuItemExtensions.Icon(MenuItem, Icons)' requires a receiver of type 'Ivy.MenuItem'`
+
+**Correct API:**
+
+```csharp
+// Icon() is only available on MenuItem, not on TextBuilder.
+// To show an icon next to text, use a layout:
+new Horizontal(new Icon(Icons.KanbanSquare), Text.H3("Task Hub"))
+```
+
+The agent assumed `.Icon()` was a chainable method on `TextBuilder`, but `Icon()` is an extension method that only applies to `MenuItem`. The `ReplaceInvalidIcons` refactoring rule caught and fixed the invalid icon name, but not the wrong receiver type.
+
+**Found In:**
+c1f8feae-b342-4bf1-a18c-9b88ee8d6d17
+fd4594df-0402-4f11-ad46-22165d480649
+513c6b12-5eae-430d-b539-633f50eaa310
+
 ## UseAlert().ShowInfo() — wrong API usage
 
 **Hallucinated API:**
@@ -1111,30 +1138,6 @@ new TableRow(new TableCell("Item 1"), new TableCell("Active"))
 **Found In:**
 9e1cba6f-bd19-472e-83a3-8db63b4860f6
 2a35b6e1-43e2-4fac-aa54-29a680c6009a (traces 003, 004, 005)
-
-## TextBuilder.Icon() — extension method receiver mismatch
-
-**Hallucinated API:**
-
-```csharp
-Text.H3("Task Hub").Icon(Icons.KanbanSquare)
-```
-
-**Error:** `CS1929: 'TextBuilder' does not contain a definition for 'Icon' and the best extension method overload 'MenuItemExtensions.Icon(MenuItem, Icons)' requires a receiver of type 'Ivy.MenuItem'`
-
-**Correct API:**
-
-```csharp
-// Icon() is only available on MenuItem, not on TextBuilder.
-// To show an icon next to text, use a layout:
-new Horizontal(new Icon(Icons.KanbanSquare), Text.H3("Task Hub"))
-```
-
-The agent assumed `.Icon()` was a chainable method on `TextBuilder`, but `Icon()` is an extension method that only applies to `MenuItem`. The `ReplaceInvalidIcons` refactoring rule caught and fixed the invalid icon name, but not the wrong receiver type.
-
-**Found In:**
-c1f8feae-b342-4bf1-a18c-9b88ee8d6d17
-fd4594df-0402-4f11-ad46-22165d480649
 
 ## ToDialog/ToSheet non-existent named parameters (subtitle, footer)
 
@@ -2735,7 +2738,7 @@ if (upload.Status == FileUploadStatus.Finished)
 `FileUploadStatus` values are: `Pending`, `Aborted`, `Loading`, `Failed`, `Finished`. There is no `Completed` value. **Auto-fixed:** The refactoring service automatically rewrites `FileUploadStatus.Completed` → `FileUploadStatus.Finished`.
 
 **Found In:**
-(session not yet recorded)
+f190873c-df6c-42a1-88fe-849c6b3ddbc5
 
 ## UseDownload — ambiguous overload between sync and async
 
@@ -3419,4 +3422,3 @@ UseEffect(() => { items.Set(GenerateUsers(count.Value)); }, count);
 ```
 
 This is a behavioral difference from React's `useEffect`, which fires on mount and on dependency changes. Ivy's `UseEffect` with state triggers uses `AfterChange` semantics only.
-

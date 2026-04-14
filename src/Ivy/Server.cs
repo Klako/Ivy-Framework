@@ -81,7 +81,12 @@ public class Server
     public AppRepository AppRepository { get; } = new();
     public NavigationBeaconRegistry NavigationBeaconRegistry { get; } = new();
     public IServiceCollection Services { get; } = new ServiceCollection();
-    public IConfiguration Configuration { get; private set; } = ServerUtils.GetConfiguration();
+    private IConfiguration? _configuration;
+    public IConfiguration Configuration
+    {
+        get => _configuration ??= ServerUtils.GetConfiguration();
+        private set => _configuration = value;
+    }
     public Type? AuthProviderType { get; private set; } = null;
     public ServerArgs Args => _args;
     public static Action<CookieOptions>? ConfigureAuthCookieOptions { get; set; }
@@ -128,8 +133,8 @@ public class Server
         };
 
         Services.AddSingleton(_args);
-        // capture the latest Configuration value at resolution time in case it gets replaced by UseConfiguration()
-        Services.AddSingleton(_ => Configuration);
+        // Configuration is lazily initialized on first access
+        Services.AddSingleton<IConfiguration>(_ => Configuration);
 
         AddDefaultApps();
     }

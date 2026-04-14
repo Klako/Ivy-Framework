@@ -36,8 +36,8 @@ namespace Ivy.Test.Sync
                 "Ivy.Test.Sync.TestWidget",
                 "greoij")
             {
-                Props = ImmutableDictionary<string, JsonNode?>.Empty
-                    .Add("testProp1", "nondefault"),
+                Props = ImmutableDictionary<string, IPropStructureNode>.Empty
+                    .Add("testProp1", new PropStructureLeaf("nondefault")),
                 Events = ["TestEvent"],
                 Children = []
             };
@@ -60,18 +60,18 @@ namespace Ivy.Test.Sync
             var expected = new SerializedWidget("Ivy.Test.Sync.TestWidget", "greoij")
             {
                 Events = [],
-                Props = ImmutableDictionary<string, JsonNode?>.Empty,
+                Props = ImmutableDictionary<string, IPropStructureNode>.Empty,
                 Children =
                 [
                     new SerializedWidget("Ivy.Test.Sync.TestWidget", "diojwef"){
                         Events = [],
-                        Props = ImmutableDictionary<string, JsonNode?>.Empty
-                            .Add("testProp1", "nondefault"),
+                        Props = ImmutableDictionary<string, IPropStructureNode>.Empty
+                            .Add("testProp1", new PropStructureLeaf("nondefault")),
                         Children = []
                     },
                     new SerializedWidget("Ivy.Test.Sync.TestWidget", "diojwef"){
                         Events = [],
-                        Props = ImmutableDictionary<string, JsonNode?>.Empty,
+                        Props = ImmutableDictionary<string, IPropStructureNode>.Empty,
                         Children = []
                     }
                 ]
@@ -90,6 +90,30 @@ namespace Ivy.Test.Sync
                     new TestWidget(){Id = expected.Children[1].Id}
                 }
             };
+
+            var result = SerializedWidget.FromWidget(widget);
+
+            SerializedWidget.AssertEqual(expected, result);
+        }
+
+        [Fact]
+        public void TestWidget_WithEnumProp()
+        {
+            var expected = new SerializedWidget(
+                "Ivy.Test.Sync.TestWidget",
+                "greoij")
+            {
+                Props = ImmutableDictionary<string, IPropStructureNode>.Empty
+                    .Add("testProp3", new PropStructureLeaf("Second")),
+                Children = []
+            };
+
+            var widget = new TestWidget()
+            {
+                TestProp3 = TestWidget.TestEnum.Second,
+                TestEvent = new(_ => ValueTask.CompletedTask)
+            };
+            widget.Id = expected.Id;
 
             var result = SerializedWidget.FromWidget(widget);
 

@@ -705,7 +705,7 @@ public class PlanReaderService(
             "state", "project", "level", "title", "sessionId",
             "repos", "created", "updated", "initialPrompt", "sourceUrl",
             "prs", "commits", "verifications", "relatedPlans", "dependsOn",
-            "priority"
+            "priority", "executionProfile"
         };
         var listKeys = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -1276,7 +1276,9 @@ public class PlanReaderService(
                         plan.Project ?? "",
                         plan.Updated,
                         status,
-                        item.DeclineReason
+                        item.DeclineReason,
+                        item.Impact,
+                        item.Risk
                     ));
             }
             catch (Exception ex)
@@ -1424,5 +1426,7 @@ public record Recommendation(
     string Project,
     DateTime Date,
     PlanStatus SourcePlanStatus,
-    string? DeclineReason = null
+    string? DeclineReason = null,
+    string? Impact = null,
+    string? Risk = null
 );

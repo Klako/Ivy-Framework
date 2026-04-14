@@ -281,10 +281,6 @@ public class JobService : IJobService
         // Persist completed job to SQLite
         PersistJob(job);
 
-        // Free output buffer — all consumers (failure reason, hooks, log writing) are done.
-        // Output for failed jobs was already written to logs/ above.
-        job.TrimOutput();
-
         // Evict stale finished jobs from memory to prevent unbounded dictionary growth.
         // Job metadata is already persisted to SQLite; the in-memory copy is only needed
         // for active display and is reloaded from DB on next startup.
@@ -338,7 +334,6 @@ public class JobService : IJobService
 
         CleanupInboxFile(job);
         ResetPlanState(job);
-        job.TrimOutput();
         RaiseJobsChanged();
 
         // Try to start queued jobs now that a slot is free

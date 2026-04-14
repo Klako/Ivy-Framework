@@ -861,19 +861,24 @@ public class JobService : IJobService
 
     internal async Task RunStaleOutputWatchdog(string id, CancellationTokenSource timeoutCts)
     {
-        var checkInterval = TimeSpan.FromSeconds(60);
+        const int checkIntervalSeconds = 60;
 
         try
         {
             while (!timeoutCts.Token.IsCancellationRequested)
             {
-                try
+                for (var i = 0; i < checkIntervalSeconds; i++)
                 {
-                    await Task.Delay(checkInterval, timeoutCts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1), timeoutCts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
+                    if (timeoutCts.Token.IsCancellationRequested) return;
                 }
 
                 if (!_jobs.TryGetValue(id, out var job) || job.Status != JobStatus.Running)

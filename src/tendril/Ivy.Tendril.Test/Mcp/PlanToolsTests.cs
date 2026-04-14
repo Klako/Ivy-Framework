@@ -222,7 +222,7 @@ public class PlanToolsTests : IDisposable
         var updatedMatch = System.Text.RegularExpressions.Regex.Match(updatedYaml, @"updated: (.+)");
         Assert.True(updatedMatch.Success, "Updated timestamp not found in YAML");
 
-        var updatedTimestamp = DateTime.Parse(updatedMatch.Groups[1].Value);
+        var updatedTimestamp = DateTime.Parse(updatedMatch.Groups[1].Value).ToUniversalTime();
 
         // Verify the timestamp was updated to a recent time
         Assert.True(updatedTimestamp >= beforeTransition, "Updated timestamp should be after transition started");

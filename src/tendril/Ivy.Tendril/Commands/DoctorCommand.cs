@@ -813,6 +813,35 @@ public static class DoctorCommand
                 }
             }
 
+            if (healthResult.Health.Contains("StaleWorktree"))
+            {
+                var worktreesPath = Path.Combine(planPath, "worktrees");
+                if (Directory.Exists(worktreesPath))
+                {
+                    foreach (var wtDir in Directory.GetDirectories(worktreesPath))
+                    {
+                        if (!File.Exists(Path.Combine(wtDir, ".git")))
+                            Directory.Delete(wtDir, true);
+                    }
+                    repairs.Add("removed stale worktrees");
+                }
+            }
+
+            if (healthResult.Health.Contains("NestedWorktree"))
+            {
+                var worktreesPath = Path.Combine(planPath, "worktrees");
+                if (Directory.Exists(worktreesPath))
+                {
+                    foreach (var wtDir in Directory.GetDirectories(worktreesPath))
+                    {
+                        var plansSubDir = Path.Combine(wtDir, "Plans");
+                        if (Directory.Exists(plansSubDir))
+                            Directory.Delete(plansSubDir, true);
+                    }
+                    repairs.Add("cleaned nested worktrees");
+                }
+            }
+
             if (repairs.Count == 0)
                 return new RepairResult(false, null);
 

@@ -1,12 +1,4 @@
-﻿using OpenAI.Chat;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.JsonDiffPatch;
-using System.Text.Json.Nodes;
+﻿using System.Reflection;
 
 namespace Ivy.Core.Sync
 {
@@ -35,8 +27,8 @@ namespace Ivy.Core.Sync
 
             foreach (var (name, propMetadata) in metadata.PropMetadatas)
             {
-                var sourceValue = propMetadata.GetValueAsJson(source);
-                var targetValue = propMetadata.GetValueAsJson(target);
+                var sourceValue = propMetadata.GetValueAsStructure(source);
+                var targetValue = propMetadata.GetValueAsStructure(target);
 
                 var propUpdate = PropDiff(sourceValue, targetValue);
 
@@ -60,7 +52,7 @@ namespace Ivy.Core.Sync
 
             // Compare children
 
-            var childrenChanges = ChildrenNaiveDiff(source, target);
+            var childrenChanges = ChildrenLCSDiff(source, target);
 
             if (id != null
                 || propUpdates.Count > 0
@@ -77,7 +69,7 @@ namespace Ivy.Core.Sync
             return null;
         }
 
-        private static IPropUpdate? PropDiff(JsonNode? source, JsonNode? target)
+        private static IPropUpdate? PropDiff(IPropStructureNode? source, IPropStructureNode? target)
         {
             if (source == null && target == null)
             {
@@ -86,27 +78,21 @@ namespace Ivy.Core.Sync
 
             if (source == null || target == null)
             {
-                return new PropValueDiff(target);
+                return new PropValueDiff(new PropStructureLeaf(target));
             }
 
-            var sourceKind = source.GetValueKind();
-            var targetKind = target.GetValueKind();
-
-            if (sourceKind == JsonValueKind.Object && targetKind == JsonValueKind.Object)
+            if (source is PropStructureObject sourceMap && target is PropStructureObject targetMap)
             {
-                var sourceObject = source.AsObject();
-                var targetObject = target.AsObject();
-
-                var maxLength = Math.Max(sourceObject.Count, targetObject.Count);
+                var maxLength = Math.Max(sourceMap.Count, targetMap.Count);
                 Dictionary<string, IPropObjectOperation> changes = new(maxLength);
 
-                var sourceKeys = sourceObject.Select(entry => entry.Key);
-                var targetKeys = targetObject.Select(entry => entry.Key);
+                var sourceKeys = sourceMap.Select(entry => entry.Key);
+                var targetKeys = targetMap.Select(entry => entry.Key);
 
                 foreach (var key in sourceKeys.Union(targetKeys))
                 {
-                    var sourceHasKey = sourceObject.TryGetPropertyValue(key, out var sourceValue);
-                    var targetHasKey = targetObject.TryGetPropertyValue(key, out var targetValue);
+                    var sourceHasKey = sourceMap.TryGetValue(key, out var sourceValue);
+                    var targetHasKey = targetMap.TryGetValue(key, out var targetValue);
 
                     if (sourceHasKey && targetHasKey)
                     {
@@ -133,22 +119,18 @@ namespace Ivy.Core.Sync
 
                 return new PropObjectDiff(changes);
             }
-
-            if (sourceKind == JsonValueKind.Array && targetKind == JsonValueKind.Array)
+            else if (source is PropStructureList sourceList && target is PropStructureList targetList)
             {
-                var sourceArray = source.AsArray();
-                var targetArray = target.AsArray();
-
-                var sourceLength = sourceArray.Count;
-                var targetLength = targetArray.Count;
+                var sourceLength = sourceList.Count;
+                var targetLength = targetList.Count;
 
                 var commonLength = Math.Min(sourceLength, targetLength);
                 List<(int, IPropUpdate)> changes = new(commonLength);
 
                 for (int i = 0; i < commonLength; i++)
                 {
-                    var sourceElement = sourceArray[i];
-                    var targetElement = targetArray[i];
+                    var sourceElement = sourceList[i];
+                    var targetElement = targetList[i];
 
                     var diff = PropDiff(sourceElement, targetElement);
                     if (diff != null)
@@ -157,13 +139,13 @@ namespace Ivy.Core.Sync
                     }
                 }
 
-                List<JsonNode?> appends = new();
+                List<IPropStructureNode> appends = new();
 
                 if (targetLength > sourceLength)
                 {
                     for (int i = commonLength; i < targetLength; i++)
                     {
-                        appends.Add(targetArray[i]);
+                        appends.Add(targetList[i]);
                     }
                 }
 
@@ -232,47 +214,132 @@ namespace Ivy.Core.Sync
 
         private static WidgetListDiff ChildrenLCSDiff(IWidget source, IWidget target)
         {
-            var childrenChanges = new List<IWidgetListOperation>();
-
             if (source.Children.Length == 0)
             {
-                childrenChanges.Add(WidgetListSplice.AddRange(0, (IWidget[])target.Children));
+                var widgetsToAdd = target.Children.Cast<IWidget>();
+                return new WidgetListDiff(changes: [WidgetListSplice.AddRange(0, widgetsToAdd)]);
             }
             else if (target.Children.Length == 0)
             {
-                childrenChanges.Add(WidgetListSplice.RemoveRange(0, source.Children.Length));
+                return new WidgetListDiff(changes: [WidgetListSplice.RemoveRange(0, source.Children.Length)]);
             }
             else
             {
+                // Compute the matrix containing all jumps in distances
+                // used to compute the subsequence itself
                 var distances = new int[source.Children.Length + 1, target.Children.Length + 1];
-                for (int i = 0; i < source.Children.Length; i++)
                 {
-                    distances[i, 0] = 0;
-                }
-                for (int i = 0; i < target.Children.Length; i++)
-                {
-                    distances[0, i] = 0;
-                }
-                var equalityComparer = new WidgetEqualityComparer();
-                for (int i = 1; i < source.Children.Length + 1; i++)
-                {
-                    for (int j = 1; j < target.Children.Length + 1; j++)
+                    for (int i = 0; i < source.Children.Length; i++)
                     {
-                        if (equalityComparer.Equals((IWidget)source.Children[i - 1], (IWidget)target.Children[j - 1]))
+                        distances[i, 0] = 0;
+                    }
+                    for (int i = 0; i < target.Children.Length; i++)
+                    {
+                        distances[0, i] = 0;
+                    }
+                    var equalityComparer = new WidgetEqualityComparer();
+                    for (int i = 1; i < source.Children.Length + 1; i++)
+                    {
+                        for (int j = 1; j < target.Children.Length + 1; j++)
                         {
-                            distances[i, j] = distances[i - 1, j - 1] + 1;
-                        }
-                        else
-                        {
-                            distances[i, j] = Math.Max(distances[i, j - 1], distances[i - 1, j]);
+                            if (equalityComparer.Equals((IWidget)source.Children[i - 1], (IWidget)target.Children[j - 1]))
+                            {
+                                distances[i, j] = distances[i - 1, j - 1] + 1;
+                            }
+                            else
+                            {
+                                distances[i, j] = Math.Max(distances[i, j - 1], distances[i - 1, j]);
+                            }
                         }
                     }
                 }
-                var subsequenceLength = distances[source.Children.Length - 1, target.Children.Length - 1];
 
+                // Compute the subsequence of pairs of widgets that match
+                var subsequencePairs = new List<(int SourceIndex, int TargetIndex)>(Math.Max(source.Children.Length, target.Children.Length));
+                {
+                    var sourceIndex = source.Children.Length;
+                    var targetIndex = target.Children.Length;
+                    while (distances[sourceIndex, targetIndex] > 0)
+                    {
+                        var pairDistance = distances[sourceIndex, targetIndex];
+                        if (distances[sourceIndex - 1, targetIndex] == pairDistance)
+                        {
+                            sourceIndex--;
+                        }
+                        else if (distances[sourceIndex, targetIndex - 1] == pairDistance)
+                        {
+                            targetIndex--;
+                        }
+                        else
+                        {
+                            subsequencePairs.Add((sourceIndex, targetIndex));
+                            sourceIndex--;
+                            targetIndex--;
+                        }
+                    }
+                    subsequencePairs.Reverse();
+                }
+
+                // Compute the changes such that the matching widgets stay and the rest are edited.
+                var changes = new List<IWidgetListOperation>();
+                {
+                    var adjacentPairs = subsequencePairs
+                        .Append((SourceIndex: source.Children.Length, TargetIndex: target.Children.Length))
+                        .Zip(subsequencePairs.Prepend((SourceIndex: 0, TargetIndex: 0)));
+
+                    foreach (var (currentPair, previousPair) in adjacentPairs)
+                    {
+                        var sourceLength = currentPair.SourceIndex - previousPair.SourceIndex;
+                        var targetLength = currentPair.TargetIndex - previousPair.TargetIndex;
+                        var minLength = Math.Min(sourceLength, targetLength);
+
+                        for (int i = 0; i < minLength; i++)
+                        {
+                            var sourceIndex = previousPair.SourceIndex + i;
+                            var targetIndex = previousPair.TargetIndex + i;
+                            var sourceChild = (IWidget)source.Children[sourceIndex];
+                            var targetChild = (IWidget)target.Children[targetIndex];
+                            var widgetDiff = ComputeDiff(sourceChild, targetChild);
+                            if (widgetDiff is WidgetUpdate update)
+                            {
+                                changes.Add(new WidgetListUpdate(sourceIndex, update));
+                            }
+                            else if (widgetDiff is IWidget newWidget)
+                            {
+                                if (changes.LastOrDefault() is WidgetListSplice previousSplice
+                                    && previousSplice.Index == sourceIndex - 1)
+                                {
+                                    changes.RemoveAt(changes.Count - 1);
+                                    changes.Add(WidgetListSplice.ReplaceRange(
+                                        previousSplice.Index,
+                                        previousSplice.Length + 1,
+                                        previousSplice.Widgets.Append(newWidget)));
+                                }
+                                else
+                                {
+                                    changes.Add(WidgetListSplice.Replace(sourceIndex, newWidget));
+                                }
+                            }
+                        }
+
+                        if (sourceLength > targetLength)
+                        {
+                            changes.Add(WidgetListSplice.RemoveRange(
+                                previousPair.SourceIndex + targetLength,
+                                sourceLength - targetLength));
+                        }
+
+                        if (sourceLength < targetLength)
+                        {
+                            changes.Add(WidgetListSplice.AddRange(
+                                previousPair.SourceIndex + sourceLength,
+                                target.Children.TakeLast(targetLength - sourceLength).Cast<IWidget>()));
+                        }
+                    }
+                }
+
+                return new WidgetListDiff(changes: changes);
             }
-
-            return new WidgetListDiff(changes: childrenChanges.ToArray());
         }
     }
 }

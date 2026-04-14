@@ -32,9 +32,12 @@ namespace Ivy.Test.Sync
             {
                 foreach (var (name, propUpdate) in update.Props)
                 {
-                    widget.Props.TryGetValue(name, out var oldNode);
+                    if (!widget.Props.TryGetValue(name, out var oldNode))
+                    {
+                        oldNode = new PropStructureLeaf(null);
+                    }
                     var newNode = ApplyPropDiff(oldNode, propUpdate);
-                    if (newNode == null)
+                    if (newNode is PropStructureLeaf leaf && leaf.Value == null)
                     {
                         widget = widget with { Props = widget.Props.Remove(name) };
                     }
@@ -80,55 +83,55 @@ namespace Ivy.Test.Sync
             return widget;
         }
 
-        private static JsonNode? ApplyPropDiff(JsonNode? source, IPropUpdate? update)
+        private static IPropStructureNode ApplyPropDiff(IPropStructureNode source, IPropUpdate? update)
         {
             if (update is PropValueDiff valueDiff)
             {
-                return valueDiff.NewValue?.DeepClone();
+                return valueDiff.NewValue;
             }
             else if (update is PropObjectDiff objectDiff)
             {
                 Assert.NotNull(source);
-                Assert.True(source.GetValueKind() == System.Text.Json.JsonValueKind.Object);
-                var sourceObject = source.AsObject();
+                Assert.IsType<PropStructureObject>(source);
+                var map = (PropStructureObject)source;
                 foreach (var (key, change) in objectDiff.Changes)
                 {
                     if (change is PropObjectUpdate fieldUpdate)
                     {
-                        sourceObject[key] = ApplyPropDiff(sourceObject[key], fieldUpdate.Update);
+                        map[key] = ApplyPropDiff(map[key], fieldUpdate.Update);
                     }
                     else if (change is PropObjectSet fieldSet)
                     {
-                        sourceObject[key] = fieldSet.NewValue?.DeepClone();
+                        map[key] = fieldSet.NewValue;
                     }
                     else if (change is PropObjectRemove fieldRemove)
                     {
-                        sourceObject.Remove(key);
+                        map.Remove(key);
                     }
                 }
-                return sourceObject.DeepClone();
+                return map;
             }
             else if (update is PropArrayDiff arrayDiff)
             {
                 Assert.NotNull(source);
-                Assert.True(source.GetValueKind() == System.Text.Json.JsonValueKind.Array);
-                var sourceArray = source.AsArray();
+                Assert.IsType<PropStructureList>(source);
+                var list = (PropStructureList)source;
                 foreach (var (index, change) in arrayDiff.Changes)
                 {
-                    sourceArray[index] = ApplyPropDiff(sourceArray[index], change);
+                    list[index] = ApplyPropDiff(list[index], change);
                 }
                 if (arrayDiff.Removals > 0)
                 {
-                    var fromIndex = sourceArray.Count - arrayDiff.Removals;
-                    sourceArray.RemoveRange(fromIndex, arrayDiff.Removals);
+                    var fromIndex = list.Count - arrayDiff.Removals;
+                    list.RemoveRange(fromIndex, arrayDiff.Removals);
                 }
-                foreach (var jsonNode in arrayDiff.Appends)
+                foreach (var node in arrayDiff.Appends)
                 {
-                    sourceArray.Add(jsonNode?.DeepClone());
+                    list.Add(node);
                 }
-                return sourceArray.DeepClone();
+                return list;
             }
-            return source?.DeepClone();
+            return source;
         }
 
         private static string CleanTypeName(Type t)

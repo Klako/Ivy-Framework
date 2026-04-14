@@ -24,19 +24,19 @@ namespace Ivy.Core.Sync
 
             // Serialize props
 
-            var props = new List<(string, JsonNode?)>(metadata.PropMetadatas.Count);
+            var props = new List<(string, IPropStructureNode)>(metadata.PropMetadatas.Count);
 
             foreach (var (name, propMetadata) in metadata.PropMetadatas)
             {
-                var value = propMetadata.GetValueAsJson(widget);
+                var value = propMetadata.GetValueAsStructure(widget);
 
                 // Skip properties that match their default values (unless AlwaysSerialize is set)
-                if (!propMetadata.AlwaysSerialize && propMetadata.DefaultJsonValue != null)
+                if (!propMetadata.AlwaysSerialize && propMetadata.DefaultValue != null)
                 {
-                    if (value.DeepEquals(propMetadata.DefaultJsonValue))
+                    if (value.DeepEquals(propMetadata.DefaultStructureValue))
                         continue;
                 }
-                if (value != null)
+                if (!value.DeepEquals(new PropStructureLeaf(null)))
                 {
                     props.Add((name, value));
                 }

@@ -15,13 +15,13 @@ namespace Ivy.Test.Sync
         public SerializedWidget(
             string type,
             string id,
-            IImmutableDictionary<string, JsonNode?>? props = null,
+            IImmutableDictionary<string, IPropStructureNode>? props = null,
             string[]? events = null,
             IImmutableList<SerializedWidget>? children = null)
         {
             Type = type;
             Id = id;
-            Props = props ?? ImmutableDictionary<string, JsonNode?>.Empty;
+            Props = props ?? ImmutableDictionary<string, IPropStructureNode>.Empty;
             Events = events ?? [];
             Children = children ?? ImmutableArray<SerializedWidget>.Empty;
         }
@@ -33,7 +33,7 @@ namespace Ivy.Test.Sync
         public string Id { get; init; }
 
         [Key(2)]
-        public IImmutableDictionary<string, JsonNode?> Props { get; init; }
+        public IImmutableDictionary<string, IPropStructureNode> Props { get; init; }
 
         [Key(3)]
         public string[] Events { get; init; }
@@ -49,7 +49,7 @@ namespace Ivy.Test.Sync
             {
                 Assert.Contains(entry.Key, actual.Props);
                 var actualValue = actual.Props[entry.Key];
-                Assert.True(JsonNode.DeepEquals(entry.Value, actualValue), $"Expected {entry.Value}\nActual {actualValue}");
+                Assert.Equal(entry.Value, actualValue, StructureNodeEqualityComparer.Instance);
             }
             foreach (var entry in actual.Props)
             {
@@ -70,12 +70,14 @@ namespace Ivy.Test.Sync
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
                         new JsonValueMessagePackFormatter(),
-                        new WidgetMessagePackFormatter()
+                        new WidgetMessagePackFormatter(),
+                        new StructureMessagePackFormatter()
                     ],
                     [
                         JsonNodeResolver.Instance,
                         WidgetMessagePackResolver.Instance,
-                        StandardResolver.Instance
+                        DynamicEnumAsStringResolver.Instance,
+                        ContractlessStandardResolver.Instance
                     ]
                 ));
 

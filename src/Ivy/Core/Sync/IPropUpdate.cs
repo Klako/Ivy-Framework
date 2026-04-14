@@ -19,9 +19,9 @@ namespace Ivy.Core.Sync
     public record PropObjectDiff(IDictionary<string, IPropObjectOperation> Changes) : IPropUpdate;
     public record PropArrayDiff(
         IEnumerable<(int, IPropUpdate)> Changes,
-        IEnumerable<JsonNode?> Appends,
+        IEnumerable<IPropStructureNode> Appends,
         int Removals) : IPropUpdate;
-    public record PropValueDiff(JsonNode? NewValue) : IPropUpdate;
+    public record PropValueDiff(IPropStructureNode NewValue) : IPropUpdate;
     public enum PropObjectOperationType
     {
         Update = 0,
@@ -30,7 +30,7 @@ namespace Ivy.Core.Sync
     }
     public interface IPropObjectOperation;
     public record PropObjectUpdate(IPropUpdate Update) : IPropObjectOperation;
-    public record PropObjectSet(JsonNode? NewValue) : IPropObjectOperation;
+    public record PropObjectSet(IPropStructureNode NewValue) : IPropObjectOperation;
     public record PropObjectRemove() : IPropObjectOperation;
 
     public class PropUpdateMessagePackFormatter : IMessagePackFormatter<IPropUpdate>
@@ -86,9 +86,9 @@ namespace Ivy.Core.Sync
                     Serialize(ref writer, change, options);
                 }
                 writer.WriteArrayHeader(arrayDiff.Appends.Count());
-                foreach (var jsonNode in arrayDiff.Appends)
+                foreach (var node in arrayDiff.Appends)
                 {
-                    MessagePackSerializer.Serialize(ref writer, jsonNode, options);
+                    MessagePackSerializer.Serialize(ref writer, node, options);
                 }
                 writer.Write(arrayDiff.Removals);
             }

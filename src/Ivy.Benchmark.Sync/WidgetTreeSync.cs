@@ -24,23 +24,22 @@ namespace Ivy.Benchmark.Sync
         IWidget binaryTreeSource;
         IWidget binaryTreeTarget;
 
-        MessagePackSerializerOptions _jsonNode2MsgPackOptions = MessagePackSerializerOptions.Standard.WithResolver(
+        MessagePackSerializerOptions _serializerOptions = MessagePackSerializerOptions.Standard.WithResolver(
                 CompositeResolver.Create(
                     new IMessagePackFormatter[] {
                         new JsonNodeMessagePackFormatter(),
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
-                        new JsonValueMessagePackFormatter()
+                        new JsonValueMessagePackFormatter(),
+                        new WidgetMessagePackFormatter()
                     },
                     new IFormatterResolver[] {
                         JsonNodeResolver.Instance,
+                        WidgetMessagePackResolver.Instance,
                         ContractlessStandardResolver.Instance
                     }
                 )
             );
-
-        MessagePackSerializerOptions _newDiff2MsgPackOptions =
-            new MessagePackSerializerOptions(CompositeResolver.Create([new Core.Sync.WidgetMessagePackFormatter()], [StandardResolver.Instance]));
 
         private static string[] texts = [
                 "Five foxes four fairies",
@@ -101,7 +100,7 @@ namespace Ivy.Benchmark.Sync
             var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(sourceWidgetJson);
             var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(targetWidgetJson);
             var patch = NativeJsonDiff.ComputePatch(oldBytes, newBytes);
-            var serialized = MessagePackSerializer.Serialize(patch, _jsonNode2MsgPackOptions);
+            var serialized = MessagePackSerializer.Serialize(patch, _serializerOptions);
             ResultSize = serialized.Length;
             return serialized.Length;
         }
@@ -111,7 +110,7 @@ namespace Ivy.Benchmark.Sync
         public int NewDiff_FlatTree()
         {
             var diff = Ivy.Core.Sync.TreeDiffer.ComputeDiff(flatTreeSource, flatTreeTarget);
-            var serialized = MessagePackSerializer.Serialize(diff, _newDiff2MsgPackOptions);
+            var serialized = MessagePackSerializer.Serialize(diff, _serializerOptions);
             ResultSize = serialized.Length;
             return serialized.Length;
         }
@@ -126,7 +125,7 @@ namespace Ivy.Benchmark.Sync
             var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(sourceWidgetJson);
             var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(targetWidgetJson);
             var patch = NativeJsonDiff.ComputePatch(oldBytes, newBytes);
-            var serialized = MessagePackSerializer.Serialize(patch, _jsonNode2MsgPackOptions);
+            var serialized = MessagePackSerializer.Serialize(patch, _serializerOptions);
             ResultSize = serialized.Length;
             return serialized.Length;
         }
@@ -136,7 +135,7 @@ namespace Ivy.Benchmark.Sync
         public int NewDiff_BinaryTree()
         {
             var diff = Ivy.Core.Sync.TreeDiffer.ComputeDiff(binaryTreeSource, binaryTreeTarget);
-            var serialized = MessagePackSerializer.Serialize(diff, _newDiff2MsgPackOptions);
+            var serialized = MessagePackSerializer.Serialize(diff, _serializerOptions);
             ResultSize = serialized.Length;
             return serialized.Length;
         }

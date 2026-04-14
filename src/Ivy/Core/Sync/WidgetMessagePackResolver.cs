@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Ivy.Core.Sync
 {
-    internal class WidgetMessagePackResolver : IFormatterResolver
+    public class WidgetMessagePackResolver : IFormatterResolver
     {
         public static readonly IFormatterResolver Instance = new WidgetMessagePackResolver();
 

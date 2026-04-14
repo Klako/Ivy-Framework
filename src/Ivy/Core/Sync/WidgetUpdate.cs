@@ -69,18 +69,18 @@ namespace Ivy.Core.Sync
     public record WidgetListDiff
     {
         public WidgetListDiff(
-            IWidgetListComplexOperation[]? complexChanges = null,
-            IWidgetListOperation[]? changes = null)
+            IEnumerable<IWidgetListComplexOperation>? complexChanges = null,
+            IEnumerable<IWidgetListOperation>? changes = null)
         {
             ComplexChanges = complexChanges;
             Changes = changes;
         }
 
         [Key(0)]
-        public IWidgetListComplexOperation[]? ComplexChanges { get; init; }
+        public IEnumerable<IWidgetListComplexOperation>? ComplexChanges { get; init; }
 
         [Key(1)]
-        public IWidgetListOperation[]? Changes { get; init; }
+        public IEnumerable<IWidgetListOperation>? Changes { get; init; }
     }
 
     [Union(0, typeof(WidgetListUpdate))]

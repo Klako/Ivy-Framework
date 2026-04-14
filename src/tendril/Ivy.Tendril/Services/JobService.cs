@@ -1042,7 +1042,23 @@ public class JobService : IJobService
         });
         if (apiError != null) return ParseClaudeApiError(apiError);
 
-        // 3. Check for validation/assertion failures (from MakePlan/ExecutePlan)
+        // 3. Check for MakePlan-specific failures and failure artifacts
+        if (jobType == "MakePlan")
+        {
+            var makePlanError = FindPattern(outputLines, new[] {
+                @"ERROR: Plan",
+                @"WARNING: TENDRIL_HOME",
+                @"Failed to parse",
+                @"Repository path does not exist",
+            });
+            if (makePlanError != null) return makePlanError;
+
+            // Check for failure artifact
+            var failureArtifactMessage = TryReadFailureArtifact(outputLines);
+            if (failureArtifactMessage != null) return failureArtifactMessage;
+        }
+
+        // 4. Check for validation/assertion failures (from MakePlan/ExecutePlan)
         var validationError = FindPattern(outputLines, new[] {
             @"validation\s+failed",
             @"assertion\s+failed",
@@ -1051,7 +1067,7 @@ public class JobService : IJobService
         });
         if (validationError != null) return validationError;
 
-        // 4. Search from end for stderr lines (existing logic)
+        // 5. Search from end for stderr lines (existing logic)
         var stderrLines = new List<string>();
         for (var i = outputLines.Count - 1; i >= 0 && stderrLines.Count < 3; i--)
         {
@@ -1067,7 +1083,7 @@ public class JobService : IJobService
         if (stderrLines.Count > 0)
             return SanitizeForDisplay(string.Join(" | ", stderrLines));
 
-        // 5. Fall back to last non-progress line
+        // 6. Fall back to last non-progress line
         for (var i = outputLines.Count - 1; i >= 0; i--)
         {
             var trimmed = outputLines[i].Trim();
@@ -1121,6 +1137,56 @@ public class JobService : IJobService
         catch { }
 
         return "Claude API error (see output for details)";
+    }
+
+    private static string? TryReadFailureArtifact(List<string> outputLines)
+    {
+        try
+        {
+            // Look for failure artifact path in output (from Get-FailureArtifact.ps1)
+            var artifactLine = outputLines.FirstOrDefault(line =>
+                line.Contains("Failure artifact written:") && line.Contains("Failed"));
+
+            if (artifactLine == null) return null;
+
+            // Extract path from the line: "Failure artifact written: <path>"
+            var pathMatch = Regex.Match(artifactLine, @"Failure artifact written:\s*(.+)");
+            if (!pathMatch.Success) return null;
+
+            var artifactPath = pathMatch.Groups[1].Value.Trim();
+            if (!File.Exists(artifactPath)) return null;
+
+            // Read the failure artifact and extract error summary
+            var lines = File.ReadAllLines(artifactPath);
+            var errorOutputSection = false;
+            var errorLines = new List<string>();
+
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("## Error Output"))
+                {
+                    errorOutputSection = true;
+                    continue;
+                }
+                if (line.StartsWith("## Investigation Steps"))
+                {
+                    break;
+                }
+                if (errorOutputSection && !line.StartsWith("```"))
+                {
+                    errorLines.Add(line.Trim());
+                }
+            }
+
+            if (errorLines.Count > 0)
+            {
+                var summary = string.Join(" | ", errorLines.Take(3).Where(l => l.Length > 0));
+                return string.IsNullOrWhiteSpace(summary) ? null : SanitizeForDisplay(summary);
+            }
+        }
+        catch { }
+
+        return null;
     }
 
     internal static string SanitizeForDisplay(string text)
@@ -1258,7 +1324,10 @@ public class JobService : IJobService
                 job.EnqueueOutput(
                     "[Tendril] WARNING: MakePlan completed but no plan folder or trash entry was found.");
                 job.Status = JobStatus.Failed;
-                job.StatusMessage = "No plan created";
+
+                // Check for failure artifact to provide better diagnostics
+                var failureMessage = TryReadFailureArtifact(job.OutputLines);
+                job.StatusMessage = failureMessage ?? "No plan created";
             }
         }
         catch

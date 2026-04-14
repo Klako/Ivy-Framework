@@ -1326,7 +1326,7 @@ public class JobService : IJobService
                 job.Status = JobStatus.Failed;
 
                 // Check for failure artifact to provide better diagnostics
-                var failureMessage = TryReadFailureArtifact(job.OutputLines);
+                var failureMessage = TryReadFailureArtifact(job.OutputLines.ToList());
                 job.StatusMessage = failureMessage ?? "No plan created";
             }
         }

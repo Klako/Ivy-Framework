@@ -203,11 +203,7 @@ public class JobsApp : ViewBase
                 BadgeColorMapping = projectColors
             })
             .Renderer(t => t.PlanId, new LinkDisplayRenderer())
-            .Renderer(t => t.StatusMessage, new TextDisplayRenderer
-            {
-                TooltipColumn = nameof(JobItemRow.ErrorContext),
-                TruncateAt = 200
-            })
+            .Renderer(t => t.StatusMessage, new TextDisplayRenderer())
             .Hidden(t => t.Id)
             .Hidden(t => t.LastOutputTimestamp)
             .Hidden(t => t.ErrorContext)

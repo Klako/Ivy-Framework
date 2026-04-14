@@ -321,9 +321,7 @@ describe("validateLinkUrl", () => {
           allowCustomProtocols: true,
         }),
       ).toBe("#");
-      expect(
-        validateLinkUrl('vbscript:msgbox("xss")', { allowCustomProtocols: true }),
-      ).toBe("#");
+      expect(validateLinkUrl('vbscript:msgbox("xss")', { allowCustomProtocols: true })).toBe("#");
     });
 
     it("should reject custom protocols by default", () => {

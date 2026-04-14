@@ -13,6 +13,7 @@ public class CreateIssueDialog(
 {
     public override object? Build()
     {
+        var isCreating = UseState(false);
         var githubService = UseService<IGithubService>();
         var assigneesError = UseState<string?>(null);
         var labelsError = UseState<string?>(null);
@@ -113,10 +114,11 @@ public class CreateIssueDialog(
                     labelsError.Set(null);
                     dialogOpen.Set(false);
                 }),
-                new Button("Create Issue").Primary().OnClick(() =>
+                new Button("Create Issue").Primary().Disabled(isCreating.Value).OnClick(() =>
                 {
-                    if (selectedRepoState.Value is { } repo)
+                    if (selectedRepoState.Value is { } repo && !isCreating.Value)
                     {
+                        isCreating.Set(true);
                         var selectedRepo = repos.FirstOrDefault(r => r.DisplayName == repo);
                         if (selectedRepo != null)
                         {

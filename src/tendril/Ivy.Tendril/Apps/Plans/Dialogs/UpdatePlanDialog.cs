@@ -19,6 +19,7 @@ public class UpdatePlanDialog(
 
     public override object? Build()
     {
+        var isCreating = UseState(false);
         if (!_dialogOpen.Value) return null;
 
         return new Dialog(
@@ -39,23 +40,24 @@ public class UpdatePlanDialog(
                     _updateText.Set("");
                     _dialogOpen.Set(false);
                 }),
-                new Button("Submit Update").Primary().ShortcutKey("Ctrl+Enter").OnClick(() =>
+                new Button("Submit Update").Primary().Disabled(isCreating.Value).ShortcutKey("Ctrl+Enter").OnClick(() =>
                 {
-                    if (!string.IsNullOrWhiteSpace(_updateText.Value))
+                    if (!string.IsNullOrWhiteSpace(_updateText.Value) && !isCreating.Value)
                     {
+                        isCreating.Set(true);
                         // Append >> comments to the latest revision so UpdatePlan can process them
                         var currentContent = _planService.ReadLatestRevision(_selectedPlan.FolderName);
                         var comments = string.Join("\n", _updateText.Value
                             .Split('\n')
                             .Select(line => $">> {line}"));
                         _planService.SavePlan(_selectedPlan.FolderName, currentContent + "\n\n" + comments + "\n");
-                    }
 
-                    _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Updating);
-                    _jobService.StartJob("UpdatePlan", _selectedPlan.FolderPath);
-                    _refreshPlans();
-                    _updateText.Set("");
-                    _dialogOpen.Set(false);
+                        _planService.TransitionState(_selectedPlan.FolderName, PlanStatus.Updating);
+                        _jobService.StartJob("UpdatePlan", _selectedPlan.FolderPath);
+                        _refreshPlans();
+                        _updateText.Set("");
+                        _dialogOpen.Set(false);
+                    }
                 })
             )
         ).Width(Size.Rem(30));

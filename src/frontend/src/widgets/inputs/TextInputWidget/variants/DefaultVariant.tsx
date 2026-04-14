@@ -85,7 +85,12 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
       >
         {/* Prefix with background and separator */}
         {hasPrefix && (
-          <div className={cn("flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]", !isFocused && "border-r border-input")}>
+          <div
+            className={cn(
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]",
+              !isFocused && "border-r border-input",
+            )}
+          >
             {prefixContent}
           </div>
         )}
@@ -179,7 +184,12 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
 
         {/* Suffix with background and separator */}
         {hasSuffix && (
-          <div className={cn("flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]", !isFocused && "border-l border-input")}>
+          <div
+            className={cn(
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]",
+              !isFocused && "border-l border-input",
+            )}
+          >
             {suffixContent}
           </div>
         )}

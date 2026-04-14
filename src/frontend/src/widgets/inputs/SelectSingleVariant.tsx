@@ -318,13 +318,23 @@ export const SelectSingleVariant: React.FC<SelectInputWidgetProps> = ({
           )}
         >
           {hasPrefix && (
-            <div className={cn("flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]", !isOpen && "border-r border-input")}>
+            <div
+              className={cn(
+                "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]",
+                !isOpen && "border-r border-input",
+              )}
+            >
               {prefixContent}
             </div>
           )}
           <div className="flex-1 relative w-full">{selectContent}</div>
           {hasSuffix && (
-            <div className={cn("flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]", !isOpen && "border-l border-input")}>
+            <div
+              className={cn(
+                "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]",
+                !isOpen && "border-l border-input",
+              )}
+            >
               {suffixContent}
             </div>
           )}

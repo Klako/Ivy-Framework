@@ -184,7 +184,7 @@ public class MarkdownHelperTests
 
             Assert.Contains(validFileLink, result);
             Assert.Contains("[Plan 99999 \u26a0\ufe0f](plan://99999)", result);
-            Assert.Single(result.Split("\u26a0\ufe0f"));
+            Assert.Equal(1, result.Split("\u26a0\ufe0f").Length - 1);
         }
         finally
         {
@@ -208,7 +208,7 @@ public class MarkdownHelperTests
 
             Assert.Contains("[broken.cs \u26a0\ufe0f](file:///C:/nonexistent/broken.cs)", result);
             Assert.Contains(validPlanLink, result);
-            Assert.Single(result.Split("\u26a0\ufe0f"));
+            Assert.Equal(1, result.Split("\u26a0\ufe0f").Length - 1);
         }
         finally
         {

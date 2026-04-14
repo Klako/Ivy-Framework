@@ -91,7 +91,6 @@ The Ivy.Console CLI provides a suite of tools to streamline your development wor
 
 Make sure you have the following prerequisites installed:
 - [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
-- [Rust Toolchain](https://rustup.rs/) (latest stable via `rustup`)
 
 1. **Install Ivy CLI**:
 

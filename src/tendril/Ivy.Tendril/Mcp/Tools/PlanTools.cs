@@ -8,7 +8,7 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace Ivy.Tendril.Mcp.Tools;
 
 [McpServerToolType]
-public sealed class PlanTools
+public sealed class PlanTools(McpAuthenticationService authService)
 {
     private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -22,9 +22,12 @@ public sealed class PlanTools
     private static readonly Regex FolderNameRegex = new(@"^(\d{5})-(.+)$", RegexOptions.Compiled);
 
     [McpServerTool(Name = "tendril_get_plan"), Description("Fetch plan metadata by ID or folder path")]
-    public static string GetPlan(
+    public string GetPlan(
         [Description("Plan ID (e.g., '03228') or full folder path")] string planId)
     {
+        if (!authService.ValidateEnvironmentToken())
+            return "Error: Authentication failed. Access denied.";
+
         var plansDir = GetPlansDirectory();
         if (plansDir == null)
             return "Error: TENDRIL_HOME is not set.";
@@ -37,11 +40,14 @@ public sealed class PlanTools
     }
 
     [McpServerTool(Name = "tendril_list_plans"), Description("Query plans by state, project, or date range")]
-    public static string ListPlans(
+    public string ListPlans(
         [Description("Filter by plan state (e.g., Draft, Executing, ReadyForReview, Failed, Completed)")] string? state = null,
         [Description("Filter by project name")] string? project = null,
         [Description("Filter plans created after this date (ISO 8601, e.g., 2026-04-01)")] string? since = null)
     {
+        if (!authService.ValidateEnvironmentToken())
+            return "Error: Authentication failed. Access denied.";
+
         var plansDir = GetPlansDirectory();
         if (plansDir == null)
             return "Error: TENDRIL_HOME is not set.";
@@ -95,12 +101,15 @@ public sealed class PlanTools
     }
 
     [McpServerTool(Name = "tendril_inbox"), Description("Create a new plan by writing to the Tendril inbox")]
-    public static string CreatePlan(
+    public string CreatePlan(
         [Description("Plan title/description")] string title,
         [Description("Project name (optional)")] string? project = null,
         [Description("Priority level: Critical, Important, NiceToHave (optional)")] string? level = null,
         [Description("Detailed prompt/description for plan creation (optional)")] string? prompt = null)
     {
+        if (!authService.ValidateEnvironmentToken())
+            return "Error: Authentication failed. Access denied.";
+
         var tendrilHome = GetTendrilHome();
         if (tendrilHome == null)
             return "Error: TENDRIL_HOME is not set.";
@@ -139,10 +148,13 @@ public sealed class PlanTools
     }
 
     [McpServerTool(Name = "tendril_transition_plan"), Description("Transition a plan to a different state")]
-    public static string TransitionPlan(
+    public string TransitionPlan(
         [Description("Plan ID (e.g., '03228') or full folder path")] string planId,
         [Description("Target state: Draft, Building, Updating, Executing, Completed, Failed, ReadyForReview, Skipped, Icebox, Blocked")] string targetState)
     {
+        if (!authService.ValidateEnvironmentToken())
+            return "Error: Authentication failed. Access denied.";
+
         var plansDir = GetPlansDirectory();
         if (plansDir == null)
             return "Error: TENDRIL_HOME is not set.";

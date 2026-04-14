@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using Ivy.Tendril.Apps.Plans;
+using Ivy.Tendril.Apps.Plans.Dialogs;
 using Ivy.Tendril.Apps.PullRequest;
+using Ivy.Tendril.Apps.PullRequest.Dialogs;
 using Ivy.Tendril.Services;
 
 namespace Ivy.Tendril.Apps;
@@ -15,8 +17,11 @@ public class PullRequestApp : ViewBase
         var nav = UseNavigation();
         var showPlan = UseState<string?>(null);
         var openFile = UseState<string?>(null);
+        var showFollowUpDialog = UseState(false);
+        var selectedRowForFollowUp = UseState<PrRow?>(null);
         var config = UseService<IConfigService>();
         var databaseService = UseService<IPlanDatabaseService>();
+        var jobService = UseService<IJobService>();
         var prStatuses = databaseService.GetAllPrStatuses();
 
         var plans = planService.GetPlans()
@@ -101,6 +106,7 @@ public class PullRequestApp : ViewBase
             })
             .RowActions(
                 new MenuItem("View Plan", Icon: Icons.FileText, Tag: "view-plan").Tooltip("Open the associated plan"),
+                new MenuItem("Follow Up", Icon: Icons.GitBranch, Tag: "follow-up").Tooltip("Create a follow-up plan based on this PR"),
                 new MenuItem("Open PR", Icon: Icons.ExternalLink, Tag: "open-pr").Tooltip(
                     "Open the pull request in browser")
             )
@@ -117,6 +123,11 @@ public class PullRequestApp : ViewBase
                         if (!string.IsNullOrEmpty(row.PlanFolderPath) && Directory.Exists(row.PlanFolderPath))
                             showPlan.Set(row.PlanFolderPath);
                     }
+                    else if (tag == "follow-up")
+                    {
+                        selectedRowForFollowUp.Set(row);
+                        showFollowUpDialog.Set(true);
+                    }
                     else if (tag == "open-pr")
                     {
                         nav.Navigate(row.Pr);
@@ -125,6 +136,29 @@ public class PullRequestApp : ViewBase
 
                 return ValueTask.CompletedTask;
             });
+
+        if (showFollowUpDialog.Value && selectedRowForFollowUp.Value is { } selectedRow)
+        {
+            var projectNames = config.Projects.Select(p => p.Name).ToList();
+            var followUpDialog = new FollowUpDialog(
+                selectedRow.PlanId,
+                selectedRow.Plan,
+                selectedRow.Pr,
+                projectNames,
+                (description, projects, priority) =>
+                {
+                    var project = string.Join(",", projects);
+                    jobService.StartJob("MakePlan", "-Description", description, "-Project", project, "-Priority", priority.ToString());
+                },
+                () =>
+                {
+                    showFollowUpDialog.Set(false);
+                    selectedRowForFollowUp.Set(null);
+                }
+            );
+
+            return Layout.Vertical().Height(Size.Full()) | new Fragment(dataTable, followUpDialog);
+        }
 
         if (showPlan.Value is { } planPath)
         {

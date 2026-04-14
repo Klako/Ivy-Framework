@@ -62,12 +62,6 @@ if ($Description -notmatch '\[FORCE\]') {
     }
 }
 
-$activePlans = & "$programFolder/Tools/Find-ActivePlans.ps1" `
-    -PlansDirectory $script:PlansDir -Repos $repos
-if ($activePlans) {
-    $firmwareValues["ActivePlans"] = $activePlans
-}
-
 $promptFile = PrepareFirmware $PSScriptRoot $logFile $programFolder $firmwareValues
 
 $agent = GetAgentCommand -Promptware "MakePlan"

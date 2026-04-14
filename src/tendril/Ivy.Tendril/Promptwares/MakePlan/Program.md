@@ -122,13 +122,6 @@ The plan ID is pre-allocated by the launcher script and provided in the firmware
   gh search issues "<keyword>" --repo <owner>/<repo> --json title,url,number,state
   ```
   Derive the repo owner/name from the repos in `config.yaml`. If an issue already covers the task, reference it in the plan and avoid creating workaround plans.
-- **Check for concurrent active plans on overlapping repos.** Check the `ActivePlans` firmware value. If present, it contains plans in Building/Executing state (format: `folderName|title|state|repos` per line). After determining this plan's repos, check for overlap with the listed active plans. If `ActivePlans` is absent, no active plans were found — skip this check.
-
-  If overlapping active plans are found, add a warning to the `## Questions` section of the plan revision:
-
-  > **Warning:** Plans \<IDs\> are currently executing on overlapping repositories. Review their changes before executing this plan to avoid conflicts.
-
-  This makes concurrent execution visible so the reviewer can decide whether to wait or proceed.
 
 ### 3.5. Validate Code State
 

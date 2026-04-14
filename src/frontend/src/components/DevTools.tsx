@@ -275,13 +275,17 @@ export function DevTools() {
   }, [enabled, dialogWidget, handleMouseOver, handleClick, handleKeyDown, handleWheel]);
 
   useEffect(() => {
-    if (!enabled || !highlightedWidget || dialogWidget) return;
+    if (!enabled) return;
 
-    const { bounds, type } = highlightedWidget;
+    const activeWidget = dialogWidget ?? highlightedWidget;
+    if (!activeWidget) return;
+
+    const { bounds, type } = activeWidget;
     if (bounds.width === 0 && bounds.height === 0) return;
 
+    const isSelected = !!dialogWidget;
     const overlay = document.createElement("div");
-    overlay.className = "ivy-devtools ivy-devtools-overlay";
+    overlay.className = `ivy-devtools ivy-devtools-overlay${isSelected ? " ivy-devtools-overlay--selected" : ""}`;
     Object.assign(overlay.style, {
       top: `${bounds.top}px`,
       left: `${bounds.left}px`,

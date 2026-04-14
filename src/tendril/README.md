@@ -1,6 +1,6 @@
-# Tendril
+# Ivy Tendril
 
-![Tendril Logo](../assets/logo_green_w200.png)
+![Tendril Logo](Ivy.Tendril/Assets/Tendril.svg)
 
 A web-based agent orchestration platform for managing AI-driven development plans.
 

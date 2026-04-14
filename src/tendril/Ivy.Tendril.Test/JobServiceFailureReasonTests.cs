@@ -8,7 +8,7 @@ public class JobServiceFailureReasonTests
     [Fact]
     public void ExtractFailureReason_EmptyOutput_ReturnsUnknownError()
     {
-        var result = JobService.ExtractFailureReason([]);
+        var result = JobService.ExtractFailureReason([], "test");
         Assert.Equal("Unknown error (exit code non-zero)", result);
     }
 
@@ -24,7 +24,7 @@ public class JobServiceFailureReasonTests
             "[stderr] fatal: cannot continue"
         };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Contains("fatal: cannot continue", result);
         Assert.Contains("error: connection refused", result);
     }
@@ -39,7 +39,7 @@ public class JobServiceFailureReasonTests
             "Build failed with 3 errors"
         };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal("Build failed with 3 errors", result);
     }
 
@@ -49,7 +49,7 @@ public class JobServiceFailureReasonTests
         var longLine = new string('x', 300);
         var lines = new List<string> { longLine };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal(203, result.Length); // 200 + "..."
         Assert.EndsWith("...", result);
     }
@@ -59,7 +59,7 @@ public class JobServiceFailureReasonTests
     {
         var lines = new List<string> { "", "  ", "" };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal("Unknown error (exit code non-zero)", result);
     }
 
@@ -73,7 +73,7 @@ public class JobServiceFailureReasonTests
             "[stderr]  "
         };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal("actual error message", result);
     }
 
@@ -87,7 +87,7 @@ public class JobServiceFailureReasonTests
             "More regular output after stderr"
         };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal("the real error", result);
     }
 
@@ -128,7 +128,7 @@ public class JobServiceFailureReasonTests
             "[stderr] \x1B[31merror: build failed\x1B[0m"
         };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal("error: build failed", result);
     }
 
@@ -140,7 +140,7 @@ public class JobServiceFailureReasonTests
             "[stderr] error:\tfailed to\t\tcompile\nwith errors"
         };
 
-        var result = JobService.ExtractFailureReason(lines);
+        var result = JobService.ExtractFailureReason(lines, "test");
         Assert.Equal("error: failed to compile with errors", result);
         Assert.DoesNotContain("\t", result);
         Assert.DoesNotContain("\n", result);

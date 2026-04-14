@@ -282,11 +282,6 @@ public class ContentView(
             content |= Layout.Vertical().AlignContent(Align.Center).Height(Size.Full())
                        | Text.Muted("Loading...");
         }
-        else if (planData is null)
-        {
-            content |= Layout.Vertical().AlignContent(Align.Center).Height(Size.Full())
-                       | Text.Muted("Loading...");
-        }
         else
         {
             // Summary tab content

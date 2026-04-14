@@ -27,9 +27,12 @@ public class ImportIssuesDialog(IState<bool> dialogOpen, IConfigService config) 
         var reposError = UseState<string?>(null);
 
         var assigneesQuery = UseQuery<string[], string>(
-            selectedRepo.Value ?? "",
-            async (repoName, _) =>
+            $"assignees:{selectedRepo.Value ?? ""}",
+            async (key, _) =>
             {
+                // Strip the "assignees:" prefix to get the actual repo name
+                var repoName = key.StartsWith("assignees:") ? key.Substring("assignees:".Length) : key;
+
                 if (string.IsNullOrEmpty(repoName))
                 {
                     assigneesError.Set(null);
@@ -51,9 +54,12 @@ public class ImportIssuesDialog(IState<bool> dialogOpen, IConfigService config) 
         );
 
         var labelsQuery = UseQuery<string[], string>(
-            selectedRepo.Value ?? "",
-            async (repoName, _) =>
+            $"labels:{selectedRepo.Value ?? ""}",
+            async (key, _) =>
             {
+                // Strip the "labels:" prefix to get the actual repo name
+                var repoName = key.StartsWith("labels:") ? key.Substring("labels:".Length) : key;
+
                 if (string.IsNullOrEmpty(repoName))
                 {
                     labelsError.Set(null);

@@ -1,6 +1,7 @@
 codingAgent: claude
 jobTimeout: 30
 staleOutputTimeout: 10
+gitTimeout: 10
 maxConcurrentJobs: 30
 projects:
 - name: Framework

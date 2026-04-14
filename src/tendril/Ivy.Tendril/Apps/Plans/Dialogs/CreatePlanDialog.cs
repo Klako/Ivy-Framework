@@ -22,6 +22,7 @@ public class CreatePlanDialog(
 
     public override object Build()
     {
+        var isCreating = UseState(false);
         var createPlanText = UseState("");
         var selectedProjects = UseState(_defaultProjects);
         var selectedPriority = UseState("Normal");
@@ -55,10 +56,11 @@ public class CreatePlanDialog(
             ),
             new DialogFooter(
                 new Button("Cancel").Outline().OnClick(onClose),
-                new Button("Create").Primary().ShortcutKey("Ctrl+Enter").OnClick(() =>
+                new Button("Create").Primary().Disabled(isCreating.Value).ShortcutKey("Ctrl+Enter").OnClick(() =>
                 {
-                    if (!string.IsNullOrWhiteSpace(createPlanText.Value))
+                    if (!string.IsNullOrWhiteSpace(createPlanText.Value) && !isCreating.Value)
                     {
+                        isCreating.Set(true);
                         var projects = selectedProjects.Value.Any() ? selectedProjects.Value : ["Auto"];
                         onCreatePlan(createPlanText.Value, projects, ParsePriority(selectedPriority.Value));
                         onClose();

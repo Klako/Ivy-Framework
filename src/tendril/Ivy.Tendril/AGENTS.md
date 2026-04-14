@@ -37,3 +37,40 @@ All paths derive from these sources:
 3. Firmware header variables (`PlanFolder`, `PlansDirectory`, `ArtifactsDir`, etc.) derived from TENDRIL_HOME
 
 **Never hardcode absolute paths** like `D:\Tendril` or `D:\Plans` in code or promptware instructions — always use the config values or firmware header variables.
+
+## MCP Server
+
+Tendril includes a built-in MCP (Model Context Protocol) server that exposes plan data and operations to agents. Start it with:
+
+```bash
+tendril mcp
+```
+
+The server runs over stdio and exposes these tools:
+
+- **`tendril_get_plan`** — Fetch plan metadata and latest revision by ID (e.g., `03228`) or folder path
+- **`tendril_list_plans`** — Query plans by state, project, or date range (returns up to 50 results)
+- **`tendril_inbox`** — Create a new plan by writing to the Tendril inbox (picked up by InboxWatcherService)
+
+### Configuration for Claude Code
+
+Add to `~/.claude/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "tendril": {
+      "command": "tendril",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### Implementation
+
+- `Commands/McpCommand.cs` — Command handler that intercepts `tendril mcp` args
+- `Mcp/TendrilMcpServer.cs` — Configures and runs the MCP server using the `ModelContextProtocol` SDK
+- `Mcp/Tools/PlanTools.cs` — Tool definitions for plan queries and inbox creation
+
+The MCP server reads plans directly from the filesystem via `TENDRIL_HOME/Plans/` and writes inbox items to `TENDRIL_HOME/Inbox/`. It does not require the Tendril web server to be running.

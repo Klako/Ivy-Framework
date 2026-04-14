@@ -602,7 +602,10 @@ function Stop-Heartbeat {
 }
 
 function GetAgentCommand {
-    param([string]$Promptware = "")
+    param(
+        [string]$Promptware = "",
+        [string]$ProfileOverride = ""
+    )
 
     $configPath = $script:ConfigPath
     $allowedTools = @()
@@ -638,6 +641,12 @@ function GetAgentCommand {
                 if ($specificConfig) {
                     if ($specificConfig.profile) { $pwConfig.profile = $specificConfig.profile }
                     if ($specificConfig.allowedTools) { $pwConfig.allowedTools = $specificConfig.allowedTools }
+                }
+
+                # Layer 3: ProfileOverride takes precedence over config values
+                if ($ProfileOverride) {
+                    $pwConfig.profile = $ProfileOverride
+                    Write-Host "Profile override applied: $ProfileOverride" -ForegroundColor Cyan
                 }
             }
 

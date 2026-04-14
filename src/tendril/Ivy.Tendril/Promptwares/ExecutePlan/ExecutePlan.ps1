@@ -39,7 +39,13 @@ if ($Note) {
 
 $promptFile = PrepareFirmware $PSScriptRoot $logFile $programFolder $firmwareValues
 
-$agent = GetAgentCommand -Promptware "ExecutePlan"
+$executionProfile = $null
+if ($planInfo.Yaml.executionProfile) {
+    $executionProfile = $planInfo.Yaml.executionProfile
+    Write-Host "Using recommended execution profile from plan: $executionProfile" -ForegroundColor Cyan
+}
+
+$agent = GetAgentCommand -Promptware "ExecutePlan" -ProfileOverride $executionProfile
 $sessionId = $env:TENDRIL_SESSION_ID
 if (-not $sessionId) {
     $sessionId = [guid]::NewGuid().ToString()

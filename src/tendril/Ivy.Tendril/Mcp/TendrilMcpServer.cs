@@ -11,6 +11,9 @@ public class TendrilMcpServer
         {
             var builder = Host.CreateEmptyApplicationBuilder(settings: null);
 
+            // Register authentication service
+            builder.Services.AddSingleton<McpAuthenticationService>();
+
             builder.Services
                 .AddMcpServer(options =>
                 {
@@ -24,6 +27,15 @@ public class TendrilMcpServer
                 .WithToolsFromAssembly();
 
             var host = builder.Build();
+
+            // Validate authentication on startup
+            var authService = host.Services.GetRequiredService<McpAuthenticationService>();
+            if (!authService.ValidateEnvironmentToken())
+            {
+                Console.Error.WriteLine("MCP server authentication failed. Ensure TENDRIL_MCP_TOKEN is set correctly.");
+                return 1;
+            }
+
             await host.RunAsync();
             return 0;
         }

@@ -76,6 +76,18 @@ public class JobsApp : ViewBase
             return Disposable.Create(() => jobService.JobsChanged -= OnJobsChanged);
         });
 
+        UseInterval(() =>
+        {
+            var hasActiveOrRecentJobs = jobService.GetJobs().Any(j =>
+                j.Status == JobStatus.Running ||
+                (j.Status is JobStatus.Stopped or JobStatus.Failed or JobStatus.Timeout or JobStatus.Completed
+                 && j.CompletedAt.HasValue
+                 && DateTime.UtcNow - j.CompletedAt.Value < TimeSpan.FromSeconds(5)));
+
+            if (hasActiveOrRecentJobs)
+                refreshToken.Refresh();
+        }, TimeSpan.FromSeconds(5));
+
         var updateStream = UseDataTableUpdates(
             Observable.Interval(TimeSpan.FromSeconds(1))
                 .SelectMany(_ =>

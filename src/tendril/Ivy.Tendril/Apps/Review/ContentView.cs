@@ -268,6 +268,14 @@ public class ContentView(
             content |= Layout.Vertical().AlignContent(Align.Center).Height(Size.Full())
                        | Text.Muted("Loading...");
         }
+        else if (planData is null)
+        {
+            var errorMsg = planContentQuery.Error is { } err
+                ? $"Failed to load plan data: {err.Message}"
+                : "Failed to load plan data. Please try refreshing.";
+            content |= Layout.Vertical().AlignContent(Align.Center).Height(Size.Full())
+                       | Text.Muted(errorMsg);
+        }
         else
         {
             // Summary tab content

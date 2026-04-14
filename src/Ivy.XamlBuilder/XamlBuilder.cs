@@ -285,7 +285,21 @@ public class XamlBuilder
         if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Responsive<>))
         {
             var innerType = targetType.GetGenericArguments()[0];
-            return ConvertValue(value, innerType);
+            var innerValue = ConvertValue(value, innerType);
+
+            // Create Responsive<T> instance with Default property set
+            var responsiveInstance = Activator.CreateInstance(targetType);
+            var defaultProp = targetType.GetProperty("Default");
+            if (defaultProp != null)
+            {
+                // For init-only properties, we need to get the backing field
+                var backingField = targetType.GetField(
+                    "<Default>k__BackingField",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                backingField?.SetValue(responsiveInstance, innerValue);
+            }
+
+            return responsiveInstance;
         }
 
         throw new InvalidOperationException($"Cannot convert '{value}' to {targetType.Name}.");

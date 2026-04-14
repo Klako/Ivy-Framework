@@ -130,6 +130,7 @@ public class TendrilSettings
     public string CodingAgent { get; set; } = "claude";
     public int JobTimeout { get; set; } = 30;
     public int StaleOutputTimeout { get; set; } = 10;
+    public int GitTimeout { get; set; } = 10;
     public int MaxConcurrentJobs { get; set; } = 5;
     public List<ProjectConfig> Projects { get; set; } = new();
     public List<VerificationConfig> Verifications { get; set; } = new();

@@ -4,6 +4,7 @@
 codingAgent: claude
 jobTimeout: 30
 staleOutputTimeout: 10
+gitTimeout: 10  # Timeout in seconds for git operations (default: 10)
 maxConcurrentJobs: 5  # Maximum number of jobs to run concurrently (default: 5)
 
 # Variable Expansion Support:

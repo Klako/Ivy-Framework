@@ -473,7 +473,7 @@ public class ContentView(
             }
             else if (changesData is null)
             {
-                var errorMsg = allChangesQuery.Error is { } err
+                var errorMsg = planContentQuery.Error is { } err
                     ? $"Failed to load changes: {err.Message}"
                     : "No commits yet.";
                 changesTabContent = Text.Muted(errorMsg);

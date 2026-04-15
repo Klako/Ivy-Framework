@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 namespace Ivy;
 
 [JsonConverter(typeof(ThicknessJsonConverter))]
+[Core.Sync.PropValueAsString]
 public readonly record struct Thickness(int Left, int Top, int Right, int Bottom)
 {
     public Thickness(int uniform) : this(uniform, uniform, uniform, uniform) { }

@@ -1,31 +1,50 @@
 using Ivy.Tendril.Apps.Plans;
 using Ivy.Tendril.Services;
+using Ivy.Tendril.Test.TestHelpers;
 using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace Ivy.Tendril.Test.Services;
 
 public class PlanReaderServiceTests
 {
+    private class TestPlanWatcherService : IPlanWatcherService
+    {
+        public List<string> NotifiedFolders { get; } = new();
+        public event Action<string?>? PlansChanged;
+
+        public void NotifyChanged(string? folderName = null)
+        {
+            if (folderName != null)
+                NotifiedFolders.Add(folderName);
+        }
+
+        public void Dispose() { }
+    }
+
+    private class TestLogger : ILogger<PlanReaderService>
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => false;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
+    }
+
     [Fact]
     public void TransitionState_NotifiesPlanWatcher()
     {
         // Arrange
-        var mockConfig = new Mock<IConfigService>();
-        mockConfig.Setup(c => c.PlanFolder).Returns(Path.GetTempPath());
-
-        var mockLogger = new Mock<ILogger<PlanReaderService>>();
-        var mockWatcher = new Mock<IPlanWatcherService>();
+        var testConfig = new StubConfigService();
+        var testLogger = new TestLogger();
+        var testWatcher = new TestPlanWatcherService();
 
         var service = new PlanReaderService(
-            mockConfig.Object,
-            mockLogger.Object,
-            planWatcherService: mockWatcher.Object);
+            testConfig,
+            testLogger,
+            planWatcherService: testWatcher);
 
         var folderName = "01234-TestPlan";
 
         // Create a temporary plan folder and plan.yaml file
-        var planFolder = Path.Combine(Path.GetTempPath(), folderName);
+        var planFolder = Path.Combine(testConfig.PlanFolder, folderName);
         Directory.CreateDirectory(planFolder);
         var planYamlPath = Path.Combine(planFolder, "plan.yaml");
         File.WriteAllText(planYamlPath, "state: Draft\nproject: TestProject\n");
@@ -36,7 +55,8 @@ public class PlanReaderServiceTests
             service.TransitionState(folderName, PlanStatus.ReadyForReview);
 
             // Assert
-            mockWatcher.Verify(w => w.NotifyChanged(folderName), Times.Once);
+            Assert.Contains(folderName, testWatcher.NotifiedFolders);
+            Assert.Single(testWatcher.NotifiedFolders);
         }
         finally
         {
@@ -50,22 +70,20 @@ public class PlanReaderServiceTests
     public void SaveRevision_NotifiesPlanWatcher()
     {
         // Arrange
-        var mockConfig = new Mock<IConfigService>();
-        mockConfig.Setup(c => c.PlanFolder).Returns(Path.GetTempPath());
-
-        var mockLogger = new Mock<ILogger<PlanReaderService>>();
-        var mockWatcher = new Mock<IPlanWatcherService>();
+        var testConfig = new StubConfigService();
+        var testLogger = new TestLogger();
+        var testWatcher = new TestPlanWatcherService();
 
         var service = new PlanReaderService(
-            mockConfig.Object,
-            mockLogger.Object,
-            planWatcherService: mockWatcher.Object);
+            testConfig,
+            testLogger,
+            planWatcherService: testWatcher);
 
         var folderName = "01234-TestPlan";
         var content = "# Test Revision\n\nTest content";
 
         // Create a temporary plan folder
-        var planFolder = Path.Combine(Path.GetTempPath(), folderName);
+        var planFolder = Path.Combine(testConfig.PlanFolder, folderName);
         Directory.CreateDirectory(planFolder);
 
         try
@@ -77,7 +95,8 @@ public class PlanReaderServiceTests
             Thread.Sleep(100);
 
             // Assert
-            mockWatcher.Verify(w => w.NotifyChanged(folderName), Times.Once);
+            Assert.Contains(folderName, testWatcher.NotifiedFolders);
+            Assert.Single(testWatcher.NotifiedFolders);
         }
         finally
         {

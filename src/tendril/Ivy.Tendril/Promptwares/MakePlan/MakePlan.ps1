@@ -74,6 +74,8 @@ if ($agent.Executable -eq "claude") {
     $extraArgs += @("--session-id", $sessionId)
 }
 $heartbeat = Start-Heartbeat
+$agentExitCode = 0
+$agentException = $null
 try {
     $rawLogFile = [System.IO.Path]::ChangeExtension($logFile, ".raw.jsonl")
     $startTs = (Get-Date).ToUniversalTime().ToString("o")
@@ -97,6 +99,16 @@ try {
         Add-Content -Path $rawLogFile -Value $line -Encoding UTF8
         $_
     }
+
+    if ($LASTEXITCODE -ne 0) {
+        $agentExitCode = $LASTEXITCODE
+    }
+}
+catch {
+    $agentException = $_
+    $errorMsg = "[tendril] PowerShell Exception: $($_.Exception.Message)"
+    Add-Content -Path $rawLogFile -Value $errorMsg -Encoding UTF8
+    Write-Host $errorMsg -ForegroundColor Red
 }
 finally {
     Stop-Heartbeat $heartbeat
@@ -145,6 +157,51 @@ else {
     }
     else {
         Write-Host "ERROR: Plan $planIdFormatted was not created. No plan folder or trash entry found." -ForegroundColor Red
+
+        # Create failure artifact
+        $errorLines = @()
+        if (Test-Path $rawLogFile) {
+            $rawContent = Get-Content $rawLogFile -ErrorAction SilentlyContinue
+            $errorLines = $rawContent | Where-Object { $_ -match '\[stderr\]|ERROR|Exception|failed' } | Select-Object -Last 20
+        }
+
+        $exitCodeOrException = if ($agentException) {
+            "PowerShell Exception: $($agentException.Exception.Message)"
+        } elseif ($agentExitCode -ne 0) {
+            "$agentExitCode"
+        } else {
+            "0 (but no plan created)"
+        }
+
+        & "$programFolder/Tools/Get-FailureArtifact.ps1" `
+            -PlanId $planIdFormatted `
+            -Description $Description `
+            -Project $Project `
+            -ExitCodeOrException $exitCodeOrException `
+            -ErrorLines $errorLines
+
         exit 1
     }
+}
+
+# Also create failure artifact if agent threw exception or had non-zero exit (but somehow continued)
+if ($agentException -or $agentExitCode -ne 0) {
+    $errorLines = @()
+    if (Test-Path $rawLogFile) {
+        $rawContent = Get-Content $rawLogFile -ErrorAction SilentlyContinue
+        $errorLines = $rawContent | Where-Object { $_ -match '\[stderr\]|ERROR|Exception|failed' } | Select-Object -Last 20
+    }
+
+    $exitCodeOrException = if ($agentException) {
+        "PowerShell Exception: $($agentException.Exception.Message)"
+    } else {
+        "$agentExitCode"
+    }
+
+    & "$programFolder/Tools/Get-FailureArtifact.ps1" `
+        -PlanId $planIdFormatted `
+        -Description $Description `
+        -Project $Project `
+        -ExitCodeOrException $exitCodeOrException `
+        -ErrorLines $errorLines
 }

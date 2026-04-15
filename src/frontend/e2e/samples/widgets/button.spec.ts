@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
+//test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
 
 // Shared setup function
 async function setupButtonPage(page: Page): Promise<void> {
@@ -111,7 +111,7 @@ test.describe("Button Widget Tests", () => {
     await expect(firstIconButton.locator("svg").first()).toBeVisible();
   });
 
-  test.skip("should render buttons with left and right icon positions", async ({ page }) => {
+  test("should render buttons with left and right icon positions", async ({ page }) => {
     // Find all buttons with both text and icons
     const buttonsWithIcons = page.locator("button:has(svg)");
     const count = await buttonsWithIcons.count();
@@ -180,7 +180,7 @@ test.describe("Button Widget Tests", () => {
     await expect(updatedLabel).toBeVisible();
   });
 
-  test.skip("should handle complex multi-step interactions", async ({ page }) => {
+  test("should handle complex multi-step interactions", async ({ page }) => {
     // Step 1: Click Primary button
     await page.getByRole("button", { name: "Primary", exact: true }).first().click();
 
@@ -209,7 +209,7 @@ test.describe("Button Widget Tests", () => {
     await expect(page.locator("text=/Button.*was clicked/")).toBeVisible();
   });
 
-  test.skip("should verify all button methods work together", async ({ page }) => {
+  test("should verify all button methods work together", async ({ page }) => {
     // Test enabled, disabled, and loading states
     await page.getByRole("button", { name: "Primary", exact: true }).first().click();
 

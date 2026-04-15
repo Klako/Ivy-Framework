@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
+//test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
 
 // Shared setup function
 async function setupBoolInputPage(page: Page): Promise<void> {
@@ -34,7 +34,7 @@ test.describe("Bool Input Tests", () => {
   });
 
   test.describe("Checkbox Variants", () => {
-    test.skip("should test checkbox with description interactions", async ({ page }) => {
+    test("should test checkbox with description interactions", async ({ page }) => {
       // Test true state with description
       const trueCheckbox = page.getByTestId("checkbox-true-state-width-description");
       await expect(trueCheckbox).toBeVisible();
@@ -77,7 +77,7 @@ test.describe("Bool Input Tests", () => {
       await expect(nullCheckbox).toHaveAttribute("aria-checked", "mixed");
     });
 
-    test.skip("should test checkbox without description interactions", async ({ page }) => {
+    test("should test checkbox without description interactions", async ({ page }) => {
       // Test true state without description
       const trueCheckbox = page.getByTestId("checkbox-true-state-width");
       await expect(trueCheckbox).toBeVisible();

@@ -28,6 +28,7 @@ export const TreeItem: React.FC<TreeItemWidgetProps> = ({
   onRowActionClick,
 }) => {
   const [isOpen, setIsOpen] = React.useState(item.expanded ?? false);
+  const [hovered, setHovered] = React.useState(false);
   const hasChildren = item.children && item.children.length > 0;
   const gapClass = densityTreeGap[density ?? Densities.Medium];
 
@@ -85,24 +86,46 @@ export const TreeItem: React.FC<TreeItemWidgetProps> = ({
           tabIndex={item.disabled ? -1 : 0}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
         >
-          <CollapsibleTrigger asChild>
-            <button
-              className="flex items-center justify-center h-5 w-5 shrink-0 rounded-sm hover:bg-accent transition-colors"
-              onClick={handleToggle}
-              tabIndex={-1}
-              disabled={item.disabled}
-            >
-              <ChevronRight
-                className={cn(
-                  "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
-                  isOpen && "rotate-90",
-                )}
-              />
-            </button>
-          </CollapsibleTrigger>
-          {item.icon && item.icon !== "None" && (
-            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" name={item.icon} />
+          {item.icon && item.icon !== "None" ? (
+            <CollapsibleTrigger asChild>
+              <button
+                className="flex items-center justify-center h-5 w-5 shrink-0 rounded-sm hover:bg-accent transition-colors"
+                onClick={handleToggle}
+                tabIndex={-1}
+                disabled={item.disabled}
+              >
+                <span style={{ display: hovered ? "inline-flex" : "none" }}>
+                  <ChevronRight
+                    className={cn(
+                      "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+                      isOpen && "rotate-90",
+                    )}
+                  />
+                </span>
+                <span style={{ display: hovered ? "none" : "inline-flex" }}>
+                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" name={item.icon} />
+                </span>
+              </button>
+            </CollapsibleTrigger>
+          ) : (
+            <CollapsibleTrigger asChild>
+              <button
+                className="flex items-center justify-center h-5 w-5 shrink-0 rounded-sm hover:bg-accent transition-colors"
+                onClick={handleToggle}
+                tabIndex={-1}
+                disabled={item.disabled}
+              >
+                <ChevronRight
+                  className={cn(
+                    "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+                    isOpen && "rotate-90",
+                  )}
+                />
+              </button>
+            </CollapsibleTrigger>
           )}
           <span className="truncate flex-1">{item.label}</span>
 

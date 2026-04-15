@@ -7,6 +7,7 @@ using Ivy.Core.Helpers;
 using Ivy.Core.Hooks;
 using Ivy.NativeJsonDiff;
 using Ivy.Core.Sync;
+using MessagePack;
 
 namespace Ivy.Core;
 

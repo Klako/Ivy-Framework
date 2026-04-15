@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
+//test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
 
 // Constants
 const AUDIO_TEST_IDS = {
@@ -425,7 +425,7 @@ test.describe("Audio Player Tests", () => {
       });
     });
 
-    test.skip("should test audio time controls", async ({ page }) => {
+    test("should test audio time controls", async ({ page }) => {
       const basicAudio = page.getByTestId(AUDIO_TEST_IDS.BASIC);
       await expect(basicAudio).toBeVisible();
 

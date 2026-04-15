@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
+//test.skip(true, "Temporarily skipping samples E2E suite while PR stabilizes");
 
 // Shared setup function for date-time input tests
 async function setupDateTimeInputPage(page: Page): Promise<void> {

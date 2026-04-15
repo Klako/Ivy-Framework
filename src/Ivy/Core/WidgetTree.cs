@@ -72,11 +72,29 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
     private readonly IContentBuilder _contentBuilder;
     private readonly IServiceProvider _appServices;
 
+#if BENCHMARK
+    private StreamWriter _benchmarkLog;
+#endif
+
     public WidgetTree(IView rootView, IContentBuilder contentBuilder, IServiceProvider appServices)
     {
         _contentBuilder = contentBuilder;
         _appServices = appServices;
         RootView = rootView;
+#if BENCHMARK
+        var viewTypeName = rootView.GetType().Name;
+        var now = DateTime.Now;
+        var logTime = $"{now:yyyy-MM-ddTHHmmssZ}";
+        Directory.CreateDirectory("Benchmark");
+        _benchmarkLog = new StreamWriter(File.OpenWrite($"benchmark\\Timings_{rootView.GetType().Name}_{logTime}.csv"));
+#if JSONPATCH
+        _benchmarkLog.WriteLine("Iteration,Before JSON serialize,Before replace,Before JSON diff,After replace or diff");
+        _benchmarkLog.Flush();
+#else
+        _benchmarkLog.WriteLine("Iteration,BeforeDiff,AfterDiff");
+        _benchmarkLog.Flush();
+#endif
+#endif
 
         async void OnNext(string[] requestedViewIds) =>
             await RefreshRequested(requestedViewIds);
@@ -188,7 +206,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
     {
         try
         {
-#if DEBUG
+#if DEBUG || BENCHMARK
             var stopWatch = Stopwatch.StartNew();
 #endif
 
@@ -201,17 +219,11 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             var parentId = node.ParentId;
 
             var indices = node.GetWidgetTreeIndices();
-            JsonNode? previousJSON = null;
-            IWidget? previousTree = null;
-
-            if (Environment.GetEnvironmentVariable("DIFF_TYPE") == "jsonpatch")
-            {
-                previousJSON = node.GetSerializedWidgetTree();
-            }
-            else
-            {
-                previousTree = node.GetWidgetTree();
-            }
+#if JSONPATCH
+            JsonNode? previous = node.GetSerializedWidgetTree();
+#else
+            IWidget? previousTree = node.GetWidgetTree();
+#endif
 
             var partial = BuildView(node.View!, node.ParentTreePath.Clone(), node.Index, parentId, node.AncestorContext, isRefreshingView: true, isHotReload);
 
@@ -243,96 +255,117 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
                 }
             }
 
-            if (Environment.GetEnvironmentVariable("DIFF_TYPE") == "jsonpatch")
-            {
-                var update = partial.GetSerializedWidgetTree();
-
-                var previousId = previousJSON?["id"]?.GetValue<string>();
-                var updateId = update?["id"]?.GetValue<string>();
-
-                JsonNode? patch;
-
-                if (previousId != null && updateId != null && previousId != updateId)
-                {
-                    patch = new JsonArray(new JsonObject
-                    {
-                        ["op"] = "replace",
-                        ["path"] = "",
-                        ["value"] = update?.DeepClone()
-                    });
-                }
-                else if (update != null && previousJSON != null)
-                {
-                    // [Native Patch Integration] Execute mathematically independent zero-allocation diffing via C/Rust!
-                    var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(previousJSON);
-                    var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(update);
-                    patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
-                }
-                else
-                {
-                    patch = null;
-                }
-
-                if (patch == null || patch.AsArray().Count == 0)
-                {
-                    return null!;
-                }
-
-                _iteration += 1;
-                string? hash = null;
-
-#if DEBUG
-                DebugHelpers.CheckIfIdUsedMultipleTimes(NodeTree);
-                hash = DebugHelpers.CalculateTreeHash(NodeTree?.GetWidgetTree()?.Serialize());
-                if (Environment.GetEnvironmentVariable("IVY_DUMP_WIDGET_TREES") == "1")
-                {
-                    stopWatch.Start();
-                    DebugHelpers.LogUpdatedTree(previousJSON, update, patch, stopWatch.ElapsedMilliseconds, _iteration, hash);
-                }
+#if JSONPATCH
+#if BENCHMARK
+            var timingBeforeJsonSerialize = stopWatch.Elapsed.TotalMicroseconds;
 #endif
-                return new WidgetTreeChanged(viewId, indices, new WidgetJsonPatch() { Patches = patch }, _iteration, hash);
+            var update = partial.GetSerializedWidgetTree();
+
+            var previousId = previous?["id"]?.GetValue<string>();
+            var updateId = update?["id"]?.GetValue<string>();
+
+            JsonNode? patch;
+
+            double? timingBeforeFullReplace = null;
+            double? timingBeforeJsonDiff = null;
+
+            if (previousId != null && updateId != null && previousId != updateId)
+            {
+                timingBeforeFullReplace = stopWatch.Elapsed.TotalMicroseconds;
+                patch = new JsonArray(new JsonObject
+                {
+                    ["op"] = "replace",
+                    ["path"] = "",
+                    ["value"] = update?.DeepClone()
+                });
+            }
+            else if (update != null && previous != null)
+            {
+                timingBeforeJsonDiff = stopWatch.Elapsed.TotalMicroseconds;
+                // [Native Patch Integration] Execute mathematically independent zero-allocation diffing via C/Rust!
+                var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(previous);
+                var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(update);
+                patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
             }
             else
             {
-                var currentTree = partial.GetWidgetTree();
-
-                var diff = TreeDiffer.ComputeDiff(previousTree!, currentTree!);
-
-                if (diff == null)
-                {
-                    return null;
-                }
-
-                _iteration += 1;
-
-                string? hash = null;
-
-                string? op = null;
-                if (diff is IWidget widget)
-                {
-                    op = "replace";
-                }
-                else if (diff is WidgetUpdate update)
-                {
-                    op = "update";
-                }
-
-                if (op == null)
-                {
-                    return null;
-                }
-
-                var patch = new WidgetNewPatch()
-                {
-                    Op = op,
-                    Update = diff
-                };
-
-                return new WidgetTreeChanged(viewId, indices, patch, _iteration, hash);
-
+                patch = null;
             }
 
+#if BENCHMARK
+            var timingAfterJsonPatch = stopWatch.Elapsed.TotalMicroseconds;
+#endif
 
+            if (patch == null || patch.AsArray().Count == 0)
+            {
+                return null!;
+            }
+
+            _iteration += 1;
+            string? hash = null;
+
+#if DEBUG
+            DebugHelpers.CheckIfIdUsedMultipleTimes(NodeTree);
+            hash = DebugHelpers.CalculateTreeHash(NodeTree?.GetWidgetTree()?.Serialize());
+            if (Environment.GetEnvironmentVariable("IVY_DUMP_WIDGET_TREES") == "1")
+            {
+                stopWatch.Start();
+                DebugHelpers.LogUpdatedTree(previous, update, patch, stopWatch.ElapsedMilliseconds, _iteration, hash);
+            }
+#endif
+#if BENCHMARK
+            _benchmarkLog.WriteLine($"{_iteration},{timingBeforeJsonSerialize},{timingBeforeFullReplace},{timingBeforeJsonDiff},{timingAfterJsonPatch}");
+            _benchmarkLog.Flush();
+#endif
+            return new WidgetTreeChanged(viewId, indices, new WidgetJsonPatch() { Patches = patch }, _iteration, hash);
+#else
+
+            var currentTree = partial.GetWidgetTree();
+
+#if BENCHMARK
+            var timingBeforeDiff = stopWatch.Elapsed.TotalMicroseconds;
+#endif
+            var diff = TreeDiffer.ComputeDiff(previousTree!, currentTree!);
+#if BENCHMARK
+            var timingAfterDiff = stopWatch.Elapsed.TotalMicroseconds;
+#endif
+
+            if (diff == null)
+            {
+                return null;
+            }
+
+            _iteration += 1;
+
+            string? hash = null;
+
+            string? op = null;
+            if (diff is IWidget widget)
+            {
+                op = "replace";
+            }
+            else if (diff is WidgetUpdate update)
+            {
+                op = "update";
+            }
+
+            if (op == null)
+            {
+                return null;
+            }
+
+            var patch = new WidgetNewPatch()
+            {
+                Op = op,
+                Update = diff
+            };
+
+#if BENCHMARK
+            _benchmarkLog.WriteLine($"{timingBeforeDiff},{timingAfterDiff}");
+            _benchmarkLog.Flush();
+#endif
+            return new WidgetTreeChanged(viewId, indices, patch, _iteration, hash);
+#endif
         }
         catch (ObjectDisposedException)
         {
@@ -417,19 +450,19 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
                 try
                 {
 #endif
-                    TextInputBuildContext.SetCurrent(context);
-                    try
-                    {
-                        buildResult = view.Build();
-                    }
-                    catch (Exception e)
-                    {
-                        buildResult = e;
-                    }
-                    finally
-                    {
-                        TextInputBuildContext.SetCurrent(null);
-                    }
+                TextInputBuildContext.SetCurrent(context);
+                try
+                {
+                    buildResult = view.Build();
+                }
+                catch (Exception e)
+                {
+                    buildResult = e;
+                }
+                finally
+                {
+                    TextInputBuildContext.SetCurrent(null);
+                }
 #if DEBUG
                 }
                 finally

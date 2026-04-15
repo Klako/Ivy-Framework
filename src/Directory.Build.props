@@ -3,6 +3,11 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- This ensures every project in the solution sees ExtraConstants -->
+    <DefineConstants>$(DefineConstants);$(ExtraConstants)</DefineConstants>
+  </PropertyGroup>
+
   <!--
     Guard: when IvyPackageVersion is set (Docker/NuGet builds), no project should
     have an unconditional ProjectReference to Ivy.csproj. Projects must use the

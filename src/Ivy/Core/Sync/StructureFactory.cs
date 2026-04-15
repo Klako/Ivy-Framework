@@ -18,6 +18,11 @@ namespace Ivy.Core.Sync
 
             var type = value.GetType();
 
+            if (type.GetCustomAttribute<PropValueAsStringAttribute>() != null)
+            {
+                return new PropStructureLeaf(value.ToString());
+            }
+
             if (type.IsPrimitive ||
                 type.IsEnum ||
                 type.IsValueType ||
@@ -58,10 +63,11 @@ namespace Ivy.Core.Sync
                 var map = new PropStructureObject();
                 foreach (var property in properties)
                 {
-                    if (property.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                    if (property.GetCustomAttribute<JsonIgnoreAttribute>() != null)
                     {
-                        map.Add(Utils.PascalCaseToCamelCase(property.Name), Transform(property.GetValue(value)));
+                        continue;
                     }
+                    map.Add(Utils.PascalCaseToCamelCase(property.Name), Transform(property.GetValue(value)));
                 }
                 return map;
             }

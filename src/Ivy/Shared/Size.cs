@@ -22,6 +22,7 @@ public enum SizeType
 }
 
 [JsonConverter(typeof(SizeJsonConverter))]
+[Core.Sync.PropValueAsString]
 public record Size
 {
     public override string ToString()

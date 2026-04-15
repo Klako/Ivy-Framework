@@ -7,7 +7,7 @@ namespace Ivy.Tendril.Test;
 
 public class ExternalWidgetValidationTests
 {
-    private const string WidgetsDirectory = "../../../../../../widgets";
+    private const string WidgetsDirectory = "../../../../../../src/widgets";
     private const string WorkflowPath = "../../../../../../.github/workflows/publish-external-widgets.yml";
 
     [Fact]

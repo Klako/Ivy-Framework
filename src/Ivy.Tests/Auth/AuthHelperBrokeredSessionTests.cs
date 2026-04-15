@@ -7,6 +7,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace Ivy.Tests.Auth;
 
+[Collection("AuthCookiePrefix")]
 public class AuthHelperBrokeredSessionTests : IDisposable
 {
     public AuthHelperBrokeredSessionTests()

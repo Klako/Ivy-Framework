@@ -313,3 +313,96 @@ Ivy’s standard host (e.g. [AppShell](../../01_Onboarding/02_Concepts/11_AppShe
 ```
 
 Alternatively use explicit removes: `<Compile Remove="Widgets/MyWidget/**/*.cs" />` and `<None Remove="Widgets/MyWidget/**/*" />`.
+
+## Publishing External Widgets to NuGet
+
+External widgets in the Ivy Framework repository (`src/widgets/Ivy.Widgets.*`) can be published to NuGet for distribution and reuse across projects.
+
+### NuGet Package Configuration
+
+Each external widget project must include NuGet package metadata in its `.csproj` file:
+
+```xml
+<PropertyGroup>
+  <PackageId>Ivy.Widgets.MyWidget</PackageId>
+  <Description>Widget for Ivy Framework</Description>
+  <Authors>Ivy Interactive</Authors>
+  <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  <PackageProjectUrl>https://github.com/Ivy-Interactive/Ivy-Framework/</PackageProjectUrl>
+  <RepositoryUrl>https://github.com/Ivy-Interactive/Ivy-Framework/</RepositoryUrl>
+  <PackageReadmeFile>README.md</PackageReadmeFile>
+</PropertyGroup>
+
+<ItemGroup>
+  <None Include="README.md" Pack="true" PackagePath="" />
+</ItemGroup>
+
+<Import Project="..\..\Ivy\Build\Ivy.ExternalWidget.targets" />
+```
+
+The `Ivy.ExternalWidget.targets` import provides shared build logic for external widgets, including frontend build integration and embedded resource configuration.
+
+### Version Management
+
+Widget versions are centrally managed in `src/widgets/Directory.Build.props`:
+
+```xml
+<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+</Project>
+```
+
+Update this version before triggering a release to publish all external widgets with the new version number.
+
+### Release Workflow
+
+External widgets are published using the `publish-external-widgets.yml` GitHub Actions workflow:
+
+**Triggering a release:**
+
+1. **Tag-based release (all widgets):**
+   ```bash
+   git tag widgets/v1.0.0
+   git push origin widgets/v1.0.0
+   ```
+   This publishes all external widgets in `src/widgets/Ivy.Widgets.*` with the version from `Directory.Build.props`.
+
+2. **Manual release (specific widget):**
+   - Go to Actions → "Publish External Widgets" → Run workflow
+   - Enter the widget name (e.g., `Xterm` for `Ivy.Widgets.Xterm`)
+   - The workflow builds, signs, and publishes only that widget
+
+**Workflow steps:**
+
+1. Restores .NET dependencies
+2. Builds the frontend (`pnpm install && pnpm run build`) if a `frontend/` directory exists
+3. Packs the NuGet package with embedded frontend assets
+4. Signs the package using SSL.com code signing
+5. Publishes to NuGet.org
+6. Creates a GitHub release (for tag-based triggers)
+
+### Consuming External Widget Packages
+
+Install the widget package in your Ivy Framework project:
+
+```bash
+dotnet add package Ivy.Widgets.Xterm
+```
+
+Then use the widget in your app:
+
+```csharp
+using Ivy.Widgets.Xterm;
+
+public class MyApp : AppBase<MyApp>
+{
+    public override Widget View() => new Terminal()
+        .Rows(24)
+        .Cols(80)
+        .OnInput(async e => await HandleInput(e.Args));
+}
+```
+
+The widget's embedded frontend assets (JavaScript and CSS) are automatically loaded by the Ivy Framework runtime.

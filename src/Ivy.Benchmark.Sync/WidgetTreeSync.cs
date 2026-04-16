@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using BenchmarkDotNet.ReportColumns;
 using Ivy.Core.Sync;
+using Ivy.NativeJsonDiff;
 
 namespace Ivy.Benchmark.Sync
 {
@@ -99,7 +100,7 @@ namespace Ivy.Benchmark.Sync
             var targetWidgetJson = flatTreeTarget.Serialize();
             var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(sourceWidgetJson);
             var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(targetWidgetJson);
-            var patch = NativeJsonDiff.ComputePatch(oldBytes, newBytes);
+            var patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
             var serialized = MessagePackSerializer.Serialize(patch, _serializerOptions);
             ResultSize = serialized.Length;
             return serialized.Length;
@@ -124,7 +125,7 @@ namespace Ivy.Benchmark.Sync
             var targetWidgetJson = binaryTreeTarget.Serialize();
             var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(sourceWidgetJson);
             var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(targetWidgetJson);
-            var patch = NativeJsonDiff.ComputePatch(oldBytes, newBytes);
+            var patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
             var serialized = MessagePackSerializer.Serialize(patch, _serializerOptions);
             ResultSize = serialized.Length;
             return serialized.Length;

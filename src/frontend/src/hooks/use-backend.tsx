@@ -230,7 +230,7 @@ function decompactWidgetNode(compactNode: CompactWidgetNode): WidgetNode {
   };
 }
 
-function applyWidgetUpdate(node: WidgetNode, update: WidgetUpdate) {
+function applyWidgetUpdate(node: WidgetNode, update: WidgetUpdate): WidgetNode {
   let [type, id, props, events, childrenDiff] = update;
   let newProps = node.props;
   if (props) {
@@ -255,51 +255,43 @@ function applyWidgetListDiff(nodeList: WidgetNode[], diff: WidgetListDiff): Widg
     return nodeList;
   }
   let newNodeList: WidgetNode[] = [];
-  let nodeIterator = nodeList.entries();
-  let changeIterator = changes.values();
-  let currentChange = changeIterator.next();
-  let currentNode = nodeIterator.next();
-  while (!currentChange.done || !currentNode.done) {
-    if (currentChange.done) {
-      if (!currentNode.done) {
-        newNodeList.push(currentNode.value[1]);
-        currentNode = nodeIterator.next();
+  let nodesIndex = 0;
+  let changesIndex = 0;
+  while (nodesIndex < nodeList.length || changesIndex < changes.length) {
+    if (changesIndex == changes.length) {
+      for (; nodesIndex < nodeList.length; nodesIndex++) {
+        newNodeList.push(nodeList[nodesIndex]);
       }
       continue;
     }
-    if (!currentNode.done) {
-      let [nodeIndex, node] = currentNode.value;
-      let [_, [changeIndex]] = currentChange.value;
-      if (nodeIndex < changeIndex) {
-        newNodeList.push(node);
-        currentNode = nodeIterator.next();
-        continue;
+    if (nodesIndex < changes[changesIndex][1][0]) {
+      let changeIndex = changes[changesIndex][1][0];
+      for (; nodesIndex < changeIndex; nodesIndex++) {
+        newNodeList.push(nodeList[nodesIndex]);
       }
+      continue;
     }
-    switch (currentChange.value[0]) {
+    let change = changes[changesIndex];
+    switch (change[0]) {
       case DiffOperationType.Update: {
-        let [_, update] = currentChange.value[1];
-        if (!currentNode.done) {
-          let [_, node] = currentNode.value;
+        let [_, update] = change[1];
+        if (nodesIndex < nodeList.length) {
+          let node = nodeList[nodesIndex];
           let newWidget = applyWidgetUpdate(node, update);
           newNodeList.push(newWidget);
-          currentNode = nodeIterator.next();
+          nodesIndex++;
         }
-        currentChange = changeIterator.next();
+        changesIndex++;
         break;
       }
       case DiffOperationType.Splice: {
-        let [changeIndex, length, compactWidgets] = currentChange.value[1];
+        let [changeIndex, length, compactWidgets] = change[1];
         let newWidgets = compactWidgets.map(decompactWidgetNode);
         newNodeList.push(...newWidgets);
-        while (!currentNode.done) {
-          let [nodeIndex, _] = currentNode.value;
-          if (nodeIndex >= changeIndex + length) {
-            break;
-          }
-          currentNode = nodeIterator.next();
+        while (nodesIndex < nodeList.length && nodesIndex < changeIndex + length) {
+          nodesIndex++;
         }
-        currentChange = changeIterator.next();
+        changesIndex++;
         break;
       }
     }

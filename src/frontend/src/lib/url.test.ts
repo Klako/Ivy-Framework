@@ -24,28 +24,6 @@ describe("extractAnchorId", () => {
   });
 });
 
-describe("validateLinkUrl (app:// fragments)", () => {
-  it("accepts app:// URLs with slug fragments for doc deep links", () => {
-    expect(validateLinkUrl("app://onboarding/getting-started/installation#prerequisites")).toBe(
-      "app://onboarding/getting-started/installation#prerequisites",
-    );
-    expect(validateLinkUrl("app://docs#introduction")).toBe("app://docs#introduction");
-  });
-
-  it("rejects fragments that look like queries or nested hashes", () => {
-    expect(validateLinkUrl("app://path#bad?query")).toBe("#");
-    expect(validateLinkUrl("app://path#bad&evil")).toBe("#");
-  });
-
-  it("rejects protocol injection after app://", () => {
-    expect(validateLinkUrl("app://evil://host")).toBe("#");
-  });
-
-  it("rejects colon used as protocol injection in app path (not in fragment)", () => {
-    expect(validateLinkUrl("app://path:extra:colons")).toBe("#");
-  });
-});
-
 describe("getFullUrl", () => {
   let metaElement: HTMLMetaElement | null = null;
 
@@ -250,15 +228,17 @@ describe("validateLinkUrl", () => {
       expect(validateLinkUrl("app://MyApp?param=value")).toBe("app://MyApp?param=value");
     });
 
-    it("should accept app:// URLs with fragments (article deep links)", () => {
-      expect(validateLinkUrl("app://path#fragment")).toBe("app://path#fragment");
+    it("should accept app:// URLs with fragments for doc deep links", () => {
       expect(validateLinkUrl("app://onboarding/getting-started/installation#prerequisites")).toBe(
         "app://onboarding/getting-started/installation#prerequisites",
       );
+      expect(validateLinkUrl("app://docs#introduction")).toBe("app://docs#introduction");
+      expect(validateLinkUrl("app://path#fragment")).toBe("app://path#fragment");
     });
 
-    it("should reject app:// URLs with invalid fragments", () => {
+    it("should reject fragments that look like queries or nested hashes", () => {
       expect(validateLinkUrl("app://path#bad?query")).toBe("#");
+      expect(validateLinkUrl("app://path#bad&evil")).toBe("#");
     });
 
     it("should accept app:// URLs with ampersands in query strings", () => {

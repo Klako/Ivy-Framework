@@ -302,6 +302,8 @@ public class Server
 
         DiscoverAndRegisterOAuthTokenHandlers();
 
+        Services.AddScoped<IConnectedAccountsService, ConnectedAccountsService>();
+
         AddApp(new AppDescriptor
         {
             Id = AppIds.Auth,
@@ -317,6 +319,12 @@ public class Server
     public Server RegisterAuthTokenHandler<T>(string provider) where T : class, IAuthTokenHandler
     {
         Services.AddKeyedSingleton<IAuthTokenHandler, T>(provider);
+        return this;
+    }
+
+    public Server RegisterConnectedAccountProvider<TProvider>(string providerKey) where TProvider : class, IAuthProvider
+    {
+        Services.AddKeyedSingleton<IAuthProvider, TProvider>(providerKey);
         return this;
     }
 

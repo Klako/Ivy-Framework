@@ -39,6 +39,9 @@ public static class CookieRegistryExtensions
 
         cookies.AddCookiesForBrokeredSessions(sessionsToWrite);
 
+        // Add connected accounts
+        cookies.AddCookiesForConnectedAccounts(authSession.ConnectedAccounts);
+
         // Also delete cookies for removed providers
         if (removedProviders != null && removedProviders.Count > 0)
         {
@@ -130,6 +133,45 @@ public static class CookieRegistryExtensions
         else
         {
             cookies.Append(authSessionDataName, authSessionData, cookieOptions);
+        }
+    }
+
+    public static void AddCookiesForConnectedAccounts(this CookieJar cookies, IReadOnlyDictionary<string, IAuthSession> connectedAccounts)
+    {
+        var cookieOptions = CreateAuthCookieOptions();
+
+        foreach (var (provider, session) in connectedAccounts)
+        {
+            var accessTokenName = PrefixCookieName($"conn_{provider}_access_token");
+            var refreshTokenName = PrefixCookieName($"conn_{provider}_refresh_token");
+            var tagName = PrefixCookieName($"conn_{provider}_auth_tag");
+
+            if (!string.IsNullOrEmpty(session.AuthToken?.AccessToken))
+            {
+                cookies.Append(accessTokenName, session.AuthToken.AccessToken, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(accessTokenName, CreateAuthCookieOptions());
+            }
+
+            if (!string.IsNullOrEmpty(session.AuthToken?.RefreshToken))
+            {
+                cookies.Append(refreshTokenName, session.AuthToken.RefreshToken, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(refreshTokenName, CreateAuthCookieOptions());
+            }
+
+            if (session.AuthToken?.Tag != null)
+            {
+                cookies.Append(tagName, session.AuthToken.Tag, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(tagName, CreateAuthCookieOptions());
+            }
         }
     }
 

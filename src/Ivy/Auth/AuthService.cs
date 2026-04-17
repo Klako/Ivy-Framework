@@ -90,6 +90,7 @@ public class AuthService : AuthTokenHandlerService, IAuthService
 
         _authSession.AuthToken = null;
         _authSession.ClearBrokeredSessions();
+        // NOTE: Do NOT clear connected accounts - they persist independently of main auth
 
         // Pass the captured providers to delete their cookies
         var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, providersToDelete);

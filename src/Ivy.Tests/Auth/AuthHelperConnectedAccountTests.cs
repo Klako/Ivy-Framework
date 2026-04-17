@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Ivy.Core.Auth;
 using Microsoft.AspNetCore.Http;

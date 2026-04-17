@@ -1,4 +1,3 @@
-using Ivy.Core.Auth;
 using Ivy.Core.Server;
 using Microsoft.Extensions.DependencyInjection;
 

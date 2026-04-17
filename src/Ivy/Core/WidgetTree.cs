@@ -88,10 +88,10 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
         Directory.CreateDirectory("Benchmark");
         _benchmarkLog = new StreamWriter(File.OpenWrite($"benchmark\\Timings_{rootView.GetType().Name}_{logTime}.csv"));
 #if JSONPATCH
-        _benchmarkLog.WriteLine("Iteration,Before JSON serialize,Before replace,Before JSON diff,After replace or diff");
+        _benchmarkLog.WriteLine("Iteration,Before serializing tree,Before replace,Before diff,After replace or diff");
         _benchmarkLog.Flush();
 #else
-        _benchmarkLog.WriteLine("Iteration,BeforeDiff,AfterDiff");
+        _benchmarkLog.WriteLine("Iteration,Before get widget tree,BeforeDiff,AfterDiff");
         _benchmarkLog.Flush();
 #endif
 #endif
@@ -324,6 +324,9 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             return new WidgetTreeChanged(viewId, indices, new WidgetJsonPatch() { Patches = patch }, _iteration, hash);
 #else
 
+#if BENCHMARK
+            var timingBeforeGetWidgetTree = stopWatch.Elapsed.TotalMicroseconds;
+#endif
             var currentTree = partial.GetWidgetTree();
 
 #if BENCHMARK
@@ -365,7 +368,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             };
 
 #if BENCHMARK
-            _benchmarkLog.WriteLine($"{timingBeforeDiff},{timingAfterDiff}");
+            _benchmarkLog.WriteLine($"{_iteration},{timingBeforeGetWidgetTree},{timingBeforeDiff},{timingAfterDiff}");
             _benchmarkLog.Flush();
 #endif
             return new WidgetTreeChanged(viewId, indices, patch, _iteration, hash);

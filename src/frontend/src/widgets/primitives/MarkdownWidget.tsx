@@ -87,7 +87,7 @@ const MarkdownWidget: React.FC<MarkdownWidgetProps> = ({
       <MarkdownRenderer
         key={id}
         content={displayContent}
-        onLinkClick={handleLinkClick}
+        onLinkClick={events.includes("OnLinkClick") ? handleLinkClick : undefined}
         dangerouslyAllowLocalFiles={dangerouslyAllowLocalFiles}
       />
     </div>

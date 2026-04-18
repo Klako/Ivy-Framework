@@ -18,16 +18,16 @@ public static class CookieRegistryExtensions
         return null;
     }
 
-    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? providersToDelete = null, IEnumerable<string>? disconnectedProviders = null)
+    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? brokeredProvidersToDelete = null, IEnumerable<string>? connectedProvidersToDelete = null)
     {
         var cookies = new CookieJar();
-        cookies.AddCookiesForAuthToken(authSession.AuthToken, providersToDelete);
+        cookies.AddCookiesForAuthToken(authSession.AuthToken, brokeredProvidersToDelete);
         cookies.AddCookiesForAuthSessionData(authSession.AuthSessionData);
 
         // Filter out brokered session providers that have been globally removed (if machineId is provided)
         IReadOnlyDictionary<string, IAuthTokenHandlerSession> sessionsToWrite = authSession.BrokeredSessions;
-        HashSet<string>? removedProviders = providersToDelete != null
-            ? new(providersToDelete)
+        HashSet<string>? removedProviders = brokeredProvidersToDelete != null
+            ? new(brokeredProvidersToDelete)
             : null;
 
         if (removedProviders != null && removedProviders.Count > 0)
@@ -43,10 +43,10 @@ public static class CookieRegistryExtensions
         cookies.AddCookiesForConnectedAccounts(authSession.ConnectedAccounts);
 
         // Delete cookies for disconnected connected account providers
-        if (disconnectedProviders != null)
+        if (connectedProvidersToDelete != null)
         {
             var cookieOptions = CreateAuthCookieOptions();
-            foreach (var provider in disconnectedProviders)
+            foreach (var provider in connectedProvidersToDelete)
             {
                 cookies.Delete(PrefixCookieName($"conn_{provider}_access_token"), cookieOptions);
                 cookies.Delete(PrefixCookieName($"conn_{provider}_refresh_token"), cookieOptions);

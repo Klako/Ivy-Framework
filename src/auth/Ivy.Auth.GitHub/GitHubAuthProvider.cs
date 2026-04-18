@@ -149,6 +149,13 @@ public class GitHubAuthProvider : GitHubAuthTokenHandler, IAuthProvider
             using var jsonDoc = JsonDocument.Parse(responseContent);
             var root = jsonDoc.RootElement;
 
+            if (root.TryGetProperty("error", out var errorProp))
+            {
+                var error = errorProp.GetString();
+                var errorDescription = root.TryGetProperty("error_description", out var descProp) ? descProp.GetString() : null;
+                throw new GitHubOAuthException(error, errorDescription);
+            }
+
             if (root.TryGetProperty("access_token", out var accessTokenProp))
             {
                 return new GitHubTokenResponse(accessTokenProp.GetString()!);

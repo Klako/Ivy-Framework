@@ -147,6 +147,13 @@ public class AppHub(
                 }
 
                 appServices.AddSingleton<IAuthService>(s => authService);
+                appServices.AddSingleton<IConnectedAccountsService>(s =>
+                    new ConnectedAccountsService(
+                        authSession,
+                        server.ServiceProvider!,
+                        clientProvider,
+                        sessionStore,
+                        server.ServiceProvider?.GetService<ILoggerFactory>()?.CreateLogger<ConnectedAccountsService>()));
 
                 oldSession = authSession.TakeSnapshot();
                 try
@@ -389,6 +396,58 @@ public class AppHub(
                     appState.BrokeredTokenRemovedHandler = removedHandler;
                     authSession.BrokeredSessionAdded += addedHandler;
                     authSession.BrokeredSessionRemoved += removedHandler;
+
+                    // Start refresh loops for connected accounts
+                    var connectedAccounts = authSession.ConnectedAccounts.Keys.ToList();
+                    var activeConnectedProviders = new HashSet<string>();
+                    var connectedCancellations = new ConcurrentDictionary<string, CancellationTokenSource>();
+                    appState.ActiveConnectedAccountRefreshLoops = activeConnectedProviders;
+                    appState.ConnectedAccountRefreshCancellations = connectedCancellations;
+
+                    void AddConnectedProvider(string provider)
+                    {
+                        lock (activeConnectedProviders)
+                        {
+                            if (activeConnectedProviders.Add(provider))
+                            {
+                                var cts = CancellationTokenSource.CreateLinkedTokenSource(connectionAborted);
+                                connectedCancellations[provider] = cts;
+                                _ = Task.Run(() => ConnectedAccountTokenRefreshLoopAsync(connectionId, provider, cts.Token), connectionAborted);
+                            }
+                        }
+                    }
+
+                    foreach (var connectedAccount in connectedAccounts)
+                    {
+                        AddConnectedProvider(connectedAccount);
+                    }
+
+                    Action<string> connectedAddedHandler = provider =>
+                    {
+                        if (!sessionStore.Sessions.ContainsKey(connectionId)) return;
+                        AddConnectedProvider(provider);
+                    };
+
+                    Action<string> connectedRemovedHandler = provider =>
+                    {
+                        logger.LogInformation("Cancelling connected account refresh loop for removed provider {Provider} on connection {ConnectionId}", provider, connectionId);
+
+                        if (connectedCancellations.TryRemove(provider, out var cts))
+                        {
+                            cts.Cancel();
+                            cts.Dispose();
+                        }
+
+                        lock (activeConnectedProviders)
+                        {
+                            activeConnectedProviders.Remove(provider);
+                        }
+                    };
+
+                    appState.ConnectedAccountAddedHandler = connectedAddedHandler;
+                    appState.ConnectedAccountRemovedHandler = connectedRemovedHandler;
+                    authSession.ConnectedAccountAdded += connectedAddedHandler;
+                    authSession.ConnectedAccountRemoved += connectedRemovedHandler;
                 }
             }
         }
@@ -467,6 +526,41 @@ public class AppHub(
                             catch (Exception ex)
                             {
                                 logger.LogWarning(ex, "Error cancelling brokered token refresh loop for provider {Provider} on connection {ConnectionId}", kvp.Key, Context.ConnectionId);
+                            }
+                        }
+                    }
+
+                    // Clean up connected account event subscriptions
+                    if (appState.ConnectedAccountAddedHandler != null || appState.ConnectedAccountRemovedHandler != null)
+                    {
+                        var authService2 = appState.AppServices.GetService<IAuthService>();
+                        if (authService2 != null)
+                        {
+                            var authSession2 = authService2.GetAuthSession();
+                            if (appState.ConnectedAccountAddedHandler != null)
+                            {
+                                authSession2.ConnectedAccountAdded -= appState.ConnectedAccountAddedHandler;
+                            }
+                            if (appState.ConnectedAccountRemovedHandler != null)
+                            {
+                                authSession2.ConnectedAccountRemoved -= appState.ConnectedAccountRemovedHandler;
+                            }
+                        }
+                    }
+
+                    // Cancel and dispose all connected account refresh loop cancellation tokens
+                    if (appState.ConnectedAccountRefreshCancellations != null)
+                    {
+                        foreach (var kvp in appState.ConnectedAccountRefreshCancellations)
+                        {
+                            try
+                            {
+                                kvp.Value.Cancel();
+                                kvp.Value.Dispose();
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogWarning(ex, "Error cancelling connected account refresh loop for provider {Provider} on connection {ConnectionId}", kvp.Key, Context.ConnectionId);
                             }
                         }
                     }
@@ -746,6 +840,81 @@ public class AppHub(
 
             // Clean up: dispose the cancellation token source
             if (session.BrokeredRefreshCancellations?.TryRemove(provider, out var cts) == true)
+            {
+                cts.Dispose();
+            }
+        }
+    }
+
+    private async Task ConnectedAccountTokenRefreshLoopAsync(string connectionId, string provider, CancellationToken cancellationToken)
+    {
+        if (!sessionStore.Sessions.TryGetValue(connectionId, out var session))
+        {
+            logger.LogWarning("ConnectedAccountRefreshLoop[{Provider}]: Session not found for {ConnectionId}, exiting loop.", provider, connectionId);
+            return;
+        }
+
+        try
+        {
+            var authProvider = server.ServiceProvider!.GetKeyedService<IAuthProvider>(provider);
+            if (authProvider == null)
+            {
+                logger.LogError("ConnectedAccountRefreshLoop[{Provider}]: No auth provider registered for {ConnectionId}, exiting loop.", provider, connectionId);
+                return;
+            }
+
+            var authService = session.AppServices.GetRequiredService<IAuthService>();
+            var authSession = authService.GetAuthSession();
+
+            if (!authSession.ConnectedAccounts.TryGetValue(provider, out var connectedSession))
+            {
+                logger.LogError("ConnectedAccountRefreshLoop[{Provider}]: No connected account session found for {ConnectionId}, exiting loop.", provider, connectionId);
+                return;
+            }
+
+            var appContext = session.AppServices.GetService<AppContext>();
+            if (appContext != null)
+            {
+                await authProvider.InitializeAsync(connectedSession, appContext.Scheme, appContext.Host, appContext.BasePath, cancellationToken);
+            }
+
+            var client = session.AppServices.GetRequiredService<IClientProvider>();
+            var refreshLogger = session.AppServices.GetRequiredService<ILoggerFactory>()
+                .CreateLogger<AuthTokenHandlerService>();
+
+            var tokenService = new AuthTokenHandlerService(
+                authProvider,
+                connectedSession,
+                client,
+                sessionStore,
+                session.MachineId,
+                refreshLogger);
+
+            var connectedAccountsService = session.AppServices.GetRequiredService<IConnectedAccountsService>();
+
+            var strategy = new ConnectedAccountTokenRefreshStrategy(
+                connectionId,
+                provider,
+                tokenService,
+                authSession,
+                client,
+                connectedAccountsService,
+                sessionStore,
+                refreshLogger);
+
+            await TokenRefreshLoopAsync(strategy, connectionId, cancellationToken);
+        }
+        finally
+        {
+            if (session.ActiveConnectedAccountRefreshLoops != null)
+            {
+                lock (session.ActiveConnectedAccountRefreshLoops)
+                {
+                    session.ActiveConnectedAccountRefreshLoops.Remove(provider);
+                }
+            }
+
+            if (session.ConnectedAccountRefreshCancellations?.TryRemove(provider, out var cts) == true)
             {
                 cts.Dispose();
             }

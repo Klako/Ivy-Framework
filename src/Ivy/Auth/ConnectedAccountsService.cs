@@ -17,6 +17,9 @@ public class ConnectedAccountsService : IConnectedAccountsService
     private readonly AppSessionStore _sessionStore;
     private readonly ILogger<ConnectedAccountsService> _logger;
 
+    public event Action<string>? AccountConnected;
+    public event Action<string>? AccountDisconnected;
+
     public ConnectedAccountsService(
         IAuthSession authSession,
         IServiceProvider serviceProvider,
@@ -29,6 +32,9 @@ public class ConnectedAccountsService : IConnectedAccountsService
         _client = client;
         _sessionStore = sessionStore;
         _logger = logger ?? NullLogger<ConnectedAccountsService>.Instance;
+
+        _authSession.ConnectedAccountAdded += provider => AccountConnected?.Invoke(provider);
+        _authSession.ConnectedAccountRemoved += provider => AccountDisconnected?.Invoke(provider);
     }
 
     public string[] GetAvailableProviders()

@@ -336,7 +336,7 @@ public class AuthController() : Controller
         // Sync brokered sessions (fires Add/Remove events → starts/stops refresh loops)
         SyncBrokeredSessions(existingSession, freshAuthState.BrokeredSessions, logger);
 
-        // Sync connected accounts
+        // Sync connected accounts (fires AccountConnected/AccountDisconnected events → UI rebuilds)
         SyncConnectedAccounts(existingSession, freshAuthState.ConnectedAccounts, logger);
 
         logger.LogInformation("Refreshed auth session from cookies for {ConnectionId}", SanitizeForLog(connectionId));

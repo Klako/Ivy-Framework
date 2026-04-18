@@ -17,4 +17,7 @@ public interface IConnectedAccountsService
     IAuthSession? GetAccountSession(string provider);
 
     Task RefreshAllAsync(CancellationToken cancellationToken = default);
+
+    event Action<string>? AccountConnected;
+    event Action<string>? AccountDisconnected;
 }

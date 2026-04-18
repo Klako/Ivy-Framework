@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using Ivy;
 using Ivy.Auth.Examples.Shared;
 
@@ -62,8 +63,21 @@ public class ConnectedGitHubSection : ViewBase
         {
             Console.WriteLine($"Received GitHub OAuth callback, request data: {request.QueryString}");
             await _connectedAccounts.HandleConnectCallbackAsync(OAuthProviders.GitHub, request);
-            connected.Set(true);
         });
+
+        UseEffect(() =>
+        {
+            _connectedAccounts.AccountConnected += OnConnected;
+            _connectedAccounts.AccountDisconnected += OnDisconnected;
+            return Disposable.Create(() =>
+            {
+                _connectedAccounts.AccountConnected -= OnConnected;
+                _connectedAccounts.AccountDisconnected -= OnDisconnected;
+            });
+
+            void OnConnected(string provider) { if (provider == OAuthProviders.GitHub) connected.Set(true); }
+            void OnDisconnected(string provider) { if (provider == OAuthProviders.GitHub) connected.Set(false); }
+        }, [EffectTrigger.OnMount()]);
 
         var gitHubSession = _connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
         var isConnected = gitHubSession?.AuthToken != null;
@@ -88,7 +102,6 @@ public class ConnectedGitHubSection : ViewBase
                 new Button("Disconnect", async () =>
                 {
                     await _connectedAccounts.DisconnectAccountAsync(OAuthProviders.GitHub);
-                    connected.Set(false);
                 }, variant: ButtonVariant.Destructive)
             ).Gap(10).AlignContent(Align.Center),
             new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!)

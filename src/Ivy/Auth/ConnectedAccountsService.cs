@@ -119,35 +119,6 @@ public class ConnectedAccountsService : IConnectedAccountsService
         return _authSession.ConnectedAccounts.TryGetValue(provider, out var session) ? session : null;
     }
 
-    public async Task RefreshAllAsync(CancellationToken cancellationToken = default)
-    {
-        var providers = _authSession.ConnectedAccounts.Keys.ToList();
-        foreach (var provider in providers)
-        {
-            var authProvider = _serviceProvider.GetKeyedService<IAuthProvider>(provider);
-            if (authProvider == null)
-            {
-                continue;
-            }
-
-            var session = _authSession.ConnectedAccounts[provider];
-            try
-            {
-                var newToken = await authProvider.RefreshAccessTokenAsync(session, cancellationToken);
-                if (newToken != null)
-                {
-                    session.AuthToken = newToken;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error refreshing connected account '{Provider}'", provider);
-            }
-        }
-
-        SetConnectedAccountCookies();
-    }
-
     private void SetConnectedAccountCookies(IEnumerable<string>? connectedProvidersToDelete = null, bool triggerMachineAuthSync = false)
     {
         var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, connectedProvidersToDelete: connectedProvidersToDelete);

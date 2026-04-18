@@ -24,7 +24,6 @@ public class MainApp : ViewBase
         }
 
         var user = userInfo.Value;
-        var gitHubSession = connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
 
         return Layout.Vertical(
             // Success Header
@@ -40,7 +39,7 @@ public class MainApp : ViewBase
             ).Gap(20).AlignContent(Align.Center),
 
             // Connected Accounts section
-            new ConnectedGitHubSection(connectedAccounts, gitHubSession)
+            new ConnectedGitHubSection(connectedAccounts)
 
         ).Gap(40).Padding(50).AlignContent(Align.Center).Height(Size.Full());
     }
@@ -49,25 +48,25 @@ public class MainApp : ViewBase
 public class ConnectedGitHubSection : ViewBase
 {
     private readonly IConnectedAccountsService _connectedAccounts;
-    private readonly IAuthSession? _gitHubSession;
 
-    public ConnectedGitHubSection(IConnectedAccountsService connectedAccounts, IAuthSession? gitHubSession)
+    public ConnectedGitHubSection(IConnectedAccountsService connectedAccounts)
     {
         _connectedAccounts = connectedAccounts;
-        _gitHubSession = gitHubSession;
     }
 
     public override object? Build()
     {
         var client = UseService<IClientProvider>();
-
+        var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
         var callback = UseWebhook(async request =>
         {
             Console.WriteLine($"Received GitHub OAuth callback, request data: {request.QueryString}");
             await _connectedAccounts.HandleConnectCallbackAsync(OAuthProviders.GitHub, request);
+            connected.Set(true);
         });
 
-        var isConnected = _gitHubSession?.AuthToken != null;
+        var gitHubSession = _connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
+        var isConnected = gitHubSession?.AuthToken != null;
 
         if (!isConnected)
         {
@@ -89,9 +88,10 @@ public class ConnectedGitHubSection : ViewBase
                 new Button("Disconnect", async () =>
                 {
                     await _connectedAccounts.DisconnectAccountAsync(OAuthProviders.GitHub);
+                    connected.Set(false);
                 }, variant: ButtonVariant.Destructive)
             ).Gap(10).AlignContent(Align.Center),
-            new OAuthProviderTestView(OAuthProviders.GitHub, _gitHubSession!)
+            new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!)
         ).Gap(10);
     }
 }

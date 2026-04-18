@@ -104,7 +104,7 @@ public class ConnectedAccountsService : IConnectedAccountsService
             }
 
             _authSession.RemoveConnectedAccount(provider);
-            SetConnectedAccountCookies();
+            SetConnectedAccountCookies(disconnectedProviders: [provider]);
         }
     }
 
@@ -142,9 +142,9 @@ public class ConnectedAccountsService : IConnectedAccountsService
         SetConnectedAccountCookies();
     }
 
-    private void SetConnectedAccountCookies()
+    private void SetConnectedAccountCookies(IEnumerable<string>? disconnectedProviders = null)
     {
-        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession);
+        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, disconnectedProviders: disconnectedProviders);
         _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null);
     }
 }

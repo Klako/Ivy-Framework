@@ -18,7 +18,7 @@ public static class CookieRegistryExtensions
         return null;
     }
 
-    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? providersToDelete = null)
+    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? providersToDelete = null, IEnumerable<string>? disconnectedProviders = null)
     {
         var cookies = new CookieJar();
         cookies.AddCookiesForAuthToken(authSession.AuthToken, providersToDelete);
@@ -42,7 +42,19 @@ public static class CookieRegistryExtensions
         // Add connected accounts
         cookies.AddCookiesForConnectedAccounts(authSession.ConnectedAccounts);
 
-        // Also delete cookies for removed providers
+        // Delete cookies for disconnected connected account providers
+        if (disconnectedProviders != null)
+        {
+            var cookieOptions = CreateAuthCookieOptions();
+            foreach (var provider in disconnectedProviders)
+            {
+                cookies.Delete(PrefixCookieName($"conn_{provider}_access_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"conn_{provider}_refresh_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"conn_{provider}_auth_tag"), cookieOptions);
+            }
+        }
+
+        // Also delete cookies for removed brokered providers
         if (removedProviders != null && removedProviders.Count > 0)
         {
             var cookieOptions = CreateAuthCookieOptions();

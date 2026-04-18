@@ -61,7 +61,6 @@ public class ConnectedGitHubSection : ViewBase
         var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
         var callback = UseWebhook(async request =>
         {
-            Console.WriteLine($"Received GitHub OAuth callback, request data: {request.QueryString}");
             await _connectedAccounts.HandleConnectCallbackAsync(OAuthProviders.GitHub, request);
         });
 

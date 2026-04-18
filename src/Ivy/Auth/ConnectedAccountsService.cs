@@ -80,7 +80,7 @@ public class ConnectedAccountsService : IConnectedAccountsService
         if (token != null)
         {
             _authSession.AddConnectedAccount(provider, connectedSession);
-            SetConnectedAccountCookies();
+            SetConnectedAccountCookies(triggerMachineAuthSync: true);
         }
 
         return token;
@@ -104,7 +104,7 @@ public class ConnectedAccountsService : IConnectedAccountsService
             }
 
             _authSession.RemoveConnectedAccount(provider);
-            SetConnectedAccountCookies(connectedProvidersToDelete: [provider]);
+            SetConnectedAccountCookies(connectedProvidersToDelete: [provider], triggerMachineAuthSync: true);
         }
     }
 
@@ -142,9 +142,9 @@ public class ConnectedAccountsService : IConnectedAccountsService
         SetConnectedAccountCookies();
     }
 
-    private void SetConnectedAccountCookies(IEnumerable<string>? connectedProvidersToDelete = null)
+    private void SetConnectedAccountCookies(IEnumerable<string>? connectedProvidersToDelete = null, bool triggerMachineAuthSync = false)
     {
         var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, connectedProvidersToDelete: connectedProvidersToDelete);
-        _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null);
+        _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null, triggerMachineAuthSync: triggerMachineAuthSync);
     }
 }

@@ -172,15 +172,15 @@ public class AuthService : AuthTokenHandlerService, IAuthService
         {
             // Pass removed providers so their cookies get deleted
             var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, removedProviders);
-            _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null, triggerMachineBrokeredRefresh: true);
+            _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null, triggerMachineAuthSync: true);
         }
 
         return BrokeredSessionsResult.Success(filteredSessions);
     }
 
-    public void SetAuthCookies(bool reloadPage = true, bool? triggerMachineReload = null, bool triggerMachineBrokeredRefresh = false)
+    public void SetAuthCookies(bool reloadPage = true, bool? triggerMachineReload = null, bool triggerMachineAuthSync = false)
     {
         var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession);
-        _client.SetAuthCookies(cookieJarId, reloadPage, triggerMachineReload, triggerMachineBrokeredRefresh);
+        _client.SetAuthCookies(cookieJarId, reloadPage, triggerMachineReload, triggerMachineAuthSync);
     }
 }

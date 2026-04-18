@@ -163,7 +163,12 @@ export const DataTableOption: React.FC<DataTableOptionProps> = ({
               : "w-0 opacity-0 border-transparent",
           )}
         >
-          <div className={cn("h-full w-[450px] flex items-center ", contentClassName)}>
+          <div
+            className={cn(
+              "flex h-full min-h-0 min-w-0 w-[450px] max-w-full items-stretch",
+              contentClassName,
+            )}
+          >
             {React.isValidElement(children)
               ? React.cloneElement(children as React.ReactElement<{ isExpanded?: boolean }>, {
                   isExpanded: expanded,

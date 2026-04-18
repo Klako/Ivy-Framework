@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColType } from "../types/types";
 import { cn } from "@/lib/utils";
+import { useThemeWithMonitoring } from "@/components/theme-provider";
 
 /**
  * DataTableFilterOption - The content component for the filter option
@@ -26,20 +27,32 @@ export const DataTableFilterOption: React.FC<{
   const [pendingFilter, setPendingFilter] = useState<Filter | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [isQueryValid, setIsQueryValid] = useState(true);
-  const [isFocused, setIsFocused] = useState(false);
   const dropdownState = useDropdownState();
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const autocompleteOpenRef = useRef(false);
 
   const { columns, setActiveFilter, connection } = useTable();
+  const { isDark } = useThemeWithMonitoring({ monitorDOM: true });
 
   /**
    * Monitor CodeMirror's autocomplete dropdown and sync with dropdownState
    * The autocomplete is created by CodeMirror as .cm-tooltip-autocomplete
    */
   useEffect(() => {
+    const setIsOpen = dropdownState.setIsOpen;
+    let raf = 0;
+
+    const sync = () => {
+      const open = !!document.querySelector(".cm-tooltip-autocomplete");
+      if (open !== autocompleteOpenRef.current) {
+        autocompleteOpenRef.current = open;
+        setIsOpen(open);
+      }
+    };
+
     const observer = new MutationObserver(() => {
-      const autocompleteTooltip = document.querySelector(".cm-tooltip-autocomplete");
-      dropdownState.setIsOpen(!!autocompleteTooltip);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(sync);
     });
 
     observer.observe(document.body, {
@@ -47,30 +60,11 @@ export const DataTableFilterOption: React.FC<{
       subtree: true,
     });
 
-    return () => observer.disconnect();
-  }, [dropdownState]);
-
-  /**
-   * Monitor focus/blur events on the CodeMirror editor
-   * Use focusin/focusout which bubble up from CodeMirror
-   */
-  useEffect(() => {
-    if (!editorContainerRef.current) return;
-
-    const handleFocusIn = () => setIsFocused(true);
-    const handleFocusOut = () => setIsFocused(false);
-
-    const container = editorContainerRef.current;
-
-    // Use focusin/focusout which bubble (unlike focus/blur)
-    container.addEventListener("focusin", handleFocusIn);
-    container.addEventListener("focusout", handleFocusOut);
-
     return () => {
-      container.removeEventListener("focusin", handleFocusIn);
-      container.removeEventListener("focusout", handleFocusOut);
+      cancelAnimationFrame(raf);
+      observer.disconnect();
     };
-  }, []);
+  }, [dropdownState.setIsOpen]);
 
   // Filter columns to only include filterable ones
   const queryEditorColumns = useMemo(
@@ -270,46 +264,41 @@ export const DataTableFilterOption: React.FC<{
     <div
       ref={editorContainerRef}
       onClick={handleContainerClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleContainerClick();
-        }
-      }}
-      role="button"
-      aria-label="Edit filter"
-      tabIndex={0}
       className={cn(
-        "flex items-center w-full h-full justify-between",
-        "rounded-tr-md rounded-br-md border transition-colors",
-        isFocused ? "border-border" : "border-transparent",
+        "relative h-full min-h-9 min-w-0 w-full flex-1",
+        "rounded-tr-md rounded-br-md",
         isExpanded ? "cursor-text" : "pointer-events-none",
       )}
     >
       <div
-        className="flex-1 min-w-0 max-w-[350px] query-editor-wrapper cursor-text"
+        className={cn(
+          "query-editor-wrapper relative cursor-text",
+          "flex h-full min-h-9 w-full max-w-full min-w-0 flex-col",
+          "rounded-field border border-input bg-background shadow-sm transition-colors",
+          "dark:border-white/10",
+          "focus-within:ring-1 focus-within:ring-ring focus-within:ring-offset-0",
+          "text-sm",
+        )}
         data-query-valid={isQueryValid}
+        data-has-clear={query ? "true" : "false"}
+        data-is-parsing={isParsing ? "true" : "false"}
         onKeyDownCapture={handleKeyDownCapture}
         onKeyDown={handleKeyDown}
-        role="searchbox"
-        tabIndex={-1}
       >
         <QueryEditor
           value={query}
           columns={queryEditorColumns}
           onChange={handleQueryChange}
           placeholder={placeholderText}
-          height={40}
-          className="font-mono border-0 shadow-none [&>.cm-editor]:border-0 [&>.cm-editor]:shadow-none [&_.cm-content]:overflow-x-auto"
+          theme={isDark ? "dark" : "light"}
+          height="100%"
+          className="block min-h-0 w-full max-w-full min-w-0 font-mono border-0 shadow-none [&>.cm-editor]:min-h-0 [&>.cm-editor]:h-full [&>.cm-editor]:w-full [&>.cm-editor]:max-w-full [&>.cm-editor]:min-w-0 [&>.cm-editor]:border-0 [&>.cm-editor]:shadow-none [&>.cm-editor]:bg-transparent [&_.cm-scroller]:min-h-0"
         />
         <style>{tableStyles.queryEditor.css}</style>
-      </div>
 
-      {/* Fixed position container for loader and clear button */}
-      <div className="flex items-center gap-2 ml-2 flex-shrink-0">
         {isParsing ? (
-          <div className="flex items-center justify-center px-4">
-            <Loader2 className="animate-spin h-4 w-4 text-gray-500" />
+          <div className="absolute right-0 top-1/2 z-10 flex h-9 -translate-y-1/2 items-center border-l border-input bg-background px-2.5">
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <Button
@@ -318,8 +307,8 @@ export const DataTableFilterOption: React.FC<{
             onClick={handleClearFilter}
             disabled={!query}
             className={cn(
-              "h-9 px-3 text-sm hover:bg-muted/50 transition-all",
-              query ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none",
+              "absolute right-0 top-1/2 z-10 h-9 -translate-y-1/2 shrink-0 rounded-none rounded-r-field border-l border-input bg-background px-3 text-sm shadow-none hover:bg-muted hover:text-accent-foreground",
+              query ? "" : "hidden",
             )}
           >
             Clear

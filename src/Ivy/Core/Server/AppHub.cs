@@ -147,6 +147,13 @@ public class AppHub(
                 }
 
                 appServices.AddSingleton<IAuthService>(s => authService);
+                appServices.AddSingleton<IConnectedAccountsService>(s =>
+                    new ConnectedAccountsService(
+                        authSession,
+                        server.ServiceProvider!,
+                        clientProvider,
+                        sessionStore,
+                        server.ServiceProvider?.GetService<ILoggerFactory>()?.CreateLogger<ConnectedAccountsService>()));
 
                 oldSession = authSession.TakeSnapshot();
                 try

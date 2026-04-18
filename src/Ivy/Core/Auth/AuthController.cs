@@ -173,7 +173,7 @@ public class AuthController() : Controller
 
         if (request.TriggerMachineReload)
         {
-            if (cookies.TryGet("access_token", out var authTokenValue) && !string.IsNullOrEmpty(authTokenValue))
+            if (cookies.TryGet(CookieRegistryExtensions.PrefixCookieName("access_token"), out var authTokenValue) && !string.IsNullOrEmpty(authTokenValue))
             {
                 // Trigger reload for all sessions with the same machineId on login
                 if (HttpContext.Request.Headers.TryGetValue("X-Machine-Id", out var loginHeaderValue))

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { renderWidgetTree, loadingState } from "@/widgets/widgetRenderer";
 import { useBackend } from "@/hooks/use-backend";
 import { Toaster } from "@/components/ui/toaster";

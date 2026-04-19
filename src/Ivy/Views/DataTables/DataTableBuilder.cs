@@ -579,6 +579,6 @@ public class DataTableBuilder<TModel>(
     public object[] GetMemoValues()
     {
         // Memoize based on configuration - if config hasn't changed, don't rebuild
-        return [_width!, _height!, _configuration, _refreshToken?.Token!];
+        return [_width!, _height!, _configuration, _refreshToken?.Token!, _density];
     }
 }

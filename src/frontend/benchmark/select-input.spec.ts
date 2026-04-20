@@ -40,7 +40,7 @@ test('test', async ({ page }) => {
   await expect(page.getByText("SelectInput Sizes")).toBeVisible();
   let firstRadioGroup = page.getByRole('radiogroup').nth(0);
   let firstRadioButtons = firstRadioGroup.getByRole('radio');
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 50; i++) {
     let now = performance.now();
     await firstRadioButtons.nth(1).click();
     await expect(firstRadioButtons.nth(1)).toBeChecked();

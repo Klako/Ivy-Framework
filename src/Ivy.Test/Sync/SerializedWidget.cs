@@ -71,7 +71,8 @@ namespace Ivy.Test.Sync
                         new JsonArrayMessagePackFormatter(),
                         new JsonValueMessagePackFormatter(),
                         new WidgetMessagePackFormatter(),
-                        new StructureMessagePackFormatter()
+                        new StructureMessagePackFormatter(),
+                        new WidgetNodeMessagePackFormatter()
                     ],
                     [
                         JsonNodeResolver.Instance,
@@ -82,12 +83,9 @@ namespace Ivy.Test.Sync
                 ));
 
         internal static MessagePackSerializerOptions DeserializeOptions { get; } =
-            new MessagePackSerializerOptions(
-                CompositeResolver.Create(
-                    JsonNodeResolver.Instance,
-                    StandardResolver.Instance));
+            new MessagePackSerializerOptions(StandardResolver.Instance);
 
-        public static SerializedWidget FromWidget(IWidget widget)
+        public static SerializedWidget FromWidget(WidgetNode widget)
         {
             var data = MessagePackSerializer.Serialize(widget, SerializeOptions);
             return MessagePackSerializer.Deserialize<SerializedWidget>(data, DeserializeOptions);

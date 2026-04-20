@@ -22,7 +22,7 @@ namespace Ivy.Test.Sync
             var widget = new TestWidget()
             {
                 Id = expected.Id
-            };
+            }.ToWidgetNode();
 
             var result = SerializedWidget.FromWidget(widget);
 
@@ -49,7 +49,7 @@ namespace Ivy.Test.Sync
             };
             widget.Id = expected.Id;
 
-            var result = SerializedWidget.FromWidget(widget);
+            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }
@@ -91,7 +91,7 @@ namespace Ivy.Test.Sync
                 }
             };
 
-            var result = SerializedWidget.FromWidget(widget);
+            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }
@@ -115,7 +115,7 @@ namespace Ivy.Test.Sync
             };
             widget.Id = expected.Id;
 
-            var result = SerializedWidget.FromWidget(widget);
+            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }

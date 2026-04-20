@@ -142,9 +142,9 @@ namespace Ivy.Test.Sync
         [Fact]
         public void ComputeDiff_SimpleChanges()
         {
-            var source = new TestWidget() { Id = "dwiojf"};
+            var source = new WidgetNode(new TestWidget() { Id = "dwiojf"});
             var convertedSource = SerializedWidget.FromWidget(source);
-            var target = new TestWidget() { Id = source.Id, TestProp1 = "nondefault" };
+            var target = new WidgetNode(new TestWidget() { Id = source.Id, TestProp1 = "nondefault" });
             var expectedTarget = SerializedWidget.FromWidget(target);
 
             var update = TreeDiffer.ComputeDiff(source, target);
@@ -180,10 +180,10 @@ namespace Ivy.Test.Sync
                     }
                 ]
             };
-            var convertedSource = SerializedWidget.FromWidget(source);
-            var expectedTarget = SerializedWidget.FromWidget(target);
+            var convertedSource = SerializedWidget.FromWidget(source.ToWidgetNode());
+            var expectedTarget = SerializedWidget.FromWidget(target.ToWidgetNode());
 
-            var update = TreeDiffer.ComputeDiff(source, target);
+            var update = TreeDiffer.ComputeDiff(source.ToWidgetNode(), target.ToWidgetNode());
 
             Assert.IsType<WidgetUpdate>(update);
 
@@ -225,10 +225,13 @@ namespace Ivy.Test.Sync
             var target = GenerateBinaryTree(new Random(), (int)Math.Log2(100));
             target.Id = "dwqpokqwd";
 
-            var convertedSource = SerializedWidget.FromWidget(source);
-            var convertedTarget = SerializedWidget.FromWidget(target);
+            var sourceNode = source.ToWidgetNode();
+            var targetNode = target.ToWidgetNode();
 
-            var update = TreeDiffer.ComputeDiff(source, target);
+            var convertedSource = SerializedWidget.FromWidget(sourceNode);
+            var convertedTarget = SerializedWidget.FromWidget(targetNode);
+
+            var update = TreeDiffer.ComputeDiff(sourceNode, targetNode);
 
             Assert.IsType<WidgetUpdate>(update);
 
@@ -260,10 +263,13 @@ namespace Ivy.Test.Sync
                 }
             };
 
-            var convertedSource = SerializedWidget.FromWidget(source);
-            var convertedTarget = SerializedWidget.FromWidget(target);
+            var sourceNode = source.ToWidgetNode();
+            var targetNode = target.ToWidgetNode();
 
-            var update = TreeDiffer.ComputeDiff(source, target);
+            var convertedSource = SerializedWidget.FromWidget(sourceNode);
+            var convertedTarget = SerializedWidget.FromWidget(targetNode);
+
+            var update = TreeDiffer.ComputeDiff(sourceNode, targetNode);
 
             Assert.IsType<WidgetUpdate>(update);
 

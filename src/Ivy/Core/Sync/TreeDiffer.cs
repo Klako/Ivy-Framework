@@ -6,7 +6,7 @@ namespace Ivy.Core.Sync
     {
         public static object? ComputeDiff(WidgetNode source, WidgetNode target)
         {
-            if (!target.GetType().Equals(source.GetType()))
+            if (!target.Type.Equals(source.Type))
             {
                 return target;
             }

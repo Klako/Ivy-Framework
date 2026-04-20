@@ -17,6 +17,8 @@ namespace Ivy.Core.Sync
 
         public IWidget Widget { get; }
 
+        public Type Type { get => Widget.GetType(); }
+
         public string Id { get; }
 
         public (string Name, IPropStructureNode Value)[] Props { get; }
@@ -28,7 +30,7 @@ namespace Ivy.Core.Sync
         public WidgetNode(IWidget widget)
         {
             Widget = widget;
-            Metadata = WidgetMetadata.FromWidgetType(widget.GetType());
+            Metadata = WidgetMetadata.FromWidgetType(Type);
             Id = widget.Id!;
             Props = Metadata.PropMetadatas
                 .Select(propMetadata => (propMetadata.CamelCaseName, propMetadata.GetValueAsStructure(widget)))

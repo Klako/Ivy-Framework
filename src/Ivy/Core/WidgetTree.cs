@@ -283,12 +283,12 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             }
             else if (update != null && previous != null)
             {
-#if BENCHMARK
-                timingBeforeJsonDiff = stopWatch.Elapsed.TotalMicroseconds;
-#endif
                 // [Native Patch Integration] Execute mathematically independent zero-allocation diffing via C/Rust!
                 var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(previous);
                 var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(update);
+#if BENCHMARK
+                timingBeforeJsonDiff = stopWatch.Elapsed.TotalMicroseconds;
+#endif
                 patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
             }
             else

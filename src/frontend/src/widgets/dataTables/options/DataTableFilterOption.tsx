@@ -266,7 +266,6 @@ export const DataTableFilterOption: React.FC<{
       onClick={handleContainerClick}
       className={cn(
         "relative h-full min-h-9 min-w-0 w-full flex-1",
-        "rounded-tr-md rounded-br-md",
         isExpanded ? "cursor-text" : "pointer-events-none",
       )}
     >
@@ -274,10 +273,7 @@ export const DataTableFilterOption: React.FC<{
         className={cn(
           "query-editor-wrapper relative cursor-text",
           "flex h-full min-h-9 w-full max-w-full min-w-0 flex-col",
-          "rounded-field border border-input bg-background shadow-sm transition-colors",
-          "dark:border-white/10",
-          "focus-within:ring-1 focus-within:ring-ring focus-within:ring-offset-0",
-          "text-sm",
+          "min-h-0 overflow-hidden bg-background text-sm",
         )}
         data-query-valid={isQueryValid}
         data-has-clear={query ? "true" : "false"}
@@ -307,7 +303,7 @@ export const DataTableFilterOption: React.FC<{
             onClick={handleClearFilter}
             disabled={!query}
             className={cn(
-              "absolute right-0 top-1/2 z-10 h-9 -translate-y-1/2 shrink-0 rounded-none rounded-r-field border-l border-input bg-background px-3 text-sm shadow-none hover:bg-muted hover:text-accent-foreground",
+              "absolute right-0 top-1/2 z-10 h-9 -translate-y-1/2 shrink-0 border-l border-input bg-background px-3 text-sm shadow-none hover:bg-muted hover:text-accent-foreground focus-visible:ring-0 focus-visible:ring-offset-0",
               query ? "" : "hidden",
             )}
           >

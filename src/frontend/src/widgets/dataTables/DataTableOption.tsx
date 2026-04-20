@@ -131,8 +131,9 @@ export const DataTableOption: React.FC<DataTableOptionProps> = ({
         ref={containerRef}
         className={cn(
           "inline-flex items-center mb-3",
-          "border rounded-field",
-          "bg-transparent border-input",
+          "rounded-field border border-input bg-transparent shadow-sm",
+          "dark:border-white/10 dark:bg-white/5",
+          "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
           "transition-all duration-300 ease-in-out",
           className,
         )}
@@ -140,9 +141,9 @@ export const DataTableOption: React.FC<DataTableOptionProps> = ({
         <button
           className={cn(
             "inline-flex items-center justify-center text-sm font-medium",
-            "h-9 w-9 gap-2 cursor-pointer flex-shrink-0",
-            "bg-transparent rounded-l-[var(--radius-fields)]",
-            "transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+            "h-9 w-9 shrink-0 gap-2 cursor-pointer",
+            "bg-transparent rounded-l-fields",
+            "transition-colors focus-visible:outline-none",
             expanded
               ? "bg-accent hover:bg-accent hover:text-accent-foreground"
               : "hover:bg-accent hover:text-accent-foreground",
@@ -158,14 +159,13 @@ export const DataTableOption: React.FC<DataTableOptionProps> = ({
           className={cn(
             "border-l h-9",
             "transition-all duration-300 ease-in-out",
-            expanded
-              ? "w-[450px] opacity-100 border-input/30" // Fixed width when expanded
-              : "w-0 opacity-0 border-transparent",
+            expanded ? "w-[450px] opacity-100 border-input" : "w-0 opacity-0 border-transparent",
           )}
         >
           <div
             className={cn(
               "flex h-full min-h-0 min-w-0 w-[450px] max-w-full items-stretch",
+              "overflow-hidden rounded-l-none rounded-tr-fields rounded-br-fields",
               contentClassName,
             )}
           >

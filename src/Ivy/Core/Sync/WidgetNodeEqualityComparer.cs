@@ -24,7 +24,7 @@ namespace Ivy.Core.Sync
                 return true;
             }
 
-            if (!x.GetType().Equals(y.GetType()))
+            if (!x.Type.Equals(y.Type))
             {
                 return false;
             }
@@ -34,7 +34,7 @@ namespace Ivy.Core.Sync
                 return false;
             }
 
-            var metadata = WidgetMetadata.FromWidgetType(x.GetType());
+            var metadata = WidgetMetadata.FromWidgetType(x.Type);
 
             foreach (var ((_, xValue), (_, yValue)) in x.Props.Zip(y.Props))
             {

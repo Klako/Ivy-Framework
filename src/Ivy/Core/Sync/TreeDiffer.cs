@@ -4,7 +4,7 @@ namespace Ivy.Core.Sync
 {
     public class TreeDiffer
     {
-        public static object? ComputeDiff(IWidget source, IWidget target)
+        public static object? ComputeDiff(WidgetNode source, WidgetNode target)
         {
             if (!target.GetType().Equals(source.GetType()))
             {
@@ -25,11 +25,8 @@ namespace Ivy.Core.Sync
 
             var propUpdates = new Dictionary<string, IPropUpdate>();
 
-            foreach (var (name, propMetadata) in metadata.PropMetadatas)
+            foreach (var ((name, sourceValue), (_, targetValue)) in source.Props.Zip(target.Props))
             {
-                var sourceValue = propMetadata.GetValueAsStructure(source);
-                var targetValue = propMetadata.GetValueAsStructure(target);
-
 #if NEWDIFF_PROPDIFF
                 var propUpdate = PropDiff(sourceValue, targetValue);
 #else
@@ -46,19 +43,16 @@ namespace Ivy.Core.Sync
 
             string[]? eventsUpdate = null;
 
-            var sourceEvents = metadata.GetEvents(source);
-            var targetEvents = metadata.GetEvents(target);
-
-            if (!sourceEvents.SequenceEqual(targetEvents))
+            if (!source.Events.SequenceEqual(target.Events))
             {
-                eventsUpdate = targetEvents.ToArray();
+                eventsUpdate = target.Events.ToArray();
             }
 
             // Compare children
 #if NEWDIFF_LCS
-            var childrenChanges = ChildrenLCSDiff(source, target);
+            var childrenChanges = ChildrenLCSDiff(source.Children, target.Children);
 #else
-            var childrenChanges = ChildrenLinearDiff(source, target);
+            var childrenChanges = ChildrenLinearDiff(source.Children, target.Children);
 #endif
 
             if (id != null
@@ -68,7 +62,7 @@ namespace Ivy.Core.Sync
             {
                 return new WidgetUpdate(
                     id: id,
-                    props: propUpdates,
+                    props: propUpdates.Count > 0 ? propUpdates : null,
                     events: eventsUpdate,
                     children: childrenChanges);
             }
@@ -174,20 +168,18 @@ namespace Ivy.Core.Sync
             return new PropValueDiff(target);
         }
 
-        private static WidgetListDiff? ChildrenLinearDiff(IWidget source, IWidget target)
+        private static WidgetListDiff? ChildrenLinearDiff(WidgetNode[] source, WidgetNode[] target)
         {
-            var changes = new List<IWidgetListOperation>(Math.Max(source.Children.Length, target.Children.Length));
+            var changes = new List<IWidgetListOperation>(Math.Max(source.Length, target.Length));
 
-            var commonLength = Math.Min(source.Children.Length, target.Children.Length);
+            var commonLength = Math.Min(source.Length, target.Length);
 
             // Both widgets have a child at index i
             for (int i = 0; i < commonLength; i++)
             {
-                var sourceChild = (IWidget)source.Children[i];
-                var targetChild = (IWidget)target.Children[i];
-                var result = ComputeDiff(sourceChild, targetChild);
+                var result = ComputeDiff(source[i], target[i]);
 
-                if (result is IWidget widget)
+                if (result is WidgetNode widget)
                 {
                     changes.Add(WidgetListSplice.Replace(i, widget));
                 }
@@ -197,18 +189,15 @@ namespace Ivy.Core.Sync
                 }
             }
 
-            if (source.Children.Length > target.Children.Length)
+            if (source.Length > target.Length)
             {
-                var diffLength = source.Children.Length - target.Children.Length;
+                var diffLength = source.Length - target.Length;
                 changes.Add(WidgetListSplice.RemoveRange(commonLength, diffLength));
             }
-            else if (source.Children.Length < target.Children.Length)
+            else if (source.Length < target.Length)
             {
-                var widgetsToAdd = target.Children
-                    .TakeLast(target.Children.Length - source.Children.Length)
-                    .Cast<IWidget>()
-                    .ToArray();
-                changes.Add(WidgetListSplice.AddRange(source.Children.Length, widgetsToAdd));
+                var widgetsToAdd = target.TakeLast(target.Length - source.Length);
+                changes.Add(WidgetListSplice.AddRange(source.Length, widgetsToAdd));
             }
 
             if (changes.Count == 0)
@@ -216,29 +205,29 @@ namespace Ivy.Core.Sync
                 return null;
             }
 
-            return new WidgetListDiff(changes: changes.ToArray());
+            return new WidgetListDiff(changes: changes);
         }
 
-        private static WidgetListDiff? ChildrenLCSDiff(IWidget source, IWidget target)
+        private static WidgetListDiff? ChildrenLCSDiff(WidgetNode[] source, WidgetNode[] target)
         {
             // Compute the matrix containing all jumps in distances
             // used to compute the subsequence itself
-            var distances = new int[source.Children.Length + 1, target.Children.Length + 1];
+            var distances = new int[source.Length + 1, target.Length + 1];
             {
-                for (int i = 0; i < source.Children.Length; i++)
+                for (int i = 0; i < source.Length; i++)
                 {
                     distances[i, 0] = 0;
                 }
-                for (int i = 0; i < target.Children.Length; i++)
+                for (int i = 0; i < target.Length; i++)
                 {
                     distances[0, i] = 0;
                 }
-                var equalityComparer = new WidgetEqualityComparer();
-                for (int i = 1; i < source.Children.Length + 1; i++)
+                var equalityComparer = new WidgetNodeEqualityComparer();
+                for (int i = 1; i < source.Length + 1; i++)
                 {
-                    for (int j = 1; j < target.Children.Length + 1; j++)
+                    for (int j = 1; j < target.Length + 1; j++)
                     {
-                        if (equalityComparer.Equals((IWidget)source.Children[i - 1], (IWidget)target.Children[j - 1]))
+                        if (equalityComparer.Equals(source[i - 1], target[j - 1]))
                         {
                             distances[i, j] = distances[i - 1, j - 1] + 1;
                         }
@@ -251,10 +240,10 @@ namespace Ivy.Core.Sync
             }
 
             // Compute the subsequence of pairs of widgets that match
-            var subsequencePairs = new List<(int SourceIndex, int TargetIndex)>(Math.Max(source.Children.Length, target.Children.Length));
+            var subsequencePairs = new List<(int SourceIndex, int TargetIndex)>(Math.Max(source.Length, target.Length));
             {
-                var sourceIndex = source.Children.Length;
-                var targetIndex = target.Children.Length;
+                var sourceIndex = source.Length;
+                var targetIndex = target.Length;
                 while (distances[sourceIndex, targetIndex] > 0)
                 {
                     var pairDistance = distances[sourceIndex, targetIndex];
@@ -280,7 +269,7 @@ namespace Ivy.Core.Sync
             var changes = new List<IWidgetListOperation>();
             {
                 var adjacentPairs = subsequencePairs
-                    .Append((SourceIndex: source.Children.Length, TargetIndex: target.Children.Length))
+                    .Append((SourceIndex: source.Length, TargetIndex: target.Length))
                     .Zip(subsequencePairs.Prepend((SourceIndex: 0, TargetIndex: 0)));
 
                 foreach (var (currentPair, previousPair) in adjacentPairs)
@@ -293,14 +282,12 @@ namespace Ivy.Core.Sync
                     {
                         var sourceIndex = previousPair.SourceIndex + i;
                         var targetIndex = previousPair.TargetIndex + i;
-                        var sourceChild = (IWidget)source.Children[sourceIndex];
-                        var targetChild = (IWidget)target.Children[targetIndex];
-                        var widgetDiff = ComputeDiff(sourceChild, targetChild);
+                        var widgetDiff = ComputeDiff(source[sourceIndex], target[targetIndex]);
                         if (widgetDiff is WidgetUpdate update)
                         {
                             changes.Add(new WidgetListUpdate(sourceIndex, update));
                         }
-                        else if (widgetDiff is IWidget newWidget)
+                        else if (widgetDiff is WidgetNode newWidget)
                         {
                             if (changes.LastOrDefault() is WidgetListSplice previousSplice
                                 && previousSplice.Index == sourceIndex - 1)
@@ -329,7 +316,7 @@ namespace Ivy.Core.Sync
                     {
                         changes.Add(WidgetListSplice.AddRange(
                             previousPair.SourceIndex + sourceLength,
-                            target.Children.TakeLast(targetLength - sourceLength).Cast<IWidget>()));
+                            target.TakeLast(targetLength - sourceLength)));
                     }
                 }
             }

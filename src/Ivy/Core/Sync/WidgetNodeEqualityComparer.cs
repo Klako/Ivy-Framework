@@ -6,9 +6,9 @@ using System.Text;
 
 namespace Ivy.Core.Sync
 {
-    internal class WidgetEqualityComparer : IEqualityComparer<IWidget>
+    internal class WidgetNodeEqualityComparer : IEqualityComparer<WidgetNode>
     {
-        public bool Equals(IWidget? x, IWidget? y)
+        public bool Equals(WidgetNode? x, WidgetNode? y)
         {
             if (x == null)
             {
@@ -36,21 +36,15 @@ namespace Ivy.Core.Sync
 
             var metadata = WidgetMetadata.FromWidgetType(x.GetType());
 
-            foreach (var (_, propMetadata) in metadata.PropMetadatas)
+            foreach (var ((_, xValue), (_, yValue)) in x.Props.Zip(y.Props))
             {
-                var xValue = propMetadata.GetValue(x);
-                var yValue = propMetadata.GetValue(y);
-
-                if (!StructuralComparisons.StructuralEqualityComparer.Equals(xValue, yValue))
+                if (!xValue.DeepEquals(yValue))
                 {
                     return false;
                 }
             }
 
-            var xEvents = metadata.GetEvents(x);
-            var yEvents = metadata.GetEvents(y);
-
-            if (!StructuralComparisons.StructuralEqualityComparer.Equals(xEvents, yEvents))
+            if (!x.Events.SequenceEqual(y.Events))
             {
                 return false;
             }
@@ -62,19 +56,16 @@ namespace Ivy.Core.Sync
 
             for (int i = 0; i < x.Children.Length; i++)
             {
-                if (x.Children[i] is IWidget xChild && y.Children[i] is IWidget yChild)
+                if (!Equals(x.Children[i], y.Children[i]))
                 {
-                    if (Equals(xChild, yChild))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 
             return true;
         }
 
-        public int GetHashCode([DisallowNull] IWidget obj)
+        public int GetHashCode([DisallowNull] WidgetNode obj)
         {
             throw new NotImplementedException();
         }

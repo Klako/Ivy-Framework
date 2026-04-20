@@ -222,7 +222,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if JSONPATCH
             JsonNode? previous = node.GetSerializedWidgetTree();
 #else
-            IWidget? previousTree = node.GetWidgetTree();
+            WidgetNode previousTree = new WidgetNode(node.GetWidgetTree()!);
 #endif
 
             var partial = BuildView(node.View!, node.ParentTreePath.Clone(), node.Index, parentId, node.AncestorContext, isRefreshingView: true, isHotReload);
@@ -327,12 +327,12 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if BENCHMARK
             var timingBeforeGetWidgetTree = stopWatch.Elapsed.TotalMicroseconds;
 #endif
-            var currentTree = partial.GetWidgetTree();
+            var currentTree = new WidgetNode(partial.GetWidgetTree()!);
 
 #if BENCHMARK
             var timingBeforeDiff = stopWatch.Elapsed.TotalMicroseconds;
 #endif
-            var diff = TreeDiffer.ComputeDiff(previousTree!, currentTree!);
+            var diff = TreeDiffer.ComputeDiff(previousTree, currentTree);
 #if BENCHMARK
             var timingAfterDiff = stopWatch.Elapsed.TotalMicroseconds;
 #endif
@@ -347,7 +347,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             string? hash = null;
 
             string? op = null;
-            if (diff is IWidget widget)
+            if (diff is WidgetNode widget)
             {
                 op = "replace";
             }

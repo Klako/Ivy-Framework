@@ -19,11 +19,17 @@ namespace Ivy.Benchmark.Sync
     [CPUUsageDiagnoser]
     public partial class WidgetTreeSync
     {
-        IWidget flatTreeSource;
-        IWidget flatTreeTarget;
+        WidgetNode flatTreeSourceNode;
+        WidgetNode flatTreeTargetNode;
 
-        IWidget binaryTreeSource;
-        IWidget binaryTreeTarget;
+        WidgetNode binaryTreeSourceNode;
+        WidgetNode binaryTreeTargetNode;
+
+        byte[] binaryTreeoOldBytes;
+        byte[] binaryTreeNewBytes;
+
+        byte[] flatTreeOldBytes;
+        byte[] flatTreeNewBytes;
 
         MessagePackSerializerOptions _serializerOptions = MessagePackSerializerOptions.Standard.WithResolver(
                 CompositeResolver.Create(
@@ -81,64 +87,60 @@ namespace Ivy.Benchmark.Sync
         [GlobalSetup]
         public void Setup()
         {
-            flatTreeSource = new List(GenerateTexts(1000)) { Id = "pokqwd" };
-            flatTreeTarget = new List(GenerateTexts(1000)) { Id = "pokqwd" };
-            binaryTreeSource = GenerateBinaryTree(new Random(), (int)Math.Log2(1000));
+            var flatTreeSource = new List(GenerateTexts(1000)) { Id = "pokqwd" };
+            var flatTreeTarget = new List(GenerateTexts(1000)) { Id = "pokqwd" };
+            var binaryTreeSource = GenerateBinaryTree(new Random(), (int)Math.Log2(1000));
             binaryTreeSource.Id = "dwqpokqwd";
-            binaryTreeTarget = GenerateBinaryTree(new Random(), (int)Math.Log2(1000));
+            var binaryTreeTarget = GenerateBinaryTree(new Random(), (int)Math.Log2(1000));
             binaryTreeTarget.Id = "dwqpokqwd";
+
+            flatTreeSourceNode = new WidgetNode(flatTreeSource);
+            flatTreeTargetNode = new WidgetNode(flatTreeTarget);
+
+            binaryTreeSourceNode = new WidgetNode(binaryTreeSource);
+            binaryTreeTargetNode = new WidgetNode(binaryTreeTarget);
+
+            var binarySourceJson = binaryTreeSource.Serialize();
+            var binaryTargetJson = binaryTreeTarget.Serialize();
+            binaryTreeoOldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(binarySourceJson);
+            binaryTreeNewBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(binaryTargetJson);
+
+            var flatSourceJson = flatTreeSource.Serialize();
+            var flatTargetJson = flatTreeTarget.Serialize();
+            flatTreeOldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(flatSourceJson);
+            flatTreeNewBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(flatTargetJson);
         }
 
-        [ReportColumn(Aggregation = Aggregation.Mean, Name = "Size", Unit = "bytes")]
-        public int ResultSize { get; set; }
+        //[ReportColumn(Aggregation = Aggregation.Mean, Name = "Size", Unit = "bytes")]
+        //public int ResultSize { get; set; }
 
         [Benchmark]
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public int RustDiff_FlatTree()
+        public object RustDiff_FlatTree()
         {
-            var sourceWidgetJson = flatTreeSource.Serialize();
-            var targetWidgetJson = flatTreeTarget.Serialize();
-            var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(sourceWidgetJson);
-            var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(targetWidgetJson);
-            var patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
-            var serialized = MessagePackSerializer.Serialize(patch, _serializerOptions);
-            ResultSize = serialized.Length;
-            return serialized.Length;
-        }
-
-        [Benchmark]
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public int NewDiff_FlatTree()
-        {
-            var diff = Ivy.Core.Sync.TreeDiffer.ComputeDiff(flatTreeSource, flatTreeTarget);
-            var serialized = MessagePackSerializer.Serialize(diff, _serializerOptions);
-            ResultSize = serialized.Length;
-            return serialized.Length;
-        }
-
-
-        [Benchmark]
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public int RustDiff_BinaryTree()
-        {
-            var sourceWidgetJson = binaryTreeSource.Serialize();
-            var targetWidgetJson = binaryTreeTarget.Serialize();
-            var oldBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(sourceWidgetJson);
-            var newBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(targetWidgetJson);
-            var patch = JsonDiffer.ComputePatch(oldBytes, newBytes);
-            var serialized = MessagePackSerializer.Serialize(patch, _serializerOptions);
-            ResultSize = serialized.Length;
-            return serialized.Length;
+            return JsonDiffer.ComputePatch(flatTreeOldBytes, flatTreeNewBytes);
         }
 
         [Benchmark]
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public int NewDiff_BinaryTree()
+        public object NewDiff_FlatTree()
         {
-            var diff = Ivy.Core.Sync.TreeDiffer.ComputeDiff(binaryTreeSource, binaryTreeTarget);
-            var serialized = MessagePackSerializer.Serialize(diff, _serializerOptions);
-            ResultSize = serialized.Length;
-            return serialized.Length;
+            return TreeDiffer.ComputeDiff(flatTreeSourceNode, flatTreeTargetNode);
+        }
+
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object RustDiff_BinaryTree()
+        {
+            return JsonDiffer.ComputePatch(binaryTreeoOldBytes, binaryTreeNewBytes);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_BinaryTree()
+        {
+            return TreeDiffer.ComputeDiff(binaryTreeSourceNode, binaryTreeTargetNode);
         }
 
     }

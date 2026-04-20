@@ -113,7 +113,7 @@ namespace Ivy.Core.Sync
     [MessagePackObject]
     public record WidgetListSplice : IWidgetListOperation
     {
-        public WidgetListSplice(int index, int length, IEnumerable<IWidget> widgets)
+        public WidgetListSplice(int index, int length, IEnumerable<WidgetNode> widgets)
         {
             Index = index;
             Length = length;
@@ -127,17 +127,17 @@ namespace Ivy.Core.Sync
         public int Length { get; init; }
 
         [Key(2)]
-        public IEnumerable<IWidget> Widgets { get; init; }
+        public IEnumerable<WidgetNode> Widgets { get; init; }
 
         [IgnoreMember]
         public int SortIndex => Index;
 
-        public static WidgetListSplice Add(int index, IWidget widget) => new(index, 0, [widget]);
-        public static WidgetListSplice AddRange(int index, IEnumerable<IWidget> widgets) => new(index, 0, widgets);
+        public static WidgetListSplice Add(int index, WidgetNode widget) => new(index, 0, [widget]);
+        public static WidgetListSplice AddRange(int index, IEnumerable<WidgetNode> widgets) => new(index, 0, widgets);
         public static WidgetListSplice Remove(int index) => new(index, 1, []);
         public static WidgetListSplice RemoveRange(int index, int length) => new(index, length, []);
-        public static WidgetListSplice Replace(int index, IWidget widget) => new(index, 1, [widget]);
-        public static WidgetListSplice ReplaceRange(int index, int length, IEnumerable<IWidget> widgets) => new(index, length, widgets);
+        public static WidgetListSplice Replace(int index, WidgetNode widget) => new(index, 1, [widget]);
+        public static WidgetListSplice ReplaceRange(int index, int length, IEnumerable<WidgetNode> widgets) => new(index, length, widgets);
     }
 
     [Union(0, typeof(WidgetListMove))]

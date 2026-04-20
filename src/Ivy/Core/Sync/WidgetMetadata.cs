@@ -13,7 +13,7 @@ namespace Ivy.Core.Sync
         
         public string TypeName { get; }       
 
-        public IDictionary<string, PropMetadata> PropMetadatas { get; }
+        public PropMetadata[] PropMetadatas { get; }
 
         private WidgetMetadata(Type widgetType)
         {
@@ -42,11 +42,12 @@ namespace Ivy.Core.Sync
             PropMetadatas = allProperties
                 .Select(p => (Property: p, Attribute: p.GetCustomAttribute<PropAttribute>()))
                 .Where(x => x.Attribute != null)
-                .Select(x => {
+                .Select(x =>
+                {
                     var defaultValue = defaultInstance != null ? x.Property.GetValue(defaultInstance) : null;
                     return new PropMetadata(x.Property, x.Attribute!, defaultValue);
-                    })
-                .ToDictionary(x => x.CamelCaseName);
+                })
+                .ToArray();
 
             eventProperties = allProperties
                 .Where(p => p.GetCustomAttribute<EventAttribute>() != null)

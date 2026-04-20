@@ -24,9 +24,9 @@ namespace Ivy.Core.Sync
 
             // Serialize props
 
-            var props = new List<(string, IPropStructureNode)>(metadata.PropMetadatas.Count);
+            var props = new List<(string, IPropStructureNode)>(metadata.PropMetadatas.Length);
 
-            foreach (var (name, propMetadata) in metadata.PropMetadatas)
+            foreach (var propMetadata in metadata.PropMetadatas)
             {
                 var value = propMetadata.GetValueAsStructure(widget);
 
@@ -38,7 +38,7 @@ namespace Ivy.Core.Sync
                 }
                 if (!value.DeepEquals(new PropStructureLeaf(null)))
                 {
-                    props.Add((name, value));
+                    props.Add((propMetadata.CamelCaseName, value));
                 }
             }
 

@@ -18,16 +18,16 @@ public static class CookieRegistryExtensions
         return null;
     }
 
-    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? providersToDelete = null)
+    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? brokeredProvidersToDelete = null, IEnumerable<string>? connectedProvidersToDelete = null)
     {
         var cookies = new CookieJar();
-        cookies.AddCookiesForAuthToken(authSession.AuthToken, providersToDelete);
+        cookies.AddCookiesForAuthToken(authSession.AuthToken, brokeredProvidersToDelete);
         cookies.AddCookiesForAuthSessionData(authSession.AuthSessionData);
 
         // Filter out brokered session providers that have been globally removed (if machineId is provided)
         IReadOnlyDictionary<string, IAuthTokenHandlerSession> sessionsToWrite = authSession.BrokeredSessions;
-        HashSet<string>? removedProviders = providersToDelete != null
-            ? new(providersToDelete)
+        HashSet<string>? removedProviders = brokeredProvidersToDelete != null
+            ? new(brokeredProvidersToDelete)
             : null;
 
         if (removedProviders != null && removedProviders.Count > 0)
@@ -39,15 +39,30 @@ public static class CookieRegistryExtensions
 
         cookies.AddCookiesForBrokeredSessions(sessionsToWrite);
 
-        // Also delete cookies for removed providers
+        // Add connected accounts
+        cookies.AddCookiesForConnectedAccounts(authSession.ConnectedAccounts);
+
+        // Delete cookies for disconnected connected account providers
+        if (connectedProvidersToDelete != null)
+        {
+            var cookieOptions = CreateAuthCookieOptions();
+            foreach (var provider in connectedProvidersToDelete)
+            {
+                cookies.Delete(PrefixCookieName($"conn_{provider}_access_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"conn_{provider}_refresh_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"conn_{provider}_auth_tag"), cookieOptions);
+            }
+        }
+
+        // Also delete cookies for removed brokered providers
         if (removedProviders != null && removedProviders.Count > 0)
         {
             var cookieOptions = CreateAuthCookieOptions();
             foreach (var provider in removedProviders)
             {
-                cookies.Delete($"{provider}_access_token", cookieOptions);
-                cookies.Delete($"{provider}_refresh_token", cookieOptions);
-                cookies.Delete($"{provider}_auth_tag", cookieOptions);
+                cookies.Delete(PrefixCookieName($"{provider}_access_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"{provider}_refresh_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"{provider}_auth_tag"), cookieOptions);
             }
         }
 
@@ -70,9 +85,9 @@ public static class CookieRegistryExtensions
 
     public static void AddCookiesForAuthToken(this CookieJar cookies, AuthToken? authToken, IEnumerable<string>? sessionsToDelete = null)
     {
-        var authTokenName = "access_token";
-        var refreshTokenName = "refresh_token";
-        var tagName = "auth_tag";
+        var authTokenName = PrefixCookieName("access_token");
+        var refreshTokenName = PrefixCookieName("refresh_token");
+        var tagName = PrefixCookieName("auth_tag");
 
         if (string.IsNullOrEmpty(authToken?.AccessToken))
         {
@@ -86,9 +101,9 @@ public static class CookieRegistryExtensions
                 var cookieOptions = CreateAuthCookieOptions();
                 foreach (var provider in sessionsToDelete)
                 {
-                    cookies.Delete($"{provider}_access_token", cookieOptions);
-                    cookies.Delete($"{provider}_refresh_token", cookieOptions);
-                    cookies.Delete($"{provider}_auth_tag", cookieOptions);
+                    cookies.Delete(PrefixCookieName($"{provider}_access_token"), cookieOptions);
+                    cookies.Delete(PrefixCookieName($"{provider}_refresh_token"), cookieOptions);
+                    cookies.Delete(PrefixCookieName($"{provider}_auth_tag"), cookieOptions);
                 }
             }
         }
@@ -120,7 +135,7 @@ public static class CookieRegistryExtensions
 
     public static void AddCookiesForAuthSessionData(this CookieJar cookies, string? authSessionData)
     {
-        var authSessionDataName = "auth_session_data";
+        var authSessionDataName = PrefixCookieName("auth_session_data");
 
         var cookieOptions = CreateAuthCookieOptions(forceLaxSameSite: true);
         if (authSessionData == null)
@@ -133,15 +148,54 @@ public static class CookieRegistryExtensions
         }
     }
 
+    public static void AddCookiesForConnectedAccounts(this CookieJar cookies, IReadOnlyDictionary<string, IAuthSession> connectedAccounts)
+    {
+        var cookieOptions = CreateAuthCookieOptions();
+
+        foreach (var (provider, session) in connectedAccounts)
+        {
+            var accessTokenName = PrefixCookieName($"conn_{provider}_access_token");
+            var refreshTokenName = PrefixCookieName($"conn_{provider}_refresh_token");
+            var tagName = PrefixCookieName($"conn_{provider}_auth_tag");
+
+            if (!string.IsNullOrEmpty(session.AuthToken?.AccessToken))
+            {
+                cookies.Append(accessTokenName, session.AuthToken.AccessToken, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(accessTokenName, CreateAuthCookieOptions());
+            }
+
+            if (!string.IsNullOrEmpty(session.AuthToken?.RefreshToken))
+            {
+                cookies.Append(refreshTokenName, session.AuthToken.RefreshToken, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(refreshTokenName, CreateAuthCookieOptions());
+            }
+
+            if (session.AuthToken?.Tag != null)
+            {
+                cookies.Append(tagName, session.AuthToken.Tag, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(tagName, CreateAuthCookieOptions());
+            }
+        }
+    }
+
     public static void AddCookiesForBrokeredSessions(this CookieJar cookies, IReadOnlyDictionary<string, IAuthTokenHandlerSession> brokeredSessions)
     {
         var cookieOptions = CreateAuthCookieOptions();
 
         foreach (var (provider, session) in brokeredSessions)
         {
-            var accessTokenName = $"{provider}_access_token";
-            var refreshTokenName = $"{provider}_refresh_token";
-            var tagName = $"{provider}_auth_tag";
+            var accessTokenName = PrefixCookieName($"{provider}_access_token");
+            var refreshTokenName = PrefixCookieName($"{provider}_refresh_token");
+            var tagName = PrefixCookieName($"{provider}_auth_tag");
 
             // Store access token
             if (!string.IsNullOrEmpty(session.AuthToken?.AccessToken))
@@ -173,6 +227,12 @@ public static class CookieRegistryExtensions
                 cookies.Delete(tagName, CreateAuthCookieOptions());
             }
         }
+    }
+
+    internal static string PrefixCookieName(string name)
+    {
+        var prefix = global::Ivy.Server.AuthCookiePrefix;
+        return string.IsNullOrEmpty(prefix) ? name : $"{prefix}__{name}";
     }
 
     private static CookieOptions CreateAuthCookieOptions(bool forceLaxSameSite = false)

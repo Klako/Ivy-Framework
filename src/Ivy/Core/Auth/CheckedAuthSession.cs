@@ -7,7 +7,8 @@ public enum AuthSessionProperty
 {
     AuthToken,
     AuthSessionData,
-    BrokeredSessions
+    BrokeredSessions,
+    ConnectedAccounts
 }
 
 public enum AuthSessionAccessMode
@@ -171,6 +172,45 @@ public class CheckedAuthSession(IAuthSession innerAuthSession, Dictionary<AuthSe
     {
         add => _innerAuthSession.BrokeredSessionRemoved += value;
         remove => _innerAuthSession.BrokeredSessionRemoved -= value;
+    }
+
+    public IReadOnlyDictionary<string, IAuthSession> ConnectedAccounts
+    {
+        get
+        {
+            CheckRead(AuthSessionProperty.ConnectedAccounts);
+            return _innerAuthSession.ConnectedAccounts;
+        }
+    }
+
+    public void AddConnectedAccount(string provider, IAuthSession session)
+    {
+        CheckWrite(AuthSessionProperty.ConnectedAccounts);
+        _innerAuthSession.AddConnectedAccount(provider, session);
+    }
+
+    public void RemoveConnectedAccount(string provider)
+    {
+        CheckWrite(AuthSessionProperty.ConnectedAccounts);
+        _innerAuthSession.RemoveConnectedAccount(provider);
+    }
+
+    public void ClearConnectedAccounts()
+    {
+        CheckWrite(AuthSessionProperty.ConnectedAccounts);
+        _innerAuthSession.ClearConnectedAccounts();
+    }
+
+    public event Action<string>? ConnectedAccountAdded
+    {
+        add => _innerAuthSession.ConnectedAccountAdded += value;
+        remove => _innerAuthSession.ConnectedAccountAdded -= value;
+    }
+
+    public event Action<string>? ConnectedAccountRemoved
+    {
+        add => _innerAuthSession.ConnectedAccountRemoved += value;
+        remove => _innerAuthSession.ConnectedAccountRemoved -= value;
     }
 }
 #endif

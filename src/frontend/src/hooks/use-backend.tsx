@@ -46,7 +46,7 @@ type SetAuthCookiesMessage = {
   cookieJarId: string;
   reloadPage: boolean;
   triggerMachineReload: boolean;
-  triggerMachineBrokeredRefresh: boolean;
+  triggerMachineAuthSync: boolean;
 };
 
 type HttpTunnelRequestMessage = {
@@ -295,7 +295,7 @@ function applyUpdateMessage(tree: WidgetNode, updates: UpdateMessage): WidgetNod
 
 async function refreshAuthFromCookies(connectionId: string | null): Promise<void> {
   try {
-    const response = await fetch(`${getIvyHost()}/ivy/auth/refresh-session`, {
+    const response = await fetch(`${getIvyHost()}/ivy/auth/sync-session`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -472,7 +472,7 @@ export const useBackend = (
         cookieJarId: message.cookieJarId,
         connectionId: currentConnectionId ?? null,
         triggerMachineReload: message.triggerMachineReload,
-        triggerMachineBrokeredRefresh: message.triggerMachineBrokeredRefresh,
+        triggerMachineAuthSync: message.triggerMachineAuthSync,
       }),
       credentials: "include",
     });
@@ -867,8 +867,8 @@ export const useBackend = (
             window.location.reload();
           });
 
-          connection.on("RefreshAuthFromCookies", () => {
-            logger.debug(`[${connection.connectionId}] RefreshAuthFromCookies`);
+          connection.on("SyncAuthFromCookies", () => {
+            logger.debug(`[${connection.connectionId}] SyncAuthFromCookies`);
             refreshAuthFromCookies(connection.connectionId);
           });
 

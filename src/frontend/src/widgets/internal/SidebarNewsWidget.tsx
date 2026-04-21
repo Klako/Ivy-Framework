@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { validateLinkUrl } from "@/lib/url";
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { hasLicensedFeature } from "@/lib/license";
+// import { hasLicensedFeature } from "@/lib/license"; // TODO: Branding check commented out - can be re-enabled in the future
 import { Card } from "@/components/ui/card";
 
 export interface SidebarNewsWidgetProps {
@@ -25,18 +25,18 @@ const fetchNewsData = async (): Promise<NewsArticle[]> => {
 };
 
 const SidebarNewsWidget = ({ feedUrl }: SidebarNewsWidgetProps) => {
-  const [removeBranding, setRemoveBranding] = useState(true);
+  // const [removeBranding, setRemoveBranding] = useState(true); // TODO: Branding check commented out - can be re-enabled in the future
   const [articles, setArticles] = useState<NewsArticle[] | null>(null);
 
-  useEffect(() => {
-    hasLicensedFeature("RemoveBranding").then(setRemoveBranding);
-  }, []);
+  // useEffect(() => { // TODO: Branding check commented out - can be re-enabled in the future
+  //   hasLicensedFeature("RemoveBranding").then(setRemoveBranding);
+  // }, []);
 
   useEffect(() => {
     fetchNewsData().then(setArticles);
   }, [feedUrl]);
 
-  if (removeBranding) return null;
+  // if (removeBranding) return null; // TODO: Branding check commented out - can be re-enabled in the future
 
   if (!articles || articles.length === 0) return null;
 

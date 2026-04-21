@@ -4,6 +4,7 @@ import { MenuItem } from "@/types/widgets";
 import { TreeItem } from "./TreeItem";
 import { useEventHandler } from "@/components/event-handler";
 import { Densities } from "@/types/density";
+import { densityTreeGap } from "@/components/ui/density-scale";
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -47,8 +48,7 @@ export const TreeWidget: React.FC<TreeWidgetProps> = ({
     [eventHandler, id, events],
   );
 
-  const gapClass =
-    density === Densities.Small ? "gap-0.5" : density === Densities.Large ? "gap-1.5" : "gap-1";
+  const gapClass = densityTreeGap[density];
 
   return (
     <div className={cn("ivy-tree flex flex-col w-full", gapClass)} role="tree">
@@ -56,6 +56,7 @@ export const TreeWidget: React.FC<TreeWidgetProps> = ({
         <TreeItem
           key={item.tag || item.label}
           item={item}
+          density={density}
           onItemClick={onItemClick}
           rowActions={rowActions}
           hasSiblingWithChildren={items.some((i) => i.children && i.children.length > 0)}

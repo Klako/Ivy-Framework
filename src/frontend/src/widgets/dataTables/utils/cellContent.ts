@@ -1,6 +1,6 @@
 import { GridCell, GridCellKind, Item, Theme } from "@glideapps/glide-data-grid";
 import { Align, DataColumn, DataRow } from "../types/types";
-import { getCSSVariable } from "@/lib/theme";
+import { getCSSVariable, isDarkMode } from "@/lib/theme";
 import type { LabelsBadgesCellData } from "./customRenderers";
 
 /**
@@ -453,11 +453,7 @@ export function resolveBadgeColor(colorValue: string | null | undefined): {
   }
 
   const lowerColor = colorValue.toLowerCase().replace(/\s+/g, "-");
-  const bgVar = `--${lowerColor}`;
-  const fgVar = `--${lowerColor}-foreground`;
-
-  let bgColor = getCSSVariable(bgVar) || getCSSVariable(`--color-${lowerColor}`);
-  let fgColor = getCSSVariable(fgVar) || getCSSVariable(`--color-${lowerColor}-foreground`);
+  const dark = isDarkMode();
 
   // Shadcn/Tailwind often use raw HSL components in variables
   const wrapInHsl = (val: string) => {
@@ -467,6 +463,22 @@ export function resolveBadgeColor(colorValue: string | null | undefined): {
     if (val.split(/[\s,]+/).filter(Boolean).length >= 3) return `hsl(${val})`;
     return val;
   };
+
+  // Use shade variants to match BadgeWidget styling (light bg, dark text)
+  const bgShade = dark ? "800" : "200";
+  const fgShade = dark ? "100" : "800";
+  let bgColor = getCSSVariable(`--${lowerColor}-${bgShade}`);
+  let fgColor = getCSSVariable(`--${lowerColor}-${fgShade}`);
+
+  // Fall back to base color variables if shade variants aren't available
+  if (!bgColor) {
+    bgColor = getCSSVariable(`--${lowerColor}`) || getCSSVariable(`--color-${lowerColor}`);
+  }
+  if (!fgColor) {
+    fgColor =
+      getCSSVariable(`--${lowerColor}-foreground`) ||
+      getCSSVariable(`--color-${lowerColor}-foreground`);
+  }
 
   return {
     bg: wrapInHsl(bgColor) || undefined,

@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
-import { GridCellKind } from '@glideapps/glide-data-grid';
-import { iconCellRenderer, IconCell } from './customRenderers';
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { GridCellKind } from "@glideapps/glide-data-grid";
+import { iconCellRenderer, IconCell } from "./customRenderers";
 
 // Mock HTMLImageElement for Node environment
 class MockImage {
-  src = '';
+  src = "";
   complete = true;
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
@@ -17,44 +17,44 @@ beforeAll(() => {
   global.HTMLImageElement = MockImage as any;
 });
 
-describe('customRenderers', () => {
-  describe('iconCellRenderer', () => {
-    describe('isMatch', () => {
-      it('should match icon cells', () => {
+describe("customRenderers", () => {
+  describe("iconCellRenderer", () => {
+    describe("isMatch", () => {
+      it("should match icon cells", () => {
         const iconCell: IconCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
-          copyData: 'Activity',
+          copyData: "Activity",
           data: {
-            kind: 'icon-cell',
-            iconName: 'Activity',
+            kind: "icon-cell",
+            iconName: "Activity",
           },
         };
 
         expect(iconCellRenderer.isMatch(iconCell)).toBe(true);
       });
 
-      it('should not match non-custom cells', () => {
+      it("should not match non-custom cells", () => {
         const textCell = {
           kind: GridCellKind.Text,
-          data: 'test',
-          displayData: 'test',
+          data: "test",
+          displayData: "test",
           allowOverlay: false,
-          copyData: 'test',
+          copyData: "test",
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
 
         expect(iconCellRenderer.isMatch(textCell)).toBe(false);
       });
 
-      it('should not match custom cells with wrong kind', () => {
+      it("should not match custom cells with wrong kind", () => {
         const customCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
-          copyData: 'test',
+          copyData: "test",
           data: {
-            kind: 'other-cell',
-            value: 'test',
+            kind: "other-cell",
+            value: "test",
           },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
@@ -63,10 +63,10 @@ describe('customRenderers', () => {
       });
     });
 
-    describe('draw', () => {
+    describe("draw", () => {
       const mockCtx = {
-        fillStyle: '',
-        font: '',
+        fillStyle: "",
+        font: "",
         fillText: vi.fn(),
         drawImage: vi.fn(),
         beginPath: vi.fn(),
@@ -75,8 +75,8 @@ describe('customRenderers', () => {
       };
 
       const mockTheme = {
-        textDark: '#000',
-        textMedium: '#666',
+        textDark: "#000",
+        textMedium: "#666",
       };
 
       const mockRect = {
@@ -99,14 +99,14 @@ describe('customRenderers', () => {
         vi.clearAllMocks();
       });
 
-      it('should return false when iconName is missing', () => {
+      it("should return false when iconName is missing", () => {
         const cell: IconCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
-          copyData: '',
+          copyData: "",
           data: {
-            kind: 'icon-cell',
-            iconName: '',
+            kind: "icon-cell",
+            iconName: "",
           },
         };
 
@@ -114,32 +114,32 @@ describe('customRenderers', () => {
         expect(result).toBe(false);
       });
 
-      it('should draw error indicator for invalid icon', () => {
+      it("should draw error indicator for invalid icon", () => {
         const cell: IconCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
-          copyData: 'InvalidIcon',
+          copyData: "InvalidIcon",
           data: {
-            kind: 'icon-cell',
-            iconName: 'InvalidIcon',
+            kind: "icon-cell",
+            iconName: "InvalidIcon",
           },
         };
 
         const result = iconCellRenderer.draw(mockArgs, cell);
 
         expect(result).toBe(true);
-        expect(mockCtx.fillText).toHaveBeenCalledWith('?', 16, 24);
-        expect(mockCtx.fillStyle).toBe('#000');
+        expect(mockCtx.fillText).toHaveBeenCalledWith("?", 16, 24);
+        expect(mockCtx.fillStyle).toBe("#000");
       });
 
-      it('should draw icon when image is complete', () => {
+      it("should draw icon when image is complete", () => {
         const cell: IconCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
-          copyData: 'Activity',
+          copyData: "Activity",
           data: {
-            kind: 'icon-cell',
-            iconName: 'Activity',
+            kind: "icon-cell",
+            iconName: "Activity",
           },
         };
 
@@ -150,36 +150,36 @@ describe('customRenderers', () => {
       });
     });
 
-    describe('onPaste', () => {
-      it('should return updated data for valid icon name', () => {
+    describe("onPaste", () => {
+      it("should return updated data for valid icon name", () => {
         const data = {
-          kind: 'icon-cell' as const,
-          iconName: 'Activity',
+          kind: "icon-cell" as const,
+          iconName: "Activity",
         };
 
-        const result = iconCellRenderer.onPaste?.('Archive', data);
+        const result = iconCellRenderer.onPaste?.("Archive", data);
 
         expect(result).toEqual({
-          kind: 'icon-cell',
-          iconName: 'Archive',
+          kind: "icon-cell",
+          iconName: "Archive",
         });
       });
 
-      it('should return undefined for invalid icon name', () => {
+      it("should return undefined for invalid icon name", () => {
         const data = {
-          kind: 'icon-cell' as const,
-          iconName: 'Activity',
+          kind: "icon-cell" as const,
+          iconName: "Activity",
         };
 
-        const result = iconCellRenderer.onPaste?.('InvalidIcon', data);
+        const result = iconCellRenderer.onPaste?.("InvalidIcon", data);
 
         expect(result).toBeUndefined();
       });
 
-      it('should return undefined for non-string values', () => {
+      it("should return undefined for non-string values", () => {
         const data = {
-          kind: 'icon-cell' as const,
-          iconName: 'Activity',
+          kind: "icon-cell" as const,
+          iconName: "Activity",
         };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,21 +189,21 @@ describe('customRenderers', () => {
       });
     });
 
-    describe('renderer properties', () => {
-      it('should have correct kind', () => {
+    describe("renderer properties", () => {
+      it("should have correct kind", () => {
         expect(iconCellRenderer.kind).toBe(GridCellKind.Custom);
       });
 
-      it('should have isMatch function', () => {
-        expect(typeof iconCellRenderer.isMatch).toBe('function');
+      it("should have isMatch function", () => {
+        expect(typeof iconCellRenderer.isMatch).toBe("function");
       });
 
-      it('should have draw function', () => {
-        expect(typeof iconCellRenderer.draw).toBe('function');
+      it("should have draw function", () => {
+        expect(typeof iconCellRenderer.draw).toBe("function");
       });
 
-      it('should have onPaste function', () => {
-        expect(typeof iconCellRenderer.onPaste).toBe('function');
+      it("should have onPaste function", () => {
+        expect(typeof iconCellRenderer.onPaste).toBe("function");
       });
     });
   });

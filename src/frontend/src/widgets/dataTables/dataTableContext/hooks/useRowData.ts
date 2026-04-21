@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import * as arrow from 'apache-arrow';
-import { DataRow } from '../../types/types';
+import { useCallback } from "react";
+import * as arrow from "apache-arrow";
+import { DataRow } from "../../types/types";
 
 /**
  * Converts an Arrow Decimal128 raw value to a JavaScript number.
@@ -9,13 +9,13 @@ import { DataRow } from '../../types/types';
  */
 function convertDecimalValue(rawValue: unknown, scale: number): number {
   const str = String(rawValue);
-  if (scale <= 0 || str === '0') return Number(str);
+  if (scale <= 0 || str === "0") return Number(str);
 
-  const isNeg = str.startsWith('-');
+  const isNeg = str.startsWith("-");
   const digits = isNeg ? str.slice(1) : str;
-  const padded = digits.padStart(scale + 1, '0');
+  const padded = digits.padStart(scale + 1, "0");
   const intPart = padded.slice(0, padded.length - scale);
-  const fracPart = padded.slice(padded.length - scale).replace(/0+$/, '');
+  const fracPart = padded.slice(padded.length - scale).replace(/0+$/, "");
   const result = fracPart ? `${intPart}.${fracPart}` : intPart;
   return parseFloat(isNeg ? `-${result}` : result);
 }
@@ -23,9 +23,7 @@ function convertDecimalValue(rawValue: unknown, scale: number): number {
 /**
  * Hook for accessing row data from Arrow table
  */
-export const useRowData = (
-  arrowTableRef: React.RefObject<arrow.Table | null>
-) => {
+export const useRowData = (arrowTableRef: React.RefObject<arrow.Table | null>) => {
   const getRowData = useCallback(
     (rowIndex: number): DataRow | null => {
       const table = arrowTableRef.current;
@@ -48,7 +46,7 @@ export const useRowData = (
       }
       return { values };
     },
-    [arrowTableRef]
+    [arrowTableRef],
   );
 
   return { getRowData };

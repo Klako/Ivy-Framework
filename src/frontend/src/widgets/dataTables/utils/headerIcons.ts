@@ -85,28 +85,12 @@ export function generateHeaderIcons(
   return iconMap;
 }
 
-/**
- * Adds standard UI icons to the header icons map.
- */
-export function addStandardIcons(baseIcons: SpriteMap): SpriteMap {
-  const standardIcons = [
-    "ChevronUp",
-    "ChevronDown",
-    "Filter",
-    "Search",
-    "Settings",
-    "MoreVertical",
-    "Info",
-    "HelpCircle",
-  ];
-
-  const extendedIcons = { ...baseIcons };
-
-  standardIcons.forEach((iconName) => {
-    if (!extendedIcons[iconName]) {
-      extendedIcons[iconName] = createIconGenerator(iconName);
+export function mergeSortIndicatorSprites(map: SpriteMap): SpriteMap {
+  const next: SpriteMap = { ...map };
+  for (const name of ["ArrowUp", "ArrowDown"] as const) {
+    if (!next[name]) {
+      next[name] = createIconGenerator(name);
     }
-  });
-
-  return extendedIcons;
+  }
+  return next;
 }

@@ -8,7 +8,7 @@ import {
   labelsBadgesCellRenderer,
   linkCellRenderer,
 } from "../utils/customRenderers";
-import { generateHeaderIcons, addStandardIcons } from "../utils/headerIcons";
+import { generateHeaderIcons, mergeSortIndicatorSprites } from "../utils/headerIcons";
 import {
   useContainerSize,
   useSearch,
@@ -198,7 +198,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
       ...generateHeaderIcons(columns, customHeaderIcons),
       ...providedHeaderIcons,
     };
-    return addStandardIcons(baseIcons);
+    return mergeSortIndicatorSprites(baseIcons);
   }, [columns, customHeaderIcons, providedHeaderIcons]);
 
   // Header menu handling

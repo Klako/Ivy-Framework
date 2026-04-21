@@ -90,8 +90,8 @@ export const BadgeWidget: React.FC<BadgeWidgetProps> = ({
   if (hasColor) {
     const kebab = colorNameToCssToken(color!.trim());
     colorStyles = {
-      ["--badge-tint-bg-light" as string]: `var(--${kebab}-400)`,
-      ["--badge-tint-fg-light" as string]: `var(--${kebab}-900)`,
+      ["--badge-tint-bg-light" as string]: `var(--${kebab}-100)`,
+      ["--badge-tint-fg-light" as string]: `var(--${kebab}-800)`,
       ["--badge-tint-bg-dark" as string]: `var(--${kebab}-800)`,
       ["--badge-tint-fg-dark" as string]: `var(--${kebab}-100)`,
     };

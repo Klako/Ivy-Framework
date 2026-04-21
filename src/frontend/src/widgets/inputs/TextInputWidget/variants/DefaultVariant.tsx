@@ -76,7 +76,9 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
       <div
         className={cn(
           "relative flex items-stretch rounded-field border bg-transparent shadow-sm transition-colors dark:bg-white/5",
-          isFocused ? "border-ring outline-none dark:border-ring" : "border-input dark:border-white/10",
+          isFocused
+            ? "border-ring outline-none dark:border-ring"
+            : "border-input dark:border-white/10",
           props.invalid && "border-destructive",
           props.disabled && "cursor-not-allowed opacity-50",
           props.ghost &&
@@ -87,7 +89,7 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
         {hasPrefix && (
           <div
             className={cn(
-              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]",
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)] [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
               !isFocused && "border-r border-input",
             )}
           >
@@ -186,7 +188,7 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
         {hasSuffix && (
           <div
             className={cn(
-              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]",
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)] [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
               !isFocused && "border-l border-input",
             )}
           >

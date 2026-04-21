@@ -103,7 +103,8 @@ export function convertToGridColumns(
     const isLastColumn = index === orderedColumns.length - 1;
     const effectiveGrow = grow !== undefined ? grow : isLastColumn ? 1 : undefined;
 
-    let columnIcon = col.icon || showColumnTypeIcons ? mapColumnIcon(col) : undefined;
+    const shouldShowIcon = Boolean(col.icon) || showColumnTypeIcons;
+    let columnIcon = shouldShowIcon ? mapColumnIcon(col) : undefined;
     if (activeSort && activeSort.length > 0) {
       const sortForColumn = activeSort.find((sort) => sort.column === col.name);
       if (sortForColumn) {

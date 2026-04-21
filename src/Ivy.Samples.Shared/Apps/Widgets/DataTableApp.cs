@@ -7,12 +7,55 @@ public class DataTableApp : SampleBase
     {
         return Layout.Tabs(
             new Tab("Overview", new DataTableMainSample()),
+            new Tab("New Features", new DataTableNewFeaturesSample()),
             new Tab("Header Slots", new DataTableHeaderSlotsSample()),
             new Tab("Footer", new DataTableFooterSample()),
             new Tab("Multi Agg", new DataTableMultiAggSample()),
             new Tab("Density", new DataTableDensitySample()),
             new Tab("Million Rows", new DataTablesMillionRowsSample())
         ).Variant(TabsVariant.Content);
+    }
+}
+
+public class DataTableNewFeaturesSample : ViewBase
+{
+    public override object? Build()
+    {
+        var rows = new[]
+        {
+            new { Id = 1, Team = "Platform Engineering", Owner = "Niels Bosma", Priority = "High", UpdatedAt = DateTime.UtcNow.AddHours(-2), Notes = "Roll out custom header icons and verify sort/filter UX." },
+            new { Id = 2, Team = "Frontend", Owner = "Rory Chatt", Priority = "Medium", UpdatedAt = DateTime.UtcNow.AddHours(-6), Notes = "Validate auto column width with long content and mixed data types." },
+            new { Id = 3, Team = "Docs", Owner = "Ivy Team", Priority = "Low", UpdatedAt = DateTime.UtcNow.AddDays(-1), Notes = "Document icon API and DataTable header customization examples." },
+            new { Id = 4, Team = "QA", Owner = "Automation", Priority = "High", UpdatedAt = DateTime.UtcNow.AddMinutes(-35), Notes = "Run regression suite for DataTable custom renderers and icon cells." },
+        }.AsQueryable();
+
+        return Layout.Vertical().Gap(3)
+            | Text.P("This sample highlights the latest DataTable column improvements. Some columns intentionally omit explicit widths to showcase auto-sizing.")
+            | rows.ToDataTable()
+                .Header(x => x.Id, "ID")
+                .Header(x => x.Team, "Team")
+                .Header(x => x.Owner, "Owner")
+                .Header(x => x.Priority, "Priority")
+                .Header(x => x.UpdatedAt, "Updated")
+                .Header(x => x.Notes, "Notes")
+                .Icon(x => x.Team, Icons.Layers)
+                .Icon(x => x.Owner, Icons.User)
+                .Icon(x => x.Priority, Icons.Flag)
+                .Icon(x => x.UpdatedAt, Icons.Clock)
+                .Icon(x => x.Notes, Icons.FileText)
+                .Width(x => x.Id, Size.Px(70))
+                .Width(x => x.UpdatedAt, Size.Px(180))
+                .AlignContent(x => x.Id, Align.Right)
+                .AlignContent(x => x.UpdatedAt, Align.Left)
+                .Config(config =>
+                {
+                    config.ShowColumnTypeIcons = true;
+                    config.AllowColumnResizing = true;
+                    config.AllowSorting = true;
+                    config.AllowFiltering = true;
+                    config.ShowSearch = true;
+                })
+                .Height(Size.Units(70));
     }
 }
 
@@ -362,9 +405,9 @@ public class DataTablesMillionRowsSample : ViewBase
             .AlignContent(row => row.Id, Align.Left)
             .AlignContent(row => row.Value, Align.Left)
             .AlignContent(row => row.CreatedAt, Align.Left)
-            .Icon(row => row.Id, Icons.Hash.ToString())
-            .Icon(row => row.Value, Icons.FileText.ToString())
-            .Icon(row => row.CreatedAt, Icons.Calendar.ToString())
+            .Icon(row => row.Id, Icons.Hash)
+            .Icon(row => row.Value, Icons.FileText)
+            .Icon(row => row.CreatedAt, Icons.Calendar)
             .Config(config => config.AllowLlmFiltering = true)
             .LoadAllRows(true);
     }

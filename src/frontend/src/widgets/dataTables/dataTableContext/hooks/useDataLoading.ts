@@ -89,6 +89,7 @@ export const useDataLoading = ({
         // Arrow's inferred metadata is unreliable, so we keep the prop metadata and
         // compute display widths from the column's configured width/header text.
         const mergedColumns = columnsProp.map((propCol) => {
+          const arrowCol = result.columns.find((ac) => ac.name === propCol.name);
           // Parse width from Size string format to numeric pixels
           const parsedWidth = parseSize(propCol.width);
           return {

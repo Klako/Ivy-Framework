@@ -195,12 +195,14 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
           mutedForeground: themeColors.mutedForeground,
         }),
         formatter: (params: any) => {
+          const extractValue = (p: any) =>
+            Array.isArray(p.value) ? p.value[isVertical ? 1 : 0] : p.value;
           if (Array.isArray(params)) {
             // Multi-series: add category header from first param
             const header = params[0]?.name ? `<strong>${params[0].name}</strong><br/>` : "";
             const lines = params
               .map((p) => {
-                const value = formatTooltipValue(p.value[isVertical ? 0 : 1], tooltip);
+                const value = formatTooltipValue(extractValue(p), tooltip);
                 return `${p.marker} ${p.seriesName}: <strong>${value}</strong>`;
               })
               .join("<br/>");
@@ -208,7 +210,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
           }
           // Single series: add category header
           const header = params.name ? `<strong>${params.name}</strong><br/>` : "";
-          const value = formatTooltipValue(params.value[isVertical ? 0 : 1], tooltip);
+          const value = formatTooltipValue(extractValue(params), tooltip);
           return `${header}${params.marker} ${params.seriesName}: <strong>${value}</strong>`;
         },
       },

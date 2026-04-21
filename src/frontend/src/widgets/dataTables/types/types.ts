@@ -39,7 +39,6 @@ export interface DataColumn {
   icon?: string | null;
   originalWidth?: string;
   help?: string | null;
-  iconSet?: "lucide" | "custom";
   footer?: string[] | null;
   color?: string | null;
   badgeColorMapping?: Record<string, string> | null;

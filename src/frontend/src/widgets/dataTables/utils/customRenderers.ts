@@ -1,23 +1,13 @@
 import { CustomRenderer, GridCellKind, CustomCell, type Theme } from "@glideapps/glide-data-grid";
-import { LUCIDE_ICONS, type IconNode } from "./lucideIconNodes.generated";
+import { icons } from "lucide-react";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 // Cache for rendered icon images
 const iconImageCache = new Map<string, HTMLImageElement>();
 
 function isValidIconName(name: string): boolean {
-  return name in LUCIDE_ICONS;
-}
-
-function iconNodeToSvg(nodes: IconNode[], color: string): string {
-  const elements = nodes
-    .map(([tag, attrs]) => {
-      const attrStr = Object.entries(attrs)
-        .map(([k, v]) => `${k}="${v === "currentColor" ? color : v}"`)
-        .join(" ");
-      return `<${tag} ${attrStr}/>`;
-    })
-    .join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${elements}</svg>`;
+  return name in icons;
 }
 
 function getIconImage(
@@ -28,10 +18,16 @@ function getIconImage(
   const cacheKey = `${iconName}-${color}`;
   if (iconImageCache.has(cacheKey)) return iconImageCache.get(cacheKey)!;
 
-  const nodes = LUCIDE_ICONS[iconName];
-  if (!nodes) return null;
+  const IconComponent = icons[iconName as keyof typeof icons];
+  if (!IconComponent) return null;
 
-  const svg = iconNodeToSvg(nodes, color);
+  const svg = renderToStaticMarkup(
+    createElement(IconComponent, {
+      size: 24,
+      color,
+      strokeWidth: 2,
+    }),
+  );
   const img = new Image();
   img.src = `data:image/svg+xml;base64,${btoa(svg)}`;
   iconImageCache.set(cacheKey, img);

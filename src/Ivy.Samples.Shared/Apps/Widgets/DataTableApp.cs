@@ -8,12 +8,67 @@ public class DataTableApp : SampleBase
         return Layout.Tabs(
             new Tab("Overview", new DataTableMainSample()),
             new Tab("New Features", new DataTableNewFeaturesSample()),
+            new Tab("Header Icons", new DataTableHeaderIconsSample()),
             new Tab("Header Slots", new DataTableHeaderSlotsSample()),
             new Tab("Footer", new DataTableFooterSample()),
             new Tab("Multi Agg", new DataTableMultiAggSample()),
             new Tab("Density", new DataTableDensitySample()),
             new Tab("Million Rows", new DataTablesMillionRowsSample())
         ).Variant(TabsVariant.Content);
+    }
+}
+
+public class DataTableHeaderIconsSample : ViewBase
+{
+    public override object? Build()
+    {
+        var data = new[]
+        {
+            new { Name = "Ada Lovelace", Team = "Compiler", Priority = "High", LastUpdate = DateTime.UtcNow.AddHours(-1) },
+            new { Name = "Grace Hopper", Team = "Runtime", Priority = "Medium", LastUpdate = DateTime.UtcNow.AddHours(-3) },
+            new { Name = "Linus Torvalds", Team = "Kernel", Priority = "High", LastUpdate = DateTime.UtcNow.AddDays(-1) },
+            new { Name = "Barbara Liskov", Team = "Architecture", Priority = "Low", LastUpdate = DateTime.UtcNow.AddDays(-2) },
+        }.AsQueryable();
+
+        var plusSquareSvg = """
+            <svg width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="16" height="16" rx="4" fill="{bgColor}" />
+              <path d="M6 10h8" stroke="{fgColor}" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 6v8" stroke="{fgColor}" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            """;
+        var diamondSvg = """
+            <svg width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="16" height="16" rx="4" fill="{bgColor}" />
+              <path d="M10 5L15 10L10 15L5 10L10 5Z" fill="{fgColor}"/>
+            </svg>
+            """;
+
+        return Layout.Vertical().Gap(3)
+            | Text.P("This demo uses custom SVG header icons via Config.HeaderIcons (not default Lucide shapes).")
+            | data.ToDataTable()
+                .Header(x => x.Name, "Engineer")
+                .Header(x => x.Team, "Team")
+                .Header(x => x.Priority, "Priority")
+                .Header(x => x.LastUpdate, "Last Update")
+                .Icon(x => x.Name, Icons.User)
+                .Icon(x => x.Team, Icons.Layers)
+                .Icon(x => x.Priority, Icons.Flag)
+                .Icon(x => x.LastUpdate, Icons.Clock)
+                .Config(config =>
+                {
+                    config.AllowSorting = true;
+                    config.ShowSearch = true;
+                    config.HeaderIcons = new Dictionary<string, string>
+                    {
+                        // Override each icon name with a custom SVG template.
+                        [Icons.User.ToString()] = plusSquareSvg,
+                        [Icons.Layers.ToString()] = diamondSvg,
+                        [Icons.Flag.ToString()] = plusSquareSvg,
+                        [Icons.Clock.ToString()] = diamondSvg
+                    };
+                })
+                .Height(Size.Units(70));
     }
 }
 

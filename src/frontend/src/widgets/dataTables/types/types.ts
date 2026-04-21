@@ -1,5 +1,6 @@
 import { MenuItem } from "@/types/widgets";
 import { Align } from "@/lib/styles";
+import type { SpriteMap } from "@glideapps/glide-data-grid";
 export type { Align };
 
 export interface DataRow {
@@ -72,6 +73,7 @@ export interface DataTableConfig {
   showSearch?: boolean;
   enableRowHover?: boolean;
   idColumnName?: string | null;
+  headerIcons?: Record<string, string> | null;
 }
 
 export interface TableProps {
@@ -79,6 +81,7 @@ export interface TableProps {
   columns: DataColumn[];
   connection: DataTableConnection;
   config?: DataTableConfig;
+  headerIcons?: SpriteMap;
   editable?: boolean;
   width?: string;
   height?: string;

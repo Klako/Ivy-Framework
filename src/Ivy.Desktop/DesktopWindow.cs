@@ -317,7 +317,7 @@ public class DesktopWindow(Server server)
             .SetTitle(_title)
             .SetResizable(_resizable)
             .SetTopMost(_topMost)
-            .SetJavascriptClipboardAccessEnabled(false)
+            .SetJavascriptClipboardAccessEnabled(true)
             .SetDevToolsEnabled(_devTools)
             .SetIgnoreCertificateErrorsEnabled(true)
             .SetWebSecurityEnabled(false);

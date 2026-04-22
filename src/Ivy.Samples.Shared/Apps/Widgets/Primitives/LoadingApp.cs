@@ -16,17 +16,23 @@ public class LoadingApp : SampleBase
             loadingView,
             Layout.Vertical()
             | Text.H2("Loading")
-            | Text.P("The Loading widget is a static indeterminate progress indicator for inline use. It has two variants selected via fluent methods: a spinner (default) and a randomized skeleton view.")
+            | Text.P("The Loading widget is a static indeterminate progress indicator for inline use. It has two variants selected via fluent methods: a spinner (default) and a randomized skeleton placeholder. The skeleton layout is randomized once per mount and stays stable across re-renders.")
             | new Card(
                 Layout.Vertical()
-                | Text.H3("Spinner (default)")
-                | Text.P("Use new Loading() or new Loading().Spinner() for an explicit spinner.")
+                | Text.H3("Default")
+                | Text.Code("new Loading()")
                 | new Loading()
-            ).Title("Spinner")
+            ).Title("Default (Spinner)")
+            | new Card(
+                Layout.Vertical()
+                | Text.H3("Spinner")
+                | Text.Code("new Loading().Spinner()")
+                | new Loading().Spinner()
+            ).Title("Spinner (explicit)")
             | new Card(
                 Layout.Vertical()
                 | Text.H3("Skeleton")
-                | Text.P("Use new Loading().Skeleton() to render a randomized skeleton placeholder layout.")
+                | Text.Code("new Loading().Skeleton()")
                 | new Loading().Skeleton()
             ).Title("Skeleton")
             | Text.H2("UseLoading")

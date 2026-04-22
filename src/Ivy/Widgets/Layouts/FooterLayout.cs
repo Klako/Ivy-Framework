@@ -14,8 +14,18 @@ public record FooterLayout : WidgetBase<FooterLayout>
     {
     }
 
+    [Prop] public Scroll ContentScroll { get; init; } = Scroll.Auto;
+
     public static FooterLayout operator |(FooterLayout widget, object child)
     {
         throw new NotSupportedException("FooterLayout does not support children.");
+    }
+}
+
+public static class FooterLayoutExtensions
+{
+    public static FooterLayout Scroll(this FooterLayout footerLayout, Scroll scroll = Ivy.Scroll.Auto)
+    {
+        return footerLayout with { ContentScroll = scroll };
     }
 }

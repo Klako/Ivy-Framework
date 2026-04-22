@@ -92,12 +92,13 @@ public class DesktopShowcaseApp : ViewBase
                // ── Notifications ─────────────────────────────────
                | new Separator()
                | Text.H2("Notifications")
-               | Text.Markdown("Send native OS toast notifications.")
+               | Text.Markdown("Send native OS toast notifications. The `appId` parameter controls the sender name on Windows.")
                | new Button("Show Notification", () =>
                {
                    var sent = DesktopWindow.ShowNotification(
                        "Ivy Desktop",
-                       $"Hello from Ivy Desktop! Time: {DateTime.Now:T}");
+                       $"Hello from Ivy Desktop! Time: {DateTime.Now:T}",
+                       appId: "Ivy Desktop Samples");
                    Log(sent ? "Notification sent" : "Notification failed");
                })
 
@@ -180,6 +181,28 @@ public class DesktopShowcaseApp : ViewBase
                   })
                )
 
+               // ── Tray Icon ─────────────────────────────────────
+               | new Separator()
+               | Text.H2("System Tray Icon")
+               | Text.Markdown("A tray icon is set up in `Program.cs` via `SetTrayIcon()`. Click it to bring the window to focus.")
+               | (Layout.Horizontal().Gap(2)
+                  | new Button("Remove Tray Icon", () =>
+                  {
+                      window.RemoveTrayIcon();
+                      Log("Tray icon removed");
+                  })
+                  | new Button("Restore Tray Icon", () =>
+                  {
+                      window.SetTrayIcon(typeof(DesktopWindow), "Ivy.Desktop.ivy.ico", "Ivy Desktop Samples",
+                          new DesktopMenu()
+                              .AddItem("tray-show", "Show Window")
+                              .AddItem("tray-hide", "Hide Window")
+                              .AddSeparator()
+                              .AddItem("tray-quit", "Quit"));
+                      Log("Tray icon restored");
+                  })
+               )
+
                // ── Zoom ──────────────────────────────────────────
                | new Separator()
                | Text.H2("Zoom")
@@ -221,6 +244,12 @@ public class DesktopShowcaseApp : ViewBase
                       Log("Executed document.title script");
                   })
                )
+
+               // ── Splashscreen ─────────────────────────────────
+               | new Separator()
+               | Text.H2("Splashscreen")
+               | Text.Markdown("A native splash image is shown during startup while the Ivy server initializes. " +
+                               "Configured via `.Splash()` on the `DesktopWindow` builder in `Program.cs`.")
 
                // ── Event Log ─────────────────────────────────────
                | new Separator()

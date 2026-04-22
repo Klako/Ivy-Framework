@@ -41,11 +41,11 @@ export function Loading({ type = "Spinner" }: LoadingProps) {
   if (type === "Skeleton") {
     return (
       <div className="flex flex-col gap-2 w-full max-w-sm" role="status" aria-label="Loading">
-        <Skeleton className="h-5 rounded-md" style={{ width: `${titleBarWidth}%` }} />
+        <Skeleton className="h-5 rounded-md bg-muted" style={{ width: `${titleBarWidth}%` }} />
         {skeletonLines.map((line, index) => (
           <Skeleton
             key={`loading-skeleton-line-${index}`}
-            className="rounded"
+            className="rounded bg-muted"
             style={{
               width: `${line.widthPercent}%`,
               height: `${line.heightPx}px`,

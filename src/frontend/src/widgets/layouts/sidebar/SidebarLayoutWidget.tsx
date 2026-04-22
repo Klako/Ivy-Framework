@@ -27,6 +27,7 @@ interface SidebarLayoutWidgetProps {
   width?: string; // Width of the sidebar (Size format: "Type:Value,MinType:MinValue,MaxType:MaxValue")
   open?: boolean; // Whether the sidebar starts open (default: true)
   resizable?: boolean; // Enable drag-to-resize on sidebar border
+  sidebarContentScroll?: "None" | "Auto"; // Controls whether sidebar content is wrapped in ScrollArea (default: Auto)
 }
 
 // Helper to parse a Size string to pixels
@@ -87,6 +88,7 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
   width,
   open: openProp = true,
   resizable = false,
+  sidebarContentScroll = "Auto",
 }) => {
   // Parse Size format: "Type:Value,MinType:MinValue,MaxType:MaxValue"
   const [wantedWidth, minWidthStr, maxWidthStr] = (width ?? "").split(",");
@@ -228,13 +230,16 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
         {hasContent(slots?.SidebarHeader) && (
           <div className="flex flex-col shrink-0 p-2 space-y-4">{slots?.SidebarHeader}</div>
         )}
-        {slots?.SidebarContent && (
-          <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
-            <ScrollArea className="h-full w-full">
-              <div className="p-2 space-y-2">{slots.SidebarContent}</div>
-            </ScrollArea>
-          </div>
-        )}
+        {slots?.SidebarContent &&
+          (sidebarContentScroll === "None" ? (
+            <div className="flex-1 min-h-0 min-w-0 overflow-hidden">{slots.SidebarContent}</div>
+          ) : (
+            <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+              <ScrollArea className="h-full w-full">
+                <div className="p-2 space-y-2">{slots.SidebarContent}</div>
+              </ScrollArea>
+            </div>
+          ))}
         {hasContent(slots?.SidebarFooter) && (
           <div className="flex flex-col shrink-0">
             <div className="flex flex-col p-2 gap-4 min-h-0">{slots?.SidebarFooter}</div>

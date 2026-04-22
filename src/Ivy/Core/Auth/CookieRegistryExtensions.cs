@@ -7,9 +7,15 @@ namespace Ivy.Core.Auth;
 public static class CookieRegistryExtensions
 {
 
-    public static IActionResult? WriteCookiesToResponse(this Controller controller, AppSessionStore sessionStore, CookieJarId cookieJarId, string intent, out CookieJar cookies)
+    public static IActionResult? WriteCookiesToResponse(
+        this Controller controller,
+        AppSessionStore sessionStore,
+        CookieJarId cookieJarId,
+        string intent,
+        out CookieJar cookies,
+        out bool triggerMachineAuthSync)
     {
-        if (!sessionStore.TryRemoveCookies(cookieJarId, intent, out cookies))
+        if (!sessionStore.TryRemoveCookies(cookieJarId, intent, out cookies, out triggerMachineAuthSync))
         {
             return controller.BadRequest("Invalid or expired cookie jar ID, or intent mismatch.");
         }
@@ -18,7 +24,12 @@ public static class CookieRegistryExtensions
         return null;
     }
 
-    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? brokeredProvidersToDelete = null, IEnumerable<string>? connectedProvidersToDelete = null)
+    public static CookieJarId RegisterAuthSessionCookies(
+        this AppSessionStore sessionStore,
+        IAuthSession authSession,
+        IEnumerable<string>? brokeredProvidersToDelete = null,
+        IEnumerable<string>? connectedProvidersToDelete = null,
+        bool triggerMachineAuthSync = false)
     {
         var cookies = new CookieJar();
         cookies.AddCookiesForAuthToken(authSession.AuthToken, brokeredProvidersToDelete);
@@ -66,7 +77,7 @@ public static class CookieRegistryExtensions
             }
         }
 
-        return sessionStore.RegisterCookies(cookies, CookieJarIntents.SetAuthCookies);
+        return sessionStore.RegisterCookies(cookies, CookieJarIntents.SetAuthCookies, triggerMachineAuthSync);
     }
 
     public static CookieJarId RegisterAuthTokenCookies(this AppSessionStore sessionStore, AuthToken? authToken)

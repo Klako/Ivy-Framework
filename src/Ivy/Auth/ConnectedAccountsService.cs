@@ -121,7 +121,10 @@ public class ConnectedAccountsService : IConnectedAccountsService
 
     private void SetConnectedAccountCookies(IEnumerable<string>? connectedProvidersToDelete = null, bool triggerMachineAuthSync = false)
     {
-        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, connectedProvidersToDelete: connectedProvidersToDelete);
-        _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null, triggerMachineAuthSync: triggerMachineAuthSync);
+        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(
+            _authSession,
+            connectedProvidersToDelete: connectedProvidersToDelete,
+            triggerMachineAuthSync: triggerMachineAuthSync);
+        _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null);
     }
 }

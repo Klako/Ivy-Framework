@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Ivy.Core.Auth;
 
-public record SetAuthCookiesRequest(string CookieJarId, string? ConnectionId, bool TriggerMachineReload, bool TriggerMachineAuthSync = false);
+public record SetAuthCookiesRequest(string CookieJarId, string? ConnectionId, bool TriggerMachineReload);
 
 public class AuthController() : Controller
 {
@@ -166,7 +166,8 @@ public class AuthController() : Controller
             sessionStore,
             new CookieJarId(request.CookieJarId),
             CookieJarIntents.SetAuthCookies,
-            out var cookies) is { } errorResponse)
+            out var cookies,
+            out var triggerMachineAuthSync) is { } errorResponse)
         {
             return errorResponse;
         }
@@ -193,7 +194,7 @@ public class AuthController() : Controller
             }
         }
 
-        if (request.TriggerMachineAuthSync)
+        if (triggerMachineAuthSync)
         {
             if (HttpContext.Request.Headers.TryGetValue("X-Machine-Id", out var headerValue))
             {

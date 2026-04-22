@@ -70,8 +70,6 @@ public static class ClientExtensions
         public required bool ReloadPage { get; set; }
         [DataMember(Name = "triggerMachineReload")]
         public required bool TriggerMachineReload { get; set; }
-        [DataMember(Name = "triggerMachineAuthSync")]
-        public required bool TriggerMachineAuthSync { get; set; }
     }
 
     public class SetRootAppIdMessage
@@ -144,7 +142,7 @@ public static class ClientExtensions
         client.Sender.Send("SetTitle", title);
     }
 
-    public static void SetAuthCookies(this IClientProvider client, CookieJarId cookieJarId, bool reloadPage, bool? triggerMachineReload = null, bool triggerMachineAuthSync = false)
+    public static void SetAuthCookies(this IClientProvider client, CookieJarId cookieJarId, bool reloadPage, bool? triggerMachineReload = null)
     {
         client.Sender.Send(
             "SetAuthCookies",
@@ -153,7 +151,6 @@ public static class ClientExtensions
                 ["cookieJarId"] = cookieJarId.Value,
                 ["reloadPage"] = reloadPage,
                 ["triggerMachineReload"] = triggerMachineReload ?? reloadPage,
-                ["triggerMachineAuthSync"] = triggerMachineAuthSync
             });
     }
 

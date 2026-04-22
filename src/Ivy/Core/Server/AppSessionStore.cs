@@ -11,6 +11,8 @@ class CookieJarEntry
     public required CookieJar CookieJar { get; set; }
     public required string Intent { get; set; }
     public required DateTime RegisteredAt { get; set; }
+    /// <summary>When true, set-auth-cookies propagates auth to other sessions on the same machine (stored server-side).</summary>
+    public bool TriggerMachineAuthSync { get; set; }
 }
 
 public class AppSessionStore : IDisposable
@@ -30,12 +32,18 @@ public class AppSessionStore : IDisposable
             TimeSpan.FromMinutes(1));
     }
 
-    public CookieJarId RegisterCookies(CookieJar cookieJar, string intent)
+    public CookieJarId RegisterCookies(CookieJar cookieJar, string intent, bool triggerMachineAuthSync = false)
     {
         var bytes = RandomNumberGenerator.GetBytes(32);
         var id = Convert.ToBase64String(bytes)
             .Replace("+", "-").Replace("/", "_").TrimEnd('=');
-        var entry = new CookieJarEntry { CookieJar = cookieJar, Intent = intent, RegisteredAt = DateTime.UtcNow };
+        var entry = new CookieJarEntry
+        {
+            CookieJar = cookieJar,
+            Intent = intent,
+            RegisteredAt = DateTime.UtcNow,
+            TriggerMachineAuthSync = triggerMachineAuthSync,
+        };
 
         if (!_cookieJarEntries.TryAdd(id, entry))
             throw new InvalidOperationException($"Cookie jar already registered for id '{id}'");
@@ -43,17 +51,19 @@ public class AppSessionStore : IDisposable
         return new CookieJarId(id);
     }
 
-    public bool TryRemoveCookies(CookieJarId cookieJarId, string intent, out CookieJar cookieJar)
+    public bool TryRemoveCookies(CookieJarId cookieJarId, string intent, out CookieJar cookieJar, out bool triggerMachineAuthSync)
     {
         if (_cookieJarEntries.TryRemove(cookieJarId.Value, out var entry) &&
             entry.Intent == intent &&
             DateTime.UtcNow - entry.RegisteredAt <= _cookieJarLifetime)
         {
             cookieJar = entry.CookieJar;
+            triggerMachineAuthSync = entry.TriggerMachineAuthSync;
             return true;
         }
 
         cookieJar = null!;
+        triggerMachineAuthSync = false;
         return false;
     }
 

@@ -46,7 +46,6 @@ type SetAuthCookiesMessage = {
   cookieJarId: string;
   reloadPage: boolean;
   triggerMachineReload: boolean;
-  triggerMachineAuthSync: boolean;
 };
 
 type HttpTunnelRequestMessage = {
@@ -472,7 +471,6 @@ export const useBackend = (
         cookieJarId: message.cookieJarId,
         connectionId: currentConnectionId ?? null,
         triggerMachineReload: message.triggerMachineReload,
-        triggerMachineAuthSync: message.triggerMachineAuthSync,
       }),
       credentials: "include",
     });

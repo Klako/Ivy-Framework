@@ -16,8 +16,25 @@ public class LoadingApp : SampleBase
             loadingView,
             Layout.Vertical()
             | Text.H2("Loading")
-            | Text.P("The Loading widget is a static indeterminate progress bar for inline use.")
-            | new Loading()
+            | Text.P("The Loading widget is a static indeterminate progress indicator for inline use. It has two variants selected via fluent methods: a spinner (default) and a randomized skeleton placeholder. The skeleton layout is randomized once per mount and stays stable across re-renders.")
+            | new Card(
+                Layout.Vertical()
+                | Text.H3("Default")
+                | Text.Code("new Loading()")
+                | new Loading()
+            ).Title("Default (Spinner)")
+            | new Card(
+                Layout.Vertical()
+                | Text.H3("Spinner")
+                | Text.Code("new Loading().Spinner()")
+                | new Loading().Spinner()
+            ).Title("Spinner (explicit)")
+            | new Card(
+                Layout.Vertical()
+                | Text.H3("Skeleton")
+                | Text.Code("new Loading().Skeleton()")
+                | new Loading().Skeleton()
+            ).Title("Skeleton")
             | Text.H2("UseLoading")
             | Text.P(
                 "Opens a modal while async work runs. The handler is void and schedules work in the background so cancel/close events are not blocked by the serial UI event queue. Pass cancellable: true and observe ILoadingContext.CancellationToken (e.g. Task.Delay(..., ct)). Optional third argument: LoadingOptions — set CancellingDisplayDuration to control how long the \"Cancelling…\" state is shown before the dialog closes (default 800ms)."

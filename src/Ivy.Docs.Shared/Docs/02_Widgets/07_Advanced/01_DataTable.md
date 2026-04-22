@@ -15,6 +15,7 @@ prepare: |
       var isActive = random.Next(100) > 25;
       return new { Name = name, Email = email, Salary = salary, Status = status, IsActive = isActive };
   }).AsQueryable();
+  var docHeaderUserSvg = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="{fgColor}" stroke-width="1.5" opacity="0.35"/><circle cx="12" cy="9" r="2.75" stroke="{fgColor}" stroke-width="1.5"/><path d="M7 18.25c0-2.75 2.25-4.25 5-4.25s5 1.5 5 4.25" stroke="{fgColor}" stroke-width="1.5" stroke-linecap="round"/></svg>""";
 searchHints:
   - table
   - grid
@@ -131,6 +132,10 @@ sampleUsers.ToDataTable()
     .Header(u => u.Email, "Email")
     .Header(u => u.Salary, "Salary")
     .Header(u => u.Status, "Status")
+    .Icon(u => u.Name, Icons.User)
+    .Icon(u => u.Email, Icons.Mail)
+    .Icon(u => u.Salary, Icons.DollarSign)
+    .Icon(u => u.Status, Icons.Activity)
     .Group(u => u.Name, "Personal")
     .Group(u => u.Email, "Personal")
     .Group(u => u.Salary, "Employment")
@@ -150,6 +155,10 @@ sampleUsers.ToDataTable()
         config.ShowSearch = true;
         config.EnableCellClickEvents = true;
         config.ShowVerticalBorders = false;
+        config.HeaderIcons = new Dictionary<string, string>
+        {
+            [Icons.User.ToString()] = docHeaderUserSvg,
+        };
     })
     .Height(Size.Units(100))
 ```
@@ -169,6 +178,7 @@ sampleUsers.ToDataTable()
 - **ShowSearch** - Enable search functionality (accessible via Ctrl/Cmd + F keyboard shortcut)
 - **EnableCellClickEvents** - Enable cell click and activation events. When enabled, you can handle `OnCellClick` (single-click) and `OnCellActivated` (double-click) events on the DataTable widget. Events provide `CellClickEventArgs` with `RowIndex`, `ColumnIndex`, `ColumnName`, and `CellValue`.
 - **ShowVerticalBorders** - Show vertical borders between columns. Set to `false` to hide column borders for a cleaner appearance
+- **HeaderIcons** - Optional `Dictionary<string, string>`: keys are the same icon names as in `.Icon()` (use `Icons.X.ToString()`); values are SVG snippets. Use `{fgColor}` and `{bgColor}` for theme-aware strokes/fills. Keys not present keep the stock Lucide header icon.
 
 ## Row Actions
 

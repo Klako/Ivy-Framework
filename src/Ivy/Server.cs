@@ -595,9 +595,22 @@ public class Server
 
         builder.Configuration.AddConfiguration(Configuration);
 
+        // Set default logging first (can be overridden by user builder mods)
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
         foreach (var mod in _builderMods)
         {
             mod(builder);
+        }
+
+        // Set minimum level after user mods (users can still override with AddFilter)
+        builder.Logging.SetMinimumLevel(!_args.Verbose ? LogLevel.Warning : LogLevel.Information);
+
+        // Suppress hosting startup errors when not verbose (we handle IOException with a friendly message)
+        if (!_args.Verbose)
+        {
+            builder.Logging.AddFilter("Microsoft.Extensions.Hosting.Internal.Host", LogLevel.None);
         }
 
         // CLI-only commands need DI but never call app.StartAsync(),
@@ -695,17 +708,6 @@ public class Server
             {
                 options.HttpsPort = 443;
             });
-        }
-
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-
-        builder.Logging.SetMinimumLevel(!_args.Verbose ? LogLevel.Warning : LogLevel.Information);
-
-        // Suppress hosting startup errors when not verbose (we handle IOException with a friendly message)
-        if (!_args.Verbose)
-        {
-            builder.Logging.AddFilter("Microsoft.Extensions.Hosting.Internal.Host", LogLevel.None);
         }
 
         var app = builder.Build();

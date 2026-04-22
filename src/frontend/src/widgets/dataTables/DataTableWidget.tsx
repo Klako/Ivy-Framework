@@ -60,6 +60,7 @@ export const DataTable: React.FC<DataTableWidgetProps> = ({
   density,
   events = EMPTY_EVENTS,
   rowActions,
+  perRowActions,
   updateStream,
   slots,
   "data-testid": dataTestId,
@@ -138,6 +139,7 @@ export const DataTable: React.FC<DataTableWidgetProps> = ({
             events={events}
             hasOptions={finalConfig.allowFiltering}
             rowActions={rowActions}
+            perRowActions={perRowActions}
             showAggregateFooter={hasFooter}
           />
         </TableLayout>

@@ -20,6 +20,7 @@ public class DataTableBuilder<TModel>(
     private Func<Event<DataTable, CellClickEventArgs>, ValueTask>? _onCellClick;
     private Func<Event<DataTable, CellClickEventArgs>, ValueTask>? _onCellActivated;
     private MenuItem[]? _menuItemRowActions;
+    private Func<TModel, MenuItem[]>? _rowActionsFactory;
     private Func<Event<DataTable, RowActionClickEventArgs>, ValueTask>? _onRowAction;
     private readonly Dictionary<string, EventHandler<object>> _cellActions = [];
     private RefreshToken? _refreshToken;
@@ -431,6 +432,12 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
+    public DataTableBuilder<TModel> RowActions(Func<TModel, MenuItem[]> factory)
+    {
+        _rowActionsFactory = factory;
+        return this;
+    }
+
     public DataTableBuilder<TModel> OnRowAction(Func<Event<DataTable, RowActionClickEventArgs>, ValueTask> handler)
     {
         _onRowAction = handler;
@@ -557,6 +564,22 @@ public class DataTableBuilder<TModel>(
             idSelectorForView = obj => _idSelectorFunc((TModel)obj);
         }
 
+        // Compute per-row actions map when a factory is provided
+        Dictionary<string, MenuItem[]>? perRowActions = null;
+        if (_rowActionsFactory != null && _idSelectorFunc != null)
+        {
+            perRowActions = new Dictionary<string, MenuItem[]>();
+            foreach (var item in queryable)
+            {
+                var id = _idSelectorFunc(item)?.ToString();
+                if (id != null)
+                {
+                    var actions = _rowActionsFactory(item);
+                    perRowActions[id] = actions;
+                }
+            }
+        }
+
         return new DataTableView(
             queryable1,
             width,
@@ -573,7 +596,8 @@ public class DataTableBuilder<TModel>(
             emptyViewFactory: _emptyViewFactory,
             headerLeftFactory: _headerLeftFactory,
             headerRightFactory: _headerRightFactory,
-            updateStream: _updateStream);
+            updateStream: _updateStream,
+            perRowActions: perRowActions);
     }
 
     public object[] GetMemoValues()

@@ -56,6 +56,8 @@ public record DataTable : WidgetBase<DataTable>
 
     [Prop] public MenuItem[]? RowActions { get; set; }
 
+    [Prop] public Dictionary<string, MenuItem[]>? PerRowActions { get; set; }
+
     [Event] public EventHandler<Event<DataTable, CellClickEventArgs>>? OnCellClick { get; set; }
 
     [Event] public EventHandler<Event<DataTable, CellClickEventArgs>>? OnCellActivated { get; set; }

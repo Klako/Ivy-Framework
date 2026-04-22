@@ -89,6 +89,7 @@ export interface TableProps {
   width?: string;
   height?: string;
   rowActions?: MenuItem[];
+  perRowActions?: Record<string, MenuItem[]>;
   updateStream?: { id: string };
   onCellUpdate?: (row: number, col: number, value: unknown) => void;
   "data-testid"?: string;

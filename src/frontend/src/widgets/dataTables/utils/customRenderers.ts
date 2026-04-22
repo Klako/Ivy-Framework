@@ -2,9 +2,10 @@ import { CustomRenderer, GridCellKind, CustomCell, type Theme } from "@glideapps
 import { icons } from "lucide-react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { LruMap } from "./lruMap";
 
-// Cache for rendered icon images
-const iconImageCache = new Map<string, HTMLImageElement>();
+const MAX_ICON_IMAGE_CACHE = 128;
+const iconImageCache = new LruMap<string, HTMLImageElement>(MAX_ICON_IMAGE_CACHE);
 
 function isValidIconName(name: string): boolean {
   return name in icons;
@@ -16,7 +17,8 @@ function getIconImage(
 ): HTMLImageElement | null {
   const { color = "#666" } = options;
   const cacheKey = `${iconName}-${color}`;
-  if (iconImageCache.has(cacheKey)) return iconImageCache.get(cacheKey)!;
+  const cached = iconImageCache.get(cacheKey);
+  if (cached) return cached;
 
   const IconComponent = icons[iconName as keyof typeof icons];
   if (!IconComponent) return null;

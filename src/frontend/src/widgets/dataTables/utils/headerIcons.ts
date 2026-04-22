@@ -28,7 +28,9 @@ function createIconGenerator(iconName: string) {
 
   return (props: SpriteProps): string => {
     if (!IconComponent) {
-      console.warn(`Icon "${iconName}" not found in Lucide icon map`);
+      if (import.meta.env.DEV) {
+        console.warn(`Icon "${iconName}" not found in Lucide icon map`);
+      }
       return `<svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>`;
     }
 

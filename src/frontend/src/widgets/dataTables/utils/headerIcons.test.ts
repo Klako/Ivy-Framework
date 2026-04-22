@@ -61,13 +61,17 @@ describe("headerIcons", () => {
       expect(map.user!(props)).toContain("rect");
     });
 
-    it("warns and returns empty svg for unknown Lucide icon names", () => {
+    it("returns empty svg for unknown Lucide icon names and warns only in development", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       const map = generateHeaderIcons([{ icon: "TotallyNonexistentLucideIcon987" }]);
       const fn = map.TotallyNonexistentLucideIcon987;
       expect(fn).toBeDefined();
       const svg = fn!(props);
-      expect(warn).toHaveBeenCalled();
+      if (import.meta.env.DEV) {
+        expect(warn).toHaveBeenCalled();
+      } else {
+        expect(warn).not.toHaveBeenCalled();
+      }
       expect(svg).toContain("<svg");
       expect(svg.length).toBeLessThan(200);
     });

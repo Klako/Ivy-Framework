@@ -1,22 +1,6 @@
 import * as arrow from "apache-arrow";
+import { convertUnscaledDecimalRawToNumber } from "./arrowDecimal";
 import { DataColumn, DataRow, ColType } from "../types/types";
-
-/**
- * Converts Arrow Decimal128 raw values into a JS number.
- * Used only for header/content width estimation (not the exported row conversion).
- */
-function convertDecimalValueForWidthEstimate(rawValue: unknown, scale: number): number {
-  const str = String(rawValue);
-  if (scale <= 0 || str === "0") return Number(str);
-
-  const isNeg = str.startsWith("-");
-  const digits = isNeg ? str.slice(1) : str;
-  const padded = digits.padStart(scale + 1, "0");
-  const intPart = padded.slice(0, padded.length - scale);
-  const fracPart = padded.slice(padded.length - scale).replace(/0+$/, "");
-  const result = fracPart ? `${intPart}.${fracPart}` : intPart;
-  return parseFloat(isNeg ? `-${result}` : result);
-}
 
 function calculateColumnWidth(
   columnName: string,
@@ -39,7 +23,7 @@ function calculateColumnWidth(
     let value = columnData.get(i);
     if (value != null) {
       if (isDecimal) {
-        value = convertDecimalValueForWidthEstimate(value, field.type.scale);
+        value = convertUnscaledDecimalRawToNumber(value, field.type.scale);
       }
       const strValue = String(value);
       maxLength = Math.max(maxLength, strValue.length);

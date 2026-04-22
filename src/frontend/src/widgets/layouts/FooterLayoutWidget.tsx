@@ -8,9 +8,13 @@ interface FooterLayoutWidgetProps {
     Footer?: React.ReactNode[];
     Content?: React.ReactNode[];
   };
+  contentScroll?: "None" | "Auto";
 }
 
-export const FooterLayoutWidget: React.FC<FooterLayoutWidgetProps> = ({ slots }) => {
+export const FooterLayoutWidget: React.FC<FooterLayoutWidgetProps> = ({
+  slots,
+  contentScroll = "Auto",
+}) => {
   const { isScrolled: hasMoreContent, scrollRef } = useScrollShadow(
     "[data-radix-scroll-area-viewport]",
     "top",
@@ -27,9 +31,13 @@ export const FooterLayoutWidget: React.FC<FooterLayoutWidgetProps> = ({ slots })
   return (
     <div className="h-full flex flex-col relative remove-parent-padding">
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-hidden">
-        <ScrollArea className="h-full">
-          <div className="p-4">{slots.Content}</div>
-        </ScrollArea>
+        {contentScroll === "None" ? (
+          <div className="h-full">{slots.Content}</div>
+        ) : (
+          <ScrollArea className="h-full">
+            <div className="p-4">{slots.Content}</div>
+          </ScrollArea>
+        )}
       </div>
       <div
         className={cn(

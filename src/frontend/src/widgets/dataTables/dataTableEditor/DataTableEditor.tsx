@@ -34,6 +34,7 @@ interface TableEditorProps {
   events: string[];
   hasOptions?: boolean;
   rowActions?: MenuItem[];
+  perRowActions?: Record<string, MenuItem[]>;
   footer?: React.ReactNode;
   showAggregateFooter?: boolean;
 }
@@ -43,6 +44,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   events,
   hasOptions = false,
   rowActions,
+  perRowActions,
   footer,
   showAggregateFooter = false,
 }) => {
@@ -121,16 +123,23 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   });
 
   // Row hover and actions
-  const { hoverRow, actionButtonsTop, actionButtonsHeight, onItemHovered, handleRowActionClick } =
-    useRowHover({
-      widgetId,
-      events,
-      visibleRows,
-      enableRowHover: enableRowHover ?? false,
-      rowActions,
-      containerRef,
-      arrowTableRef,
-    });
+  const {
+    hoverRow,
+    actionButtonsTop,
+    actionButtonsHeight,
+    onItemHovered,
+    handleRowActionClick,
+    resolvedRowActions,
+  } = useRowHover({
+    widgetId,
+    events,
+    visibleRows,
+    enableRowHover: enableRowHover ?? false,
+    rowActions,
+    perRowActions,
+    containerRef,
+    arrowTableRef,
+  });
 
   // Link cell hover tooltip
   const {
@@ -321,7 +330,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
         highlightRegions={showSearchConfig ? highlightRegions : undefined}
         onItemHovered={handleItemHovered}
         getRowThemeOverride={enableRowHover || emptyRowsCount > 0 ? getRowThemeOverride : undefined}
-        rowActions={rowActions}
+        rowActions={resolvedRowActions}
         actionButtonsTop={actionButtonsTop}
         actionButtonsHeight={actionButtonsHeight}
         hoverRow={hoverRow}

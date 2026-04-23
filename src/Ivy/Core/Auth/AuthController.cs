@@ -21,6 +21,7 @@ public class AuthController() : Controller
         [FromQuery] string optionId,
         [FromQuery] string callbackId,
         [FromQuery] string connectionId,
+        [FromQuery] string? provider,
         [FromServices] AppSessionStore sessionStore,
         [FromServices] ServerArgs serverArgs,
         [FromServices] ILogger<AuthController> logger)
@@ -37,22 +38,6 @@ public class AuthController() : Controller
             return BadRequest("Authentication error");
         }
 
-        var authService = appSession.AppServices.GetService<IAuthService>();
-        if (authService == null)
-        {
-            logger.LogWarning("OAuth login failed: Auth service not configured for connection {ConnectionId}", SanitizeForLog(connectionId));
-            return BadRequest("Authentication error");
-        }
-
-        // Find the auth option by ID
-        var options = authService.GetAuthOptions();
-        var option = options.FirstOrDefault(o => o.Id == optionId);
-        if (option == null)
-        {
-            logger.LogWarning("OAuth login failed: Auth option '{OptionId}' not found for connection {ConnectionId}", SanitizeForLog(optionId), SanitizeForLog(connectionId));
-            return BadRequest("Authentication error");
-        }
-
         // Construct the OAuth callback endpoint
         var scheme = HttpContext.Request.Scheme;
         if (HttpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out var forwardedProto))
@@ -62,16 +47,57 @@ public class AuthController() : Controller
         var host = HttpContext.Request.Host.Value ?? throw new InvalidOperationException("Host not found in request");
         var callback = WebhookEndpoint.CreateAuthCallback(callbackId, scheme, host, serverArgs.BasePath);
 
-        try
+        if (string.IsNullOrWhiteSpace(provider))
         {
-            // Get the OAuth URI and redirect to it
-            var uri = await authService.GetOAuthUriAsync(option, callback, HttpContext.RequestAborted);
-            return Redirect(uri.ToString());
+            // Main auth flow
+            var authService = appSession.AppServices.GetService<IAuthService>();
+            if (authService == null)
+            {
+                logger.LogWarning("OAuth login failed: Auth service not configured for connection {ConnectionId}", SanitizeForLog(connectionId));
+                return BadRequest("Authentication error");
+            }
+
+            // Find the auth option by ID
+            var options = authService.GetAuthOptions();
+            var option = options.FirstOrDefault(o => o.Id == optionId);
+            if (option == null)
+            {
+                logger.LogWarning("OAuth login failed: Auth option '{OptionId}' not found for connection {ConnectionId}", SanitizeForLog(optionId), SanitizeForLog(connectionId));
+                return BadRequest("Authentication error");
+            }
+
+            try
+            {
+                // Get the OAuth URI and redirect to it
+                var uri = await authService.GetOAuthUriAsync(option, callback, HttpContext.RequestAborted);
+                return Redirect(uri.ToString());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "OAuth login failed: Error initiating OAuth for option '{OptionId}' on connection {ConnectionId}", optionId.Replace("\n", "").Replace("\r", ""), connectionId.Replace("\n", "").Replace("\r", ""));
+                return BadRequest("Authentication error");
+            }
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError(ex, "OAuth login failed: Error initiating OAuth for option '{OptionId}' on connection {ConnectionId}", optionId.Replace("\n", "").Replace("\r", ""), connectionId.Replace("\n", "").Replace("\r", ""));
-            return BadRequest("Authentication error");
+            // Connected account flow
+            var connectedAccountsService = appSession.AppServices.GetService<IConnectedAccountsService>();
+            if (connectedAccountsService == null)
+            {
+                logger.LogWarning("OAuth login failed: Connected accounts service not configured");
+                return BadRequest("Connected accounts not configured");
+            }
+
+            try
+            {
+                var uri = await connectedAccountsService.ConnectAccountAsync(provider, callback, HttpContext.RequestAborted);
+                return Redirect(uri.ToString());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "OAuth login failed: Error initiating connected account OAuth for provider '{Provider}' on connection {ConnectionId}", SanitizeForLog(provider), SanitizeForLog(connectionId));
+                return BadRequest("Authentication error");
+            }
         }
     }
 
@@ -111,46 +137,93 @@ public class AuthController() : Controller
             return BadRequest("Invalid or expired OAuth state. Please try logging in again.");
         }
 
-        try
+        var path = (serverArgs.BasePath ?? "").Trim().Replace('\\', '/').TrimStart('/').TrimEnd('/');
+        var redirectUrl = string.IsNullOrEmpty(path) ? "/?oauthLogin=1" : $"/{path}/?oauthLogin=1";
+
+        if (string.IsNullOrWhiteSpace(pending.Provider))
         {
-            TunneledHttpMessageHandler? httpMessageHandler;
-            // Get the session and its HttpMessageHandler using the connectionId from the pending callback
-            if (sessionStore.Sessions.TryGetValue(pending.ConnectionId, out var appSession))
+            // Main auth flow
+            try
             {
-                httpMessageHandler = appSession.AppServices.GetService<TunneledHttpMessageHandler>();
+                TunneledHttpMessageHandler? httpMessageHandler;
+                // Get the session and its HttpMessageHandler using the connectionId from the pending callback
+                if (sessionStore.Sessions.TryGetValue(pending.ConnectionId, out var appSession))
+                {
+                    httpMessageHandler = appSession.AppServices.GetService<TunneledHttpMessageHandler>();
+                }
+                else
+                {
+                    logger.LogDebug("OAuth callback: session not found for connection {ConnectionId} (expected during redirect flow). Unable to retrieve frontend-tunneled HttpMessageHandler; Clerk auth provider may be affected.", SanitizeForLog(pending.ConnectionId));
+                    httpMessageHandler = null;
+                }
+
+                var tempSession = AuthHelper.GetAuthSession(HttpContext, httpMessageHandler);
+
+                var token = await authProvider.HandleOAuthCallbackAsync(tempSession, HttpContext.Request);
+
+                if (token == null)
+                {
+                    logger.LogWarning("OAuth callback failed: No token returned");
+                    return BadRequest("Authentication failed: no token received");
+                }
+
+                logger.LogInformation("OAuth callback successful, setting auth cookies");
+
+                var cookies = new CookieJar();
+                cookies.AddCookiesForAuthToken(token);
+                cookies.AddCookiesForAuthSessionData(tempSession.AuthSessionData);
+                cookies.AddCookiesForBrokeredSessions(tempSession.BrokeredSessions);
+                cookies.WriteToResponse(Response);
+
+                return LocalRedirect(redirectUrl);
             }
-            else
+            catch (Exception ex)
             {
-                logger.LogDebug("OAuth callback: session not found for connection {ConnectionId} (expected during redirect flow). Unable to retrieve frontend-tunneled HttpMessageHandler; Clerk auth provider may be affected.", SanitizeForLog(pending.ConnectionId));
-                httpMessageHandler = null;
+                logger.LogError(ex, "OAuth callback failed: Error processing callback");
+                return BadRequest($"Authentication error: {ex.Message}");
             }
-
-            var tempSession = AuthHelper.GetAuthSession(HttpContext, httpMessageHandler);
-
-            var token = await authProvider.HandleOAuthCallbackAsync(tempSession, HttpContext.Request);
-
-            if (token == null)
-            {
-                logger.LogWarning("OAuth callback failed: No token returned");
-                return BadRequest("Authentication failed: no token received");
-            }
-
-            logger.LogInformation("OAuth callback successful, setting auth cookies");
-
-            var cookies = new CookieJar();
-            cookies.AddCookiesForAuthToken(token);
-            cookies.AddCookiesForAuthSessionData(tempSession.AuthSessionData);
-            cookies.AddCookiesForBrokeredSessions(tempSession.BrokeredSessions);
-            cookies.WriteToResponse(Response);
-
-            var path = (serverArgs.BasePath ?? "").Trim().Replace('\\', '/').TrimStart('/').TrimEnd('/');
-            var redirectUrl = string.IsNullOrEmpty(path) ? "/?oauthLogin=1" : $"/{path}/?oauthLogin=1";
-            return LocalRedirect(redirectUrl);
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError(ex, "OAuth callback failed: Error processing callback");
-            return BadRequest($"Authentication error: {ex.Message}");
+            // Connected account flow
+            if (!sessionStore.Sessions.TryGetValue(pending.ConnectionId, out var appSession))
+            {
+                logger.LogWarning("OAuth callback failed: Session not found for connection {ConnectionId}",
+                    SanitizeForLog(pending.ConnectionId));
+                return BadRequest("Session not found");
+            }
+
+            var connectedAccountsService = appSession.AppServices.GetService<IConnectedAccountsService>();
+            if (connectedAccountsService == null)
+            {
+                logger.LogWarning("OAuth callback failed: Connected accounts service not configured");
+                return BadRequest("Connected accounts not configured");
+            }
+
+            try
+            {
+                var token = await connectedAccountsService.HandleConnectCallbackAsync(
+                    pending.Provider,
+                    HttpContext.Request,
+                    HttpContext.RequestAborted);
+
+                if (token == null)
+                {
+                    logger.LogWarning("OAuth callback failed: No token returned for provider {Provider}",
+                        SanitizeForLog(pending.Provider));
+                    return BadRequest("Authentication failed: no token received");
+                }
+
+                logger.LogInformation("Connected account callback successful for provider {Provider}",
+                    SanitizeForLog(pending.Provider));
+
+                return LocalRedirect(redirectUrl);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "OAuth callback failed: Error processing connected account callback for provider {Provider}", SanitizeForLog(pending.Provider));
+                return BadRequest($"Authentication error: {ex.Message}");
+            }
         }
     }
 

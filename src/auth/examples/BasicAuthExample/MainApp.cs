@@ -57,12 +57,7 @@ public class ConnectedGitHubSection : ViewBase
 
     public override object? Build()
     {
-        var client = UseService<IClientProvider>();
         var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
-        var callback = UseWebhook(async request =>
-        {
-            await _connectedAccounts.HandleConnectCallbackAsync(OAuthProviders.GitHub, request);
-        });
 
         UseEffect(() =>
         {
@@ -85,11 +80,11 @@ public class ConnectedGitHubSection : ViewBase
         {
             return Layout.Vertical(
                 Text.H3("Connected Accounts"),
-                new Button("Connect GitHub", async () =>
-                {
-                    var uri = await _connectedAccounts.ConnectAccountAsync(OAuthProviders.GitHub, callback);
-                    client.OpenUrl(uri.ToString());
-                }, icon: Icons.Github, variant: ButtonVariant.Outline)
+                new Button("Connect GitHub")
+                    .Icon(Icons.Github)
+                    .Variant(ButtonVariant.Outline)
+                    .Url(BuildConnectUrl(OAuthProviders.GitHub))
+                    .Target(LinkTarget.Self)
             ).Gap(10);
         }
 
@@ -105,5 +100,23 @@ public class ConnectedGitHubSection : ViewBase
             ).Gap(10).AlignContent(Align.Center),
             new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!)
         ).Gap(10);
+    }
+
+    private string BuildConnectUrl(string provider)
+    {
+        var appContext = UseService<AppContext>();
+        var registry = UseService<IOAuthCallbackRegistry>();
+
+        var callbackId = registry.RegisterPending(
+            appContext.ConnectionId,
+            provider,
+            provider
+        );
+
+        return $"{appContext.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login?" +
+               $"optionId={Uri.EscapeDataString(provider)}&" +
+               $"callbackId={Uri.EscapeDataString(callbackId)}&" +
+               $"connectionId={Uri.EscapeDataString(appContext.ConnectionId)}&" +
+               $"provider={Uri.EscapeDataString(provider)}";
     }
 }

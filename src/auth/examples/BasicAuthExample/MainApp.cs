@@ -59,7 +59,7 @@ public class ConnectedGitHubSection : ViewBase
     public override object? Build()
     {
         var appContext = UseService<Ivy.AppContext>();
-        var registry = UseService<IOAuthCallbackRegistry>();
+        var loginRegistry = UseService<IOAuthLoginRegistry>();
         var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
 
         UseEffect(() =>
@@ -86,7 +86,7 @@ public class ConnectedGitHubSection : ViewBase
                 new Button("Connect GitHub")
                     .Icon(Icons.Github)
                     .Variant(ButtonVariant.Outline)
-                    .Url(BuildConnectUrl(appContext, registry, OAuthProviders.GitHub))
+                    .Url(BuildConnectUrl(appContext, loginRegistry, OAuthProviders.GitHub))
                     .OpenInNewTab()
             ).Gap(10);
         }
@@ -105,18 +105,14 @@ public class ConnectedGitHubSection : ViewBase
         ).Gap(10);
     }
 
-    private static string BuildConnectUrl(Ivy.AppContext appContext, IOAuthCallbackRegistry registry, string provider)
+    private static string BuildConnectUrl(Ivy.AppContext appContext, IOAuthLoginRegistry loginRegistry, string provider)
     {
-        var callbackId = registry.RegisterPending(
+        var loginId = loginRegistry.RegisterPending(
             appContext.ConnectionId,
             provider,
             provider
         );
 
-        return $"{appContext.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login?" +
-               $"optionId={Uri.EscapeDataString(provider)}&" +
-               $"callbackId={Uri.EscapeDataString(callbackId)}&" +
-               $"connectionId={Uri.EscapeDataString(appContext.ConnectionId)}&" +
-               $"provider={Uri.EscapeDataString(provider)}";
+        return $"{appContext.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login?loginId={Uri.EscapeDataString(loginId)}";
     }
 }

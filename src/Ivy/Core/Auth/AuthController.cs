@@ -18,25 +18,38 @@ public class AuthController() : Controller
     [Route("ivy/auth/oauth-login")]
     [HttpGet]
     public async Task<IActionResult> OAuthLogin(
-        [FromQuery] string optionId,
-        [FromQuery] string callbackId,
-        [FromQuery] string connectionId,
-        [FromQuery] string? provider,
+        [FromQuery] string loginId,
+        [FromServices] IOAuthLoginRegistry loginRegistry,
+        [FromServices] IOAuthCallbackRegistry callbackRegistry,
         [FromServices] AppSessionStore sessionStore,
         [FromServices] ServerArgs serverArgs,
         [FromServices] ILogger<AuthController> logger)
     {
-        if (string.IsNullOrWhiteSpace(optionId) || string.IsNullOrWhiteSpace(callbackId) || string.IsNullOrWhiteSpace(connectionId))
+        if (string.IsNullOrWhiteSpace(loginId))
         {
-            logger.LogWarning("OAuth login failed: Missing required parameters");
+            logger.LogWarning("OAuth login failed: Missing loginId");
             return BadRequest("Authentication error");
         }
+
+        var pending = loginRegistry.GetAndRemove(loginId);
+        if (pending == null)
+        {
+            logger.LogWarning("OAuth login failed: Invalid or expired loginId");
+            return BadRequest("Invalid or expired login request. Please try again.");
+        }
+
+        var connectionId = pending.ConnectionId;
+        var optionId = pending.OptionId;
+        var provider = pending.Provider;
 
         if (!sessionStore.Sessions.TryGetValue(connectionId, out var appSession))
         {
             logger.LogWarning("OAuth login failed: Session not found for connection {ConnectionId}", SanitizeForLog(connectionId));
             return BadRequest("Authentication error");
         }
+
+        // Register callback server-side
+        var callbackId = callbackRegistry.RegisterPending(connectionId, optionId, provider);
 
         // Construct the OAuth callback endpoint
         var scheme = HttpContext.Request.Scheme;
@@ -68,13 +81,12 @@ public class AuthController() : Controller
 
             try
             {
-                // Get the OAuth URI and redirect to it
                 var uri = await authService.GetOAuthUriAsync(option, callback, HttpContext.RequestAborted);
                 return Redirect(uri.ToString());
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "OAuth login failed: Error initiating OAuth for option '{OptionId}' on connection {ConnectionId}", optionId.Replace("\n", "").Replace("\r", ""), connectionId.Replace("\n", "").Replace("\r", ""));
+                logger.LogError(ex, "OAuth login failed: Error initiating OAuth for option '{OptionId}' on connection {ConnectionId}", SanitizeForLog(optionId), SanitizeForLog(connectionId));
                 return BadRequest("Authentication error");
             }
         }

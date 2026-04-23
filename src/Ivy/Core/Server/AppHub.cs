@@ -448,6 +448,11 @@ public class AppHub(
                 }
             }
         }
+        catch (OperationCanceledException) when (Context.ConnectionAborted.IsCancellationRequested)
+        {
+            logger.LogInformation("Client {ConnectionId} disconnected during connection setup", Context.ConnectionId);
+            return;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to connect client {ConnectionId}", Context.ConnectionId);
@@ -520,6 +525,7 @@ public class AppHub(
                                 kvp.Value.Cancel();
                                 kvp.Value.Dispose();
                             }
+                            catch (ObjectDisposedException) { }
                             catch (Exception ex)
                             {
                                 logger.LogWarning(ex, "Error cancelling brokered token refresh loop for provider {Provider} on connection {ConnectionId}", kvp.Key, Context.ConnectionId);
@@ -555,6 +561,7 @@ public class AppHub(
                                 kvp.Value.Cancel();
                                 kvp.Value.Dispose();
                             }
+                            catch (ObjectDisposedException) { }
                             catch (Exception ex)
                             {
                                 logger.LogWarning(ex, "Error cancelling connected account refresh loop for provider {Provider} on connection {ConnectionId}", kvp.Key, Context.ConnectionId);

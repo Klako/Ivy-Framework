@@ -683,13 +683,17 @@ export const useBackend = (
     // Check if this is an OAuth login redirect
     const pageParams = new URLSearchParams(window.location.search);
     const oauthLogin = pageParams.get("oauthLogin");
+    const connectedAccountLogin = pageParams.get("connectedAccountLogin");
 
     // Build SignalR connection URL
     let signalRUrl = `${getIvyHost()}/ivy/messages?appId=${latestAppIdRef.current ?? ""}&appArgs=${appArgs ?? ""}&machineId=${machineId}&parentId=${parentId ?? ""}&shell=${latestAppShellRef.current}`;
     if (oauthLogin) {
       signalRUrl += `&oauthLogin=${oauthLogin}`;
-      // Clean up the URL by removing the oauthLogin parameter
+    }
+    // Clean up auth-related query parameters from the URL
+    if (oauthLogin || connectedAccountLogin) {
       pageParams.delete("oauthLogin");
+      pageParams.delete("connectedAccountLogin");
       const newUrl = pageParams.toString()
         ? `${window.location.pathname}?${pageParams.toString()}`
         : window.location.pathname;

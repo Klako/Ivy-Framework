@@ -138,7 +138,9 @@ public class AuthController() : Controller
         }
 
         var path = (serverArgs.BasePath ?? "").Trim().Replace('\\', '/').TrimStart('/').TrimEnd('/');
-        var redirectUrl = string.IsNullOrEmpty(path) ? "/?oauthLogin=1" : $"/{path}/?oauthLogin=1";
+        var isConnectedAccount = !string.IsNullOrWhiteSpace(pending.Provider);
+        var queryParam = isConnectedAccount ? "connectedAccountLogin=1" : "oauthLogin=1";
+        var redirectUrl = string.IsNullOrEmpty(path) ? $"/?{queryParam}" : $"/{path}/?{queryParam}";
 
         if (string.IsNullOrWhiteSpace(pending.Provider))
         {

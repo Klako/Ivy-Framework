@@ -148,7 +148,7 @@ public class Server
         AddDefaultApps();
     }
 
-    internal void SetForceNonSecureCookies(bool force)
+    public void SetForceNonSecureCookies(bool force)
     {
         _args = _args with { ForceNonSecureCookies = force };
         ForceNonSecureCookies = force;

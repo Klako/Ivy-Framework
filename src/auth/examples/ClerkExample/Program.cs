@@ -53,4 +53,5 @@ if (launchDesktop)
 else
 {
     await server.RunAsync();
+    return 0;
 }

@@ -218,6 +218,7 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
         isVertical,
         {
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,
@@ -232,6 +233,7 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
         categories,
         {
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,
@@ -247,6 +249,7 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
           fontSans: themeColors.fontSans,
           background: themeColors.background,
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
         }),
         formatter: (params: any) => {
           const extractValue = (p: any) =>

@@ -165,6 +165,7 @@ const PieChartWidget: React.FC<PieChartWidgetProps> = ({
           fontSans: themeColors.fontSans,
           background: themeColors.background,
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
         }),
         trigger: "item",
         formatter: (params: { name: string; value: number; percent: number; marker: string }) => {

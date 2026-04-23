@@ -193,6 +193,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
           fontSans: themeColors.fontSans,
           background: themeColors.background,
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
         }),
         formatter: (params: any) => {
           const extractValue = (p: any) =>
@@ -227,6 +228,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
         isVertical,
         {
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,
@@ -241,6 +243,7 @@ const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({
         undefined,
         {
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,

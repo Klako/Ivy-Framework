@@ -170,6 +170,13 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
+    public DataTableBuilder<TModel> WrapText(Expression<Func<TModel, object>> field, bool wrap = true)
+    {
+        var column = GetColumn(field);
+        column.Column.WrapText = wrap;
+        return this;
+    }
+
     public DataTableBuilder<TModel> Sortable(Expression<Func<TModel, object>> field, bool sortable)
     {
         var column = GetColumn(field);

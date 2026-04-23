@@ -83,7 +83,6 @@ const LineChartWidget: React.FC<LineChartWidgetProps> = ({
         isVertical,
         {
           mutedForeground: themeColors.mutedForeground,
-          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,
@@ -98,7 +97,6 @@ const LineChartWidget: React.FC<LineChartWidgetProps> = ({
         undefined,
         {
           mutedForeground: themeColors.mutedForeground,
-          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,

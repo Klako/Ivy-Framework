@@ -218,7 +218,6 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
         isVertical,
         {
           mutedForeground: themeColors.mutedForeground,
-          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,
@@ -233,7 +232,6 @@ const BarChartWidget: React.FC<BarChartWidgetProps> = ({
         categories,
         {
           mutedForeground: themeColors.mutedForeground,
-          card: themeColors.card,
           fontSans: themeColors.fontSans,
         },
         cartesianGrid,

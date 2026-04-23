@@ -373,12 +373,10 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
       grid: generateEChartGrid(cartesianGrid, !!toolbox && toolbox.enabled !== false, yAxis, xAxis),
       xAxis: generateScatterXAxis(xAxis, {
         mutedForeground: themeColors.mutedForeground,
-        card: themeColors.card,
         fontSans: themeColors.fontSans,
       }),
       yAxis: generateScatterYAxis(yAxis, {
         mutedForeground: themeColors.mutedForeground,
-        card: themeColors.card,
         fontSans: themeColors.fontSans,
       }),
       tooltip: {

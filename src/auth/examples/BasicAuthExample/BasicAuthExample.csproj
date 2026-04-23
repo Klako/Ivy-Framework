@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Ivy\Ivy.csproj" />
+    <ProjectReference Include="..\..\..\Ivy.Desktop\Ivy.Desktop.csproj" />
     <ProjectReference Include="..\..\..\Ivy.Analyser\Ivy.Analyser.csproj">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

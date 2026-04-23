@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../Ivy/Ivy.csproj" />
+    <ProjectReference Include="../../../Ivy.Desktop/Ivy.Desktop.csproj" />
     <ProjectReference Include="../../Ivy.Auth.Sliplane/Ivy.Auth.Sliplane.csproj" />
   </ItemGroup>
 

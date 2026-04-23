@@ -175,6 +175,7 @@ const FunnelChartWidget: React.FC<FunnelChartWidgetProps> = ({
           fontSans: themeColors.fontSans,
           background: themeColors.background,
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
         }),
         trigger: "item" as const,
         formatter: (params: { name: string; value: number; percent: number; marker: string }) => {

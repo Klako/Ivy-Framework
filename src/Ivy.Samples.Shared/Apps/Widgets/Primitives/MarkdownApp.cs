@@ -8,6 +8,7 @@ public class MarkdownApp : SampleBase
     {
         return Layout.Tabs(
             new Tab("Text", new TextFormattingTab()),
+            new Tab("Inline Code", new InlineCodeTab()),
             new Tab("Lists", new ListsTab()),
             new Tab("Links & Quotes", new LinksAndQuotesTab()),
             new Tab("Code", new CodeBlocksTab()),
@@ -34,14 +35,6 @@ public class TextFormattingTab : ViewBase
                        
                        You can also use ~~strikethrough~~ text for deleted or deprecated content.
                        
-                       ## Inline Code
-                       
-                       This is inline code: `const x = 10;` 
-                       
-                       Here's more inline code: `Console.WriteLine("Hello, World!");`
-                       
-                       You can use inline code for variable names, function calls, or any technical terms: `UseState`, `ViewBase`, `Layout.Vertical()`.
-                       
                        ## Headings
                        
                        # Heading 1
@@ -64,6 +57,62 @@ public class TextFormattingTab : ViewBase
                        This is the second paragraph. Notice how there's a blank line between paragraphs.
                        
                        This is the third paragraph with some **bold** and *italic* text mixed in.
+                       """;
+
+        return new Markdown(markdown);
+    }
+}
+
+public class InlineCodeTab : ViewBase
+{
+    public override object? Build()
+    {
+        var markdown = """
+                       # Inline Code
+
+                       Inline code is used to highlight code elements within regular text using backticks.
+
+                       ## Basic Inline Code
+
+                       Use backticks to mark inline code: `console.log("hello")`.
+
+                       Reference variables like `userId`, `isActive`, or `maxRetries` in your text.
+
+                       Call functions like `Array.from()`, `String.prototype.split()`, or `Object.keys()`.
+
+                       ## Inline Code in Headers
+
+                       ### Using `useState` Hook
+
+                       ### The `IServiceProvider` Interface
+
+                       ### Configuring `appsettings.json`
+
+                       ### Running `dotnet test --filter`
+
+                       #### The `async/await` Pattern
+
+                       #### Working with `List<T>` and `Dictionary<TKey, TValue>`
+
+                       ## Inline Code in Context
+
+                       To install the package, run `npm install ivy-framework` in your terminal.
+
+                       The `Build()` method returns an `object?` which is rendered by the framework.
+
+                       Set `enabled: true` in your config file to activate the feature.
+
+                       Use `Ctrl+C` to copy and `Ctrl+V` to paste.
+
+                       ## Mixed Formatting with Inline Code
+
+                       You can combine **bold with `inline code`** or *italic with `inline code`*.
+
+                       > Blockquotes can contain `inline code` too.
+
+                       - List items with `inline code`
+                       - Another item referencing `Layout.Vertical()`
+                       - Using `new Tab("title", content)` pattern
                        """;
 
         return new Markdown(markdown);

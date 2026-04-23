@@ -144,7 +144,7 @@ export const ContentVariant: React.FC<ContentVariantProps> = ({
                 aria-selected={index === activeIndex}
                 tabIndex={0}
                 className={cn(
-                  "px-3 py-1.5 cursor-pointer transition-colors duration-300 h-[26px]",
+                  "px-3 py-1.5 cursor-pointer transition-colors duration-300 h-[26px] rounded-selector hover:bg-secondary",
                   index === activeIndex ? "text-foreground" : "text-muted-foreground",
                 )}
                 onClick={() => {

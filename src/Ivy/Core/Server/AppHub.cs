@@ -366,12 +366,8 @@ public class AppHub(
                     // Subscribe to new brokered auth sessions being added
                     Action<string> addedHandler = provider =>
                     {
-                        // Check if connection is still active
-                        if (!sessionStore.Sessions.ContainsKey(connectionId))
-                        {
-                            return;
-                        }
-
+                        if (connectionAborted.IsCancellationRequested) return;
+                        if (!sessionStore.Sessions.ContainsKey(connectionId)) return;
                         AddProvider(provider);
                     };
 
@@ -424,6 +420,7 @@ public class AppHub(
 
                     Action<string> connectedAddedHandler = provider =>
                     {
+                        if (connectionAborted.IsCancellationRequested) return;
                         if (!sessionStore.Sessions.ContainsKey(connectionId)) return;
                         AddConnectedProvider(provider);
                     };
@@ -450,6 +447,11 @@ public class AppHub(
                     authSession.ConnectedAccountRemoved += connectedRemovedHandler;
                 }
             }
+        }
+        catch (OperationCanceledException) when (Context.ConnectionAborted.IsCancellationRequested)
+        {
+            logger.LogInformation("Client {ConnectionId} disconnected during connection setup", Context.ConnectionId);
+            return;
         }
         catch (Exception ex)
         {
@@ -523,6 +525,7 @@ public class AppHub(
                                 kvp.Value.Cancel();
                                 kvp.Value.Dispose();
                             }
+                            catch (ObjectDisposedException) { }
                             catch (Exception ex)
                             {
                                 logger.LogWarning(ex, "Error cancelling brokered token refresh loop for provider {Provider} on connection {ConnectionId}", kvp.Key, Context.ConnectionId);
@@ -558,6 +561,7 @@ public class AppHub(
                                 kvp.Value.Cancel();
                                 kvp.Value.Dispose();
                             }
+                            catch (ObjectDisposedException) { }
                             catch (Exception ex)
                             {
                                 logger.LogWarning(ex, "Error cancelling connected account refresh loop for provider {Provider} on connection {ConnectionId}", kvp.Key, Context.ConnectionId);
@@ -655,6 +659,9 @@ public class AppHub(
 
                             if (!isValid)
                             {
+                                // If validation "failed" because the connection was aborted
+                                // (and the handler swallowed the TaskCanceledException), exit cleanly.
+                                cancellationToken.ThrowIfCancellationRequested();
                                 state = TokenRefreshState.TokenInvalid;
                             }
                             else
@@ -713,6 +720,7 @@ public class AppHub(
                             }
                             else
                             {
+                                cancellationToken.ThrowIfCancellationRequested();
                                 logger.LogError("{StrategyName}RefreshLoop: Token refresh failed for {ConnectionId}.", strategy.LoggingName, connectionId);
                                 var shouldContinue = await strategy.OnRefreshFailedAsync();
                                 if (!shouldContinue)
@@ -726,7 +734,7 @@ public class AppHub(
 
                 consecutiveErrors = 0;
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 logger.LogInformation("{StrategyName}RefreshLoop: cancelled for {ConnectionId}", strategy.LoggingName, connectionId);
                 return;

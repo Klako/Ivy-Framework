@@ -144,20 +144,17 @@ public class OAuthFlowView(AuthOption option) : ViewBase
     public override object? Build()
     {
         var args = this.UseService<AppContext>();
-        var registry = this.UseService<IOAuthCallbackRegistry>();
+        var loginRegistry = this.UseService<IOAuthLoginRegistry>();
         var auth = this.UseService<IAuthProvider>();
 
-        var state = this.UseState(() => registry.RegisterPending(args.ConnectionId, option.Id ?? ""));
+        var loginId = this.UseState(() => loginRegistry.RegisterPending(args.ConnectionId, option.Id ?? ""));
 
-        var oauthUriBuilder = new UriBuilder($"{args.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login")
-        {
-            Query = $"optionId={Uri.EscapeDataString(option.Id ?? "")}&callbackId={Uri.EscapeDataString(state.Value)}&connectionId={Uri.EscapeDataString(args.ConnectionId)}"
-        };
+        var oauthUri = $"{args.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login?loginId={Uri.EscapeDataString(loginId.Value)}";
         return new Button(option.Name)
             .Secondary()
             .Icon(option.Icon)
             .Width(Size.Full())
-            .Url(oauthUriBuilder.ToString())
+            .Url(oauthUri)
             .Target(LinkTarget.Self)
             .OpenInNewTab(auth.OpenOAuthLoginInNewTab);
     }

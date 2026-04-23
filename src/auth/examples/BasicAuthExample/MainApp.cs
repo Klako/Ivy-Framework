@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using Ivy;
 using Ivy.Auth.Examples.Shared;
+using Ivy.Core.Auth;
 
 namespace BasicAuthExample;
 
@@ -57,6 +58,8 @@ public class ConnectedGitHubSection : ViewBase
 
     public override object? Build()
     {
+        var appContext = UseService<Ivy.AppContext>();
+        var registry = UseService<IOAuthCallbackRegistry>();
         var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
 
         UseEffect(() =>
@@ -83,7 +86,7 @@ public class ConnectedGitHubSection : ViewBase
                 new Button("Connect GitHub")
                     .Icon(Icons.Github)
                     .Variant(ButtonVariant.Outline)
-                    .Url(BuildConnectUrl(OAuthProviders.GitHub))
+                    .Url(BuildConnectUrl(appContext, registry, OAuthProviders.GitHub))
                     .Target(LinkTarget.Self)
             ).Gap(10);
         }
@@ -102,11 +105,8 @@ public class ConnectedGitHubSection : ViewBase
         ).Gap(10);
     }
 
-    private string BuildConnectUrl(string provider)
+    private static string BuildConnectUrl(Ivy.AppContext appContext, IOAuthCallbackRegistry registry, string provider)
     {
-        var appContext = UseService<AppContext>();
-        var registry = UseService<IOAuthCallbackRegistry>();
-
         var callbackId = registry.RegisterPending(
             appContext.ConnectionId,
             provider,

@@ -69,6 +69,11 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
 
   const densityConfig = DENSITY_CONFIG[density];
 
+  const hasWrappingColumns = columns.some((c) => c.wrapText && !c.hidden);
+  const effectiveRowHeight = hasWrappingColumns
+    ? densityConfig.rowHeight * 3
+    : densityConfig.rowHeight;
+
   const {
     allowColumnReordering,
     allowColumnResizing,
@@ -184,7 +189,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     visibleRows,
     hasMore,
     showGroups: showGroups ?? false,
-    rowHeight: densityConfig.rowHeight,
+    rowHeight: effectiveRowHeight,
   });
 
   // Data loading
@@ -194,7 +199,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     isLoading,
     hasMore,
     loadMoreData,
-    rowHeight: densityConfig.rowHeight,
+    rowHeight: effectiveRowHeight,
   });
 
   // Generate header icons map for all column icons
@@ -306,7 +311,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
         onVisibleRegionChanged={handleVisibleRegionChanged}
         onHeaderClicked={allowSorting ? handleHeaderMenuClick : undefined}
         theme={tableTheme}
-        rowHeight={densityConfig.rowHeight}
+        rowHeight={effectiveRowHeight}
         headerHeight={densityConfig.rowHeight}
         freezeColumns={freezeColumns ?? 0}
         getCellsForSelection={(allowCopySelection ?? true) ? true : undefined}

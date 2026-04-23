@@ -87,7 +87,7 @@ public class ConnectedGitHubSection : ViewBase
                     .Icon(Icons.Github)
                     .Variant(ButtonVariant.Outline)
                     .Url(BuildConnectUrl(appContext, registry, OAuthProviders.GitHub))
-                    .Target(LinkTarget.Self)
+                    .OpenInNewTab()
             ).Gap(10);
         }
 

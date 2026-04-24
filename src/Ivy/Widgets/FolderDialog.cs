@@ -16,4 +16,5 @@ public record FolderDialog : WidgetBase<FolderDialog>
 
     [Event] public EventHandler<Event<FolderDialog>>? OnCancel { get; set; }
     [Event] public EventHandler<Event<FolderDialog, FolderDialogEntry[]>>? OnFolderSelected { get; set; }
+    [Event] public EventHandler<Event<FolderDialog, string>>? OnPathSelected { get; set; }
 }

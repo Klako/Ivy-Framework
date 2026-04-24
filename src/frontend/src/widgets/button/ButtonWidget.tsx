@@ -251,7 +251,7 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
             title
           )}
           {badge && (
-            <Badge variant="outline" className="ml-1 w-min whitespace-nowrap">
+            <Badge variant="outline" className="ml-1 w-min whitespace-nowrap text-inherit">
               {badge}
             </Badge>
           )}

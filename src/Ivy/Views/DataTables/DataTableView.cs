@@ -61,6 +61,6 @@ public class DataTableView(
         // Memoize based on queryable and configuration
         // Don't include the queryable itself as it might change reference
         // Only memoize if all inputs are stable
-        return [(object?)width!, (object?)height!, columns, config, refreshToken?.Token!];
+        return [(object?)width!, (object?)height!, columns, config, refreshToken?.Token!, density];
     }
 }

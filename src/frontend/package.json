@@ -138,6 +138,7 @@
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
     "overrides": {
+      "uuid": "14.0.0",
       "@swc/helpers": "0.5.17",
       "axios": "1.15.0",
       "dompurify": "3.4.0",

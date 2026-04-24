@@ -3,9 +3,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, useReducer } 
 import Icon from "@/components/Icon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { MenuItem, WidgetEventHandlerType } from "@/types/widgets";
 import { useFocusable } from "@/hooks/use-focus-management";
+import { useShortcut } from "@/lib/useShortcut";
 import { sidebarMenuRef } from "./sidebar-refs";
 import { useEventHandler } from "@/components/event-handler";
 import { cn, getAppId } from "@/lib/utils";
@@ -192,6 +194,14 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
     dispatchSidebar({ isManuallyToggled: true });
   }, [dispatchSidebar]);
 
+  // Register keyboard shortcut for toggling sidebar (Ctrl+B)
+  useShortcut(
+    "sidebar-layout-toggle",
+    "CTRL+B",
+    handleManualToggle,
+    { skipInInputs: true, disabled: !mainAppSidebar }
+  );
+
   // Auto-collapse/expand based on width (only for main app sidebar)
   useEffect(() => {
     if (!mainAppSidebar) return;
@@ -287,18 +297,27 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
       >
         {/* Toggle Button - Only show for main app sidebar */}
         {showToggleButton && mainAppSidebar && (
-          <button
-            onClick={handleManualToggle}
-            className="absolute top-0 left-1 z-50 p-2 rounded-selector bg-background hover:bg-muted hover:text-accent-foreground cursor-pointer"
-            style={{ marginTop: "3px" }}
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-          >
-            {isSidebarOpen ? (
-              <PanelLeftClose className="h-4 w-4" />
-            ) : (
-              <PanelLeftOpen className="h-4 w-4" />
-            )}
-          </button>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleManualToggle}
+                  className="absolute top-0 left-1 z-50 p-2 rounded-selector bg-background hover:bg-muted hover:text-accent-foreground cursor-pointer"
+                  style={{ marginTop: "3px" }}
+                  aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+                >
+                  {isSidebarOpen ? (
+                    <PanelLeftClose className="h-4 w-4" />
+                  ) : (
+                    <PanelLeftOpen className="h-4 w-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Toggle sidebar (Ctrl+B)
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         {slots?.MainContent}
       </div>

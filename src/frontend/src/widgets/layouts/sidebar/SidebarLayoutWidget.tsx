@@ -195,12 +195,10 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
   }, [dispatchSidebar]);
 
   // Register keyboard shortcut for toggling sidebar (Ctrl+B)
-  useShortcut(
-    "sidebar-layout-toggle",
-    "CTRL+B",
-    handleManualToggle,
-    { skipInInputs: true, disabled: !mainAppSidebar }
-  );
+  useShortcut("sidebar-layout-toggle", "CTRL+B", handleManualToggle, {
+    skipInInputs: true,
+    disabled: !mainAppSidebar,
+  });
 
   // Auto-collapse/expand based on width (only for main app sidebar)
   useEffect(() => {
@@ -313,9 +311,7 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                Toggle sidebar (Ctrl+B)
-              </TooltipContent>
+              <TooltipContent side="right">Toggle sidebar (Ctrl+B)</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}

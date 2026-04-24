@@ -438,7 +438,7 @@ const CollapsibleMenuItem: React.FC<{
     );
   } else {
     return (
-      <li key={item.label} ref={itemRef} data-menu-item={item.tag || item.label}>
+      <li key={item.label} ref={itemRef} data-menu-item={item.tag || item.label} className="relative">
         <button
           className={cn(
             "flex w-full items-center gap-2 rounded-selector p-2 text-large-label hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
@@ -528,7 +528,7 @@ const renderMenuItems = (
       const isActive = item.tag === activeTag;
       if (level === 1) {
         return (
-          <li key={item.tag} data-menu-item={item.tag}>
+          <li key={item.tag} data-menu-item={item.tag} className="relative">
             <button
               className={cn(
                 "flex w-full items-center gap-2 rounded-selector p-2 text-body hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
@@ -545,7 +545,7 @@ const renderMenuItems = (
         );
       } else {
         return (
-          <li key={item.tag} data-menu-item={item.tag}>
+          <li key={item.tag} data-menu-item={item.tag} className="relative">
             <button
               className={cn(
                 "flex w-full items-center gap-2 rounded-selector p-2 text-body hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",

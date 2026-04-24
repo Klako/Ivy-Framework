@@ -14,19 +14,22 @@ public static class UseFolderDialogExtensions
     /// (files and subdirectories) in the selected folder.
     /// On Chromium, uses showDirectoryPicker for true folder selection.
     /// On other browsers, falls back to input[webkitdirectory].
-    /// Returns (dialogView, showFolderDialog) tuple following the UseAlert pattern.
+    /// Returns (dialogView, showFolderDialog, selectedPath) tuple following the UseAlert pattern.
     /// Call showFolderDialog(callback) to open the dialog; the callback receives folder entries.
+    /// selectedPath is set when the desktop bridge provides the absolute folder path.
     /// </summary>
-    public static (object? dialogView, ShowFolderDialogDelegate showFolderDialog) UseFolderDialog(
+    public static (object? dialogView, ShowFolderDialogDelegate showFolderDialog, IState<string?> selectedPath) UseFolderDialog(
         this IViewContext context)
     {
         var triggerCount = context.UseState(0);
         var folderCallback = context.UseRef<Action<FolderDialogEntry[]>?>();
+        var selectedPath = context.UseState<string?>();
 
         var dialog = new FolderDialog
         {
             TriggerCount = triggerCount.Value,
             OnFolderSelected = new(e => { folderCallback.Value?.Invoke(e.Value); return ValueTask.CompletedTask; }),
+            OnPathSelected = new(e => { selectedPath.Set(e.Value); return ValueTask.CompletedTask; }),
         };
 
         var showFolderDialog = new ShowFolderDialogDelegate(callback =>
@@ -35,6 +38,6 @@ public static class UseFolderDialogExtensions
             triggerCount.Set(triggerCount.Value + 1);
         });
 
-        return (dialog, showFolderDialog);
+        return (dialog, showFolderDialog, selectedPath);
     }
 }

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { useEventHandler } from "@/components/event-handler";
-import { hasDirectoryPicker } from "./browserSupport";
+import { hasDirectoryPicker, pickDirectoryFullPath } from "./browserSupport";
 import { EMPTY_ARRAY } from "@/lib/constants";
 
 interface FolderDialogEntry {
@@ -27,8 +27,35 @@ export const FolderDialogWidget: React.FC<FolderDialogWidgetProps> = ({
 
   const hasOnCancel = Array.isArray(events) && events.includes("OnCancel");
   const hasOnFolderSelected = Array.isArray(events) && events.includes("OnFolderSelected");
+  const hasOnPathSelected = Array.isArray(events) && events.includes("OnPathSelected");
 
   const openModernDialog = useCallback(async () => {
+    // Try desktop bridge first — it returns the full path but not directory entries
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasDesktopBridge =
+      typeof window !== "undefined" &&
+      typeof (window as any).__ivy_desktop?.showDirectoryPicker === "function";
+
+    if (hasDesktopBridge) {
+      const result = await pickDirectoryFullPath();
+      if (result.kind === "selected") {
+        if (result.path && hasOnPathSelected) {
+          handleEvent("OnPathSelected", id, [result.path]);
+        }
+        if (hasOnFolderSelected) {
+          handleEvent("OnFolderSelected", id, [[]]);
+        }
+      } else if (result.kind === "cancelled") {
+        if (hasOnCancel) {
+          handleEvent("OnCancel", id, []);
+        }
+      } else {
+        console.error("Folder dialog error:", result.error);
+      }
+      return;
+    }
+
+    // Browser path: use showDirectoryPicker directly to enumerate entries
     try {
       const dirHandle = await showDirectoryPicker();
       const entries: FolderDialogEntry[] = [];
@@ -36,7 +63,7 @@ export const FolderDialogWidget: React.FC<FolderDialogWidgetProps> = ({
       for await (const [name, handle] of dirHandle.entries()) {
         entries.push({
           name,
-          kind: handle.kind, // "file" or "directory"
+          kind: handle.kind,
           relativePath: name,
         });
       }
@@ -53,7 +80,7 @@ export const FolderDialogWidget: React.FC<FolderDialogWidgetProps> = ({
         console.error("Folder dialog error:", err);
       }
     }
-  }, [hasOnFolderSelected, hasOnCancel, handleEvent, id]);
+  }, [hasOnFolderSelected, hasOnCancel, hasOnPathSelected, handleEvent, id]);
 
   const openFallbackDialog = useCallback(() => {
     if (!inputRef.current) return;

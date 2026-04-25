@@ -1,3 +1,4 @@
+using Ivy.Core.Hooks;
 using Ivy.Core.Server;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -118,5 +119,123 @@ public class ConnectedAccountButtonTests
     {
         var services = new ServiceCollection();
         return services.BuildServiceProvider();
+    }
+
+    [Fact]
+    public void UseConnectedAccountState_InitializesWithCurrentStatus()
+    {
+        var authSession = new AuthSession(authToken: null);
+        var githubSession = new AuthSession(authToken: new AuthToken("token"));
+        authSession.AddConnectedAccount("github", githubSession);
+
+        var sessionStore = new AppSessionStore();
+        var service = new ConnectedAccountsService(
+            authSession, CreateEmptyServiceProvider(), null!, sessionStore);
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IConnectedAccountsService>(service);
+        var provider = services.BuildServiceProvider();
+
+        var testView = new TestConnectedAccountView("github", provider);
+        var state = testView.GetConnectionState();
+
+        Assert.True(state.Value);
+    }
+
+    [Fact]
+    public void UseConnectedAccountState_UpdatesOnConnect()
+    {
+        var authSession = new AuthSession(authToken: null);
+        var sessionStore = new AppSessionStore();
+        var service = new ConnectedAccountsService(
+            authSession, CreateEmptyServiceProvider(), null!, sessionStore);
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IConnectedAccountsService>(service);
+        var provider = services.BuildServiceProvider();
+
+        var testView = new TestConnectedAccountView("github", provider);
+        var state = testView.GetConnectionState();
+
+        Assert.False(state.Value);
+
+        var githubSession = new AuthSession(authToken: new AuthToken("token"));
+        authSession.AddConnectedAccount("github", githubSession);
+
+        Assert.True(state.Value);
+    }
+
+    [Fact]
+    public void UseConnectedAccountState_UpdatesOnDisconnect()
+    {
+        var authSession = new AuthSession(authToken: null);
+        var githubSession = new AuthSession(authToken: new AuthToken("token"));
+        authSession.AddConnectedAccount("github", githubSession);
+
+        var sessionStore = new AppSessionStore();
+        var service = new ConnectedAccountsService(
+            authSession, CreateEmptyServiceProvider(), null!, sessionStore);
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IConnectedAccountsService>(service);
+        var provider = services.BuildServiceProvider();
+
+        var testView = new TestConnectedAccountView("github", provider);
+        var state = testView.GetConnectionState();
+
+        Assert.True(state.Value);
+
+        authSession.RemoveConnectedAccount("github");
+
+        Assert.False(state.Value);
+    }
+
+    [Fact]
+    public void UseConnectedAccountState_IgnoresOtherProviders()
+    {
+        var authSession = new AuthSession(authToken: null);
+        var sessionStore = new AppSessionStore();
+        var service = new ConnectedAccountsService(
+            authSession, CreateEmptyServiceProvider(), null!, sessionStore);
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IConnectedAccountsService>(service);
+        var provider = services.BuildServiceProvider();
+
+        var testView = new TestConnectedAccountView("github", provider);
+        var state = testView.GetConnectionState();
+
+        Assert.False(state.Value);
+
+        var googleSession = new AuthSession(authToken: new AuthToken("token"));
+        authSession.AddConnectedAccount("google", googleSession);
+
+        Assert.False(state.Value); // Should remain false for github
+    }
+
+    private class TestConnectedAccountView : ViewBase
+    {
+        private readonly string _provider;
+        private readonly IServiceProvider _serviceProvider;
+        private IState<bool>? _state;
+
+        public TestConnectedAccountView(string provider, IServiceProvider serviceProvider)
+        {
+            _provider = provider;
+            _serviceProvider = serviceProvider;
+        }
+
+        public override object? Build()
+        {
+            _state = UseConnectedAccountState(_provider);
+            return null;
+        }
+
+        public IState<bool> GetConnectionState()
+        {
+            this.Context = new ViewContext(() => { }, null, _serviceProvider);
+            Build();
+            return _state!;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Ivy.Core;
+using Ivy.Core.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -239,6 +240,28 @@ public abstract partial class ViewBase
 
     protected Action<string> UseClipboard() =>
         this.Context.UseClipboard();
+
+    protected IState<bool> UseConnectedAccountState(string provider)
+    {
+        var connectedAccounts = UseService<IConnectedAccountsService>();
+        var isConnected = UseState(() => connectedAccounts.GetAccountSession(provider)?.AuthToken != null);
+
+        UseEffect(() =>
+        {
+            connectedAccounts.AccountConnected += OnConnected;
+            connectedAccounts.AccountDisconnected += OnDisconnected;
+            return System.Reactive.Disposables.Disposable.Create(() =>
+            {
+                connectedAccounts.AccountConnected -= OnConnected;
+                connectedAccounts.AccountDisconnected -= OnDisconnected;
+            });
+
+            void OnConnected(string p) { if (p == provider) isConnected.Set(true); }
+            void OnDisconnected(string p) { if (p == provider) isConnected.Set(false); }
+        }, [EffectTrigger.OnMount()]);
+
+        return isConnected;
+    }
 
     protected static EffectTrigger OnMount() =>
         EffectTrigger.OnMount();

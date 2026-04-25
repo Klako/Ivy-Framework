@@ -1,4 +1,3 @@
-using System.Reactive.Disposables;
 using Ivy.Core.Auth;
 
 // ReSharper disable once CheckNamespace
@@ -18,21 +17,7 @@ public class ConnectedAccountButton(string provider, string? displayName = null,
         var loginRegistry = UseService<IOAuthLoginRegistry>();
         var connectedAccounts = UseService<IConnectedAccountsService>();
 
-        var isConnected = UseState(() => connectedAccounts.GetAccountSession(provider)?.AuthToken != null);
-
-        UseEffect(() =>
-        {
-            connectedAccounts.AccountConnected += OnConnected;
-            connectedAccounts.AccountDisconnected += OnDisconnected;
-            return Disposable.Create(() =>
-            {
-                connectedAccounts.AccountConnected -= OnConnected;
-                connectedAccounts.AccountDisconnected -= OnDisconnected;
-            });
-
-            void OnConnected(string p) { if (p == provider) isConnected.Set(true); }
-            void OnDisconnected(string p) { if (p == provider) isConnected.Set(false); }
-        }, [EffectTrigger.OnMount()]);
+        var isConnected = UseConnectedAccountState(provider);
 
         var name = displayName ?? FormatProviderName(provider);
         var resolvedIcon = icon ?? GetProviderIcon(provider);

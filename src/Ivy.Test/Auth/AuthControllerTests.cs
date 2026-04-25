@@ -1,3 +1,5 @@
+using Ivy.Core;
+using Ivy.Core.Apps;
 using Ivy.Core.Auth;
 using Ivy.Core.Server;
 using Microsoft.AspNetCore.Http;
@@ -20,22 +22,79 @@ public class AuthControllerTests
 
         public IAuthSession GetAuthSession() => new AuthSession(authToken: null);
 
-        public List<AuthOption> GetAuthOptions() =>
-            [new AuthOption { Id = "test-option", DisplayName = "Test" }];
+        public AuthOption[] GetAuthOptions() =>
+            [new AuthOption(AuthFlow.OAuth, Id: "test-option")];
 
-        public Task<Uri> GetOAuthUriAsync(AuthOption option, string callback, CancellationToken cancellationToken)
+        public Task<Uri> GetOAuthUriAsync(AuthOption option, WebhookEndpoint callback, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_redirectUri);
         }
 
-        public Task<LoginResult> HandleOAuthCallbackAsync(IAuthSession authSession, HttpRequest request)
+        public Task<AuthToken?> HandleOAuthCallbackAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<LogoutResult> LogoutAsync(IAuthSession authSession)
+        public Task LogoutAsync(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<LoginResult> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<BrokeredSessionsResult> GetBrokeredSessionsAsync(bool skipCache = false, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAuthService.SetAuthCookies(bool reloadPage, bool? triggerMachineReload, bool triggerMachineAuthSync)
+        {
+        }
+
+        public Task<AuthToken?> RefreshAccessTokenAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ValidateAccessTokenAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<UserInfo?> GetUserInfoAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TokenLifetime?> GetAccessTokenLifetimeAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public AuthToken? GetCurrentToken()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string? GetCurrentSessionData()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IAuthTokenHandlerSession GetAuthTokenHandlerSession()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAuthTokenHandlerService.SetAuthTokenCookies(bool reloadPage, bool? triggerMachineReload)
+        {
+        }
+
+        void IAuthTokenHandlerService.SetAuthSessionDataCookies(bool reloadPage, bool? triggerMachineReload)
+        {
         }
     }
 
@@ -48,12 +107,12 @@ public class AuthControllerTests
             _redirectUri = redirectUri;
         }
 
-        public Task<Uri> ConnectAccountAsync(string provider, string callback, CancellationToken cancellationToken)
+        public Task<Uri> ConnectAccountAsync(string provider, WebhookEndpoint callback, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_redirectUri);
         }
 
-        public Task DisconnectAccountAsync(string provider, CancellationToken cancellationToken)
+        public Task DisconnectAccountAsync(string provider, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -63,15 +122,20 @@ public class AuthControllerTests
             throw new NotImplementedException();
         }
 
-        public List<string> GetAvailableProviders()
+        public string[] GetAvailableProviders()
         {
             throw new NotImplementedException();
         }
 
-        public Task<LoginResult> HandleConnectCallbackAsync(string provider, HttpRequest request, CancellationToken cancellationToken)
+        public Task<AuthToken?> HandleConnectCallbackAsync(string provider, HttpRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
+
+#pragma warning disable CS0067 // Event is never used
+        public event Action<string>? AccountConnected;
+        public event Action<string>? AccountDisconnected;
+#pragma warning restore CS0067
     }
 
     private static (AuthController controller, AppSessionStore sessionStore, string connectionId) SetupController(Uri redirectUri, bool useConnectedAccounts = false)
@@ -91,7 +155,19 @@ public class AuthControllerTests
         }
 
         var serviceProvider = services.BuildServiceProvider();
-        var appSession = new AppSession(connectionId, serviceProvider, "", null, null);
+        var appSession = new AppSession
+        {
+            ConnectionId = connectionId,
+            AppId = "",
+            MachineId = "",
+            ParentId = null,
+            WidgetTree = null!,
+            AppDescriptor = null!,
+            App = null!,
+            ContentBuilder = null!,
+            AppServices = serviceProvider,
+            LastInteraction = DateTime.UtcNow
+        };
         sessionStore.Sessions[connectionId] = appSession;
 
         controller.ControllerContext = new ControllerContext
@@ -117,7 +193,7 @@ public class AuthControllerTests
         var (controller, sessionStore, connectionId) = SetupController(httpsUri);
 
         var loginRegistry = new OAuthLoginRegistry();
-        var loginId = loginRegistry.RegisterPending(connectionId, "test-option", null);
+        var loginId = loginRegistry.RegisterPending(connectionId, "test-option");
 
         var callbackRegistry = new OAuthCallbackRegistry();
         var serverArgs = new ServerArgs { BasePath = null };
@@ -139,7 +215,7 @@ public class AuthControllerTests
         var (controller, sessionStore, connectionId) = SetupController(relativeUri);
 
         var loginRegistry = new OAuthLoginRegistry();
-        var loginId = loginRegistry.RegisterPending(connectionId, "test-option", null);
+        var loginId = loginRegistry.RegisterPending(connectionId, "test-option");
 
         var callbackRegistry = new OAuthCallbackRegistry();
         var serverArgs = new ServerArgs { BasePath = null };
@@ -161,7 +237,7 @@ public class AuthControllerTests
         var (controller, sessionStore, connectionId) = SetupController(httpUri);
 
         var loginRegistry = new OAuthLoginRegistry();
-        var loginId = loginRegistry.RegisterPending(connectionId, "test-option", null);
+        var loginId = loginRegistry.RegisterPending(connectionId, "test-option");
 
         var callbackRegistry = new OAuthCallbackRegistry();
         var serverArgs = new ServerArgs { BasePath = null };
@@ -183,7 +259,7 @@ public class AuthControllerTests
         var (controller, sessionStore, connectionId) = SetupController(httpsUri, useConnectedAccounts: true);
 
         var loginRegistry = new OAuthLoginRegistry();
-        var loginId = loginRegistry.RegisterPending(connectionId, null, "github");
+        var loginId = loginRegistry.RegisterPending(connectionId, "github", "github");
 
         var callbackRegistry = new OAuthCallbackRegistry();
         var serverArgs = new ServerArgs { BasePath = null };
@@ -205,7 +281,7 @@ public class AuthControllerTests
         var (controller, sessionStore, connectionId) = SetupController(httpUri, useConnectedAccounts: true);
 
         var loginRegistry = new OAuthLoginRegistry();
-        var loginId = loginRegistry.RegisterPending(connectionId, null, "github");
+        var loginId = loginRegistry.RegisterPending(connectionId, "github", "github");
 
         var callbackRegistry = new OAuthCallbackRegistry();
         var serverArgs = new ServerArgs { BasePath = null };

@@ -22,6 +22,7 @@ import {
   lookupBadgeColorMapping,
 } from "./cellContent";
 import { DataColumn, DataRow, ColType } from "../types/types";
+import { applyColumnDefaults } from "../DataTableDefaults";
 import type { LabelsBadgesCellData } from "./customRenderers";
 
 describe("cellContent utilities", () => {
@@ -815,6 +816,81 @@ describe("cellContent utilities", () => {
 
       const cell = getCellContent([0, 0], labelsColumns, [], true, getLabelsRowData3);
       expect(cell.contentAlign).toBe("right");
+    });
+  });
+
+  describe("wrapText support", () => {
+    it("should set allowWrapping on text cell when wrapText is true", () => {
+      const cell = createTextCell("hello world", false, undefined, true);
+      expect(cell.kind).toBe(GridCellKind.Text);
+      if (cell.kind === GridCellKind.Text) {
+        expect(cell.allowWrapping).toBe(true);
+      }
+    });
+
+    it("should set allowWrapping to false on text cell when wrapText is false", () => {
+      const cell = createTextCell("hello", false, undefined, false);
+      if (cell.kind === GridCellKind.Text) {
+        expect(cell.allowWrapping).toBe(false);
+      }
+    });
+
+    it("should set allowWrapping to false on text cell when wrapText is undefined", () => {
+      const cell = createTextCell("hello", false);
+      if (cell.kind === GridCellKind.Text) {
+        expect(cell.allowWrapping).toBe(false);
+      }
+    });
+
+    it("should set allowWrapping on date cell when wrapText is true", () => {
+      const cell = createDateCell("2025-01-01", "date", false, undefined, true);
+      expect(cell).not.toBeNull();
+      if (cell && cell.kind === GridCellKind.Text) {
+        expect(cell.allowWrapping).toBe(true);
+      }
+    });
+
+    it("should pass wrapText through getCellContent to text cells", () => {
+      const wrapColumns: DataColumn[] = [
+        { name: "Description", type: ColType.Text, width: 200, wrapText: true },
+      ];
+      const wrapData: DataRow[] = [{ values: ["Long text content"] }];
+      const getWrapRowData = (rowIndex: number): DataRow | null => {
+        return rowIndex >= 0 && rowIndex < wrapData.length ? wrapData[rowIndex] : null;
+      };
+
+      const cell = getCellContent([0, 0], wrapColumns, [], false, getWrapRowData);
+      expect(cell.kind).toBe(GridCellKind.Text);
+      if (cell.kind === GridCellKind.Text) {
+        expect(cell.allowWrapping).toBe(true);
+      }
+    });
+
+    it("should not wrap text by default in getCellContent", () => {
+      const noWrapColumns: DataColumn[] = [{ name: "Name", type: ColType.Text, width: 100 }];
+      const noWrapData: DataRow[] = [{ values: ["Some text"] }];
+      const getNoWrapRowData = (rowIndex: number): DataRow | null => {
+        return rowIndex >= 0 && rowIndex < noWrapData.length ? noWrapData[rowIndex] : null;
+      };
+
+      const cell = getCellContent([0, 0], noWrapColumns, [], false, getNoWrapRowData);
+      if (cell.kind === GridCellKind.Text) {
+        expect(cell.allowWrapping).toBe(false);
+      }
+    });
+  });
+
+  describe("applyColumnDefaults wrapText", () => {
+    it("should default wrapText to false when not specified", () => {
+      const column: DataColumn = { name: "Test", type: ColType.Text, width: 100 };
+      const result = applyColumnDefaults(column);
+      expect(result.wrapText).toBe(false);
+    });
+
+    it("should preserve wrapText when explicitly set to true", () => {
+      const column: DataColumn = { name: "Test", type: ColType.Text, width: 100, wrapText: true };
+      const result = applyColumnDefaults(column);
+      expect(result.wrapText).toBe(true);
     });
   });
 });

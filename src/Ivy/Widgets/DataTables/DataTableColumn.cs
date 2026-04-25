@@ -25,6 +25,8 @@ public class DataTableColumn
     [JsonPropertyName("alignContent")]
     public Align AlignContent { get; set; } = Align.Left;
 
+    public bool WrapText { get; set; } = false;
+
     public int Order { get; set; } = 0;
     public string? Icon { get; set; } = null;
     public string? Help { get; set; } = null;

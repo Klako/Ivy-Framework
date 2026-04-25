@@ -4,12 +4,12 @@ namespace Ivy.Core.Auth;
 
 public interface IOAuthCallbackRegistry
 {
-    string RegisterPending(string connectionId, string optionId);
+    string RegisterPending(string connectionId, string optionId, string? provider = null);
 
     PendingOAuthCallback? GetAndRemove(string state);
 }
 
-public record PendingOAuthCallback(string ConnectionId, string OptionId, DateTime CreatedAt);
+public record PendingOAuthCallback(string ConnectionId, string OptionId, DateTime CreatedAt, string? Provider = null);
 
 public class OAuthCallbackRegistry : IOAuthCallbackRegistry
 {
@@ -18,12 +18,12 @@ public class OAuthCallbackRegistry : IOAuthCallbackRegistry
     private DateTime _lastCleanup = DateTime.UtcNow;
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(1);
 
-    public string RegisterPending(string connectionId, string optionId)
+    public string RegisterPending(string connectionId, string optionId, string? provider = null)
     {
         CleanupExpiredIfNeeded();
 
         var state = Guid.NewGuid().ToString();
-        _pending[state] = new PendingOAuthCallback(connectionId, optionId, DateTime.UtcNow);
+        _pending[state] = new PendingOAuthCallback(connectionId, optionId, DateTime.UtcNow, provider);
         return state;
     }
 

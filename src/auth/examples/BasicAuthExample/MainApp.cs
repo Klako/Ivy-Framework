@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using Ivy;
 using Ivy.Auth.Examples.Shared;
+using Ivy.Core.Auth;
 
 namespace BasicAuthExample;
 
@@ -57,12 +58,9 @@ public class ConnectedGitHubSection : ViewBase
 
     public override object? Build()
     {
-        var client = UseService<IClientProvider>();
+        var appContext = UseService<Ivy.AppContext>();
+        var loginRegistry = UseService<IOAuthLoginRegistry>();
         var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
-        var callback = UseWebhook(async request =>
-        {
-            await _connectedAccounts.HandleConnectCallbackAsync(OAuthProviders.GitHub, request);
-        });
 
         UseEffect(() =>
         {
@@ -85,11 +83,11 @@ public class ConnectedGitHubSection : ViewBase
         {
             return Layout.Vertical(
                 Text.H3("Connected Accounts"),
-                new Button("Connect GitHub", async () =>
-                {
-                    var uri = await _connectedAccounts.ConnectAccountAsync(OAuthProviders.GitHub, callback);
-                    client.OpenUrl(uri.ToString());
-                }, icon: Icons.Github, variant: ButtonVariant.Outline)
+                new Button("Connect GitHub")
+                    .Icon(Icons.Github)
+                    .Variant(ButtonVariant.Outline)
+                    .Url(BuildConnectUrl(appContext, loginRegistry, OAuthProviders.GitHub))
+                    .OpenInNewTab()
             ).Gap(10);
         }
 
@@ -105,5 +103,16 @@ public class ConnectedGitHubSection : ViewBase
             ).Gap(10).AlignContent(Align.Center),
             new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!)
         ).Gap(10);
+    }
+
+    private static string BuildConnectUrl(Ivy.AppContext appContext, IOAuthLoginRegistry loginRegistry, string provider)
+    {
+        var loginId = loginRegistry.RegisterPending(
+            appContext.ConnectionId,
+            provider,
+            provider
+        );
+
+        return $"{appContext.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login?loginId={Uri.EscapeDataString(loginId)}";
     }
 }

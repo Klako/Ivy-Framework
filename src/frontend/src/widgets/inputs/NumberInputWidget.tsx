@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { useOptimisticValue } from "./shared/useOptimisticValue";
 import { useEventHandler, EventHandler } from "@/components/event-handler";
 import NumberInput from "@/components/NumberInput";
@@ -259,6 +259,24 @@ const NumberVariant = memo(
     autoFocus,
     "data-testid": dataTestId,
   }: NumberInputBaseProps) => {
+    const [isFocused, setIsFocused] = useState(false);
+
+    const handleFocus = useCallback(
+      (e: React.FocusEvent) => {
+        setIsFocused(true);
+        onFocus?.(e);
+      },
+      [onFocus],
+    );
+
+    const handleBlur = useCallback(
+      (e: React.FocusEvent) => {
+        setIsFocused(false);
+        onBlur?.(e);
+      },
+      [onBlur],
+    );
+
     const isBytesFormat = formatStyle === "Bytes";
 
     const formatConfig = useMemo(() => {
@@ -312,13 +330,22 @@ const NumberVariant = memo(
     return (
       <div
         className={cn(
-          "relative flex items-stretch w-full flex-1 rounded-field border border-input bg-transparent shadow-sm dark:bg-white/5 dark:border-white/10",
+          "relative flex items-stretch w-full flex-1 rounded-field border bg-transparent shadow-sm transition-colors dark:bg-white/5",
+          isFocused
+            ? "border-ring outline-none dark:border-ring"
+            : "border-input dark:border-white/10",
+          invalid && "border-destructive",
           disabled && "cursor-not-allowed opacity-50",
         )}
       >
         {/* Prefix with background and separator */}
         {hasPrefix && (
-          <div className="flex items-center px-3 bg-muted text-muted-foreground border-r border-input rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]">
+          <div
+            className={cn(
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]",
+              !isFocused && "border-r border-input",
+            )}
+          >
             {prefixContent}
           </div>
         )}
@@ -336,8 +363,8 @@ const NumberVariant = memo(
             density={density}
             autoFocus={autoFocus}
             onChange={handleNumberChange}
-            onBlur={onBlur}
-            onFocus={onFocus}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
             className={cn(
               "border-0 shadow-none",
               invalid && inputStyles.invalidInput,
@@ -371,7 +398,12 @@ const NumberVariant = memo(
 
         {/* Suffix with background and separator */}
         {hasSuffix && (
-          <div className="flex items-center px-3 bg-muted text-muted-foreground border-l border-input rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]">
+          <div
+            className={cn(
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]",
+              !isFocused && "border-l border-input",
+            )}
+          >
             {suffixContent}
           </div>
         )}

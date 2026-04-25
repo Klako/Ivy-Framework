@@ -142,6 +142,7 @@ export function createDateCell(
   columnType: string,
   editable: boolean,
   align?: Align,
+  wrapText?: boolean,
 ): GridCell | null {
   const dateValue = parseDateValue(cellValue);
 
@@ -158,6 +159,7 @@ export function createDateCell(
     allowOverlay: editable,
     readonly: !editable,
     contentAlign: align ? getContentAlign(align) : undefined,
+    allowWrapping: wrapText ?? false,
   };
 }
 
@@ -200,7 +202,12 @@ export function createBooleanCell(cellValue: boolean, editable: boolean, align?:
 /**
  * Creates a text cell
  */
-export function createTextCell(cellValue: unknown, editable: boolean, align?: Align): GridCell {
+export function createTextCell(
+  cellValue: unknown,
+  editable: boolean,
+  align?: Align,
+  wrapText?: boolean,
+): GridCell {
   const stringValue = String(cellValue);
 
   return {
@@ -210,6 +217,7 @@ export function createTextCell(cellValue: unknown, editable: boolean, align?: Al
     allowOverlay: editable,
     readonly: !editable,
     contentAlign: align ? getContentAlign(align) : undefined,
+    allowWrapping: wrapText ?? false,
   };
 }
 
@@ -409,7 +417,7 @@ export function getCellContent(
 
   // Handle Date and DateTime types
   if (isDateColumnType(columnType)) {
-    const dateCell = createDateCell(cellValue, columnType, editable, align);
+    const dateCell = createDateCell(cellValue, columnType, editable, align, column.wrapText);
     if (dateCell) {
       return dateCell;
     }
@@ -430,7 +438,7 @@ export function getCellContent(
   // Now that column.type is properly preserved from backend (#1273), we don't need this fallback
 
   // Default to text
-  return createTextCell(cellValue, editable, align);
+  return createTextCell(cellValue, editable, align, column.wrapText);
 }
 
 /**

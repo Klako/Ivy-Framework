@@ -25,9 +25,9 @@ const _getWantedWidth = (width?: string): React.CSSProperties => {
     case "units":
       return { width: `${remValue}rem`, maxWidth: `${remValue}rem` };
     case "px":
-      return { width: `${value}px` };
+      return { width: `${value}px`, maxWidth: `${value}px` };
     case "rem":
-      return { width: `${value}rem` };
+      return { width: `${value}rem`, maxWidth: `${value}rem` };
     case "fraction":
       return {
         width: `${parseFloat(value) * 100}%`,

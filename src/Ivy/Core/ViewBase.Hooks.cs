@@ -225,7 +225,7 @@ public abstract partial class ViewBase
         string suggestedName) =>
         this.Context.UseSaveDialog(contentFactory, mimeType, suggestedName);
 
-    protected (object? dialogView, ShowFolderDialogDelegate showFolderDialog) UseFolderDialog() =>
+    protected (object? dialogView, ShowFolderDialogDelegate showFolderDialog, IState<string?> selectedPath) UseFolderDialog() =>
         this.Context.UseFolderDialog();
 
     protected IWriteStream<T> UseStream<T>() =>

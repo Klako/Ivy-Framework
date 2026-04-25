@@ -60,10 +60,11 @@ public class ConnectedAccountTestSection : ViewBase
 
     public override object? Build()
     {
-        var gitHubSession = _connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
-        if (gitHubSession?.AuthToken == null)
+        var isGitHubConnected = UseConnectedAccountState(OAuthProviders.GitHub);
+        if (!isGitHubConnected.Value)
             return null;
 
-        return new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession);
+        var gitHubSession = _connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
+        return new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!);
     }
 }

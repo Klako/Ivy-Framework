@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Ivy.IvyML;
 using Spectre.Console.Cli;
 
 namespace Ivy.IvyML.Console;

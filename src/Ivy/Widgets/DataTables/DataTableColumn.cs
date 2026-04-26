@@ -39,6 +39,11 @@ public class DataTableColumn
 
     [JsonIgnore]
     public IDataTableColumnRenderer? Renderer { get; set; } = null;
+
+    /// <summary>
+    /// Link type for LinkDisplayRenderer ("url", "email", "phone"). Sent to frontend for URL scheme handling.
+    /// </summary>
+    public string? LinkType { get; set; } = null;
 }
 
 public enum SortDirection
@@ -124,6 +129,7 @@ public enum LinkDisplayType
     Url,
     Email,
     Phone,
+    [Obsolete("Button type is deprecated. Use explicit button renderers instead.")]
     Button
 }
 

@@ -225,6 +225,42 @@ A free-form layout that positions children at absolute coordinates using attache
 | `CanvasLeft` | Size | Horizontal offset from left edge    |
 | `CanvasTop`  | Size | Vertical offset from top edge       |
 
+## Widget Defaults
+
+Many widgets have built-in defaults. **Do not set an attribute if it matches the default** -- it adds noise without changing behavior. Use `ivyml docs <widget>` to see all defaults for a specific widget.
+
+| Widget       | Prop          | Default      |
+|--------------|---------------|--------------|
+| StackLayout  | Orientation   | Vertical     |
+| StackLayout  | RowGap        | 4            |
+| StackLayout  | ColumnGap     | 4            |
+| GridLayout   | RowGap        | 4            |
+| GridLayout   | ColumnGap     | 4            |
+| Button       | Variant       | Primary      |
+| Button       | IconPosition  | Left         |
+| Button       | BorderRadius  | Rounded      |
+| Badge        | IconPosition  | Left         |
+| TextBlock    | Variant       | Literal      |
+| Separator    | Orientation   | Horizontal   |
+| Card         | HoverVariant  | None         |
+| Box          | BorderRadius  | Rounded      |
+| Box          | BorderStyle   | Solid        |
+| Box          | Padding       | 2            |
+
+For example, these two are equivalent:
+
+```xml
+<!-- Redundant -- don't do this -->
+<StackLayout Orientation="Vertical" RowGap="4" ColumnGap="4">
+  <Button Title="Submit" Variant="Primary" />
+</StackLayout>
+
+<!-- Clean -- use this -->
+<StackLayout>
+  <Button Title="Submit" />
+</StackLayout>
+```
+
 ## Examples
 
 Simple text:
@@ -252,6 +288,27 @@ Badge:
 Progress bar:
 ```xml
 <Progress Value="75" />
+```
+
+Composed example -- a bordered box with header, badges, progress bar, and buttons:
+```xml
+<Box Width="400px" Padding="6">
+  <StackLayout>
+    <TextBlock Content="Project Status" Variant="H3" />
+    <TextBlock Content="Sprint 12 is 75% complete." Variant="Muted" />
+    <Separator />
+    <StackLayout>
+      <Badge Title="Auth service" Variant="Success" />
+      <Badge Title="Dashboard UI" Variant="Warning" />
+      <Badge Title="API docs" Variant="Info" />
+    </StackLayout>
+    <Progress Value="75" />
+    <StackLayout Orientation="Horizontal">
+      <Button Title="View Details" Variant="Outline" />
+      <Button Title="Mark Complete" Variant="Success" />
+    </StackLayout>
+  </StackLayout>
+</Box>
 ```
 
 Wireframe sketch:

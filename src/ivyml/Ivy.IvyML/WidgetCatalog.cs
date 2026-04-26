@@ -4,7 +4,7 @@ using Ivy.Core;
 
 namespace Ivy.IvyML;
 
-public record WidgetPropInfo(string Name, string Type, bool IsNullable, string? DefaultValue, string[]? EnumValues);
+public record WidgetPropInfo(string Name, string Type, bool IsNullable, string? DefaultValue, string[]? EnumValues, bool IsInherited);
 
 public record WidgetEventInfo(string Name);
 
@@ -59,6 +59,8 @@ public static class WidgetCatalog
         return catalog;
     }
 
+    private static readonly Type BaseWidgetType = typeof(WidgetBase);
+
     private static WidgetPropInfo[] GetProps(Type type)
     {
         object? defaultInstance = null;
@@ -77,19 +79,27 @@ public static class WidgetCatalog
         return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<PropAttribute>() != null)
             .Where(p => p.GetCustomAttribute<PropAttribute>()!.AttachedName == null)
-            .Select(p => BuildPropInfo(p, defaultInstance))
+            .Select(p => BuildPropInfo(p, defaultInstance, type))
             .ToArray();
     }
 
-    private static WidgetPropInfo BuildPropInfo(PropertyInfo prop, object? defaultInstance)
+    private static WidgetPropInfo BuildPropInfo(PropertyInfo prop, object? defaultInstance, Type declaringWidgetType)
     {
         var propType = prop.PropertyType;
         var underlying = Nullable.GetUnderlyingType(propType);
         var isNullable = underlying != null;
         var effectiveType = underlying ?? propType;
 
+        var isResponsive = false;
         if (effectiveType.IsGenericType && effectiveType.GetGenericTypeDefinition() == typeof(Responsive<>))
+        {
             effectiveType = effectiveType.GetGenericArguments()[0];
+            isResponsive = true;
+        }
+
+        var innerNullable = Nullable.GetUnderlyingType(effectiveType);
+        if (innerNullable != null)
+            effectiveType = innerNullable;
 
         string? defaultValue = null;
         if (defaultInstance != null)
@@ -98,7 +108,19 @@ public static class WidgetCatalog
             {
                 var val = prop.GetValue(defaultInstance);
                 if (val != null)
-                    defaultValue = FormatDefault(val, effectiveType);
+                {
+                    if (isResponsive)
+                    {
+                        var defProp = val.GetType().GetProperty("Default");
+                        var inner = defProp?.GetValue(val);
+                        if (inner != null)
+                            defaultValue = FormatDefault(inner, effectiveType);
+                    }
+                    else
+                    {
+                        defaultValue = FormatDefault(val, effectiveType);
+                    }
+                }
             }
             catch { /* ignore */ }
         }
@@ -110,7 +132,11 @@ public static class WidgetCatalog
         if (enumType.IsEnum)
             enumValues = Enum.GetNames(enumType);
 
-        return new WidgetPropInfo(prop.Name, FormatTypeName(effectiveType), isNullable, defaultValue, enumValues);
+        var isInherited = prop.DeclaringType != null
+                          && prop.DeclaringType != declaringWidgetType
+                          && BaseWidgetType.IsAssignableFrom(prop.DeclaringType);
+
+        return new WidgetPropInfo(prop.Name, FormatTypeName(effectiveType), isNullable, defaultValue, enumValues, isInherited);
     }
 
     private static WidgetEventInfo[] GetEvents(Type type) =>
@@ -154,6 +180,8 @@ public static class WidgetCatalog
         if (value is int i) return i != 0 ? i.ToString() : null;
         if (value is float f) return f != 0 ? f.ToString() : null;
         if (value is double d) return d != 0 ? d.ToString() : null;
+        if (value is Thickness t) return t != new Thickness(0) ? t.ToString() : null;
+        if (value is Size sz) return sz.ToString();
         return null;
     }
 
@@ -171,43 +199,49 @@ public static class WidgetCatalog
         sb.AppendLine(widget.Name);
         sb.AppendLine();
 
-        if (widget.Props.Length > 0)
+        var ownProps = widget.Props.Where(p => !p.IsInherited).ToArray();
+        var inheritedProps = widget.Props.Where(p => p.IsInherited).ToArray();
+
+        if (ownProps.Length > 0)
         {
             sb.AppendLine("Props:");
-            foreach (var prop in widget.Props)
-            {
-                var def = prop.DefaultValue != null ? $" = {prop.DefaultValue}" : "";
-                var nullable = prop.IsNullable ? "?" : "";
-                sb.Append($"  {prop.Name} : {prop.Type}{nullable}{def}");
-                if (prop.EnumValues is { Length: > 0 })
-                {
-                    if (prop.Type == "Icons")
-                        sb.Append(" [use `ivyml icons <search>` to find values]");
-                    else
-                        sb.Append($" [{string.Join(", ", prop.EnumValues)}]");
-                }
+            FormatProps(sb, ownProps);
+        }
+
+        if (inheritedProps.Length > 0)
+        {
+            if (ownProps.Length > 0)
                 sb.AppendLine();
-            }
+            sb.AppendLine("Inherited props (from WidgetBase):");
+            FormatProps(sb, inheritedProps);
         }
 
         if (widget.Slots.Length > 0)
         {
-            if (widget.Props.Length > 0)
-                sb.AppendLine();
+            sb.AppendLine();
             sb.AppendLine("Slots:");
             foreach (var slot in widget.Slots)
                 sb.AppendLine($"  {slot.Name}");
         }
 
-        if (widget.Events.Length > 0)
-        {
-            if (widget.Props.Length > 0 || widget.Slots.Length > 0)
-                sb.AppendLine();
-            sb.AppendLine("Events:");
-            foreach (var evt in widget.Events)
-                sb.AppendLine($"  {evt.Name}");
-        }
-
         return sb.ToString().TrimEnd();
+    }
+
+    private static void FormatProps(StringBuilder sb, WidgetPropInfo[] props)
+    {
+        foreach (var prop in props)
+        {
+            var def = prop.DefaultValue != null ? $" = {prop.DefaultValue}" : "";
+            var nullable = prop.IsNullable ? "?" : "";
+            sb.Append($"  {prop.Name} : {prop.Type}{nullable}{def}");
+            if (prop.EnumValues is { Length: > 0 })
+            {
+                if (prop.Type == "Icons")
+                    sb.Append(" [use `ivyml icons <search>` to find values]");
+                else
+                    sb.Append($" [{string.Join(", ", prop.EnumValues)}]");
+            }
+            sb.AppendLine();
+        }
     }
 }

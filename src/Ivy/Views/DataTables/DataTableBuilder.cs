@@ -342,6 +342,11 @@ public class DataTableBuilder<TModel>(
             column.Column.BadgeColorMapping = labelsRenderer.BadgeColorMapping;
         }
 
+        if (renderer is LinkDisplayRenderer linkRenderer)
+        {
+            column.Column.LinkType = linkRenderer.Type.ToString().ToLower();
+        }
+
         return this;
     }
 

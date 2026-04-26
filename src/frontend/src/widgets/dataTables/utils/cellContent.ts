@@ -333,18 +333,41 @@ export function createLabelsCell(
  * Creates a link cell with custom renderer (blue text + underline)
  */
 export function createLinkCell(
-  url: string,
+  value: string,
   _editable: boolean, // Intentionally unused - links are always readonly
   align?: Align,
+  linkType?: string,
 ): GridCell {
+  let url: string;
+  let text: string;
+
+  // Check if it's a markdown link [text](url)
+  const markdownMatch = value.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+  if (markdownMatch) {
+    text = markdownMatch[1];
+    url = markdownMatch[2];
+  } else {
+    url = value;
+    text = value; // Backward compatible - show URL as text
+  }
+
+  // Auto-prepend mailto: or tel: for Email/Phone types
+  if (linkType === "email" && !url.startsWith("mailto:")) {
+    url = `mailto:${url}`;
+  } else if (linkType === "phone" && !url.startsWith("tel:")) {
+    url = `tel:${url}`;
+  }
+
   return {
     kind: GridCellKind.Custom,
     data: {
       kind: "link-cell",
       url: url,
+      text: text,
       align: align?.toLowerCase() as "left" | "center" | "right" | undefined,
+      linkType: linkType,
     },
-    copyData: url,
+    copyData: text, // Copy the display text, not the URL
     allowOverlay: false,
     readonly: true,
     cursor: "default",
@@ -412,7 +435,8 @@ export function getCellContent(
 
   // Handle explicit link type from backend metadata
   if (column.type === "Link" && typeof cellValue === "string") {
-    return createLinkCell(cellValue, editable, align);
+    const linkType = column.linkType?.toLowerCase();
+    return createLinkCell(cellValue, editable, align, linkType);
   }
 
   // Handle Date and DateTime types

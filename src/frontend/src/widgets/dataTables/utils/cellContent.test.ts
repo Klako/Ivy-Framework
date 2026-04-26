@@ -374,6 +374,52 @@ describe("cellContent utilities", () => {
         expect(linkData.align).toBe("center");
       }
     });
+
+    it("should parse markdown link syntax [text](url)", () => {
+      const markdownLink = "[View Profile](https://example.com/user/123)";
+      const cell = createLinkCell(markdownLink, false);
+      if (cell.kind === GridCellKind.Custom) {
+        const data = cell.data as { kind: string; url: string; text: string };
+        expect(data.kind).toBe("link-cell");
+        expect(data.url).toBe("https://example.com/user/123");
+        expect(data.text).toBe("View Profile");
+        expect(cell.copyData).toBe("View Profile"); // Copy text, not URL
+      }
+    });
+
+    it("should auto-prepend mailto: for email type links", () => {
+      const cell = createLinkCell("user@example.com", false, undefined, "email");
+      if (cell.kind === GridCellKind.Custom) {
+        const data = cell.data as { kind: string; url: string };
+        expect(data.url).toBe("mailto:user@example.com");
+      }
+    });
+
+    it("should not double-prepend mailto: for email type links", () => {
+      const cell = createLinkCell("mailto:user@example.com", false, undefined, "email");
+      if (cell.kind === GridCellKind.Custom) {
+        const data = cell.data as { kind: string; url: string };
+        expect(data.url).toBe("mailto:user@example.com");
+      }
+    });
+
+    it("should auto-prepend tel: for phone type links", () => {
+      const cell = createLinkCell("+1-555-0123", false, undefined, "phone");
+      if (cell.kind === GridCellKind.Custom) {
+        const data = cell.data as { kind: string; url: string };
+        expect(data.url).toBe("tel:+1-555-0123");
+      }
+    });
+
+    it("should fallback to url as text when markdown is not detected (backward compatibility)", () => {
+      const url = "https://example.com";
+      const cell = createLinkCell(url, false);
+      if (cell.kind === GridCellKind.Custom) {
+        const data = cell.data as { kind: string; url: string; text?: string };
+        expect(data.url).toBe(url);
+        expect(data.text).toBe(url);
+      }
+    });
   });
 
   describe("getOrderedColumns", () => {

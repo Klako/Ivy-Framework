@@ -1,5 +1,10 @@
-import React, { useCallback, useMemo, useRef } from "react";
-import { CustomRenderer, DataEditorRef, GridMouseEventArgs } from "@glideapps/glide-data-grid";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  CompactSelection,
+  CustomRenderer,
+  DataEditorRef,
+  GridMouseEventArgs,
+} from "@glideapps/glide-data-grid";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTable } from "../dataTableContext";
 import { getSelectionProps } from "../utils/selectionModes";
@@ -256,6 +261,25 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     visibleRows,
     wantAggregateFooter,
   );
+
+  // Handle click outside to deselect cells
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the container
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        // Always clear the selection - React handles no-op if already empty
+        setGridSelection({
+          columns: CompactSelection.empty(),
+          rows: CompactSelection.empty(),
+        });
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setGridSelection]);
 
   if (finalColumns.length === 0) {
     return null;

@@ -380,6 +380,7 @@ const CollapsibleMenuItem: React.FC<{
   const shouldBeOpen = expandedSections.has(pathKey) || (item.expanded ?? false);
   const [isOpen, setIsOpen] = useState(shouldBeOpen);
   const [prevShouldBeOpen, setPrevShouldBeOpen] = useState(shouldBeOpen);
+  const [isPenHovered, setIsPenHovered] = useState(false);
   const itemRef = useRef<HTMLLIElement>(null);
 
   // Sync local state with derived state
@@ -417,6 +418,7 @@ const CollapsibleMenuItem: React.FC<{
               className={cn(
                 "group flex w-full items-center gap-2 rounded-selector p-2 text-large-label hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
                 isActive && "bg-secondary text-accent-foreground",
+                isPenHovered && "bg-secondary text-accent-foreground",
               )}
               onClick={() => {
                 // For items with children, toggle the collapsible state
@@ -426,6 +428,16 @@ const CollapsibleMenuItem: React.FC<{
                 }
               }}
               onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
+              onPointerEnter={(e) => {
+                if (e.pointerType === "pen") {
+                  setIsPenHovered(true);
+                }
+              }}
+              onPointerLeave={(e) => {
+                if (e.pointerType === "pen") {
+                  setIsPenHovered(false);
+                }
+              }}
             >
               <Icon name={item.icon} size={16} />
               <span className="text-sm">{item.label}</span>
@@ -458,9 +470,20 @@ const CollapsibleMenuItem: React.FC<{
           className={cn(
             "flex w-full items-center gap-2 rounded-selector p-2 text-large-label hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
             isActive && "bg-secondary text-accent-foreground",
+            isPenHovered && "bg-secondary text-accent-foreground",
           )}
           onClick={() => onItemClick(item)}
           onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
+          onPointerEnter={(e) => {
+            if (e.pointerType === "pen") {
+              setIsPenHovered(true);
+            }
+          }}
+          onPointerLeave={(e) => {
+            if (e.pointerType === "pen") {
+              setIsPenHovered(false);
+            }
+          }}
         >
           <Icon name={item.icon} size={16} />
           <span className="text-sm">{item.label}</span>
@@ -469,6 +492,44 @@ const CollapsibleMenuItem: React.FC<{
       </li>
     );
   }
+};
+
+// Helper component to handle pen hover state for menu items
+const MenuItemButton: React.FC<{
+  item: MenuItem;
+  isActive: boolean;
+  level: number;
+  onClick: () => void;
+  onMouseDown: (e: React.MouseEvent) => void;
+}> = ({ item, isActive, level, onClick, onMouseDown }) => {
+  const [isPenHovered, setIsPenHovered] = useState(false);
+
+  return (
+    <button
+      className={cn(
+        "flex w-full items-center gap-2 rounded-selector p-2 hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
+        level === 1 ? "text-body" : "text-body",
+        isActive && "bg-secondary text-accent-foreground",
+        isPenHovered && "bg-secondary text-accent-foreground",
+      )}
+      onClick={onClick}
+      onMouseDown={onMouseDown}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "pen") {
+          setIsPenHovered(true);
+        }
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "pen") {
+          setIsPenHovered(false);
+        }
+      }}
+    >
+      <Icon name={item.icon} size={16} />
+      <span className="text-sm">{item.label}</span>
+      {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+    </button>
+  );
 };
 
 const renderMenuItems = (
@@ -544,35 +605,25 @@ const renderMenuItems = (
       if (level === 1) {
         return (
           <li key={item.tag} data-menu-item={item.tag}>
-            <button
-              className={cn(
-                "flex w-full items-center gap-2 rounded-selector p-2 text-body hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
-                isActive && "bg-secondary text-accent-foreground",
-              )}
+            <MenuItemButton
+              item={item}
+              isActive={isActive}
+              level={level}
               onClick={() => onItemClick(item)}
               onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
-            >
-              <Icon name={item.icon} size={16} />
-              <span className="text-sm">{item.label}</span>
-              {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-            </button>
+            />
           </li>
         );
       } else {
         return (
           <li key={item.tag} data-menu-item={item.tag}>
-            <button
-              className={cn(
-                "flex w-full items-center gap-2 rounded-selector p-2 text-body hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
-                isActive && "bg-secondary text-accent-foreground",
-              )}
+            <MenuItemButton
+              item={item}
+              isActive={isActive}
+              level={level}
               onClick={() => onItemClick(item)}
               onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
-            >
-              <Icon name={item.icon} size={16} />
-              <span className="text-sm">{item.label}</span>
-              {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-            </button>
+            />
           </li>
         );
       }

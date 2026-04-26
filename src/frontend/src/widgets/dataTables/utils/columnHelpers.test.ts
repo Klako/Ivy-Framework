@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { reorderColumns, convertToGridColumns } from "./columnHelpers";
 import type { DataColumn } from "../types/types";
 import { ColType } from "../types/types";
+import type { SortOrder } from "@/services/grpcTableService";
 
 describe("columnHelpers", () => {
   describe("reorderColumns", () => {
@@ -402,6 +403,31 @@ describe("columnHelpers", () => {
       const result = convertToGridColumns(columns, [], {}, false);
       expect(result[0].grow).toBe(2);
       expect(result[1].grow).toBe(1);
+    });
+
+    it("should pass explicit header icon names to the grid column", () => {
+      const columns: DataColumn[] = [
+        { name: "Team", type: ColType.Text, width: 120, icon: "Layers" },
+        { name: "Owner", type: ColType.Text, width: 120, icon: "User" },
+      ];
+      const result = convertToGridColumns(columns, [], {}, false, false);
+      expect(result[0].icon).toBe("Layers");
+      expect(result[1].icon).toBe("User");
+    });
+
+    it("should use ArrowUp / ArrowDown when column is actively sorted", () => {
+      const columns: DataColumn[] = [
+        { name: "Name", type: ColType.Text, width: 150, icon: "User" },
+        { name: "Score", type: ColType.Number, width: 80 },
+      ];
+      const asc: SortOrder[] = [{ column: "Name", direction: "ASC" }];
+      const desc: SortOrder[] = [{ column: "Score", direction: "DESC" }];
+      const ascResult = convertToGridColumns(columns, [], {}, false, true, undefined, asc);
+      const descResult = convertToGridColumns(columns, [], {}, false, true, undefined, desc);
+      expect(ascResult[0].icon).toBe("ArrowUp");
+      expect(ascResult[1].icon).toBe("headerNumber");
+      expect(descResult[0].icon).toBe("User");
+      expect(descResult[1].icon).toBe("ArrowDown");
     });
   });
 });

@@ -1,5 +1,3 @@
-using Ivy.IvyML;
-
 namespace Ivy.IvyML.Test;
 
 public class IvyMLValidatorTests

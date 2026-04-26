@@ -658,6 +658,7 @@ const SidebarMenuSubButton = React.forwardRef<
   }
 >(({ asChild = false, size = "md", isActive, className, ...props }, ref) => {
   const Comp = asChild ? Slot : "a";
+  const [isPenHovered, setIsPenHovered] = React.useState(false);
 
   return (
     <Comp
@@ -671,8 +672,21 @@ const SidebarMenuSubButton = React.forwardRef<
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
         "group-data-[collapsible=icon]:hidden",
+        isPenHovered && "bg-secondary",
         className,
       )}
+      onPointerEnter={(e: React.PointerEvent<HTMLAnchorElement>) => {
+        if (e.pointerType === "pen") {
+          setIsPenHovered(true);
+        }
+        props.onPointerEnter?.(e);
+      }}
+      onPointerLeave={(e: React.PointerEvent<HTMLAnchorElement>) => {
+        if (e.pointerType === "pen") {
+          setIsPenHovered(false);
+        }
+        props.onPointerLeave?.(e);
+      }}
       {...props}
     />
   );

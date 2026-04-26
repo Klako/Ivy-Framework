@@ -43,6 +43,7 @@ public class DataTableMainSample : ViewBase
             .Header(e => e.Name, "Name")
             .Header(e => e.Email, "Email")
             .Header(e => e.Notes, "Notes")
+            .Icon(e => e.Notes, Icons.ListTodo)
             .Header(e => e.IsActive, "Active")
             .Header(e => e.IsManager, "Manager")
             .Header(e => e.HireDate, "Hire Date")
@@ -206,23 +207,63 @@ public class DataTableHeaderSlotsSample : ViewBase
 {
     public override object? Build()
     {
-        var products = new[]
+        var data = new[]
         {
-            new { Id = 1, Product = "Widget A", Price = 29.99m, Stock = 150 },
-            new { Id = 2, Product = "Widget B", Price = 49.99m, Stock = 85 },
-            new { Id = 3, Product = "Widget C", Price = 19.99m, Stock = 320 },
-            new { Id = 4, Product = "Gadget X", Price = 99.99m, Stock = 42 },
-            new { Id = 5, Product = "Gadget Y", Price = 149.99m, Stock = 18 },
+            new { Name = "Ada Lovelace", Team = "Compiler", Priority = "High", LastUpdate = DateTime.UtcNow.AddHours(-1) },
+            new { Name = "Grace Hopper", Team = "Runtime", Priority = "Medium", LastUpdate = DateTime.UtcNow.AddHours(-3) },
+            new { Name = "Linus Torvalds", Team = "Kernel", Priority = "High", LastUpdate = DateTime.UtcNow.AddDays(-1) },
+            new { Name = "Barbara Liskov", Team = "Architecture", Priority = "Low", LastUpdate = DateTime.UtcNow.AddDays(-2) },
         }.AsQueryable();
 
-        return products.ToDataTable()
-            .HeaderLeft(ctx => Layout.Horizontal().Gap(2)
-                | new Button("Export", icon: Icons.Download).Small()
-                | new Badge("Live").Color(Colors.Blue).Small())
-            .HeaderRight(ctx => Layout.Horizontal().Gap(2)
-                | new Badge($"{products.Count()} items").Color(Colors.Green).Small()
-                | new Button("Settings", icon: Icons.Settings).Primary().Small())
-            .Height(Size.Units(80));
+        // Custom header sprites (only columns listed in HeaderIcons). Flag + Clock keep default Lucide.
+        var customUserHeaderSvg = """
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="{fgColor}" stroke-width="1.5" opacity="0.35"/>
+              <circle cx="12" cy="9" r="2.75" stroke="{fgColor}" stroke-width="1.5"/>
+              <path d="M7 18.25c0-2.75 2.25-4.25 5-4.25s5 1.5 5 4.25" stroke="{fgColor}" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            """;
+        var customLayersHeaderSvg = """
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3.5 20.5 8 12 12.5 3.5 8Z" stroke="{fgColor}" stroke-width="1.5" stroke-linejoin="round" fill="{bgColor}" fill-opacity="0.12"/>
+              <path d="M12 8.5 20.5 13 12 17.5 3.5 13Z" stroke="{fgColor}" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+            """;
+
+        return Layout.Vertical().Gap(3)
+            | Text.P(
+                "HeaderLeft / HeaderRight add the table toolbar. "
+                    + "Engineer and Team pass .Icon() names but override only those two via Config.HeaderIcons (stroke-friendly SVGs). "
+                    + "Priority and Last Update use the same .Icon() names with no override — default Lucide sprites.")
+            | data.ToDataTable()
+                .Header(x => x.Name, "Engineer")
+                .Header(x => x.Team, "Team")
+                .Header(x => x.Priority, "Priority")
+                .Header(x => x.LastUpdate, "Last Update")
+                .Icon(x => x.Name, Icons.User)
+                .Icon(x => x.Team, Icons.Layers)
+                .Icon(x => x.Priority, Icons.Flag)
+                .Icon(x => x.LastUpdate, Icons.Clock)
+                .HeaderLeft(_ => Layout.Horizontal().Gap(2)
+                    | new Button("Export", icon: Icons.Download).Small()
+                    | new Badge("Live").Color(Colors.Blue).Small())
+                .HeaderRight(_ => Layout.Horizontal().Gap(2)
+                    | new Badge($"{data.Count()} rows").Color(Colors.Green).Small()
+                    | new Button("Settings", icon: Icons.Settings).Primary().Small())
+                .Config(config =>
+                {
+                    config.AllowSorting = true;
+                    config.ShowSearch = true;
+                    config.AllowFiltering = true;
+                    config.ShowColumnTypeIcons = true;
+                    config.AllowColumnResizing = true;
+                    config.HeaderIcons = new Dictionary<string, string>
+                    {
+                        [Icons.User.ToString()] = customUserHeaderSvg,
+                        [Icons.Layers.ToString()] = customLayersHeaderSvg,
+                    };
+                })
+                .Height(Size.Units(80));
     }
 }
 
@@ -361,9 +402,9 @@ public class DataTablesMillionRowsSample : ViewBase
             .AlignContent(row => row.Id, Align.Left)
             .AlignContent(row => row.Value, Align.Left)
             .AlignContent(row => row.CreatedAt, Align.Left)
-            .Icon(row => row.Id, Icons.Hash.ToString())
-            .Icon(row => row.Value, Icons.FileText.ToString())
-            .Icon(row => row.CreatedAt, Icons.Calendar.ToString())
+            .Icon(row => row.Id, Icons.Hash)
+            .Icon(row => row.Value, Icons.FileText)
+            .Icon(row => row.CreatedAt, Icons.Calendar)
             .Config(config => config.AllowLlmFiltering = true)
             .LoadAllRows(true);
     }

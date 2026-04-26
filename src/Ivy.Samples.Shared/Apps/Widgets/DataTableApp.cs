@@ -131,8 +131,6 @@ public class DataTableMainSample : ViewBase
             .Group(e => e.Email, "Links")
             .Group(e => e.Phone, "Links")
 
-            // Markdown syntax - natural for both static and dynamic content (auto-detected)
-            .ValueAccessor(e => e.ProfileLink, e => $"[View {e.Name}](https://linkedin.com/in/{e.Name})")
             .Renderer(e => e.ProfileLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
 
             // Plain URL - backward compatible
@@ -208,10 +206,10 @@ public class DataTableMainSample : ViewBase
             | "This header demonstrates that the DataTable below correctly calculates its height even when placed inside a vertical layout with other elements."
             | dataTable;
 
-        return new Fragment([content, new EmployeeEditDialog(editModalOpen, editingEmployee, refreshToken, updated =>
+        return new Fragment(content, new EmployeeEditDialog(editModalOpen, editingEmployee, refreshToken, updated =>
         {
             mockService.UpdateEmployee(updated);
-        })]);
+        }));
     }
 }
 

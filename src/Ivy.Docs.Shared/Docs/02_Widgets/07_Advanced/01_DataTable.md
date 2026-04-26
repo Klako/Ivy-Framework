@@ -223,8 +223,30 @@ public class RowActionsDemo : ViewBase
 ```
 
 <Callout Type="tip">
-Use <code>Renderer(expr, new LinkDisplayRenderer { Type = LinkDisplayType.Url })</code> to mark a URL string column as a clickable hyperlink. Click on a link to open it. External links (http/https) open in a new focused tab, while relative URLs navigate in the same tab.
+Use <code>Renderer(expr, new LinkDisplayRenderer { Type = LinkDisplayType.Url })</code> to mark a column as a clickable hyperlink. Two input formats are supported:
+<ul>
+  <li><strong>Plain URL:</strong> <code>"https://example.com"</code> — URL is used for both text and href (backward compatible)</li>
+  <li><strong>Markdown syntax:</strong> <code>"[Display Text](https://...)"</code> — Automatically parsed to extract custom text and URL</li>
+</ul>
+External links (http/https) open in a new focused tab, while relative URLs navigate in the same tab. Email and Phone types auto-prepend <code>mailto:</code> and <code>tel:</code> URI schemes.
 </Callout>
+
+**Examples:**
+
+```csharp
+// Simple URL (text = URL)
+.Renderer(e => e.Website, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+
+// Markdown link syntax (auto-detected)
+.ValueAccessor(e => e.ProfileLink, e => $"[{e.Name}](https://app.com/users/{e.Id})")
+.Renderer(e => e.ProfileLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+
+// Email (auto-prepends mailto:)
+.Renderer(e => e.Email, new LinkDisplayRenderer { Type = LinkDisplayType.Email })
+
+// Phone (auto-prepends tel:)
+.Renderer(e => e.Phone, new LinkDisplayRenderer { Type = LinkDisplayType.Phone })
+```
 
 ## Cell Click Events
 

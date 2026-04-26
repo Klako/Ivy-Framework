@@ -127,9 +127,21 @@ public class DataTableMainSample : ViewBase
             })
             .Group(e => e.WidgetLink, "Links")
             .Group(e => e.ProfileLink, "Links")
+            .Group(e => e.Email, "Links")
+            .Group(e => e.Phone, "Links")
 
-            .Renderer(e => e.WidgetLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+            // Markdown syntax - natural for both static and dynamic content (auto-detected)
+            .ValueAccessor(e => e.ProfileLink, e => $"[View {e.Name}](https://linkedin.com/in/{e.Name})")
             .Renderer(e => e.ProfileLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+
+            // Plain URL - backward compatible
+            .Renderer(e => e.WidgetLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+
+            // Email with auto-prepend
+            .Renderer(e => e.Email, new LinkDisplayRenderer { Type = LinkDisplayType.Email })
+
+            // Phone with auto-prepend
+            .Renderer(e => e.Phone, new LinkDisplayRenderer { Type = LinkDisplayType.Phone })
 
             .Sortable(e => e.Email, false)
             .Sortable(e => e.Notes, false)

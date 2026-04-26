@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { CompactSelection, CustomRenderer, DataEditorRef, GridMouseEventArgs } from "@glideapps/glide-data-grid";
+import {
+  CompactSelection,
+  CustomRenderer,
+  DataEditorRef,
+  GridMouseEventArgs,
+} from "@glideapps/glide-data-grid";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTable } from "../dataTableContext";
 import { getSelectionProps } from "../utils/selectionModes";
@@ -240,12 +245,9 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Check if click is outside the container
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         // Only clear if there's an active selection
-        if (!gridSelection.rows.isEmpty() || !gridSelection.columns.isEmpty()) {
+        if (gridSelection.rows.length > 0 || gridSelection.columns.length > 0) {
           setGridSelection({
             columns: CompactSelection.empty(),
             rows: CompactSelection.empty(),
@@ -254,9 +256,9 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [gridSelection, setGridSelection]);
 

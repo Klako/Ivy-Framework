@@ -1,5 +1,6 @@
 import { MenuItem } from "@/types/widgets";
 import { Align } from "@/lib/styles";
+import type { SpriteMap } from "@glideapps/glide-data-grid";
 export type { Align };
 
 export interface DataRow {
@@ -33,16 +34,17 @@ export interface DataColumn {
   sortable?: boolean;
   sortDirection?: SortDirection;
   filterable?: boolean;
+  align?: Align;
   alignContent?: Align;
   order?: number;
   icon?: string | null;
-  originalWidth?: string; // Original Size string from backend, preserved for grow calculation
+  originalWidth?: string;
   help?: string | null;
   footer?: string[] | null;
-  iconSet?: "lucide" | "custom";
   color?: string | null;
   badgeColorMapping?: Record<string, string> | null;
   linkType?: string | null; // Link type for LinkDisplayRenderer ("url", "email", "phone")
+  wrapText?: boolean;
 }
 
 export interface DataTableConnection {
@@ -73,12 +75,7 @@ export interface DataTableConfig {
   showSearch?: boolean;
   enableRowHover?: boolean;
   idColumnName?: string | null;
-}
-
-export interface DataTableCellUpdate {
-  rowId: string | number;
-  columnName: string;
-  value: unknown;
+  headerIcons?: Record<string, string> | null;
 }
 
 export interface TableProps {
@@ -86,13 +83,21 @@ export interface TableProps {
   columns: DataColumn[];
   connection: DataTableConnection;
   config?: DataTableConfig;
+  headerIcons?: SpriteMap;
   editable?: boolean;
   width?: string;
   height?: string;
   rowActions?: MenuItem[];
+  perRowActions?: Record<string, MenuItem[]>;
   updateStream?: { id: string };
   onCellUpdate?: (row: number, col: number, value: unknown) => void;
   "data-testid"?: string;
+}
+
+export interface DataTableCellUpdate {
+  rowId: string | number;
+  columnName: string;
+  value: unknown;
 }
 
 export enum FilterTypes {

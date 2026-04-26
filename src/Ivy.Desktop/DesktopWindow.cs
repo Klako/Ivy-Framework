@@ -6,8 +6,9 @@ using Rustino.NET;
 
 namespace Ivy.Desktop;
 
-public class DesktopWindow(Server server)
+public class DesktopWindow
 {
+    private readonly Server server;
     private string _title = Assembly.GetEntryAssembly()?.GetName().Name ?? "Ivy App";
     private int _width = 1280;
     private int _height = 800;
@@ -35,6 +36,19 @@ public class DesktopWindow(Server server)
     private DesktopMenu? _menu;
     private Action<DesktopWindow>? _onReady;
     private RustinoWindow? _window;
+    private string? _splashImagePath;
+    private Assembly? _splashImageAssembly;
+    private string? _splashImageResourceName;
+    private int _splashWidth = 400;
+    private int _splashHeight = 300;
+    private string? _appId;
+
+    public DesktopWindow(Server server)
+    {
+        this.server = server;
+        // Ensure auth cookies work over HTTP in desktop mode
+        server.SetForceNonSecureCookies(true);
+    }
 
     public DesktopWindow Title(string title) { _title = title; return this; }
     public DesktopWindow Size(int width, int height) { _width = width; _height = height; return this; }
@@ -57,6 +71,24 @@ public class DesktopWindow(Server server)
     public DesktopWindow InitScript(string js) { _initScripts.Add(js); return this; }
     public DesktopWindow Menu(DesktopMenu menu) { _menu = menu; return this; }
     public DesktopWindow OnReady(Action<DesktopWindow> callback) { _onReady = callback; return this; }
+    public DesktopWindow AppId(string appId) { _appId = appId; return this; }
+
+    public DesktopWindow Splash(string imagePath, int width = 400, int height = 300)
+    {
+        _splashImagePath = imagePath;
+        _splashWidth = width;
+        _splashHeight = height;
+        return this;
+    }
+
+    public DesktopWindow Splash(Type typeInAssembly, string resourceName, int width = 400, int height = 300)
+    {
+        _splashImageAssembly = typeInAssembly.Assembly;
+        _splashImageResourceName = resourceName;
+        _splashWidth = width;
+        _splashHeight = height;
+        return this;
+    }
 
     /// <summary>
     /// Sets the window icon from an embedded resource.
@@ -181,8 +213,8 @@ public class DesktopWindow(Server server)
 
     // ── Notifications (static) ───────────────────────────────────────────
 
-    public static bool ShowNotification(string title, string body, string? iconPath = null)
-        => RustinoWindow.ShowNotification(title, body, iconPath);
+    public static bool ShowNotification(string title, string body, string? iconPath = null, string? appId = null)
+        => RustinoWindow.ShowNotification(title, body, iconPath, appId);
 
     // ── Run ──────────────────────────────────────────────────────────────
 
@@ -218,6 +250,9 @@ public class DesktopWindow(Server server)
     {
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
+        // Force HTTP for all desktop apps (WKWebView doesn't trust dev certs)
+        Environment.SetEnvironmentVariable("IVY_TLS", "false");
+
         server.Services.AddSingleton(this);
 
         var cts = new CancellationTokenSource();
@@ -227,14 +262,17 @@ public class DesktopWindow(Server server)
         // FindAvailablePort) completes before the first await, so Args.Port is
         // already updated to the actual port the server will bind to.
         var port = server.Args.Port;
-        var ivyTlsEnv = Environment.GetEnvironmentVariable("IVY_TLS");
-        var useTls = !string.IsNullOrEmpty(ivyTlsEnv)
-            ? ivyTlsEnv?.ToLowerInvariant() is "1" or "true" or "yes" or "on"
-            : true; // Default to true if not overridden
-        var url = $"{(useTls ? "https" : "http")}://localhost:{port}";
+        var url = $"http://localhost:{port}";  // Always HTTP in desktop mode
+
+        // Show splash while the server starts
+        RustinoSplashscreen? splash = null;
+        try { splash = CreateSplashscreen(); } catch { }
 
         // Wait for the server to become ready (or detect early failure).
         WaitForServerReady(serverTask, url);
+
+        splash?.Dispose();
+        splash = null;
 
         string? tempLoadingPath = null;
         try
@@ -246,6 +284,8 @@ public class DesktopWindow(Server server)
             tempLoadingPath = Path.Combine(Path.GetTempPath(), $"ivy_loading_{Guid.NewGuid():N}.html");
             File.WriteAllText(tempLoadingPath, loadingHtml);
             _window.Load(new Uri(tempLoadingPath));
+
+            if (_menu != null) _window.SetMenu(_menu.ToRustinoMenu());
 
             _onReady?.Invoke(this);
 
@@ -284,7 +324,7 @@ public class DesktopWindow(Server server)
             .SetTitle(_title)
             .SetResizable(_resizable)
             .SetTopMost(_topMost)
-            .SetJavascriptClipboardAccessEnabled(false)
+            .SetJavascriptClipboardAccessEnabled(true)
             .SetDevToolsEnabled(_devTools)
             .SetIgnoreCertificateErrorsEnabled(true)
             .SetWebSecurityEnabled(false);
@@ -301,7 +341,6 @@ public class DesktopWindow(Server server)
         if (_zoomHotkeys) window.SetZoomHotkeysEnabled(true);
         if (!_mediaAutoplay) window.SetMediaAutoplayEnabled(false);
         foreach (var script in _initScripts) window.AddInitScript(script);
-        if (_menu != null) window.SetMenu(_menu.ToRustinoMenu());
 
         if (_iconFilePath != null)
         {
@@ -466,6 +505,21 @@ public class DesktopWindow(Server server)
 
         throw new TimeoutException(
             $"The Ivy server did not respond within {timeoutMs / 1000} seconds at {healthUrl}.");
+    }
+
+    private RustinoSplashscreen? CreateSplashscreen()
+    {
+        if (_splashImagePath != null)
+            return new RustinoSplashscreen(_splashImagePath, _splashWidth, _splashHeight);
+
+        if (_splashImageAssembly != null && _splashImageResourceName != null)
+        {
+            using var stream = _splashImageAssembly.GetManifestResourceStream(_splashImageResourceName);
+            if (stream != null)
+                return RustinoSplashscreen.FromImage(stream, _splashWidth, _splashHeight);
+        }
+
+        return null;
     }
 
     private static string? ExtractEmbeddedIcon(Assembly assembly, string resourceName)

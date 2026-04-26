@@ -251,12 +251,12 @@ export const ButtonWidget: React.FC<ButtonWidgetProps> = ({
             title
           )}
           {badge && (
-            <Badge variant="outline" className="ml-1 w-min whitespace-nowrap">
+            <Badge variant="outline" className="ml-1 w-min whitespace-nowrap text-inherit">
               {badge}
             </Badge>
           )}
           {shortcutKey && title && (
-            <kbd className="ml-1 px-1 py-0.5 text-[0.65rem] font-medium text-muted-foreground bg-muted border border-border rounded-selector">
+            <kbd className="ml-1 px-1 py-0.5 text-[0.65rem] font-medium border border-current/20 rounded-selector opacity-70">
               {shortcutDisplay}
             </kbd>
           )}

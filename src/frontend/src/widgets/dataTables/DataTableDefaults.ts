@@ -20,6 +20,7 @@ export const DATA_COLUMN_DEFAULTS: Partial<DataColumn> = {
   help: null,
   footer: null,
   color: null,
+  wrapText: false,
 };
 
 // DataTableConfig defaults (DataTableConfig.cs)
@@ -41,6 +42,7 @@ export const DATA_TABLE_CONFIG_DEFAULTS: Partial<DataTableConfig> = {
   enableCellClickEvents: false,
   showSearch: false,
   idColumnName: null,
+  headerIcons: null,
 };
 
 /**
@@ -57,6 +59,7 @@ export function applyColumnDefaults(column: DataColumn): DataColumn {
     filterable: column.filterable ?? DATA_COLUMN_DEFAULTS.filterable,
     alignContent: column.alignContent ?? DATA_COLUMN_DEFAULTS.alignContent,
     order: column.order ?? DATA_COLUMN_DEFAULTS.order,
+    wrapText: column.wrapText ?? DATA_COLUMN_DEFAULTS.wrapText,
   } as DataColumn;
 }
 

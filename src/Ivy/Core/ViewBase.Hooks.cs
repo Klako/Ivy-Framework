@@ -225,7 +225,7 @@ public abstract partial class ViewBase
         string suggestedName) =>
         this.Context.UseSaveDialog(contentFactory, mimeType, suggestedName);
 
-    protected (object? dialogView, ShowFolderDialogDelegate showFolderDialog) UseFolderDialog() =>
+    protected (object? dialogView, ShowFolderDialogDelegate showFolderDialog, IState<string?> selectedPath) UseFolderDialog() =>
         this.Context.UseFolderDialog();
 
     protected IWriteStream<T> UseStream<T>() =>
@@ -239,6 +239,28 @@ public abstract partial class ViewBase
 
     protected Action<string> UseClipboard() =>
         this.Context.UseClipboard();
+
+    protected IState<bool> UseConnectedAccountState(string provider)
+    {
+        var connectedAccounts = UseService<IConnectedAccountsService>();
+        var isConnected = UseState(() => connectedAccounts.GetAccountSession(provider)?.AuthToken != null);
+
+        UseEffect(() =>
+        {
+            connectedAccounts.AccountConnected += OnConnected;
+            connectedAccounts.AccountDisconnected += OnDisconnected;
+            return System.Reactive.Disposables.Disposable.Create(() =>
+            {
+                connectedAccounts.AccountConnected -= OnConnected;
+                connectedAccounts.AccountDisconnected -= OnDisconnected;
+            });
+
+            void OnConnected(string p) { if (p == provider) isConnected.Set(true); }
+            void OnDisconnected(string p) { if (p == provider) isConnected.Set(false); }
+        }, [EffectTrigger.OnMount()]);
+
+        return isConnected;
+    }
 
     protected static EffectTrigger OnMount() =>
         EffectTrigger.OnMount();

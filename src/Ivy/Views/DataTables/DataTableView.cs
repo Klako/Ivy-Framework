@@ -19,7 +19,8 @@ public class DataTableView(
     FuncViewBuilder? emptyViewFactory = null,
     FuncViewBuilder? headerLeftFactory = null,
     FuncViewBuilder? headerRightFactory = null,
-    IWriteStream<DataTableCellUpdate>? updateStream = null) : ViewBase, IMemoized
+    IWriteStream<DataTableCellUpdate>? updateStream = null,
+    Dictionary<string, MenuItem[]>? perRowActions = null) : ViewBase, IMemoized
 {
     public override object? Build()
     {
@@ -35,6 +36,7 @@ public class DataTableView(
             OnCellClick = onCellClick.ToEventHandler(),
             OnCellActivated = onCellActivated.ToEventHandler(),
             RowActions = rowActions,
+            PerRowActions = perRowActions,
             OnRowAction = onRowAction.ToEventHandler(),
             UpdateStream = updateStream
         };
@@ -59,6 +61,6 @@ public class DataTableView(
         // Memoize based on queryable and configuration
         // Don't include the queryable itself as it might change reference
         // Only memoize if all inputs are stable
-        return [(object?)width!, (object?)height!, columns, config, refreshToken?.Token!];
+        return [(object?)width!, (object?)height!, columns, config, refreshToken?.Token!, density];
     }
 }

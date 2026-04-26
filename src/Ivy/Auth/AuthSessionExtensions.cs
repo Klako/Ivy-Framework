@@ -31,13 +31,15 @@ public static class AuthSessionExtensions
         {
             AuthToken = authSession.AuthToken,
             BrokeredSessions = new Dictionary<string, IAuthTokenHandlerSession>(authSession.BrokeredSessions),
+            ConnectedAccounts = new Dictionary<string, IAuthSession>(authSession.ConnectedAccounts),
             AuthSessionData = authSession.AuthSessionData,
         };
 
     public static bool HasChangedSince(this IAuthSession authSession, AuthSessionSnapshot snapshot)
         => authSession.AuthToken != snapshot.AuthToken ||
            authSession.AuthSessionData != snapshot.AuthSessionData ||
-           !BrokeredSessionsEqual(authSession.BrokeredSessions, snapshot.BrokeredSessions);
+           !BrokeredSessionsEqual(authSession.BrokeredSessions, snapshot.BrokeredSessions) ||
+           !ConnectedAccountsEqual(authSession.ConnectedAccounts, snapshot.ConnectedAccounts);
 
     private static bool BrokeredSessionsEqual(
         IReadOnlyDictionary<string, IAuthTokenHandlerSession> current,
@@ -53,6 +55,29 @@ public static class AuthSessionExtensions
             }
 
             // Compare the sessions by their auth tokens
+            if (kvp.Value.AuthToken != snapshotSession.AuthToken ||
+                kvp.Value.AuthSessionData != snapshotSession.AuthSessionData)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool ConnectedAccountsEqual(
+        IReadOnlyDictionary<string, IAuthSession> current,
+        IReadOnlyDictionary<string, IAuthSession> snapshot)
+    {
+        if (current.Count != snapshot.Count) return false;
+
+        foreach (var kvp in current)
+        {
+            if (!snapshot.TryGetValue(kvp.Key, out var snapshotSession))
+            {
+                return false;
+            }
+
             if (kvp.Value.AuthToken != snapshotSession.AuthToken ||
                 kvp.Value.AuthSessionData != snapshotSession.AuthSessionData)
             {

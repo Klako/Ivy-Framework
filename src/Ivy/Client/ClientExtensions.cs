@@ -70,8 +70,6 @@ public static class ClientExtensions
         public required bool ReloadPage { get; set; }
         [DataMember(Name = "triggerMachineReload")]
         public required bool TriggerMachineReload { get; set; }
-        [DataMember(Name = "triggerMachineBrokeredRefresh")]
-        public required bool TriggerMachineBrokeredRefresh { get; set; }
     }
 
     public class SetRootAppIdMessage
@@ -144,7 +142,7 @@ public static class ClientExtensions
         client.Sender.Send("SetTitle", title);
     }
 
-    public static void SetAuthCookies(this IClientProvider client, CookieJarId cookieJarId, bool reloadPage, bool? triggerMachineReload = null, bool triggerMachineBrokeredRefresh = false)
+    public static void SetAuthCookies(this IClientProvider client, CookieJarId cookieJarId, bool reloadPage, bool? triggerMachineReload = null)
     {
         client.Sender.Send(
             "SetAuthCookies",
@@ -153,7 +151,6 @@ public static class ClientExtensions
                 ["cookieJarId"] = cookieJarId.Value,
                 ["reloadPage"] = reloadPage,
                 ["triggerMachineReload"] = triggerMachineReload ?? reloadPage,
-                ["triggerMachineBrokeredRefresh"] = triggerMachineBrokeredRefresh
             });
     }
 
@@ -162,9 +159,9 @@ public static class ClientExtensions
         client.Sender.Send("ReloadPage", new Dictionary<string, object?>());
     }
 
-    public static void RefreshAuthFromCookies(this IClientProvider client)
+    public static void SyncAuthFromCookies(this IClientProvider client)
     {
-        client.Sender.Send("RefreshAuthFromCookies", new Dictionary<string, object?>());
+        client.Sender.Send("SyncAuthFromCookies", new Dictionary<string, object?>());
     }
 
     public static void SetRootAppId(this IClientProvider client, string rootAppId)

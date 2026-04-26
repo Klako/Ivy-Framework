@@ -3,9 +3,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, useReducer } 
 import Icon from "@/components/Icon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { MenuItem, WidgetEventHandlerType } from "@/types/widgets";
 import { useFocusable } from "@/hooks/use-focus-management";
+import { useShortcut } from "@/lib/useShortcut";
 import { sidebarMenuRef } from "./sidebar-refs";
 import { useEventHandler } from "@/components/event-handler";
 import { cn, getAppId } from "@/lib/utils";
@@ -27,6 +29,7 @@ interface SidebarLayoutWidgetProps {
   width?: string; // Width of the sidebar (Size format: "Type:Value,MinType:MinValue,MaxType:MaxValue")
   open?: boolean; // Whether the sidebar starts open (default: true)
   resizable?: boolean; // Enable drag-to-resize on sidebar border
+  sidebarContentScroll?: "None" | "Auto"; // Controls whether sidebar content is wrapped in ScrollArea (default: Auto)
 }
 
 // Helper to parse a Size string to pixels
@@ -87,6 +90,7 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
   width,
   open: openProp = true,
   resizable = false,
+  sidebarContentScroll = "Auto",
 }) => {
   // Parse Size format: "Type:Value,MinType:MinValue,MaxType:MaxValue"
   const [wantedWidth, minWidthStr, maxWidthStr] = (width ?? "").split(",");
@@ -190,6 +194,12 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
     dispatchSidebar({ isManuallyToggled: true });
   }, [dispatchSidebar]);
 
+  // Register keyboard shortcut for toggling sidebar (Ctrl+B)
+  useShortcut("sidebar-layout-toggle", "CTRL+B", handleManualToggle, {
+    skipInInputs: true,
+    disabled: !mainAppSidebar,
+  });
+
   // Auto-collapse/expand based on width (only for main app sidebar)
   useEffect(() => {
     if (!mainAppSidebar) return;
@@ -228,13 +238,16 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
         {hasContent(slots?.SidebarHeader) && (
           <div className="flex flex-col shrink-0 p-2 space-y-4">{slots?.SidebarHeader}</div>
         )}
-        {slots?.SidebarContent && (
-          <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
-            <ScrollArea className="h-full w-full">
-              <div className="p-2 space-y-2">{slots.SidebarContent}</div>
-            </ScrollArea>
-          </div>
-        )}
+        {slots?.SidebarContent &&
+          (sidebarContentScroll === "None" ? (
+            <div className="flex-1 min-h-0 min-w-0 overflow-hidden">{slots.SidebarContent}</div>
+          ) : (
+            <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+              <ScrollArea className="h-full w-full">
+                <div className="p-2 space-y-2">{slots.SidebarContent}</div>
+              </ScrollArea>
+            </div>
+          ))}
         {hasContent(slots?.SidebarFooter) && (
           <div className="flex flex-col shrink-0">
             <div className="flex flex-col p-2 gap-4 min-h-0">{slots?.SidebarFooter}</div>
@@ -282,18 +295,25 @@ export const SidebarLayoutWidget: React.FC<SidebarLayoutWidgetProps> = ({
       >
         {/* Toggle Button - Only show for main app sidebar */}
         {showToggleButton && mainAppSidebar && (
-          <button
-            onClick={handleManualToggle}
-            className="absolute top-0 left-1 z-50 p-2 rounded-selector bg-background hover:bg-muted hover:text-accent-foreground cursor-pointer"
-            style={{ marginTop: "3px" }}
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-          >
-            {isSidebarOpen ? (
-              <PanelLeftClose className="h-4 w-4" />
-            ) : (
-              <PanelLeftOpen className="h-4 w-4" />
-            )}
-          </button>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleManualToggle}
+                  className="absolute top-0 left-1 z-50 p-2 rounded-selector bg-background hover:bg-muted hover:text-accent-foreground cursor-pointer"
+                  style={{ marginTop: "3px" }}
+                  aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+                >
+                  {isSidebarOpen ? (
+                    <PanelLeftClose className="h-4 w-4" />
+                  ) : (
+                    <PanelLeftOpen className="h-4 w-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Toggle sidebar (Ctrl+B)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         {slots?.MainContent}
       </div>
@@ -360,6 +380,7 @@ const CollapsibleMenuItem: React.FC<{
   const shouldBeOpen = expandedSections.has(pathKey) || (item.expanded ?? false);
   const [isOpen, setIsOpen] = useState(shouldBeOpen);
   const [prevShouldBeOpen, setPrevShouldBeOpen] = useState(shouldBeOpen);
+  const [isPenHovered, setIsPenHovered] = useState(false);
   const itemRef = useRef<HTMLLIElement>(null);
 
   // Sync local state with derived state
@@ -397,6 +418,7 @@ const CollapsibleMenuItem: React.FC<{
               className={cn(
                 "group flex w-full items-center gap-2 rounded-selector p-2 text-large-label hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
                 isActive && "bg-secondary text-accent-foreground",
+                isPenHovered && "bg-secondary text-accent-foreground",
               )}
               onClick={() => {
                 // For items with children, toggle the collapsible state
@@ -406,6 +428,16 @@ const CollapsibleMenuItem: React.FC<{
                 }
               }}
               onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
+              onPointerEnter={(e) => {
+                if (e.pointerType === "pen") {
+                  setIsPenHovered(true);
+                }
+              }}
+              onPointerLeave={(e) => {
+                if (e.pointerType === "pen") {
+                  setIsPenHovered(false);
+                }
+              }}
             >
               <Icon name={item.icon} size={16} />
               <span className="text-sm">{item.label}</span>
@@ -438,9 +470,20 @@ const CollapsibleMenuItem: React.FC<{
           className={cn(
             "flex w-full items-center gap-2 rounded-selector p-2 text-large-label hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
             isActive && "bg-secondary text-accent-foreground",
+            isPenHovered && "bg-secondary text-accent-foreground",
           )}
           onClick={() => onItemClick(item)}
           onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
+          onPointerEnter={(e) => {
+            if (e.pointerType === "pen") {
+              setIsPenHovered(true);
+            }
+          }}
+          onPointerLeave={(e) => {
+            if (e.pointerType === "pen") {
+              setIsPenHovered(false);
+            }
+          }}
         >
           <Icon name={item.icon} size={16} />
           <span className="text-sm">{item.label}</span>
@@ -449,6 +492,44 @@ const CollapsibleMenuItem: React.FC<{
       </li>
     );
   }
+};
+
+// Helper component to handle pen hover state for menu items
+const MenuItemButton: React.FC<{
+  item: MenuItem;
+  isActive: boolean;
+  level: number;
+  onClick: () => void;
+  onMouseDown: (e: React.MouseEvent) => void;
+}> = ({ item, isActive, level, onClick, onMouseDown }) => {
+  const [isPenHovered, setIsPenHovered] = useState(false);
+
+  return (
+    <button
+      className={cn(
+        "flex w-full items-center gap-2 rounded-selector p-2 hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
+        level === 1 ? "text-body" : "text-body",
+        isActive && "bg-secondary text-accent-foreground",
+        isPenHovered && "bg-secondary text-accent-foreground",
+      )}
+      onClick={onClick}
+      onMouseDown={onMouseDown}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "pen") {
+          setIsPenHovered(true);
+        }
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "pen") {
+          setIsPenHovered(false);
+        }
+      }}
+    >
+      <Icon name={item.icon} size={16} />
+      <span className="text-sm">{item.label}</span>
+      {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+    </button>
+  );
 };
 
 const renderMenuItems = (
@@ -524,35 +605,25 @@ const renderMenuItems = (
       if (level === 1) {
         return (
           <li key={item.tag} data-menu-item={item.tag}>
-            <button
-              className={cn(
-                "flex w-full items-center gap-2 rounded-selector p-2 text-body hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
-                isActive && "bg-secondary text-accent-foreground",
-              )}
+            <MenuItemButton
+              item={item}
+              isActive={isActive}
+              level={level}
               onClick={() => onItemClick(item)}
               onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
-            >
-              <Icon name={item.icon} size={16} />
-              <span className="text-sm">{item.label}</span>
-              {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-            </button>
+            />
           </li>
         );
       } else {
         return (
           <li key={item.tag} data-menu-item={item.tag}>
-            <button
-              className={cn(
-                "flex w-full items-center gap-2 rounded-selector p-2 text-body hover:bg-secondary hover:text-accent-foreground cursor-pointer h-8 text-left",
-                isActive && "bg-secondary text-accent-foreground",
-              )}
+            <MenuItemButton
+              item={item}
+              isActive={isActive}
+              level={level}
               onClick={() => onItemClick(item)}
               onMouseDown={(e) => onCtrlRightMouseClick(e, item)}
-            >
-              <Icon name={item.icon} size={16} />
-              <span className="text-sm">{item.label}</span>
-              {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-            </button>
+            />
           </li>
         );
       }

@@ -318,6 +318,15 @@ ivy-widget {
   .shadow-selector {
     box-shadow: var(--shadow-selectors);
   }
+
+  .badge-tinted {
+    background-color: var(--badge-tint-bg-light);
+    color: var(--badge-tint-fg-light);
+  }
+  .dark .badge-tinted {
+    background-color: var(--badge-tint-bg-dark);
+    color: var(--badge-tint-fg-dark);
+  }
 }
 
 /* 

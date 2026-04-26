@@ -679,6 +679,7 @@ export const generateTooltip = (
     fontSans: string;
     background: string;
     mutedForeground?: string;
+    card?: string;
   },
   valueFormat?: {
     formatter?: string | null;
@@ -717,9 +718,10 @@ export const generateTooltip = (
         ),
     }),
     textStyle: generateTextStyle(themeColors?.foreground, themeColors?.fontSans),
-    backgroundColor: themeColors?.background || "rgba(255, 255, 255, 0.9)",
-    borderColor: themeColors?.foreground || "#000",
-    borderWidth: 1,
+    backgroundColor: themeColors?.card || themeColors?.background || "rgba(255, 255, 255, 0.9)",
+    borderWidth: 0,
+    extraCssText:
+      "min-width: 180px; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);",
   };
 };
 

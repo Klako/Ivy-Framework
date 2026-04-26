@@ -1,6 +1,6 @@
 import { GridCell, GridCellKind, Item, Theme } from "@glideapps/glide-data-grid";
 import { Align, DataColumn, DataRow } from "../types/types";
-import { getCSSVariable } from "@/lib/theme";
+import { getCSSVariable, isDarkMode } from "@/lib/theme";
 import type { LabelsBadgesCellData } from "./customRenderers";
 
 /**
@@ -142,6 +142,7 @@ export function createDateCell(
   columnType: string,
   editable: boolean,
   align?: Align,
+  wrapText?: boolean,
 ): GridCell | null {
   const dateValue = parseDateValue(cellValue);
 
@@ -158,6 +159,7 @@ export function createDateCell(
     allowOverlay: editable,
     readonly: !editable,
     contentAlign: align ? getContentAlign(align) : undefined,
+    allowWrapping: wrapText ?? false,
   };
 }
 
@@ -200,7 +202,12 @@ export function createBooleanCell(cellValue: boolean, editable: boolean, align?:
 /**
  * Creates a text cell
  */
-export function createTextCell(cellValue: unknown, editable: boolean, align?: Align): GridCell {
+export function createTextCell(
+  cellValue: unknown,
+  editable: boolean,
+  align?: Align,
+  wrapText?: boolean,
+): GridCell {
   const stringValue = String(cellValue);
 
   return {
@@ -210,6 +217,7 @@ export function createTextCell(cellValue: unknown, editable: boolean, align?: Al
     allowOverlay: editable,
     readonly: !editable,
     contentAlign: align ? getContentAlign(align) : undefined,
+    allowWrapping: wrapText ?? false,
   };
 }
 
@@ -433,7 +441,7 @@ export function getCellContent(
 
   // Handle Date and DateTime types
   if (isDateColumnType(columnType)) {
-    const dateCell = createDateCell(cellValue, columnType, editable, align);
+    const dateCell = createDateCell(cellValue, columnType, editable, align, column.wrapText);
     if (dateCell) {
       return dateCell;
     }
@@ -454,7 +462,7 @@ export function getCellContent(
   // Now that column.type is properly preserved from backend (#1273), we don't need this fallback
 
   // Default to text
-  return createTextCell(cellValue, editable, align);
+  return createTextCell(cellValue, editable, align, column.wrapText);
 }
 
 /**
@@ -477,11 +485,7 @@ export function resolveBadgeColor(colorValue: string | null | undefined): {
   }
 
   const lowerColor = colorValue.toLowerCase().replace(/\s+/g, "-");
-  const bgVar = `--${lowerColor}`;
-  const fgVar = `--${lowerColor}-foreground`;
-
-  let bgColor = getCSSVariable(bgVar) || getCSSVariable(`--color-${lowerColor}`);
-  let fgColor = getCSSVariable(fgVar) || getCSSVariable(`--color-${lowerColor}-foreground`);
+  const dark = isDarkMode();
 
   // Shadcn/Tailwind often use raw HSL components in variables
   const wrapInHsl = (val: string) => {
@@ -491,6 +495,22 @@ export function resolveBadgeColor(colorValue: string | null | undefined): {
     if (val.split(/[\s,]+/).filter(Boolean).length >= 3) return `hsl(${val})`;
     return val;
   };
+
+  // Use shade variants to match BadgeWidget styling (light bg, dark text)
+  const bgShade = dark ? "800" : "200";
+  const fgShade = dark ? "100" : "800";
+  let bgColor = getCSSVariable(`--${lowerColor}-${bgShade}`);
+  let fgColor = getCSSVariable(`--${lowerColor}-${fgShade}`);
+
+  // Fall back to base color variables if shade variants aren't available
+  if (!bgColor) {
+    bgColor = getCSSVariable(`--${lowerColor}`) || getCSSVariable(`--color-${lowerColor}`);
+  }
+  if (!fgColor) {
+    fgColor =
+      getCSSVariable(`--${lowerColor}-foreground`) ||
+      getCSSVariable(`--color-${lowerColor}-foreground`);
+  }
 
   return {
     bg: wrapInHsl(bgColor) || undefined,

@@ -228,6 +228,7 @@ export const CodeInputWidget: React.FC<CodeInputWidgetProps> = ({
           data-gramm="false"
           className={cn(
             "h-full",
+            "[&_.cm-theme-light]:overflow-hidden",
             "border border-input shadow-sm rounded-field",
             "dark:bg-white/5 dark:border-white/10",
             invalid && inputStyles.invalid,

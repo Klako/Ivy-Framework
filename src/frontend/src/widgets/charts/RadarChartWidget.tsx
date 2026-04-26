@@ -193,6 +193,7 @@ const RadarChartWidget: React.FC<RadarChartWidgetProps> = ({
           fontSans: themeColors.fontSans,
           background: themeColors.background,
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
         }),
         trigger: "item",
       },

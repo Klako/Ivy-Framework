@@ -246,13 +246,11 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       // Check if click is outside the container
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        // Only clear if there's an active selection
-        if (gridSelection.rows.length > 0 || gridSelection.columns.length > 0) {
-          setGridSelection({
-            columns: CompactSelection.empty(),
-            rows: CompactSelection.empty(),
-          });
-        }
+        // Always clear the selection - React handles no-op if already empty
+        setGridSelection({
+          columns: CompactSelection.empty(),
+          rows: CompactSelection.empty(),
+        });
       }
     };
 
@@ -260,7 +258,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [gridSelection, setGridSelection]);
+  }, [setGridSelection]);
 
   if (finalColumns.length === 0) {
     return null;

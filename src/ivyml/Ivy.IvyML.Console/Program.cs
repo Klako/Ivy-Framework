@@ -9,6 +9,8 @@ app.Configure(config =>
         .WithDescription("Render IvyML to a screenshot image.");
     config.AddCommand<DocsCommand>("docs")
         .WithDescription("Show IvyML documentation and widget reference.");
+    config.AddCommand<IconsCommand>("icons")
+        .WithDescription("Search for icons by name.");
 });
 
 return await app.RunAsync(args);

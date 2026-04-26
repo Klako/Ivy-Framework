@@ -180,7 +180,12 @@ public static class WidgetCatalog
                 var nullable = prop.IsNullable ? "?" : "";
                 sb.Append($"  {prop.Name} : {prop.Type}{nullable}{def}");
                 if (prop.EnumValues is { Length: > 0 })
-                    sb.Append($" [{string.Join(", ", prop.EnumValues)}]");
+                {
+                    if (prop.Type == "Icons")
+                        sb.Append(" [use `ivyml icons <search>` to find values]");
+                    else
+                        sb.Append($" [{string.Join(", ", prop.EnumValues)}]");
+                }
                 sb.AppendLine();
             }
         }

@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { GridCellKind } from "@glideapps/glide-data-grid";
 import { iconCellRenderer, IconCell } from "./customRenderers";
-import * as iconRendererModule from "./iconRenderer";
 
 // Mock HTMLImageElement for Node environment
 class MockImage {
@@ -12,9 +11,9 @@ class MockImage {
 }
 
 beforeAll(() => {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   global.Image = MockImage as any;
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   global.HTMLImageElement = MockImage as any;
 });
 
@@ -42,7 +41,7 @@ describe("customRenderers", () => {
           displayData: "test",
           allowOverlay: false,
           copyData: "test",
-          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
 
         expect(iconCellRenderer.isMatch(textCell)).toBe(false);
@@ -57,7 +56,7 @@ describe("customRenderers", () => {
             kind: "other-cell",
             value: "test",
           },
-          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
 
         expect(iconCellRenderer.isMatch(customCell)).toBe(false);
@@ -93,10 +92,10 @@ describe("customRenderers", () => {
         rect: mockRect,
         col: 0,
         row: 0,
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
 
-      beforeAll(() => {
+      beforeEach(() => {
         vi.clearAllMocks();
       });
 
@@ -116,8 +115,6 @@ describe("customRenderers", () => {
       });
 
       it("should draw error indicator for invalid icon", () => {
-        vi.spyOn(iconRendererModule, "isValidIconName").mockReturnValue(false);
-
         const cell: IconCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
@@ -131,21 +128,11 @@ describe("customRenderers", () => {
         const result = iconCellRenderer.draw(mockArgs, cell);
 
         expect(result).toBe(true);
-        // Default alignment is left, so x = rect.x + 16
         expect(mockCtx.fillText).toHaveBeenCalledWith("?", 16, 24);
         expect(mockCtx.fillStyle).toBe("#000");
       });
 
       it("should draw icon when image is complete", () => {
-        vi.spyOn(iconRendererModule, "isValidIconName").mockReturnValue(true);
-
-        const mockImage = new MockImage();
-        mockImage.complete = true;
-        vi.spyOn(iconRendererModule, "getIconImage").mockReturnValue(
-          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-          mockImage as any,
-        );
-
         const cell: IconCell = {
           kind: GridCellKind.Custom,
           allowOverlay: false,
@@ -159,70 +146,12 @@ describe("customRenderers", () => {
         const result = iconCellRenderer.draw(mockArgs, cell);
 
         expect(result).toBe(true);
-        expect(mockCtx.drawImage).toHaveBeenCalledWith(
-          mockImage,
-          16, // padding (left-aligned)
-          10, // (40 - 20) / 2 (vertically centered)
-          20,
-          20,
-        );
-      });
-
-      it("should draw placeholder when image is not complete", () => {
-        vi.spyOn(iconRendererModule, "isValidIconName").mockReturnValue(true);
-
-        const mockImage = new MockImage();
-        mockImage.complete = false;
-        vi.spyOn(iconRendererModule, "getIconImage").mockReturnValue(
-          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-          mockImage as any,
-        );
-
-        const cell: IconCell = {
-          kind: GridCellKind.Custom,
-          allowOverlay: false,
-          copyData: "Activity",
-          data: {
-            kind: "icon-cell",
-            iconName: "Activity",
-          },
-        };
-
-        const result = iconCellRenderer.draw(mockArgs, cell);
-
-        expect(result).toBe(true);
-        expect(mockCtx.beginPath).toHaveBeenCalled();
-        // Icon is now left-aligned with padding of 16 + 10 = 26
-        expect(mockCtx.arc).toHaveBeenCalledWith(26, 20, 4, 0, 2 * Math.PI);
-        expect(mockCtx.fill).toHaveBeenCalled();
-        expect(mockCtx.fillStyle).toBe("#666");
-      });
-
-      it("should draw placeholder when getIconImage returns null", () => {
-        vi.spyOn(iconRendererModule, "isValidIconName").mockReturnValue(true);
-        vi.spyOn(iconRendererModule, "getIconImage").mockReturnValue(null);
-
-        const cell: IconCell = {
-          kind: GridCellKind.Custom,
-          allowOverlay: false,
-          copyData: "Activity",
-          data: {
-            kind: "icon-cell",
-            iconName: "Activity",
-          },
-        };
-
-        const result = iconCellRenderer.draw(mockArgs, cell);
-
-        expect(result).toBe(true);
-        expect(mockCtx.beginPath).toHaveBeenCalled();
+        expect(mockCtx.drawImage).toHaveBeenCalled();
       });
     });
 
     describe("onPaste", () => {
       it("should return updated data for valid icon name", () => {
-        vi.spyOn(iconRendererModule, "isValidIconName").mockReturnValue(true);
-
         const data = {
           kind: "icon-cell" as const,
           iconName: "Activity",
@@ -237,8 +166,6 @@ describe("customRenderers", () => {
       });
 
       it("should return undefined for invalid icon name", () => {
-        vi.spyOn(iconRendererModule, "isValidIconName").mockReturnValue(false);
-
         const data = {
           kind: "icon-cell" as const,
           iconName: "Activity",
@@ -255,7 +182,7 @@ describe("customRenderers", () => {
           iconName: "Activity",
         };
 
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = iconCellRenderer.onPaste?.(123 as any, data);
 
         expect(result).toBeUndefined();

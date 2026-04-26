@@ -8,7 +8,7 @@ import {
   labelsBadgesCellRenderer,
   linkCellRenderer,
 } from "../utils/customRenderers";
-import { generateHeaderIcons, addStandardIcons } from "../utils/headerIcons";
+import { generateHeaderIcons, mergeSortIndicatorSprites } from "../utils/headerIcons";
 import {
   useContainerSize,
   useSearch,
@@ -28,6 +28,7 @@ import { MenuItem } from "@/types/widgets";
 import { DENSITY_CONFIG } from "./constants";
 import { useCellContent, useGridColumns, useHeaderMenu } from "./hooks";
 import { getOrderedVisibleDataColumns } from "../utils/columnHelpers";
+import type { SpriteMap } from "@glideapps/glide-data-grid";
 
 interface TableEditorProps {
   widgetId: string;
@@ -37,6 +38,7 @@ interface TableEditorProps {
   perRowActions?: Record<string, MenuItem[]>;
   footer?: React.ReactNode;
   showAggregateFooter?: boolean;
+  headerIcons?: SpriteMap;
 }
 
 export const DataTableEditor: React.FC<TableEditorProps> = ({
@@ -47,6 +49,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   perRowActions,
   footer,
   showAggregateFooter = false,
+  headerIcons: providedHeaderIcons,
 }) => {
   const {
     columns,
@@ -88,6 +91,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     showColumnTypeIcons,
     showVerticalBorders,
     enableRowHover,
+    headerIcons: customHeaderIcons,
   } = config;
 
   const selectionProps = getSelectionProps(selectionMode);
@@ -204,9 +208,12 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
 
   // Generate header icons map for all column icons
   const headerIcons = useMemo(() => {
-    const baseIcons = generateHeaderIcons(columns);
-    return addStandardIcons(baseIcons);
-  }, [columns]);
+    const baseIcons = {
+      ...generateHeaderIcons(columns, customHeaderIcons),
+      ...providedHeaderIcons,
+    };
+    return mergeSortIndicatorSprites(baseIcons);
+  }, [columns, customHeaderIcons, providedHeaderIcons]);
 
   // Header menu handling
   const { handleHeaderMenuClick } = useHeaderMenu({

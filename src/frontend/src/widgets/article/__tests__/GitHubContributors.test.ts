@@ -42,8 +42,6 @@ describe("GitHubContributors utility functions", () => {
 
   describe("getCommitsUrl", () => {
     it("should fallback to original replacement if parsing fails", () => {
-      const url = "https://github.com/owner/repo/blob/main/path"; // Not enough parts (length 6 needed for pathParts)
-      // Actually pathParts = ['', 'owner', 'repo', 'blob', 'main', 'path'] -> length 6. Wait, path is index 5.
       // If it fails some logic, it does a replace
       expect(getCommitsUrl("https://github.com/owner/repo/blob/main")).toBe(
         "https://github.com/owner/repo/commits/main",

@@ -8,6 +8,16 @@ namespace Ivy.Test.Sync
     {
         public static string StringType = "Ivy.Test.Sync.TestWidget";
 
+        public TestWidget()
+        {
+
+        }
+
+        public TestWidget(string id)
+        {
+            Id = id;
+        }
+
         public enum TestEnum
         {
             First,

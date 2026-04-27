@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -49,12 +50,12 @@ namespace Ivy.Core.Sync
                 {
                     return static value =>
                     {
-                        var obj = new PropStructureObject();
+                        var builder = ImmutableDictionary.CreateBuilder<string, IPropStructureNode>();
                         foreach (DictionaryEntry entry in (IDictionary)value)
                         {
-                            obj.Add(entry.Key.ToString()!, Transform(entry.Value));
+                            builder.Add(entry.Key.ToString()!, Transform(entry.Value));
                         }
-                        return obj;
+                        return new PropStructureObject(builder.ToImmutable());
                     };
                 }
 
@@ -62,12 +63,12 @@ namespace Ivy.Core.Sync
                 {
                     return static value =>
                     {
-                        var list = new PropStructureList();
+                        var builder = ImmutableList.CreateBuilder<IPropStructureNode>();
                         foreach (var element in (IEnumerable)value)
                         {
-                            list.Add(Transform(element));
+                            builder.Add(Transform(element));
                         }
-                        return list;
+                        return new PropStructureList(builder.ToImmutable());
                     };
                 }
 
@@ -76,16 +77,16 @@ namespace Ivy.Core.Sync
                 {
                     return value =>
                     {
-                        var obj = new PropStructureObject();
+                        var builder = ImmutableDictionary.CreateBuilder<string, IPropStructureNode>();
                         foreach (var property in properties)
                         {
                             if (property.GetCustomAttribute<JsonIgnoreAttribute>() != null)
                             {
                                 continue;
                             }
-                            obj.Add(Utils.PascalCaseToCamelCase(property.Name), Transform(property.GetValue(value)));
+                            builder.Add(Utils.PascalCaseToCamelCase(property.Name), Transform(property.GetValue(value)));
                         }
-                        return obj;
+                        return new PropStructureObject(builder.ToImmutable());
                     };
                 }
 

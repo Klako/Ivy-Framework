@@ -76,6 +76,8 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
     private StreamWriter _benchmarkLog;
 #endif
 
+    private TreeDiffer _treeDiffer;
+
     public WidgetTree(IView rootView, IContentBuilder contentBuilder, IServiceProvider appServices)
     {
         _contentBuilder = contentBuilder;
@@ -95,9 +97,25 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
         _benchmarkLog.Flush();
 #endif
 #endif
+#if !JSONPATCH
+        var treeDifferOptions = new TreeDifferOptions()
+        {
+#if NEWDIFF_LCS
+            ChildDiffer = TreeDifferChildDiff.LCS,
+#else
+            ChildrenDiffer = TreeChildrenDiffer.Linear,
+#endif
+#if NEWDIFF_PROPDIFF
+            PropDiff = true
+#else
+            PropDiff = false
+#endif
+        };
+#endif
+        _treeDiffer = new TreeDiffer(treeDifferOptions);
 
         async void OnNext(string[] requestedViewIds) =>
-            await RefreshRequested(requestedViewIds);
+                await RefreshRequested(requestedViewIds);
 
         var subscription = _buildRequestedSubject
             .Buffer(TimeSpan.FromMilliseconds(16))
@@ -332,7 +350,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if BENCHMARK
             var timingBeforeDiff = stopWatch.Elapsed.TotalMicroseconds;
 #endif
-            var diff = TreeDiffer.ComputeDiff(previousTree, currentTree);
+            var diff = _treeDiffer.ComputeDiff(previousTree, currentTree);
 #if BENCHMARK
             var timingAfterDiff = stopWatch.Elapsed.TotalMicroseconds;
 #endif
@@ -457,19 +475,19 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
                 try
                 {
 #endif
-                TextInputBuildContext.SetCurrent(context);
-                try
-                {
-                    buildResult = view.Build();
-                }
-                catch (Exception e)
-                {
-                    buildResult = e;
-                }
-                finally
-                {
-                    TextInputBuildContext.SetCurrent(null);
-                }
+                    TextInputBuildContext.SetCurrent(context);
+                    try
+                    {
+                        buildResult = view.Build();
+                    }
+                    catch (Exception e)
+                    {
+                        buildResult = e;
+                    }
+                    finally
+                    {
+                        TextInputBuildContext.SetCurrent(null);
+                    }
 #if DEBUG
                 }
                 finally

@@ -2,9 +2,9 @@
 
 namespace Ivy.Core.Sync
 {
-    public class TreeDiffer
+    public class TreeDiffer(TreeDifferOptions options)
     {
-        public static object? ComputeDiff(WidgetNode source, WidgetNode target)
+        public object? ComputeDiff(WidgetNode source, WidgetNode target)
         {
             if (!target.Type.Equals(source.Type))
             {
@@ -18,20 +18,17 @@ namespace Ivy.Core.Sync
                 id = target.Id;
             }
 
-            // Widgets are the same type
-            var metadata = WidgetMetadata.FromWidgetType(source.GetType());
-
             // Compare props
 
             var propUpdates = new Dictionary<string, IPropUpdate>();
 
             foreach (var ((name, sourceValue), (_, targetValue)) in source.Props.Zip(target.Props))
             {
-#if NEWDIFF_PROPDIFF
-                var propUpdate = PropDiff(sourceValue, targetValue);
-#else
-                var propUpdate = sourceValue.DeepEquals(targetValue) ? null : new PropValueDiff(targetValue);
-#endif
+                var propUpdate = options.PropDiff switch
+                {
+                    true => PropDiff(sourceValue, targetValue),
+                    false => (sourceValue.DeepEquals(targetValue) ? null : new PropValueDiff(targetValue))
+                };
 
                 if (propUpdate != null)
                 {
@@ -49,11 +46,12 @@ namespace Ivy.Core.Sync
             }
 
             // Compare children
-#if NEWDIFF_LCS
-            var childrenChanges = ChildrenLCSDiff(source.Children, target.Children);
-#else
-            var childrenChanges = ChildrenLinearDiff(source.Children, target.Children);
-#endif
+            var childrenChanges = options.ChildrenDiffer switch
+            {
+                TreeChildrenDiffer.Linear => ChildrenLinearDiff(source.Children, target.Children),
+                TreeChildrenDiffer.LCS => ChildrenLCSDiff(source.Children, target.Children),
+                _ => throw new ArgumentException("Invalid child differ option")
+            };
 
             if (id != null
                 || propUpdates.Count > 0
@@ -70,7 +68,7 @@ namespace Ivy.Core.Sync
             return null;
         }
 
-        private static IPropUpdate? PropDiff(IPropStructureNode? source, IPropStructureNode? target)
+        private IPropUpdate? PropDiff(IPropStructureNode? source, IPropStructureNode? target)
         {
             if (source == null && target == null)
             {
@@ -82,22 +80,25 @@ namespace Ivy.Core.Sync
                 return new PropValueDiff(new PropStructureLeaf(target));
             }
 
-            if (source is PropStructureObject sourceMap && target is PropStructureObject targetMap)
+            if (source is PropStructureObject sourceObj && target is PropStructureObject targetObj)
             {
-                var maxLength = Math.Max(sourceMap.Count, targetMap.Count);
+                var sourceMembers = sourceObj.Members;
+                var targetMembers = targetObj.Members;
+
+                var maxLength = Math.Max(sourceMembers.Count, targetMembers.Count);
                 Dictionary<string, IPropObjectOperation> changes = new(maxLength);
 
-                var sourceKeys = sourceMap.Select(entry => entry.Key);
-                var targetKeys = targetMap.Select(entry => entry.Key);
+                var sourceKeys = sourceMembers.Select(entry => entry.Key);
+                var targetKeys = targetMembers.Select(entry => entry.Key);
 
                 foreach (var key in sourceKeys.Union(targetKeys))
                 {
-                    var sourceHasKey = sourceMap.TryGetValue(key, out var sourceValue);
-                    var targetHasKey = targetMap.TryGetValue(key, out var targetValue);
+                    var sourceHasKey = sourceMembers.TryGetValue(key, out var sourceValue);
+                    var targetHasKey = targetMembers.TryGetValue(key, out var targetValue);
 
                     if (sourceHasKey && targetHasKey)
                     {
-                        var valueDiff = PropDiff(sourceValue!, targetValue!);
+                        var valueDiff = PropDiff(sourceValue, targetValue);
                         if (valueDiff != null)
                         {
                             changes.Add(key, new PropObjectUpdate(valueDiff));
@@ -122,16 +123,19 @@ namespace Ivy.Core.Sync
             }
             else if (source is PropStructureList sourceList && target is PropStructureList targetList)
             {
-                var sourceLength = sourceList.Count;
-                var targetLength = targetList.Count;
+                var sourceMembers = sourceList.Members;
+                var targetMembers = targetList.Members;
+
+                var sourceLength = sourceMembers.Count;
+                var targetLength = targetMembers.Count;
 
                 var commonLength = Math.Min(sourceLength, targetLength);
                 List<(int, IPropUpdate)> changes = new(commonLength);
 
                 for (int i = 0; i < commonLength; i++)
                 {
-                    var sourceElement = sourceList[i];
-                    var targetElement = targetList[i];
+                    var sourceElement = sourceMembers[i];
+                    var targetElement = targetMembers[i];
 
                     var diff = PropDiff(sourceElement, targetElement);
                     if (diff != null)
@@ -146,7 +150,7 @@ namespace Ivy.Core.Sync
                 {
                     for (int i = commonLength; i < targetLength; i++)
                     {
-                        appends.Add(targetList[i]);
+                        appends.Add(targetMembers[i]);
                     }
                 }
 
@@ -168,7 +172,7 @@ namespace Ivy.Core.Sync
             return new PropValueDiff(target);
         }
 
-        private static WidgetListDiff? ChildrenLinearDiff(WidgetNode[] source, WidgetNode[] target)
+        private WidgetListDiff? ChildrenLinearDiff(WidgetNode[] source, WidgetNode[] target)
         {
             var changes = new List<IWidgetListOperation>(Math.Max(source.Length, target.Length));
 
@@ -208,7 +212,7 @@ namespace Ivy.Core.Sync
             return new WidgetListDiff(changes: changes);
         }
 
-        private static WidgetListDiff? ChildrenLCSDiff(WidgetNode[] source, WidgetNode[] target)
+        private WidgetListDiff? ChildrenLCSDiff(WidgetNode[] source, WidgetNode[] target)
         {
             // Compute the matrix containing all jumps in distances
             // used to compute the subsequence itself

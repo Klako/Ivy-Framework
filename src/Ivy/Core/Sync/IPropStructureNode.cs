@@ -2,6 +2,7 @@
 using MessagePack.Formatters;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
@@ -13,19 +14,19 @@ namespace Ivy.Core.Sync
         public bool DeepEquals(IPropStructureNode? otherNode);
     }
 
-    internal class PropStructureObject : Dictionary<string, IPropStructureNode>, IPropStructureNode
+    public record PropStructureObject(IImmutableDictionary<string, IPropStructureNode> Members) : IPropStructureNode
     {
         public bool DeepEquals(IPropStructureNode? otherNode)
         {
             if (otherNode is PropStructureObject otherObj)
             {
-                if (Count != otherObj.Count)
+                if (Members.Count != otherObj.Members.Count)
                 {
                     return false;
                 }
-                foreach (var (key, value) in this)
+                foreach (var (key, value) in Members)
                 {
-                    if (!(otherObj.TryGetValue(key, out var otherValue)
+                    if (!(otherObj.Members.TryGetValue(key, out var otherValue)
                           && value.DeepEquals(otherValue)))
                     {
                         return false;
@@ -37,19 +38,19 @@ namespace Ivy.Core.Sync
         }
     }
 
-    internal class PropStructureList : List<IPropStructureNode>,  IPropStructureNode
+    public record PropStructureList(ImmutableList<IPropStructureNode> Members) : IPropStructureNode
     {
         public bool DeepEquals(IPropStructureNode? otherNode)
         {
             if (otherNode is PropStructureList otherList)
             {
-                return this.SequenceEqual(otherList, StructureNodeEqualityComparer.Instance);
+                return Members.SequenceEqual(otherList.Members, StructureNodeEqualityComparer.Instance);
             }
             else return false;
         }
     }
 
-    internal record PropStructureLeaf(object? Value) : IPropStructureNode
+    public record PropStructureLeaf(object? Value) : IPropStructureNode
     {
         public bool DeepEquals(IPropStructureNode? otherNode)
         {
@@ -94,7 +95,7 @@ namespace Ivy.Core.Sync
             if (reader.NextMessagePackType == MessagePackType.Map)
             {
                 var size = reader.ReadMapHeader();
-                var map = new PropStructureObject();
+                var builder = ImmutableDictionary.CreateBuilder<string, IPropStructureNode>();
                 for (int i = 0; i < size; i++)
                 {
                     var key = reader.ReadString();
@@ -103,21 +104,20 @@ namespace Ivy.Core.Sync
                         throw new MessagePackSerializationException("Expected string, got null");
                     }
                     var value = Deserialize(ref reader, options);
-                    map.Add(key, value);
+                    builder.Add(key, value);
                 }
-                return map;
+                return new PropStructureObject(builder.ToImmutable());
             }
             else if (reader.NextMessagePackType == MessagePackType.Array)
             {
                 var size = reader.ReadArrayHeader();
-                var list = new PropStructureList();
-                list.EnsureCapacity(size);
+                var builder = ImmutableList.CreateBuilder<IPropStructureNode>();
                 for (int i = 0; i < size; i++)
                 {
                     var element = Deserialize(ref reader, options);
-                    list.Add(element);
+                    builder.Add(element);
                 }
-                return list;
+                return new PropStructureList(builder.ToImmutable());
             }
             else
             {
@@ -138,10 +138,10 @@ namespace Ivy.Core.Sync
                     MessagePackSerializer.Serialize(leaf.Value.GetType(), ref writer, leaf.Value, options);
                 }
             }
-            else if (value is PropStructureObject map)
+            else if (value is PropStructureObject obj)
             {
-                writer.WriteMapHeader(map.Count);
-                foreach (var (k, v) in map)
+                writer.WriteMapHeader(obj.Members.Count);
+                foreach (var (k, v) in obj.Members)
                 {
                     writer.Write(k);
                     Serialize(ref writer, v, options);
@@ -149,8 +149,8 @@ namespace Ivy.Core.Sync
             }
             else if (value is PropStructureList list)
             {
-                writer.WriteArrayHeader(list.Count());
-                foreach (var e in list)
+                writer.WriteArrayHeader(list.Members.Count);
+                foreach (var e in list.Members)
                 {
                     Serialize(ref writer, e, options);
                 }

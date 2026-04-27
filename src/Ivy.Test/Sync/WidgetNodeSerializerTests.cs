@@ -10,7 +10,7 @@ using System.Text.Json.Nodes;
 
 namespace Ivy.Test.Sync
 {
-    public class WidgetSerializerTests
+    public class WidgetNodeSerializerTests
     {
         [Fact]
         public void TestWidget_BasicValues()

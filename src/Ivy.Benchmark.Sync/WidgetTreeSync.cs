@@ -19,6 +19,11 @@ namespace Ivy.Benchmark.Sync
     [CPUUsageDiagnoser]
     public partial class WidgetTreeSync
     {
+        private TreeDiffer _linearNoPropDiffer = new(new(TreeChildrenDiffer.Linear, false));
+        private TreeDiffer _linearWithPropDiffer = new(new(TreeChildrenDiffer.Linear, true));
+        private TreeDiffer _lcsNoPropDiffer = new(new(TreeChildrenDiffer.LCS, false));
+        private TreeDiffer _lcsWithPropDiffer = new(new(TreeChildrenDiffer.LCS, true));
+
         WidgetNode flatTreeSourceNode;
         WidgetNode flatTreeTargetNode;
 
@@ -37,12 +42,10 @@ namespace Ivy.Benchmark.Sync
                         new JsonNodeMessagePackFormatter(),
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
-                        new JsonValueMessagePackFormatter(),
-                        new WidgetMessagePackFormatter()
+                        new JsonValueMessagePackFormatter()
                     },
                     new IFormatterResolver[] {
                         JsonNodeResolver.Instance,
-                        WidgetMessagePackResolver.Instance,
                         ContractlessStandardResolver.Instance
                     }
                 )
@@ -123,14 +126,6 @@ namespace Ivy.Benchmark.Sync
 
         [Benchmark]
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public object NewDiff_FlatTree()
-        {
-            return TreeDiffer.ComputeDiff(flatTreeSourceNode, flatTreeTargetNode);
-        }
-
-
-        [Benchmark]
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public object RustDiff_BinaryTree()
         {
             return JsonDiffer.ComputePatch(binaryTreeoOldBytes, binaryTreeNewBytes);
@@ -138,10 +133,58 @@ namespace Ivy.Benchmark.Sync
 
         [Benchmark]
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public object NewDiff_BinaryTree()
+        public object NewDiff_LinearNoProp_FlatTree()
         {
-            return TreeDiffer.ComputeDiff(binaryTreeSourceNode, binaryTreeTargetNode);
+            return _linearNoPropDiffer.ComputeDiff(flatTreeSourceNode, flatTreeTargetNode);
         }
 
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LinearNoProp_BinaryTree()
+        {
+            return _linearNoPropDiffer.ComputeDiff(binaryTreeSourceNode, binaryTreeTargetNode);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LinearWithProp_FlatTree()
+        {
+            return _linearWithPropDiffer.ComputeDiff(flatTreeSourceNode, flatTreeTargetNode);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LinearWithProp_BinaryTree()
+        {
+            return _linearWithPropDiffer.ComputeDiff(binaryTreeSourceNode, binaryTreeTargetNode);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LCSNoProp_FlatTree()
+        {
+            return _lcsNoPropDiffer.ComputeDiff(flatTreeSourceNode, flatTreeTargetNode);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LCSNoProp_BinaryTree()
+        {
+            return _lcsNoPropDiffer.ComputeDiff(binaryTreeSourceNode, binaryTreeTargetNode);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LCSWithProp_FlatTree()
+        {
+            return _lcsWithPropDiffer.ComputeDiff(flatTreeSourceNode, flatTreeTargetNode);
+        }
+
+        [Benchmark]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public object NewDiff_LCSWithProp_BinaryTree()
+        {
+            return _lcsWithPropDiffer.ComputeDiff(binaryTreeSourceNode, binaryTreeTargetNode);
+        }
     }
 }

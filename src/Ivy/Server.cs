@@ -710,12 +710,10 @@ public class Server
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
                         new JsonValueMessagePackFormatter(),
-                        new WidgetMessagePackFormatter(),
                         new WidgetNodeMessagePackFormatter()
                     },
                     new IFormatterResolver[] {
                         JsonNodeResolver.Instance,
-                        WidgetMessagePackResolver.Instance,
                         DynamicEnumAsStringResolver.Instance,
                         ContractlessStandardResolver.Instance
                     }

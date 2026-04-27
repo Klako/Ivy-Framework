@@ -14,6 +14,11 @@ namespace Ivy.Test.Sync
 {
     public class TreeDifferTests
     {
+        private TreeDiffer _linearNoPropDiffer = new(new(TreeChildrenDiffer.Linear, false));
+        private TreeDiffer _linearWithPropDiffer = new(new(TreeChildrenDiffer.Linear, true));
+        private TreeDiffer _lcsNoPropDiffer = new(new(TreeChildrenDiffer.LCS, false));
+        private TreeDiffer _lcsWithPropDiffer = new(new(TreeChildrenDiffer.LCS, true));
+
         private SerializedWidget ApplyDiff(SerializedWidget source, WidgetUpdate update)
         {
             var widget = source;
@@ -93,43 +98,43 @@ namespace Ivy.Test.Sync
             {
                 Assert.NotNull(source);
                 Assert.IsType<PropStructureObject>(source);
-                var map = (PropStructureObject)source;
+                var members = ((PropStructureObject)source).Members;
                 foreach (var (key, change) in objectDiff.Changes)
                 {
                     if (change is PropObjectUpdate fieldUpdate)
                     {
-                        map[key] = ApplyPropDiff(map[key], fieldUpdate.Update);
+                        members = members.SetItem(key, ApplyPropDiff(members[key], fieldUpdate.Update));
                     }
                     else if (change is PropObjectSet fieldSet)
                     {
-                        map[key] = fieldSet.NewValue;
+                        members = members.SetItem(key, fieldSet.NewValue);
                     }
                     else if (change is PropObjectRemove fieldRemove)
                     {
-                        map.Remove(key);
+                        members = members.Remove(key);
                     }
                 }
-                return map;
+                return new PropStructureObject(members);
             }
             else if (update is PropArrayDiff arrayDiff)
             {
                 Assert.NotNull(source);
                 Assert.IsType<PropStructureList>(source);
-                var list = (PropStructureList)source;
+                var members = ((PropStructureList)source).Members;
                 foreach (var (index, change) in arrayDiff.Changes)
                 {
-                    list[index] = ApplyPropDiff(list[index], change);
+                    members = members.SetItem(index, ApplyPropDiff(members[index], change));
                 }
                 if (arrayDiff.Removals > 0)
                 {
-                    var fromIndex = list.Count - arrayDiff.Removals;
-                    list.RemoveRange(fromIndex, arrayDiff.Removals);
+                    var fromIndex = members.Count - arrayDiff.Removals;
+                    members = members.RemoveRange(fromIndex, arrayDiff.Removals);
                 }
                 foreach (var node in arrayDiff.Appends)
                 {
-                    list.Add(node);
+                    members = members.Add(node);
                 }
-                return list;
+                return new PropStructureList(members);
             }
             return source;
         }
@@ -142,12 +147,15 @@ namespace Ivy.Test.Sync
         [Fact]
         public void ComputeDiff_SimpleChanges()
         {
-            var source = new WidgetNode(new TestWidget() { Id = "dwiojf"});
+            var source = new WidgetNode(new TestWidget() { Id = "dwiojf" });
             var convertedSource = SerializedWidget.FromWidget(source);
             var target = new WidgetNode(new TestWidget() { Id = source.Id, TestProp1 = "nondefault" });
             var expectedTarget = SerializedWidget.FromWidget(target);
 
-            var update = TreeDiffer.ComputeDiff(source, target);
+            var treeDifferOptions = new TreeDifferOptions(TreeChildrenDiffer.Linear, false);
+            var treeDiffer = new TreeDiffer(treeDifferOptions);
+
+            var update = treeDiffer.ComputeDiff(source, target);
 
             Assert.IsType<WidgetUpdate>(update);
 
@@ -156,12 +164,12 @@ namespace Ivy.Test.Sync
         }
 
         [Fact]
-        public void ComputeDiff_AddChildren()
+        public void ComputeDiff_AddChildren_Linear()
         {
             var source = new TestWidget()
             {
                 Id = "pokwefp",
-                Children = [ ]
+                Children = []
             };
             var target = new TestWidget()
             {
@@ -183,7 +191,7 @@ namespace Ivy.Test.Sync
             var convertedSource = SerializedWidget.FromWidget(source.ToWidgetNode());
             var expectedTarget = SerializedWidget.FromWidget(target.ToWidgetNode());
 
-            var update = TreeDiffer.ComputeDiff(source.ToWidgetNode(), target.ToWidgetNode());
+            var update = _linearNoPropDiffer.ComputeDiff(source.ToWidgetNode(), target.ToWidgetNode());
 
             Assert.IsType<WidgetUpdate>(update);
 
@@ -200,29 +208,33 @@ namespace Ivy.Test.Sync
                 "Vivamus lobortis diam id nulla mattis"
             ];
 
-        private IWidget GenerateBinaryTree(Random rand, int depth)
+        private IWidget GenerateRandomTree(Random rand, int depth)
         {
             if (depth == 1)
             {
-                return (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!; ;
+                return (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
             }
             var prefix = rand.Next().ToString();
 
-            var nodeText = (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
-            nodeText.Id = prefix + "1";
-            var left = GenerateBinaryTree(rand, depth - 1);
-            left.Id = prefix + "2";
-            var right = GenerateBinaryTree(rand, depth - 1);
-            right.Id = prefix + "3";
-            return new List(nodeText, left, right);
+            var textNode = (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
+            var nodes = Enumerable.Range(0, rand.Next(5))
+                .Select(idx => rand.Next(2) switch
+                {
+                    0 => (WidgetBase)GenerateRandomTree(rand, depth - 1),
+                    1 => (WidgetBase)Text.H3(texts[rand.Next(texts.Length)]).Build()!,
+                    _ => throw new Exception("Test is faulty")
+                } with
+                { Id = prefix + idx.ToString() });
+
+            return new List(nodes);
         }
 
         [Fact]
         public void TreeDiffer_RandomBinaryTree()
         {
-            var source = GenerateBinaryTree(new Random(), (int)Math.Log2(100));
+            var source = GenerateRandomTree(new Random(), (int)Math.Log2(100));
             source.Id = "dwqpokqwd";
-            var target = GenerateBinaryTree(new Random(), (int)Math.Log2(100));
+            var target = GenerateRandomTree(new Random(), (int)Math.Log2(100));
             target.Id = "dwqpokqwd";
 
             var sourceNode = source.ToWidgetNode();
@@ -231,7 +243,7 @@ namespace Ivy.Test.Sync
             var convertedSource = SerializedWidget.FromWidget(sourceNode);
             var convertedTarget = SerializedWidget.FromWidget(targetNode);
 
-            var update = TreeDiffer.ComputeDiff(sourceNode, targetNode);
+            var update = _linearNoPropDiffer.ComputeDiff(sourceNode, targetNode);
 
             Assert.IsType<WidgetUpdate>(update);
 
@@ -267,15 +279,47 @@ namespace Ivy.Test.Sync
             var targetNode = target.ToWidgetNode();
 
             var convertedSource = SerializedWidget.FromWidget(sourceNode);
-            var convertedTarget = SerializedWidget.FromWidget(targetNode);
+            var expectedTarget = SerializedWidget.FromWidget(targetNode);
 
-            var update = TreeDiffer.ComputeDiff(sourceNode, targetNode);
+            {
+                var update = _linearNoPropDiffer.ComputeDiff(sourceNode, targetNode);
 
-            Assert.IsType<WidgetUpdate>(update);
+                Assert.IsType<WidgetUpdate>(update);
 
-            var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
+                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
 
-            SerializedWidget.AssertEqual(convertedTarget, updatedSource);
+                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
+            }
+
+            {
+                var update = _linearWithPropDiffer.ComputeDiff(sourceNode, targetNode);
+
+                Assert.IsType<WidgetUpdate>(update);
+
+                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
+
+                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
+            }
+
+            {
+                var update = _lcsNoPropDiffer.ComputeDiff(sourceNode, targetNode);
+
+                Assert.IsType<WidgetUpdate>(update);
+
+                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
+
+                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
+            }
+
+            {
+                var update = _lcsWithPropDiffer.ComputeDiff(sourceNode, targetNode);
+
+                Assert.IsType<WidgetUpdate>(update);
+
+                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
+
+                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
+            }
         }
     }
 }

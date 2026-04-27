@@ -70,13 +70,11 @@ namespace Ivy.Test.Sync
                         new JsonObjectMessagePackFormatter(),
                         new JsonArrayMessagePackFormatter(),
                         new JsonValueMessagePackFormatter(),
-                        new WidgetMessagePackFormatter(),
                         new StructureMessagePackFormatter(),
                         new WidgetNodeMessagePackFormatter()
                     ],
                     [
                         JsonNodeResolver.Instance,
-                        WidgetMessagePackResolver.Instance,
                         DynamicEnumAsStringResolver.Instance,
                         ContractlessStandardResolver.Instance
                     ]

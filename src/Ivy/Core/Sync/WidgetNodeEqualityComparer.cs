@@ -34,8 +34,6 @@ namespace Ivy.Core.Sync
                 return false;
             }
 
-            var metadata = WidgetMetadata.FromWidgetType(x.Type);
-
             foreach (var ((_, xValue), (_, yValue)) in x.Props.Zip(y.Props))
             {
                 if (!xValue.DeepEquals(yValue))

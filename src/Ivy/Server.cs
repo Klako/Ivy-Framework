@@ -111,6 +111,7 @@ public class Server
     private readonly List<IHtmlFilter> _customHtmlFilters = new();
     private Action<HtmlPipeline>? _pipelineConfigurator;
     private PluginLoader? _pluginLoader;
+    private Func<Server, WebApplicationBuilder, PluginContextBase>? _pluginContextFactory;
     private ManifestOptions? _manifestOptions;
     private ServerArgs _args;
     private bool _presetsLoaded;
@@ -559,7 +560,10 @@ public class Server
         return this;
     }
 
-    public Server UsePlugins(string pluginsDirectory, Version? hostVersion = null)
+    public Server UsePlugins(
+        string pluginsDirectory,
+        Version? hostVersion = null,
+        Func<Server, WebApplicationBuilder, PluginContextBase>? contextFactory = null)
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var logger = loggerFactory.CreateLogger<PluginLoader>();
@@ -573,6 +577,7 @@ public class Server
         loader.ConfigureServices(Services, Configuration);
 
         _pluginLoader = loader;
+        _pluginContextFactory = contextFactory;
         return this;
     }
 
@@ -746,10 +751,11 @@ public class Server
 
         // Plugin Configure runs before Build so UseWebApplicationBuilder actions
         // apply directly to the builder. UseWebApplication actions are deferred to Apply.
-        PluginContext? pluginContext = null;
+        PluginContextBase? pluginContext = null;
         if (_pluginLoader != null)
         {
-            pluginContext = new PluginContext(this, builder);
+            pluginContext = _pluginContextFactory?.Invoke(this, builder)
+                ?? new PluginContext(this, builder);
             _pluginLoader.Configure(pluginContext);
         }
 

@@ -1,6 +1,7 @@
 ﻿using Force.DeepCloner;
 using Ivy.Core;
 using Ivy.Core.Sync;
+using Ivy.Test.DataTables;
 using MessagePack;
 using MessagePack.Resolvers;
 using System;
@@ -144,32 +145,68 @@ namespace Ivy.Test.Sync
             return t.Namespace + "." + Utils.CleanGenericNotation(t.Name);
         }
 
+        private void TestAllDiffers(WidgetNode source, WidgetNode target)
+        {
+            var convertedSource = SerializedWidget.FromWidget(source);
+            var convertedTarget = SerializedWidget.FromWidget(target);
+
+            TreeDiffer[] differs = [
+                _linearNoPropDiffer,
+                _linearWithPropDiffer,
+                _lcsNoPropDiffer,
+                _lcsWithPropDiffer
+            ];
+
+            foreach (var differ in differs)
+            {
+                var result = differ.ComputeDiff(source, target);
+                switch (result)
+                {
+                    case WidgetUpdate update:
+                        var updatedSource = ApplyDiff(convertedSource, update);
+                        SerializedWidget.AssertEqual(convertedTarget, updatedSource);
+                        break;
+                    case WidgetNode newNode:
+                        var convertedNewNode = SerializedWidget.FromWidget(newNode);
+                        SerializedWidget.AssertEqual(convertedTarget, convertedNewNode);
+                        break;
+                    case null:
+                        SerializedWidget.AssertEqual(convertedTarget, convertedSource);
+                        break;
+                    default:
+                        throw new Exception("Invalid result from ComputeDiff");
+                }
+            }
+        }
+
         [Fact]
         public void ComputeDiff_SimpleChanges()
         {
             var source = new WidgetNode(new TestWidget() { Id = "dwiojf" });
-            var convertedSource = SerializedWidget.FromWidget(source);
             var target = new WidgetNode(new TestWidget() { Id = source.Id, TestProp1 = "nondefault" });
-            var expectedTarget = SerializedWidget.FromWidget(target);
 
-            var treeDifferOptions = new TreeDifferOptions(TreeChildrenDiffer.Linear, false);
-            var treeDiffer = new TreeDiffer(treeDifferOptions);
-
-            var update = treeDiffer.ComputeDiff(source, target);
-
-            Assert.IsType<WidgetUpdate>(update);
-
-            var computedTarget = ApplyDiff(convertedSource, (WidgetUpdate)update);
-            SerializedWidget.AssertEqual(expectedTarget, computedTarget);
+            TestAllDiffers(source, target);
         }
 
         [Fact]
-        public void ComputeDiff_AddChildren_Linear()
+        public void ComputeDiff_AddChildren()
         {
             var source = new TestWidget()
             {
                 Id = "pokwefp",
-                Children = []
+                Children = 
+                [
+                    new TestWidget()
+                    {
+                        Id = "12345",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "56789",
+                        TestProp1 = "foo"
+                    },
+                ]
             };
             var target = new TestWidget()
             {
@@ -178,27 +215,89 @@ namespace Ivy.Test.Sync
                 [
                     new TestWidget()
                     {
-                        Id = "dqwpok",
+                        Id = "12345",
                         TestEvent = new(_ => ValueTask.CompletedTask)
                     },
                     new TestWidget()
                     {
-                        Id = "dwqioj",
+                        Id = "23456",
+                        TestProp1 = "foo"
+                    },
+                    new TestWidget()
+                    {
+                        Id = "34567",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "56789",
+                        TestProp1 = "foo"
+                    },
+                    new TestWidget()
+                    {
+                        Id = "67890",
                         TestProp1 = "foo"
                     }
                 ]
             };
-            var convertedSource = SerializedWidget.FromWidget(source.ToWidgetNode());
-            var expectedTarget = SerializedWidget.FromWidget(target.ToWidgetNode());
 
-            var update = _linearNoPropDiffer.ComputeDiff(source.ToWidgetNode(), target.ToWidgetNode());
+            TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
+        }
 
-            Assert.IsType<WidgetUpdate>(update);
+        [Fact]
+        public void ComputeDiff_RemoveChildren()
+        {
+            var target = new TestWidget()
+            {
+                Id = "pokwefp",
+                Children =
+                [
+                    new TestWidget()
+                    {
+                        Id = "12345",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "23456",
+                        TestProp1 = "foo"
+                    },
+                    new TestWidget()
+                    {
+                        Id = "34567",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "56789",
+                        TestProp1 = "foo"
+                    },
+                    new TestWidget()
+                    {
+                        Id = "67890",
+                        TestProp1 = "foo"
+                    }
+                ]
+            };
+            var source = new TestWidget()
+            {
+                Id = "pokwefp",
+                Children =
+                [
+                    new TestWidget()
+                    {
+                        Id = "12345",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "34567",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                ]
+            };
 
-            var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
-
-            SerializedWidget.AssertEqual(expectedTarget, updatedSource);
-
+            TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
         }
 
         private static string[] texts = [
@@ -217,7 +316,7 @@ namespace Ivy.Test.Sync
             var prefix = rand.Next().ToString();
 
             var textNode = (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
-            var nodes = Enumerable.Range(0, rand.Next(5))
+            var nodes = Enumerable.Range(0, rand.Next(2, 5))
                 .Select(idx => rand.Next(2) switch
                 {
                     0 => (WidgetBase)GenerateRandomTree(rand, depth - 1),
@@ -230,26 +329,32 @@ namespace Ivy.Test.Sync
         }
 
         [Fact]
-        public void TreeDiffer_RandomBinaryTree()
+        public void TreeDiffer_NoChange()
         {
             var source = GenerateRandomTree(new Random(), (int)Math.Log2(100));
             source.Id = "dwqpokqwd";
-            var target = GenerateRandomTree(new Random(), (int)Math.Log2(100));
+
+            TestAllDiffers(source.ToWidgetNode(), source.ToWidgetNode());
+        }
+
+        [Fact]
+        public void TreeDiffer_Replace()
+        {
+            var sourceNode = new TestWidget("qwodijqwd").ToWidgetNode();
+            var targetNode = ((WidgetBase)Text.H3("qwoijqd").Build()! with { Id = "qwdoijq" }).ToWidgetNode();
+
+            TestAllDiffers(sourceNode, targetNode);
+        }
+
+        [Fact]
+        public void TreeDiffer_RandomTree()
+        {
+            var source = GenerateRandomTree(new Random(), (int)Math.Log2(1000));
+            source.Id = "dwqpokqwd";
+            var target = GenerateRandomTree(new Random(), (int)Math.Log2(1000));
             target.Id = "dwqpokqwd";
 
-            var sourceNode = source.ToWidgetNode();
-            var targetNode = target.ToWidgetNode();
-
-            var convertedSource = SerializedWidget.FromWidget(sourceNode);
-            var convertedTarget = SerializedWidget.FromWidget(targetNode);
-
-            var update = _linearNoPropDiffer.ComputeDiff(sourceNode, targetNode);
-
-            Assert.IsType<WidgetUpdate>(update);
-
-            var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
-
-            SerializedWidget.AssertEqual(convertedTarget, updatedSource);
+            TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
         }
 
         [Fact]
@@ -278,48 +383,7 @@ namespace Ivy.Test.Sync
             var sourceNode = source.ToWidgetNode();
             var targetNode = target.ToWidgetNode();
 
-            var convertedSource = SerializedWidget.FromWidget(sourceNode);
-            var expectedTarget = SerializedWidget.FromWidget(targetNode);
-
-            {
-                var update = _linearNoPropDiffer.ComputeDiff(sourceNode, targetNode);
-
-                Assert.IsType<WidgetUpdate>(update);
-
-                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
-
-                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
-            }
-
-            {
-                var update = _linearWithPropDiffer.ComputeDiff(sourceNode, targetNode);
-
-                Assert.IsType<WidgetUpdate>(update);
-
-                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
-
-                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
-            }
-
-            {
-                var update = _lcsNoPropDiffer.ComputeDiff(sourceNode, targetNode);
-
-                Assert.IsType<WidgetUpdate>(update);
-
-                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
-
-                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
-            }
-
-            {
-                var update = _lcsWithPropDiffer.ComputeDiff(sourceNode, targetNode);
-
-                Assert.IsType<WidgetUpdate>(update);
-
-                var updatedSource = ApplyDiff(convertedSource, (WidgetUpdate)update);
-
-                SerializedWidget.AssertEqual(expectedTarget, updatedSource);
-            }
+            TestAllDiffers(sourceNode, targetNode);
         }
     }
 }

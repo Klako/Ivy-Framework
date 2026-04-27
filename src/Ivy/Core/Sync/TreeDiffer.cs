@@ -246,24 +246,27 @@ namespace Ivy.Core.Sync
             // Compute the subsequence of pairs of widgets that match
             var subsequencePairs = new List<(int SourceIndex, int TargetIndex)>(Math.Max(source.Length, target.Length));
             {
-                var sourceIndex = source.Length;
-                var targetIndex = target.Length;
-                while (distances[sourceIndex, targetIndex] > 0)
+                // We say 'nth' rather than index because we are
+                // looking at distances[1.., 1..]
+                // Row and column 0 are baselines for the algorithm
+                var sourceNth = source.Length;
+                var targetNth = target.Length;
+                while (distances[sourceNth, targetNth] > 0)
                 {
-                    var pairDistance = distances[sourceIndex, targetIndex];
-                    if (distances[sourceIndex - 1, targetIndex] == pairDistance)
+                    var pairDistance = distances[sourceNth, targetNth];
+                    if (distances[sourceNth - 1, targetNth] == pairDistance)
                     {
-                        sourceIndex--;
+                        sourceNth--;
                     }
-                    else if (distances[sourceIndex, targetIndex - 1] == pairDistance)
+                    else if (distances[sourceNth, targetNth - 1] == pairDistance)
                     {
-                        targetIndex--;
+                        targetNth--;
                     }
                     else
                     {
-                        subsequencePairs.Add((sourceIndex, targetIndex));
-                        sourceIndex--;
-                        targetIndex--;
+                        subsequencePairs.Add((sourceNth - 1, targetNth - 1));
+                        sourceNth--;
+                        targetNth--;
                     }
                 }
                 subsequencePairs.Reverse();
@@ -320,7 +323,8 @@ namespace Ivy.Core.Sync
                     {
                         changes.Add(WidgetListSplice.AddRange(
                             previousPair.SourceIndex + sourceLength,
-                            target.TakeLast(targetLength - sourceLength)));
+                            target.Skip(previousPair.TargetIndex + sourceLength)
+                                .Take(targetLength - sourceLength)));
                     }
                 }
             }

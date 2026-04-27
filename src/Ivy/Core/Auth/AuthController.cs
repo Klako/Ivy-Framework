@@ -15,6 +15,24 @@ public class AuthController() : Controller
 {
     internal static string SanitizeForLog(string? input) => input?.Replace("\n", "").Replace("\r", "") ?? string.Empty;
 
+    private static bool IsValidRedirectUri(Uri uri, ILogger logger)
+    {
+        // Allow relative URLs
+        if (!uri.IsAbsoluteUri)
+        {
+            return true;
+        }
+
+        // For absolute URLs: must use HTTPS
+        if (uri.Scheme != Uri.UriSchemeHttps)
+        {
+            logger.LogWarning("OAuth redirect rejected: non-HTTPS URL {Url}", SanitizeForLog(uri.ToString()));
+            return false;
+        }
+
+        return true;
+    }
+
     [Route("ivy/auth/oauth-login")]
     [HttpGet]
     public async Task<IActionResult> OAuthLogin(
@@ -82,6 +100,12 @@ public class AuthController() : Controller
             try
             {
                 var uri = await authService.GetOAuthUriAsync(option, callback, HttpContext.RequestAborted);
+
+                if (!IsValidRedirectUri(uri, logger))
+                {
+                    return BadRequest("Invalid OAuth redirect URL");
+                }
+
                 return Redirect(uri.ToString());
             }
             catch (Exception ex)
@@ -103,6 +127,12 @@ public class AuthController() : Controller
             try
             {
                 var uri = await connectedAccountsService.ConnectAccountAsync(provider, callback, HttpContext.RequestAborted);
+
+                if (!IsValidRedirectUri(uri, logger))
+                {
+                    return BadRequest("Invalid OAuth redirect URL");
+                }
+
                 return Redirect(uri.ToString());
             }
             catch (Exception ex)

@@ -3,21 +3,20 @@ namespace Ivy.Test.Auth;
 public class ConnectedAccountLifecycleTests
 {
     [Fact]
-    public void ConnectedAccounts_PersistThroughMainAuthLogout()
+    public void ConnectedAccounts_ClearedOnMainAuthLogout()
     {
         var session = new AuthSession(authToken: new AuthToken("main-token"));
         var githubSession = new AuthSession(authToken: new AuthToken("github-token"));
         session.AddConnectedAccount("github", githubSession);
         session.AddBrokeredSession("google", new AuthTokenHandlerSession(authToken: new AuthToken("google-brokered")));
 
-        // Simulate logout: clear main token and brokered sessions
+        // Simulate logout: clear main token, brokered sessions, and connected accounts
         session.AuthToken = null;
         session.ClearBrokeredSessions();
+        session.ClearConnectedAccounts();
 
-        // Connected accounts should persist
-        Assert.Single(session.ConnectedAccounts);
-        Assert.True(session.ConnectedAccounts.ContainsKey("github"));
-        Assert.Equal("github-token", session.ConnectedAccounts["github"].AuthToken?.AccessToken);
+        // Connected accounts should be cleared
+        Assert.Empty(session.ConnectedAccounts);
 
         // Brokered sessions should be cleared
         Assert.Empty(session.BrokeredSessions);

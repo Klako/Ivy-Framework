@@ -15,6 +15,7 @@ import { Densities } from "@/types/density";
 import { TableProps } from "./types/types";
 import { getWidth, getHeight } from "@/lib/styles";
 import { applyConfigDefaults, applyColumnsDefaults } from "./DataTableDefaults";
+import type { SpriteMap } from "@glideapps/glide-data-grid";
 
 interface TableLayoutProps {
   children?: React.ReactNode;
@@ -40,6 +41,7 @@ const TableLayout: React.FC<TableLayoutProps> = ({ children, emptyView }) => {
 interface DataTableWidgetProps extends TableProps {
   events?: string[];
   density?: Densities;
+  headerIcons?: SpriteMap;
   slots?: {
     EmptyView?: React.ReactNode[];
     HeaderLeft?: React.ReactNode[];
@@ -62,6 +64,7 @@ export const DataTable: React.FC<DataTableWidgetProps> = ({
   rowActions,
   perRowActions,
   updateStream,
+  headerIcons,
   slots,
   "data-testid": dataTestId,
 }) => {
@@ -141,6 +144,7 @@ export const DataTable: React.FC<DataTableWidgetProps> = ({
             rowActions={rowActions}
             perRowActions={perRowActions}
             showAggregateFooter={hasFooter}
+            headerIcons={headerIcons}
           />
         </TableLayout>
       </TableProvider>

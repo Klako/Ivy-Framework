@@ -191,10 +191,10 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
-    public DataTableBuilder<TModel> Icon(Expression<Func<TModel, object>> field, string icon)
+    public DataTableBuilder<TModel> Icon(Expression<Func<TModel, object>> field, Icons icon)
     {
         var column = GetColumn(field);
-        column.Column.Icon = icon;
+        column.Column.Icon = icon.ToString();
         return this;
     }
 
@@ -340,6 +340,11 @@ public class DataTableBuilder<TModel>(
         {
             column.Column.Color = labelsRenderer.Color;
             column.Column.BadgeColorMapping = labelsRenderer.BadgeColorMapping;
+        }
+
+        if (renderer is LinkDisplayRenderer linkRenderer)
+        {
+            column.Column.LinkType = linkRenderer.Type.ToString().ToLower();
         }
 
         return this;

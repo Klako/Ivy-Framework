@@ -42,6 +42,7 @@ export const DATA_TABLE_CONFIG_DEFAULTS: Partial<DataTableConfig> = {
   enableCellClickEvents: false,
   showSearch: false,
   idColumnName: null,
+  headerIcons: null,
 };
 
 /**

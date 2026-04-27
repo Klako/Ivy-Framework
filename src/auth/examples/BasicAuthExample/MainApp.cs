@@ -1,7 +1,5 @@
-using System.Reactive.Disposables;
 using Ivy;
 using Ivy.Auth.Examples.Shared;
-using Ivy.Core.Auth;
 
 namespace BasicAuthExample;
 
@@ -41,78 +39,32 @@ public class MainApp : ViewBase
             ).Gap(20).AlignContent(Align.Center),
 
             // Connected Accounts section
-            new ConnectedGitHubSection(connectedAccounts)
+            Layout.Vertical(
+                Text.H3("Connected Accounts"),
+                new ConnectedAccountButton(OAuthProviders.GitHub),
+                new ConnectedAccountTestSection(connectedAccounts)
+            ).Gap(10)
 
         ).Gap(40).Padding(50).AlignContent(Align.Center).Height(Size.Full());
     }
 }
 
-public class ConnectedGitHubSection : ViewBase
+public class ConnectedAccountTestSection : ViewBase
 {
     private readonly IConnectedAccountsService _connectedAccounts;
 
-    public ConnectedGitHubSection(IConnectedAccountsService connectedAccounts)
+    public ConnectedAccountTestSection(IConnectedAccountsService connectedAccounts)
     {
         _connectedAccounts = connectedAccounts;
     }
 
     public override object? Build()
     {
-        var appContext = UseService<Ivy.AppContext>();
-        var loginRegistry = UseService<IOAuthLoginRegistry>();
-        var connected = UseState(() => _connectedAccounts.GetAccountSession(OAuthProviders.GitHub)?.AuthToken != null);
-
-        UseEffect(() =>
-        {
-            _connectedAccounts.AccountConnected += OnConnected;
-            _connectedAccounts.AccountDisconnected += OnDisconnected;
-            return Disposable.Create(() =>
-            {
-                _connectedAccounts.AccountConnected -= OnConnected;
-                _connectedAccounts.AccountDisconnected -= OnDisconnected;
-            });
-
-            void OnConnected(string provider) { if (provider == OAuthProviders.GitHub) connected.Set(true); }
-            void OnDisconnected(string provider) { if (provider == OAuthProviders.GitHub) connected.Set(false); }
-        }, [EffectTrigger.OnMount()]);
+        var isGitHubConnected = UseConnectedAccountState(OAuthProviders.GitHub);
+        if (!isGitHubConnected.Value)
+            return null;
 
         var gitHubSession = _connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
-        var isConnected = gitHubSession?.AuthToken != null;
-
-        if (!isConnected)
-        {
-            return Layout.Vertical(
-                Text.H3("Connected Accounts"),
-                new Button("Connect GitHub")
-                    .Icon(Icons.Github)
-                    .Variant(ButtonVariant.Outline)
-                    .Url(BuildConnectUrl(appContext, loginRegistry, OAuthProviders.GitHub))
-                    .OpenInNewTab()
-            ).Gap(10);
-        }
-
-        return Layout.Vertical(
-            Text.H3("Connected Accounts"),
-            Layout.Horizontal(
-                Text.P("GitHub").Bold(),
-                new Badge("Connected").Variant(BadgeVariant.Success),
-                new Button("Disconnect", async () =>
-                {
-                    await _connectedAccounts.DisconnectAccountAsync(OAuthProviders.GitHub);
-                }, variant: ButtonVariant.Destructive)
-            ).Gap(10).AlignContent(Align.Center),
-            new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!)
-        ).Gap(10);
-    }
-
-    private static string BuildConnectUrl(Ivy.AppContext appContext, IOAuthLoginRegistry loginRegistry, string provider)
-    {
-        var loginId = loginRegistry.RegisterPending(
-            appContext.ConnectionId,
-            provider,
-            provider
-        );
-
-        return $"{appContext.BaseUrl.TrimEnd('/')}/ivy/auth/oauth-login?loginId={Uri.EscapeDataString(loginId)}";
+        return new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!);
     }
 }

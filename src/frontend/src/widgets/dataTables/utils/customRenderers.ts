@@ -56,7 +56,9 @@ export type IconCell = CustomCell<IconCellData>;
 export interface LinkCellData {
   kind: "link-cell";
   url: string;
+  text?: string; // Optional display text (falls back to url if missing)
   align?: "left" | "center" | "right";
+  linkType?: "url" | "email" | "phone"; // For frontend handling
 }
 
 /**
@@ -261,9 +263,10 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
   draw: (args, cell) => {
     const { ctx, rect, theme } = args;
     const url = cell.data?.url;
+    const text = cell.data?.text || url; // Use text if provided, fallback to URL
     const align = cell.data?.align || "left";
 
-    if (!url) return false;
+    if (!url || !text) return false;
 
     // Use linkColor from theme (should be blue)
     const linkColor = theme.linkColor || theme.accentColor || "#2563eb";
@@ -275,7 +278,7 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
     ctx.textBaseline = "middle";
 
     // Calculate text position based on alignment
-    const textMetrics = ctx.measureText(url);
+    const textMetrics = ctx.measureText(text); // Measure text, not URL
     let textX: number;
 
     switch (align) {
@@ -293,7 +296,7 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
     const textY = rect.y + rect.height / 2;
 
     // Draw the text
-    ctx.fillText(url, textX, textY);
+    ctx.fillText(text, textX, textY); // Draw text, not URL
 
     // Draw underline
     const underlineY = textY + 8;

@@ -128,9 +128,19 @@ public class DataTableMainSample : ViewBase
             })
             .Group(e => e.WidgetLink, "Links")
             .Group(e => e.ProfileLink, "Links")
+            .Group(e => e.Email, "Links")
+            .Group(e => e.Phone, "Links")
 
-            .Renderer(e => e.WidgetLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
             .Renderer(e => e.ProfileLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+
+            // Plain URL - backward compatible
+            .Renderer(e => e.WidgetLink, new LinkDisplayRenderer { Type = LinkDisplayType.Url })
+
+            // Email with auto-prepend
+            .Renderer(e => e.Email, new LinkDisplayRenderer { Type = LinkDisplayType.Email })
+
+            // Phone with auto-prepend
+            .Renderer(e => e.Phone, new LinkDisplayRenderer { Type = LinkDisplayType.Phone })
 
             .Sortable(e => e.Email, false)
             .Sortable(e => e.Notes, false)
@@ -196,10 +206,10 @@ public class DataTableMainSample : ViewBase
             | "This header demonstrates that the DataTable below correctly calculates its height even when placed inside a vertical layout with other elements."
             | dataTable;
 
-        return new Fragment([content, new EmployeeEditDialog(editModalOpen, editingEmployee, refreshToken, updated =>
+        return new Fragment(content, new EmployeeEditDialog(editModalOpen, editingEmployee, refreshToken, updated =>
         {
             mockService.UpdateEmployee(updated);
-        })]);
+        }));
     }
 }
 

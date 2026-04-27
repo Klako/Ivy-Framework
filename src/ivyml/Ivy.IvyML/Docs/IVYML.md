@@ -158,6 +158,109 @@ Use `Color="Red"`, not `Color="Red500"`. Available values: Black, White, Slate, 
 - Use `<Separator />` between major sections to create visual hierarchy and prevent content from blending together.
 - Prefer semantic variants (`Primary`, `Success`, `Muted`) over raw colors when available on a widget.
 
+## Attached Properties
+
+Some layout widgets define properties that are set on **child** elements rather than the layout itself. These are called attached properties. In IvyML, use them as attributes on any child widget inside that layout.
+
+```xml
+<CanvasLayout Width="Full" Height="300px">
+  <TextBlock Content="Hello" CanvasLeft="50px" CanvasTop="20px" />
+</CanvasLayout>
+```
+
+Attached props are resolved automatically -- the child doesn't need to know about them.
+
+## Wireframe Widgets
+
+Wireframe widgets have a hand-drawn, Balsamiq-style appearance for sketching and prototyping.
+
+### WireframeNote
+
+A sticky note with a folded corner, drop shadow, and hand-drawn font.
+
+```xml
+<WireframeNote Text="Remember this" />
+<WireframeNote Text="Urgent item" Color="Pink" />
+```
+
+| Prop    | Type              | Default  | Values                                         |
+|---------|-------------------|----------|-------------------------------------------------|
+| `Text`  | string            |          | The note content. Use `&#10;` for line breaks.  |
+| `Color` | Colors            | Yellow   | Any color from the Colors enum                  |
+
+### WireframeCallout
+
+A hand-drawn numbered circle for annotations and step markers.
+
+```xml
+<WireframeCallout Label="1" />
+<WireframeCallout Label="!" Color="Pink" />
+```
+
+| Prop    | Type              | Default  | Values                                         |
+|---------|-------------------|----------|-------------------------------------------------|
+| `Label` | string            |          | Short text shown inside the circle.             |
+| `Color` | Colors            | Yellow   | Any color from the Colors enum                  |
+
+### CanvasLayout
+
+A free-form layout that positions children at absolute coordinates using attached properties.
+
+```xml
+<CanvasLayout Width="Full" Height="400px">
+  <WireframeNote Text="Top left" CanvasLeft="20px" CanvasTop="20px" />
+  <WireframeNote Text="Center" CanvasLeft="200px" CanvasTop="150px" />
+</CanvasLayout>
+```
+
+| Prop         | Type      | Description                |
+|--------------|-----------|----------------------------|
+| `Padding`    | Thickness | Inner padding              |
+| `Background` | Colors    | Background color           |
+
+**Attached props** (set on children):
+
+| Prop         | Type | Description                         |
+|--------------|------|-------------------------------------|
+| `CanvasLeft` | Size | Horizontal offset from left edge    |
+| `CanvasTop`  | Size | Vertical offset from top edge       |
+
+## Widget Defaults
+
+Many widgets have built-in defaults. **Do not set an attribute if it matches the default** -- it adds noise without changing behavior. Use `ivyml docs <widget>` to see all defaults for a specific widget.
+
+| Widget       | Prop          | Default      |
+|--------------|---------------|--------------|
+| StackLayout  | Orientation   | Vertical     |
+| StackLayout  | RowGap        | 4            |
+| StackLayout  | ColumnGap     | 4            |
+| GridLayout   | RowGap        | 4            |
+| GridLayout   | ColumnGap     | 4            |
+| Button       | Variant       | Primary      |
+| Button       | IconPosition  | Left         |
+| Button       | BorderRadius  | Rounded      |
+| Badge        | IconPosition  | Left         |
+| TextBlock    | Variant       | Literal      |
+| Separator    | Orientation   | Horizontal   |
+| Card         | HoverVariant  | None         |
+| Box          | BorderRadius  | Rounded      |
+| Box          | BorderStyle   | Solid        |
+| Box          | Padding       | 2            |
+
+For example, these two are equivalent:
+
+```xml
+<!-- Redundant -- don't do this -->
+<StackLayout Orientation="Vertical" RowGap="4" ColumnGap="4">
+  <Button Title="Submit" Variant="Primary" />
+</StackLayout>
+
+<!-- Clean -- use this -->
+<StackLayout>
+  <Button Title="Submit" />
+</StackLayout>
+```
+
 ## Examples
 
 Simple text:
@@ -185,4 +288,35 @@ Badge:
 Progress bar:
 ```xml
 <Progress Value="75" />
+```
+
+Composed example -- a bordered box with header, badges, progress bar, and buttons:
+```xml
+<Box Width="400px" Padding="6">
+  <StackLayout>
+    <TextBlock Content="Project Status" Variant="H3" />
+    <TextBlock Content="Sprint 12 is 75% complete." Variant="Muted" />
+    <Separator />
+    <StackLayout>
+      <Badge Title="Auth service" Variant="Success" />
+      <Badge Title="Dashboard UI" Variant="Warning" />
+      <Badge Title="API docs" Variant="Info" />
+    </StackLayout>
+    <Progress Value="75" />
+    <StackLayout Orientation="Horizontal">
+      <Button Title="View Details" Variant="Outline" />
+      <Button Title="Mark Complete" Variant="Success" />
+    </StackLayout>
+  </StackLayout>
+</Box>
+```
+
+Wireframe sketch:
+```xml
+<CanvasLayout Width="Full" Height="400px">
+  <WireframeNote Text="Step 1: User signs up" Color="Yellow" CanvasLeft="30px" CanvasTop="20px" />
+  <WireframeNote Text="Step 2: Verify email" Color="Blue" CanvasLeft="220px" CanvasTop="100px" />
+  <WireframeNote Text="Step 3: Onboarding" Color="Green" CanvasLeft="410px" CanvasTop="40px" />
+  <TextBlock Content="Signup Flow" Variant="H3" CanvasLeft="180px" CanvasTop="300px" />
+</CanvasLayout>
 ```

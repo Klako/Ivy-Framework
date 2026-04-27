@@ -1,4 +1,5 @@
 using System.Reflection;
+using Ivy.Core.Apps;
 using Ivy.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -6,15 +7,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Ivy.Core.Plugins;
 
-internal class PluginContext(Ivy.Server server, WebApplicationBuilder builder) : IIvyPluginContext
+public abstract class PluginContextBase : IIvyPluginContext
 {
     private readonly List<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> _menuTransformers = [];
     private readonly List<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> _footerMenuTransformers = [];
     private readonly List<(string Tag, Func<IServiceProvider, int> CountProvider)> _badgeProviders = [];
     private readonly List<Action<WebApplication>> _appActions = [];
 
-    public IServiceCollection Services => server.Services;
-    public IConfiguration Configuration => server.Configuration;
+    public abstract IServiceCollection Services { get; }
+    public abstract IConfiguration Configuration { get; }
+
+    protected abstract AppRepository AppRepository { get; }
+    protected abstract WebApplicationBuilder Builder { get; }
 
     public IReadOnlyList<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> MenuTransformers => _menuTransformers;
     public IReadOnlyList<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> FooterMenuTransformers => _footerMenuTransformers;
@@ -22,12 +26,12 @@ internal class PluginContext(Ivy.Server server, WebApplicationBuilder builder) :
 
     public void AddApp(AppDescriptor descriptor)
     {
-        server.AddApp(descriptor);
+        AppRepository.AddFactory(() => [descriptor]);
     }
 
     public void AddAppsFromAssembly(Assembly assembly)
     {
-        server.AddAppsFromAssembly(assembly);
+        AppRepository.AddFactory(() => AppHelpers.GetApps(assembly));
     }
 
     public void AddMenuItems(Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>> transformer)
@@ -52,12 +56,20 @@ internal class PluginContext(Ivy.Server server, WebApplicationBuilder builder) :
 
     public void UseWebApplicationBuilder(Action<WebApplicationBuilder> configure)
     {
-        configure(builder);
+        configure(Builder);
     }
 
-    internal void Apply(WebApplication app)
+    public void Apply(WebApplication app)
     {
         foreach (var action in _appActions)
             action(app);
     }
+}
+
+internal class PluginContext(Ivy.Server server, WebApplicationBuilder builder) : PluginContextBase
+{
+    public override IServiceCollection Services => server.Services;
+    public override IConfiguration Configuration => server.Configuration;
+    protected override AppRepository AppRepository => server.AppRepository;
+    protected override WebApplicationBuilder Builder => builder;
 }

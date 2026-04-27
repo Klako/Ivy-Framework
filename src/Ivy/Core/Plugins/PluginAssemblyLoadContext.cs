@@ -3,15 +3,16 @@ using System.Runtime.Loader;
 
 namespace Ivy.Core.Plugins;
 
-internal class PluginAssemblyLoadContext(string pluginPath) : AssemblyLoadContext(isCollectible: false)
+internal class PluginAssemblyLoadContext(string pluginPath, IReadOnlySet<string> sharedAssemblyNames)
+    : AssemblyLoadContext(isCollectible: false)
 {
     private readonly AssemblyDependencyResolver _resolver = new(pluginPath);
 
     protected override Assembly? Load(AssemblyName assemblyName)
     {
-        // Don't load Ivy.Plugin.Abstractions here — use the default context's copy
-        if (assemblyName.Name == "Ivy.Plugin.Abstractions")
-            return null;
+        // Shared assemblies are loaded from the host so types match across contexts
+        if (sharedAssemblyNames.Contains(assemblyName.Name!))
+            return null; // fall back to Default context
 
         var path = _resolver.ResolveAssemblyToPath(assemblyName);
         return path != null ? LoadFromAssemblyPath(path) : null;

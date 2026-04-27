@@ -11,12 +11,17 @@ public class PluginLoader
 {
     private readonly string _pluginsDirectory;
     private readonly ILogger<PluginLoader> _logger;
+    private readonly IReadOnlySet<string> _sharedAssemblyNames;
     private readonly List<LoadedPlugin> _plugins = [];
 
-    internal PluginLoader(string pluginsDirectory, ILogger<PluginLoader> logger)
+    internal PluginLoader(string pluginsDirectory, ILogger<PluginLoader> logger, IEnumerable<string>? sharedAssemblyNames = null)
     {
         _pluginsDirectory = pluginsDirectory;
         _logger = logger;
+        _sharedAssemblyNames = new HashSet<string>(sharedAssemblyNames ?? [])
+        {
+            "Ivy.Plugin.Abstractions"
+        };
     }
 
     public IReadOnlyList<LoadedPlugin> Plugins => _plugins;
@@ -66,7 +71,9 @@ public class PluginLoader
     private (IIvyPlugin Instance, Assembly Assembly, AssemblyLoadContext Context)? LoadPluginFromDirectory(
         string directory, IServiceProvider serviceProvider)
     {
-        var dllFiles = Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories);
+        var dllFiles = Directory.GetFiles(directory, "*.dll", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .ToArray();
         if (dllFiles.Length == 0)
         {
             _logger.LogWarning("No DLL files found in plugin directory: {Directory}", directory);
@@ -77,7 +84,7 @@ public class PluginLoader
 
         foreach (var dllPath in dllFiles)
         {
-            var loadContext = new PluginAssemblyLoadContext(dllPath);
+            var loadContext = new PluginAssemblyLoadContext(dllPath, _sharedAssemblyNames);
             Assembly assembly;
             try
             {

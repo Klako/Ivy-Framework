@@ -563,11 +563,12 @@ public class Server
     public Server UsePlugins(
         string pluginsDirectory,
         Version? hostVersion = null,
-        Func<Server, WebApplicationBuilder, PluginContextBase>? contextFactory = null)
+        Func<Server, WebApplicationBuilder, PluginContextBase>? contextFactory = null,
+        IEnumerable<string>? sharedAssemblyNames = null)
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var logger = loggerFactory.CreateLogger<PluginLoader>();
-        var loader = new PluginLoader(pluginsDirectory, logger);
+        var loader = new PluginLoader(pluginsDirectory, logger, sharedAssemblyNames);
 
         using var bootstrapProvider = Services.BuildServiceProvider();
         loader.DiscoverAndLoad(

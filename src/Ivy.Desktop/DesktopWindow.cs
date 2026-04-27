@@ -310,7 +310,7 @@ public class DesktopWindow
         var windowWidth = _width;
         var windowHeight = _height;
 
-        if (_useDpiScaling)
+        if (_useDpiScaling && !OperatingSystem.IsMacOS())
         {
             var scalingFactor = DpiDetector.GetSystemScalingFactor();
             windowWidth = (int)(_width * scalingFactor);

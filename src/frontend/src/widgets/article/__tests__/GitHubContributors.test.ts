@@ -42,7 +42,6 @@ describe("GitHubContributors utility functions", () => {
 
   describe("getCommitsUrl", () => {
     it("should fallback to original replacement if parsing fails", () => {
-      // If it fails some logic, it does a replace
       expect(getCommitsUrl("https://github.com/owner/repo/blob/main")).toBe(
         "https://github.com/owner/repo/commits/main",
       );

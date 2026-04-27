@@ -43,6 +43,12 @@ public class AppSession : IAsyncDisposable
     internal HashSet<string>? ActiveBrokeredRefreshLoops { get; set; }
     internal ConcurrentDictionary<string, CancellationTokenSource>? BrokeredRefreshCancellations { get; set; }
 
+    // Connected account session state
+    internal Action<string>? ConnectedAccountAddedHandler { get; set; }
+    internal Action<string>? ConnectedAccountRemovedHandler { get; set; }
+    internal HashSet<string>? ActiveConnectedAccountRefreshLoops { get; set; }
+    internal ConcurrentDictionary<string, CancellationTokenSource>? ConnectedAccountRefreshCancellations { get; set; }
+
     public async ValueTask DisposeAsync()
     {
         _isDisposed = true;

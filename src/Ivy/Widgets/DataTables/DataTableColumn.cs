@@ -25,6 +25,8 @@ public class DataTableColumn
     [JsonPropertyName("alignContent")]
     public Align AlignContent { get; set; } = Align.Left;
 
+    public bool WrapText { get; set; } = false;
+
     public int Order { get; set; } = 0;
     public string? Icon { get; set; } = null;
     public string? Help { get; set; } = null;
@@ -39,6 +41,11 @@ public class DataTableColumn
 
     [JsonIgnore]
     public IDataTableColumnRenderer? Renderer { get; set; } = null;
+
+    /// <summary>
+    /// Link type for LinkDisplayRenderer ("url", "email", "phone"). Sent to frontend for URL scheme handling.
+    /// </summary>
+    public string? LinkType { get; set; } = null;
 }
 
 public enum SortDirection
@@ -124,6 +131,7 @@ public enum LinkDisplayType
     Url,
     Email,
     Phone,
+    [Obsolete("Button type is deprecated. Use explicit button renderers instead.")]
     Button
 }
 

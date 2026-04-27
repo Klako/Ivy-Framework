@@ -62,7 +62,6 @@ type SetAuthCookiesMessage = {
   cookieJarId: string;
   reloadPage: boolean;
   triggerMachineReload: boolean;
-  triggerMachineBrokeredRefresh: boolean;
 };
 
 type HttpTunnelRequestMessage = {
@@ -311,7 +310,7 @@ function applyUpdateMessage(tree: WidgetNode, updates: UpdateMessage): WidgetNod
 
 async function refreshAuthFromCookies(connectionId: string | null): Promise<void> {
   try {
-    const response = await fetch(`${getIvyHost()}/ivy/auth/refresh-session`, {
+    const response = await fetch(`${getIvyHost()}/ivy/auth/sync-session`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -488,7 +487,6 @@ export const useBackend = (
         cookieJarId: message.cookieJarId,
         connectionId: currentConnectionId ?? null,
         triggerMachineReload: message.triggerMachineReload,
-        triggerMachineBrokeredRefresh: message.triggerMachineBrokeredRefresh,
       }),
       credentials: "include",
     });
@@ -711,14 +709,18 @@ export const useBackend = (
     // Check if this is an OAuth login redirect
     const pageParams = new URLSearchParams(window.location.search);
     const oauthLogin = pageParams.get("oauthLogin");
+    const connectedAccountLogin = pageParams.get("connectedAccountLogin");
 
     // Build SignalR connection URL
     let signalRUrl = `${getIvyHost()}/ivy/messages?appId=${latestAppIdRef.current ?? ""}&appArgs=${appArgs ?? ""}&machineId=${machineId}&parentId=${parentId ?? ""}&shell=${latestAppShellRef.current}`;
     if (oauthLogin) {
       signalRUrl += `&oauthLogin=${oauthLogin}`;
-      // Clean up the URL by removing the oauthLogin parameter
+    }
+    // Clean up auth-related query parameters from the URL
+    if (oauthLogin || connectedAccountLogin) {
       pageParams.delete("oauthLogin");
       const hash = window.location.hash || "";
+      pageParams.delete("connectedAccountLogin");
       const newUrl = pageParams.toString()
         ? `${window.location.pathname}?${pageParams.toString()}`
         : window.location.pathname;
@@ -894,8 +896,8 @@ export const useBackend = (
             window.location.reload();
           });
 
-          connection.on("RefreshAuthFromCookies", () => {
-            logger.debug(`[${connection.connectionId}] RefreshAuthFromCookies`);
+          connection.on("SyncAuthFromCookies", () => {
+            logger.debug(`[${connection.connectionId}] SyncAuthFromCookies`);
             refreshAuthFromCookies(connection.connectionId);
           });
 

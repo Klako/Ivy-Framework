@@ -20,6 +20,7 @@ public class DataTableBuilder<TModel>(
     private Func<Event<DataTable, CellClickEventArgs>, ValueTask>? _onCellClick;
     private Func<Event<DataTable, CellClickEventArgs>, ValueTask>? _onCellActivated;
     private MenuItem[]? _menuItemRowActions;
+    private Func<TModel, MenuItem[]>? _rowActionsFactory;
     private Func<Event<DataTable, RowActionClickEventArgs>, ValueTask>? _onRowAction;
     private readonly Dictionary<string, EventHandler<object>> _cellActions = [];
     private RefreshToken? _refreshToken;
@@ -169,6 +170,13 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
+    public DataTableBuilder<TModel> WrapText(Expression<Func<TModel, object>> field, bool wrap = true)
+    {
+        var column = GetColumn(field);
+        column.Column.WrapText = wrap;
+        return this;
+    }
+
     public DataTableBuilder<TModel> Sortable(Expression<Func<TModel, object>> field, bool sortable)
     {
         var column = GetColumn(field);
@@ -183,10 +191,10 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
-    public DataTableBuilder<TModel> Icon(Expression<Func<TModel, object>> field, string icon)
+    public DataTableBuilder<TModel> Icon(Expression<Func<TModel, object>> field, Icons icon)
     {
         var column = GetColumn(field);
-        column.Column.Icon = icon;
+        column.Column.Icon = icon.ToString();
         return this;
     }
 
@@ -334,6 +342,11 @@ public class DataTableBuilder<TModel>(
             column.Column.BadgeColorMapping = labelsRenderer.BadgeColorMapping;
         }
 
+        if (renderer is LinkDisplayRenderer linkRenderer)
+        {
+            column.Column.LinkType = linkRenderer.Type.ToString().ToLower();
+        }
+
         return this;
     }
 
@@ -428,6 +441,12 @@ public class DataTableBuilder<TModel>(
     public DataTableBuilder<TModel> RowActions(params MenuItem[] actions)
     {
         _menuItemRowActions = actions;
+        return this;
+    }
+
+    public DataTableBuilder<TModel> RowActions(Func<TModel, MenuItem[]> factory)
+    {
+        _rowActionsFactory = factory;
         return this;
     }
 
@@ -557,6 +576,22 @@ public class DataTableBuilder<TModel>(
             idSelectorForView = obj => _idSelectorFunc((TModel)obj);
         }
 
+        // Compute per-row actions map when a factory is provided
+        Dictionary<string, MenuItem[]>? perRowActions = null;
+        if (_rowActionsFactory != null && _idSelectorFunc != null)
+        {
+            perRowActions = new Dictionary<string, MenuItem[]>();
+            foreach (var item in queryable)
+            {
+                var id = _idSelectorFunc(item)?.ToString();
+                if (id != null)
+                {
+                    var actions = _rowActionsFactory(item);
+                    perRowActions[id] = actions;
+                }
+            }
+        }
+
         return new DataTableView(
             queryable1,
             width,
@@ -573,12 +608,13 @@ public class DataTableBuilder<TModel>(
             emptyViewFactory: _emptyViewFactory,
             headerLeftFactory: _headerLeftFactory,
             headerRightFactory: _headerRightFactory,
-            updateStream: _updateStream);
+            updateStream: _updateStream,
+            perRowActions: perRowActions);
     }
 
     public object[] GetMemoValues()
     {
         // Memoize based on configuration - if config hasn't changed, don't rebuild
-        return [_width!, _height!, _configuration, _refreshToken?.Token!];
+        return [_width!, _height!, _configuration, _refreshToken?.Token!, _density];
     }
 }

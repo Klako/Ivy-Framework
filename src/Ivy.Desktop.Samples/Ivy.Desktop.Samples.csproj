@@ -14,4 +14,8 @@
     <ProjectReference Include="../Ivy.Desktop/Ivy.Desktop.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="../assets/logo_green_w200.png" LogicalName="Ivy.Desktop.Samples.splash.png" />
+  </ItemGroup>
+
 </Project>

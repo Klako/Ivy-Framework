@@ -5,12 +5,14 @@ namespace Ivy.Widgets.Internal;
 /// </summary>
 public record SidebarNews : WidgetBase<SidebarNews>
 {
-    public SidebarNews(string feedUrl)
+    public SidebarNews(SidebarNewsArticle[] articles)
     {
-        FeedUrl = feedUrl;
+        Articles = articles;
     }
 
     internal SidebarNews() { }
 
-    [Prop] public string? FeedUrl { get; set; }
+    [Prop] public SidebarNewsArticle[]? Articles { get; set; }
 }
+
+public record SidebarNewsArticle(string Id, string Href, string Title, string Summary, string Image);

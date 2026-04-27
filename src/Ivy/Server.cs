@@ -72,6 +72,13 @@ public record ServerArgs
     /// that needs DI but should not bind a real port.
     /// </summary>
     public bool IsCliCommand => Describe || DescribeConnection != null || TestConnection != null;
+
+    /// <summary>
+    /// When true, forces all authentication cookies to have Secure=false.
+    /// This is applied AFTER ConfigureAuthCookieOptions callback to ensure
+    /// cookies work over HTTP in desktop environments.
+    /// </summary>
+    public bool ForceNonSecureCookies { get; set; } = false;
 }
 
 public class Server
@@ -91,6 +98,7 @@ public class Server
     public ServerArgs Args => _args;
     public static Action<CookieOptions>? ConfigureAuthCookieOptions { get; set; }
     public static string? AuthCookiePrefix { get; set; }
+    internal static bool ForceNonSecureCookies { get; set; }
     private IContentBuilder? _contentBuilder;
     private bool _useHotReload;
     private bool _useHttpRedirection;
@@ -138,6 +146,12 @@ public class Server
         Services.AddSingleton<IConfiguration>(_ => Configuration);
 
         AddDefaultApps();
+    }
+
+    public void SetForceNonSecureCookies(bool force)
+    {
+        _args = _args with { ForceNonSecureCookies = force };
+        ForceNonSecureCookies = force;
     }
 
     private void AddDefaultApps()
@@ -302,6 +316,8 @@ public class Server
 
         DiscoverAndRegisterOAuthTokenHandlers();
 
+        Services.AddScoped<IConnectedAccountsService, ConnectedAccountsService>();
+
         AddApp(new AppDescriptor
         {
             Id = AppIds.Auth,
@@ -317,6 +333,12 @@ public class Server
     public Server RegisterAuthTokenHandler<T>(string provider) where T : class, IAuthTokenHandler
     {
         Services.AddKeyedSingleton<IAuthTokenHandler, T>(provider);
+        return this;
+    }
+
+    public Server RegisterConnectedAccountProvider<TProvider>(string providerKey) where TProvider : class, IAuthProvider
+    {
+        Services.AddKeyedSingleton<IAuthProvider, TProvider>(providerKey);
         return this;
     }
 
@@ -587,9 +609,22 @@ public class Server
 
         builder.Configuration.AddConfiguration(Configuration);
 
+        // Set default logging first (can be overridden by user builder mods)
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
         foreach (var mod in _builderMods)
         {
             mod(builder);
+        }
+
+        // Set minimum level after user mods (users can still override with AddFilter)
+        builder.Logging.SetMinimumLevel(!_args.Verbose ? LogLevel.Warning : LogLevel.Information);
+
+        // Suppress hosting startup errors when not verbose (we handle IOException with a friendly message)
+        if (!_args.Verbose)
+        {
+            builder.Logging.AddFilter("Microsoft.Extensions.Hosting.Internal.Host", LogLevel.None);
         }
 
         // CLI-only commands need DI but never call app.StartAsync(),
@@ -651,6 +686,7 @@ public class Server
         builder.Services.AddSingleton(_contentBuilder ?? new DefaultContentBuilder());
         builder.Services.AddSingleton(sessionStore);
         builder.Services.AddSingleton<IOAuthCallbackRegistry, OAuthCallbackRegistry>();
+        builder.Services.AddSingleton<IOAuthLoginRegistry, OAuthLoginRegistry>();
         builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
         builder.Services.AddHealthChecks();
         builder.Services.AddQueryManager();
@@ -687,17 +723,6 @@ public class Server
             {
                 options.HttpsPort = 443;
             });
-        }
-
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-
-        builder.Logging.SetMinimumLevel(!_args.Verbose ? LogLevel.Warning : LogLevel.Information);
-
-        // Suppress hosting startup errors when not verbose (we handle IOException with a friendly message)
-        if (!_args.Verbose)
-        {
-            builder.Logging.AddFilter("Microsoft.Extensions.Hosting.Internal.Host", LogLevel.None);
         }
 
         var app = builder.Build();

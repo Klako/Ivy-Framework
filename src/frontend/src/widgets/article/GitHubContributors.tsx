@@ -41,19 +41,28 @@ const IVY_TEAM_MEMBERS: Record<string, { role: string; displayName?: string }> =
 };
 
 // Helper function to generate correct commits URL for main branch
-const getCommitsUrl = (githubUrl: string): string => {
+export const getCommitsUrl = (githubUrl: string): string => {
   try {
     const url = new URL(githubUrl);
     const pathParts = url.pathname.split("/");
 
     // Expected format: /owner/repo/blob/branch/path/to/file
     if (pathParts.length >= 6 && pathParts[3] === "blob") {
-      const owner = pathParts[1];
-      const repo = pathParts[2];
-      const filePath = pathParts.slice(5).join("/");
+      let owner = pathParts[1];
+      let repo = pathParts[2];
+      const branch = pathParts[4];
+      let filePath = pathParts.slice(5).join("/");
 
-      // Generate commits URL for main branch with specific file path
-      return `https://github.com/${owner}/${repo}/commits/main/${filePath}`;
+      // Mono-repo mapping support
+      if (owner.toLowerCase() === "ivy-interactive") {
+        if (repo.toLowerCase() === "ivy-tendril" || repo.toLowerCase() === "ivy-framework") {
+          filePath = `${repo}/${filePath}`;
+          repo = "ivy";
+        }
+      }
+
+      // Generate commits URL for the specific branch and file path
+      return `https://github.com/${owner}/${repo}/commits/${branch}/${filePath}`;
     }
   } catch (error) {
     // If URL parsing fails, return the original URL as fallback
@@ -64,15 +73,48 @@ const getCommitsUrl = (githubUrl: string): string => {
   return githubUrl.replace("/blob/", "/commits/");
 };
 
+// Extract repo and file path from GitHub URL
+export const getApiUrl = (githubUrl: string): string | null => {
+  try {
+    const url = new URL(githubUrl);
+    const pathParts = url.pathname.split("/");
+
+    // Expected format: /owner/repo/blob/branch/path/to/file
+    if (pathParts.length < 6 || pathParts[3] !== "blob") {
+      return null;
+    }
+
+    let owner = pathParts[1];
+    let repo = pathParts[2];
+    const branch = pathParts[4];
+    let filePath = pathParts.slice(5).join("/");
+
+    // Mono-repo mapping support
+    if (owner.toLowerCase() === "ivy-interactive") {
+      if (repo.toLowerCase() === "ivy-tendril" || repo.toLowerCase() === "ivy-framework") {
+        filePath = `${repo}/${filePath}`;
+        repo = "ivy";
+      }
+    }
+
+    // Use the branch from the URL
+    return `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(filePath)}&sha=${branch}&per_page=20`;
+  } catch {
+    return null;
+  }
+};
+
 const fetchGitHubCommits = async (apiUrl: string) => {
   const response = await fetch(apiUrl);
   if (!response.ok) {
     if (response.status === 403) {
       throw new Error("GitHub API rate limit exceeded. Please try again later.");
     } else if (response.status === 404) {
-      throw new Error("Repository or file not found.");
+      // Gracefully return empty commits if file is not found
+      // This prevents ugly errors for new files or private repositories
+      return [];
     } else {
-      throw new Error(`GitHub API error: ${response.status}`);
+      throw new Error(`GitHub API error: ${response.statusText}`);
     }
   }
   return response.json();
@@ -91,28 +133,6 @@ export const GitHubContributors: React.FC<GitHubContributorsProps> = ({
       onLoadingChange?.(false);
       return;
     }
-
-    // Extract repo and file path from GitHub URL
-    const getApiUrl = (githubUrl: string): string | null => {
-      try {
-        const url = new URL(githubUrl);
-        const pathParts = url.pathname.split("/");
-
-        // Expected format: /owner/repo/blob/branch/path/to/file
-        if (pathParts.length < 6 || pathParts[3] !== "blob") {
-          return null;
-        }
-
-        const owner = pathParts[1];
-        const repo = pathParts[2];
-        const filePath = pathParts.slice(5).join("/");
-
-        // Always fetch contributors from the main branch, regardless of the source URL branch
-        return `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(filePath)}&sha=main&per_page=20`;
-      } catch {
-        return null;
-      }
-    };
 
     const apiUrl = getApiUrl(documentSource);
     if (!apiUrl) {

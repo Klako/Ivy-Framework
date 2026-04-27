@@ -385,6 +385,7 @@ const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({
           fontSans: themeColors.fontSans,
           background: themeColors.background,
           mutedForeground: themeColors.mutedForeground,
+          card: themeColors.card,
         }),
         formatter: (params: any) => {
           const xValue = formatTooltipValue(params.value[0], tooltip);

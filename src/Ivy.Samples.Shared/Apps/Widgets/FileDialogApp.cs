@@ -166,7 +166,7 @@ public class FolderPickerDemo : ViewBase
     {
         var entries = UseState<FolderDialogEntry[]?>();
 
-        var (folderDialogView, showFolderDialog) = UseFolderDialog();
+        var (folderDialogView, showFolderDialog, selectedPath) = UseFolderDialog();
 
         return Layout.Vertical()
                | Text.H2("Folder Picker")
@@ -176,6 +176,9 @@ public class FolderPickerDemo : ViewBase
                {
                    entries.Set(selected);
                }), icon: Icons.Folder)
+               | (selectedPath.Value != null
+                   ? Text.P($"Path: {selectedPath.Value}").Small()
+                   : null)
                | (entries.Value != null && entries.Value.Length > 0
                    ? (object)Layout.Vertical(
                        entries.Value.Take(50).Select(e =>

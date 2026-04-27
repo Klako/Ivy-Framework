@@ -4,7 +4,7 @@ import Icon from "@/components/Icon";
 import { camelCase } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { getColor } from "@/lib/styles";
+import { colorNameToCssToken } from "@/lib/styles";
 import { Densities } from "@/types/density";
 
 const EMPTY_ARRAY: never[] = [];
@@ -85,10 +85,17 @@ export const BadgeWidget: React.FC<BadgeWidgetProps> = ({
       | "info";
   };
 
-  const colorStyles: React.CSSProperties = {
-    ...getColor(color, "backgroundColor", "background"),
-    ...getColor(color, "color", "foreground"),
-  };
+  const hasColor = !!color && color.trim().length > 0;
+  let colorStyles: React.CSSProperties | undefined;
+  if (hasColor) {
+    const kebab = colorNameToCssToken(color!.trim());
+    colorStyles = {
+      ["--badge-tint-bg-light" as string]: `var(--${kebab}-200)`,
+      ["--badge-tint-fg-light" as string]: `var(--${kebab}-800)`,
+      ["--badge-tint-bg-dark" as string]: `var(--${kebab}-800)`,
+      ["--badge-tint-fg-dark" as string]: `var(--${kebab}-100)`,
+    };
+  }
 
   return (
     <Badge
@@ -97,6 +104,7 @@ export const BadgeWidget: React.FC<BadgeWidgetProps> = ({
       style={colorStyles}
       className={cn(
         "whitespace-nowrap gap-1",
+        hasColor && "badge-tinted",
         hasIcon &&
           title &&
           iconPosition === "Left" &&

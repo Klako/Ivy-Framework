@@ -47,8 +47,8 @@ export default function MadeWithIvy() {
   return (
     <div
       className="fixed bottom-0 right-0 z-100 overflow-hidden rounded-tl-full "
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
     >
       <div
         className={`

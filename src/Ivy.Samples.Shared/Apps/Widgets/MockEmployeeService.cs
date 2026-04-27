@@ -21,6 +21,7 @@ public class EmployeeRecord
     public string[] Skills { get; set; } = Array.Empty<string>();
     public string? WidgetLink { get; set; }
     public string? ProfileLink { get; set; }
+    public string? Phone { get; set; }
 }
 
 public class MockEmployeeService
@@ -68,6 +69,7 @@ public class MockEmployeeService
 
             var widgetLink = "/widgets/charts/area-chart";
             var profileLink = $"https://linkedin.com/in/{firstName.ToLower()}{lastName.ToLower()}{i}";
+            var phone = $"+1-555-{random.Next(100, 999)}-{random.Next(1000, 9999)}";
 
             return new EmployeeRecord
             {
@@ -89,7 +91,8 @@ public class MockEmployeeService
                 OptionalId = optionalId,
                 Skills = skills,
                 WidgetLink = widgetLink,
-                ProfileLink = profileLink
+                ProfileLink = profileLink,
+                Phone = phone
             };
         }).ToList();
     }

@@ -7,6 +7,10 @@ namespace Ivy;
 /// <summary>
 /// A common application layout with a collapsible sidebar and main content area.
 /// </summary>
+[Slot("MainContent")]
+[Slot("SidebarContent")]
+[Slot("SidebarHeader")]
+[Slot("SidebarFooter")]
 public record SidebarLayout : WidgetBase<SidebarLayout>
 {
     public static Size DefaultWidth => Size.Rem(16);
@@ -35,6 +39,8 @@ public record SidebarLayout : WidgetBase<SidebarLayout>
 
     [Prop] public bool Resizable { get; set; } = false;
 
+    [Prop] public Scroll SidebarContentScroll { get; set; } = Scroll.Auto;
+
     public static SidebarLayout operator |(SidebarLayout widget, object child)
     {
         throw new NotSupportedException("SidebarLayout does not support children.");
@@ -56,6 +62,11 @@ public static class SidebarLayoutExtensions
     public static SidebarLayout Padding(this SidebarLayout sidebar, int padding)
     {
         return sidebar with { MainContentPadding = padding };
+    }
+
+    public static SidebarLayout SidebarContentScroll(this SidebarLayout sidebar, Scroll scroll)
+    {
+        return sidebar with { SidebarContentScroll = scroll };
     }
 
     /// <summary>

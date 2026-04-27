@@ -110,8 +110,10 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
     <div className="relative w-full select-none" style={styles}>
       <div
         className={cn(
-          "relative flex items-stretch rounded-field border border-input bg-transparent shadow-sm transition-colors dark:bg-white/5 dark:border-white/10",
-          isFocused && "outline-none ring-1 ring-ring",
+          "relative flex items-stretch rounded-field border bg-transparent shadow-sm transition-colors dark:bg-white/5",
+          isFocused
+            ? "border-ring outline-none dark:border-ring"
+            : "border-input dark:border-white/10",
           props.invalid && "border-destructive",
           props.disabled && "cursor-not-allowed opacity-50",
           props.ghost &&
@@ -121,7 +123,7 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
         {hasPrefix && (
           <div
             className={cn(
-              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)]",
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)] [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
               !isFocused && "border-r border-input",
             )}
           >
@@ -149,7 +151,7 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
             autoComplete="off"
             className={cn(
               textInputSizeVariant({ density }),
-              "pl-8 cursor-pointer border-0 shadow-none dark:bg-transparent",
+              "pl-8 cursor-pointer border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent",
               props.invalid && inputStyles.invalidInput,
               (props.invalid || showClear) && "pr-8",
               props.shortcutKey &&
@@ -198,7 +200,7 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
         {hasSuffix && (
           <div
             className={cn(
-              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)]",
+              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)] [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
               !isFocused && "border-l border-input",
             )}
           >

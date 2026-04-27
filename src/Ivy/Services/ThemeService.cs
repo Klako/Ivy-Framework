@@ -461,6 +461,71 @@ public class ThemeService : IThemeService
         AppendColorVariable(sb, "--stone-800", IvyFrameworkSourceTokens.Color.Stone_800);
         AppendColorVariable(sb, "--stone-900", IvyFrameworkSourceTokens.Color.Stone_900);
         AppendColorVariable(sb, "--stone-950", IvyFrameworkSourceTokens.Color.Stone_950);
+
+        // Destructive scale (alias of Red)
+        AppendColorVariable(sb, "--destructive-50", IvyFrameworkSourceTokens.Color.Red_50);
+        AppendColorVariable(sb, "--destructive-100", IvyFrameworkSourceTokens.Color.Red_100);
+        AppendColorVariable(sb, "--destructive-200", IvyFrameworkSourceTokens.Color.Red_200);
+        AppendColorVariable(sb, "--destructive-300", IvyFrameworkSourceTokens.Color.Red_300);
+        AppendColorVariable(sb, "--destructive-400", IvyFrameworkSourceTokens.Color.Red_400);
+        AppendColorVariable(sb, "--destructive-500", IvyFrameworkSourceTokens.Color.Red_500);
+        AppendColorVariable(sb, "--destructive-600", IvyFrameworkSourceTokens.Color.Red_600);
+        AppendColorVariable(sb, "--destructive-700", IvyFrameworkSourceTokens.Color.Red_700);
+        AppendColorVariable(sb, "--destructive-800", IvyFrameworkSourceTokens.Color.Red_800);
+        AppendColorVariable(sb, "--destructive-900", IvyFrameworkSourceTokens.Color.Red_900);
+        AppendColorVariable(sb, "--destructive-950", IvyFrameworkSourceTokens.Color.Red_950);
+
+        // Success scale (alias of Green)
+        AppendColorVariable(sb, "--success-50", IvyFrameworkSourceTokens.Color.Green_50);
+        AppendColorVariable(sb, "--success-100", IvyFrameworkSourceTokens.Color.Green_100);
+        AppendColorVariable(sb, "--success-200", IvyFrameworkSourceTokens.Color.Green_200);
+        AppendColorVariable(sb, "--success-300", IvyFrameworkSourceTokens.Color.Green_300);
+        AppendColorVariable(sb, "--success-400", IvyFrameworkSourceTokens.Color.Green_400);
+        AppendColorVariable(sb, "--success-500", IvyFrameworkSourceTokens.Color.Green_500);
+        AppendColorVariable(sb, "--success-600", IvyFrameworkSourceTokens.Color.Green_600);
+        AppendColorVariable(sb, "--success-700", IvyFrameworkSourceTokens.Color.Green_700);
+        AppendColorVariable(sb, "--success-800", IvyFrameworkSourceTokens.Color.Green_800);
+        AppendColorVariable(sb, "--success-900", IvyFrameworkSourceTokens.Color.Green_900);
+        AppendColorVariable(sb, "--success-950", IvyFrameworkSourceTokens.Color.Green_950);
+
+        // Warning scale (alias of Amber)
+        AppendColorVariable(sb, "--warning-50", IvyFrameworkSourceTokens.Color.Amber_50);
+        AppendColorVariable(sb, "--warning-100", IvyFrameworkSourceTokens.Color.Amber_100);
+        AppendColorVariable(sb, "--warning-200", IvyFrameworkSourceTokens.Color.Amber_200);
+        AppendColorVariable(sb, "--warning-300", IvyFrameworkSourceTokens.Color.Amber_300);
+        AppendColorVariable(sb, "--warning-400", IvyFrameworkSourceTokens.Color.Amber_400);
+        AppendColorVariable(sb, "--warning-500", IvyFrameworkSourceTokens.Color.Amber_500);
+        AppendColorVariable(sb, "--warning-600", IvyFrameworkSourceTokens.Color.Amber_600);
+        AppendColorVariable(sb, "--warning-700", IvyFrameworkSourceTokens.Color.Amber_700);
+        AppendColorVariable(sb, "--warning-800", IvyFrameworkSourceTokens.Color.Amber_800);
+        AppendColorVariable(sb, "--warning-900", IvyFrameworkSourceTokens.Color.Amber_900);
+        AppendColorVariable(sb, "--warning-950", IvyFrameworkSourceTokens.Color.Amber_950);
+
+        // Info scale (alias of Blue)
+        AppendColorVariable(sb, "--info-50", IvyFrameworkSourceTokens.Color.Blue_50);
+        AppendColorVariable(sb, "--info-100", IvyFrameworkSourceTokens.Color.Blue_100);
+        AppendColorVariable(sb, "--info-200", IvyFrameworkSourceTokens.Color.Blue_200);
+        AppendColorVariable(sb, "--info-300", IvyFrameworkSourceTokens.Color.Blue_300);
+        AppendColorVariable(sb, "--info-400", IvyFrameworkSourceTokens.Color.Blue_400);
+        AppendColorVariable(sb, "--info-500", IvyFrameworkSourceTokens.Color.Blue_500);
+        AppendColorVariable(sb, "--info-600", IvyFrameworkSourceTokens.Color.Blue_600);
+        AppendColorVariable(sb, "--info-700", IvyFrameworkSourceTokens.Color.Blue_700);
+        AppendColorVariable(sb, "--info-800", IvyFrameworkSourceTokens.Color.Blue_800);
+        AppendColorVariable(sb, "--info-900", IvyFrameworkSourceTokens.Color.Blue_900);
+        AppendColorVariable(sb, "--info-950", IvyFrameworkSourceTokens.Color.Blue_950);
+
+        // Ivy Green scale
+        AppendColorVariable(sb, "--ivy-green-50", IvyFrameworkSourceTokens.Color.IvyGreen_50);
+        AppendColorVariable(sb, "--ivy-green-100", IvyFrameworkSourceTokens.Color.IvyGreen_100);
+        AppendColorVariable(sb, "--ivy-green-200", IvyFrameworkSourceTokens.Color.IvyGreen_200);
+        AppendColorVariable(sb, "--ivy-green-300", IvyFrameworkSourceTokens.Color.IvyGreen_300);
+        AppendColorVariable(sb, "--ivy-green-400", IvyFrameworkSourceTokens.Color.IvyGreen_400);
+        AppendColorVariable(sb, "--ivy-green-500", IvyFrameworkSourceTokens.Color.IvyGreen_500);
+        AppendColorVariable(sb, "--ivy-green-600", IvyFrameworkSourceTokens.Color.IvyGreen_600);
+        AppendColorVariable(sb, "--ivy-green-700", IvyFrameworkSourceTokens.Color.IvyGreen_700);
+        AppendColorVariable(sb, "--ivy-green-800", IvyFrameworkSourceTokens.Color.IvyGreen_800);
+        AppendColorVariable(sb, "--ivy-green-900", IvyFrameworkSourceTokens.Color.IvyGreen_900);
+        AppendColorVariable(sb, "--ivy-green-950", IvyFrameworkSourceTokens.Color.IvyGreen_950);
     }
 
     private void AppendOtherThemeProperties(StringBuilder sb)

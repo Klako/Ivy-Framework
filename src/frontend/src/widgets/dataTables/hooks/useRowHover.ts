@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { GridMouseCellEventArgs, GridMouseEventArgs } from "@glideapps/glide-data-grid";
 import { useEventHandler } from "@/components/event-handler";
 import { MenuItem } from "@/types/widgets";
@@ -11,6 +11,7 @@ interface UseRowHoverProps {
   visibleRows: number;
   enableRowHover: boolean | undefined;
   rowActions?: MenuItem[];
+  perRowActions?: Record<string, MenuItem[]>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   arrowTableRef: React.RefObject<arrow.Table | null>;
 }
@@ -24,6 +25,7 @@ export const useRowHover = ({
   visibleRows,
   enableRowHover,
   rowActions,
+  perRowActions,
   containerRef,
   arrowTableRef,
 }: UseRowHoverProps) => {
@@ -45,7 +47,11 @@ export const useRowHover = ({
       const newHoverRow = args.kind !== "cell" ? undefined : row;
       setHoverRow(newHoverRow);
 
-      if (rowActions?.length && newHoverRow !== undefined && containerRef.current) {
+      if (
+        (rowActions?.length || perRowActions) &&
+        newHoverRow !== undefined &&
+        containerRef.current
+      ) {
         const { bounds } = args as GridMouseCellEventArgs;
         const container = containerRef.current;
         const containerRect = container.getBoundingClientRect();
@@ -67,7 +73,7 @@ export const useRowHover = ({
         setActionButtonsHeight(snap(overlayHeight));
       }
     },
-    [enableRowHover, rowActions, visibleRows, containerRef],
+    [enableRowHover, rowActions, perRowActions, visibleRows, containerRef],
   );
 
   // Handle row action button click
@@ -90,11 +96,22 @@ export const useRowHover = ({
     [hoverRow, events, eventHandler, widgetId, arrowTableRef],
   );
 
+  // Resolve per-row actions for the currently hovered row
+  const resolvedRowActions = useMemo(() => {
+    if (!perRowActions || hoverRow === undefined) return rowActions;
+    const rowId = getHiddenKeyValue(arrowTableRef.current, hoverRow);
+    if (rowId !== null && String(rowId) in perRowActions) {
+      return perRowActions[String(rowId)];
+    }
+    return rowActions;
+  }, [perRowActions, rowActions, hoverRow, arrowTableRef]);
+
   return {
     hoverRow,
     actionButtonsTop,
     actionButtonsHeight,
     onItemHovered,
     handleRowActionClick,
+    resolvedRowActions,
   };
 };

@@ -50,7 +50,8 @@ public class GitHubAuthTokenHandler : IAuthTokenHandler
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            _logger.LogError(ex, "Exception during GitHub token validation");
+            if (!cancellationToken.IsCancellationRequested)
+                _logger.LogError(ex, "Exception during GitHub token validation");
             return false;
         }
     }

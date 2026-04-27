@@ -25,9 +25,9 @@ const _getWantedWidth = (width?: string): React.CSSProperties => {
     case "units":
       return { width: `${remValue}rem`, maxWidth: `${remValue}rem` };
     case "px":
-      return { width: `${value}px` };
+      return { width: `${value}px`, maxWidth: `${value}px` };
     case "rem":
-      return { width: `${value}rem` };
+      return { width: `${value}rem`, maxWidth: `${value}rem` };
     case "fraction":
       return {
         width: `${parseFloat(value) * 100}%`,
@@ -740,7 +740,7 @@ export const typography: Record<string, string> = {
 
   // Size variants
   large: "text-lg font-semibold",
-  small: "text-large-body leading-none",
+  small: "text-sm",
   muted: "text-base text-muted-foreground",
 
   // Semantic variants
@@ -765,7 +765,7 @@ export const typography: Record<string, string> = {
   blockquote: "border-l-2 pl-6 italic",
 
   // Code
-  code: "relative rounded bg-muted px-[0.25rem] py-[0.05rem] font-mono text-[0.875em] font-semibold h-fit",
+  code: "relative rounded bg-muted px-[0.25rem] py-[0.05rem] font-mono font-semibold h-fit",
 
   // Table
   table: "w-full border-collapse border border-border",

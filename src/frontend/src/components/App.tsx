@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { renderWidgetTree, loadingState } from "@/widgets/widgetRenderer";
 import { useBackend } from "@/hooks/use-backend";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorSheet } from "@/components/ErrorSheet";
 import ErrorBoundary from "./ErrorBoundary";
-import MadeWithIvy from "./MadeWithIvy";
+// import MadeWithIvy from "./MadeWithIvy"; // TODO: Branding feature commented out - can be re-enabled in the future
 import { DevTools } from "./DevTools";
 import {
   getAppArgs,
@@ -14,7 +14,7 @@ import {
   wrapAppContent,
   isDevToolsEnabled,
 } from "@/lib/utils";
-import { hasLicensedFeature } from "@/lib/license";
+// import { hasLicensedFeature } from "@/lib/license"; // TODO: Branding feature commented out - can be re-enabled in the future
 import { ConnectionModal } from "./ConnectionModal";
 import { ThemeProvider } from "./theme-provider";
 import { EventHandlerProvider } from "./event-handler";
@@ -31,11 +31,11 @@ export function App() {
 
   const { connection, widgetTree, eventHandler, subscribeToStream, disconnected, connectionState } =
     useBackend(appId, appArgs, parentId, appShell);
-  const [removeBranding, setRemoveBranding] = useState(true);
-
-  useEffect(() => {
-    hasLicensedFeature("RemoveBranding").then(setRemoveBranding);
-  }, []);
+  // const [removeBranding, setRemoveBranding] = useState(true); // TODO: Branding feature commented out - can be re-enabled in the future
+  //
+  // useEffect(() => {
+  //   hasLicensedFeature("RemoveBranding").then(setRemoveBranding);
+  // }, []);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -61,7 +61,8 @@ export function App() {
           <EventHandlerProvider eventHandler={eventHandler}>
             <StreamHandlerProvider subscribeToStream={subscribeToStream}>
               <>
-                {!removeBranding && <MadeWithIvy />}
+                {/* {!removeBranding && <MadeWithIvy />} */}
+                {/* TODO: Branding feature commented out - can be re-enabled in the future */}
                 {isDevToolsEnabled() && <DevTools />}
                 {wrapAppContent(renderWidgetTree(widgetTree || loadingState()))}
                 <ErrorSheet />

@@ -1,5 +1,10 @@
-import React, { useCallback, useMemo, useRef } from "react";
-import { CustomRenderer, DataEditorRef, GridMouseEventArgs } from "@glideapps/glide-data-grid";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  CompactSelection,
+  CustomRenderer,
+  DataEditorRef,
+  GridMouseEventArgs,
+} from "@glideapps/glide-data-grid";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTable } from "../dataTableContext";
 import { getSelectionProps } from "../utils/selectionModes";
@@ -8,7 +13,7 @@ import {
   labelsBadgesCellRenderer,
   linkCellRenderer,
 } from "../utils/customRenderers";
-import { generateHeaderIcons, addStandardIcons } from "../utils/headerIcons";
+import { generateHeaderIcons, mergeSortIndicatorSprites } from "../utils/headerIcons";
 import {
   useContainerSize,
   useSearch,
@@ -28,14 +33,17 @@ import { MenuItem } from "@/types/widgets";
 import { DENSITY_CONFIG } from "./constants";
 import { useCellContent, useGridColumns, useHeaderMenu } from "./hooks";
 import { getOrderedVisibleDataColumns } from "../utils/columnHelpers";
+import type { SpriteMap } from "@glideapps/glide-data-grid";
 
 interface TableEditorProps {
   widgetId: string;
   events: string[];
   hasOptions?: boolean;
   rowActions?: MenuItem[];
+  perRowActions?: Record<string, MenuItem[]>;
   footer?: React.ReactNode;
   showAggregateFooter?: boolean;
+  headerIcons?: SpriteMap;
 }
 
 export const DataTableEditor: React.FC<TableEditorProps> = ({
@@ -43,8 +51,10 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   events,
   hasOptions = false,
   rowActions,
+  perRowActions,
   footer,
   showAggregateFooter = false,
+  headerIcons: providedHeaderIcons,
 }) => {
   const {
     columns,
@@ -67,6 +77,11 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
 
   const densityConfig = DENSITY_CONFIG[density];
 
+  const hasWrappingColumns = columns.some((c) => c.wrapText && !c.hidden);
+  const effectiveRowHeight = hasWrappingColumns
+    ? densityConfig.rowHeight * 3
+    : densityConfig.rowHeight;
+
   const {
     allowColumnReordering,
     allowColumnResizing,
@@ -81,6 +96,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     showColumnTypeIcons,
     showVerticalBorders,
     enableRowHover,
+    headerIcons: customHeaderIcons,
   } = config;
 
   const selectionProps = getSelectionProps(selectionMode);
@@ -121,16 +137,23 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   });
 
   // Row hover and actions
-  const { hoverRow, actionButtonsTop, actionButtonsHeight, onItemHovered, handleRowActionClick } =
-    useRowHover({
-      widgetId,
-      events,
-      visibleRows,
-      enableRowHover: enableRowHover ?? false,
-      rowActions,
-      containerRef,
-      arrowTableRef,
-    });
+  const {
+    hoverRow,
+    actionButtonsTop,
+    actionButtonsHeight,
+    onItemHovered,
+    handleRowActionClick,
+    resolvedRowActions,
+  } = useRowHover({
+    widgetId,
+    events,
+    visibleRows,
+    enableRowHover: enableRowHover ?? false,
+    rowActions,
+    perRowActions,
+    containerRef,
+    arrowTableRef,
+  });
 
   // Link cell hover tooltip
   const {
@@ -175,7 +198,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     visibleRows,
     hasMore,
     showGroups: showGroups ?? false,
-    rowHeight: densityConfig.rowHeight,
+    rowHeight: effectiveRowHeight,
   });
 
   // Data loading
@@ -185,14 +208,17 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     isLoading,
     hasMore,
     loadMoreData,
-    rowHeight: densityConfig.rowHeight,
+    rowHeight: effectiveRowHeight,
   });
 
   // Generate header icons map for all column icons
   const headerIcons = useMemo(() => {
-    const baseIcons = generateHeaderIcons(columns);
-    return addStandardIcons(baseIcons);
-  }, [columns]);
+    const baseIcons = {
+      ...generateHeaderIcons(columns, customHeaderIcons),
+      ...providedHeaderIcons,
+    };
+    return mergeSortIndicatorSprites(baseIcons);
+  }, [columns, customHeaderIcons, providedHeaderIcons]);
 
   // Header menu handling
   const { handleHeaderMenuClick } = useHeaderMenu({
@@ -235,6 +261,25 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     visibleRows,
     wantAggregateFooter,
   );
+
+  // Handle click outside to deselect cells
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the container
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        // Always clear the selection - React handles no-op if already empty
+        setGridSelection({
+          columns: CompactSelection.empty(),
+          rows: CompactSelection.empty(),
+        });
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setGridSelection]);
 
   if (finalColumns.length === 0) {
     return null;
@@ -297,7 +342,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
         onVisibleRegionChanged={handleVisibleRegionChanged}
         onHeaderClicked={allowSorting ? handleHeaderMenuClick : undefined}
         theme={tableTheme}
-        rowHeight={densityConfig.rowHeight}
+        rowHeight={effectiveRowHeight}
         headerHeight={densityConfig.rowHeight}
         freezeColumns={freezeColumns ?? 0}
         getCellsForSelection={(allowCopySelection ?? true) ? true : undefined}
@@ -321,7 +366,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
         highlightRegions={showSearchConfig ? highlightRegions : undefined}
         onItemHovered={handleItemHovered}
         getRowThemeOverride={enableRowHover || emptyRowsCount > 0 ? getRowThemeOverride : undefined}
-        rowActions={rowActions}
+        rowActions={resolvedRowActions}
         actionButtonsTop={actionButtonsTop}
         actionButtonsHeight={actionButtonsHeight}
         hoverRow={hoverRow}

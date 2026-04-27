@@ -79,8 +79,9 @@ public class AuthService : AuthTokenHandlerService, IAuthService
 
     public async Task LogoutAsync(CancellationToken cancellationToken)
     {
-        // Capture OAuth providers before clearing so we can delete their cookies
-        var providersToDelete = _authSession.BrokeredSessions.Keys.ToList();
+        // Capture providers before clearing so we can delete their cookies
+        var brokeredProvidersToDelete = _authSession.BrokeredSessions.Keys.ToList();
+        var connectedProvidersToDelete = _authSession.ConnectedAccounts.Keys.ToList();
 
         if (!string.IsNullOrWhiteSpace(_authSession.AuthToken?.AccessToken))
         {
@@ -90,9 +91,13 @@ public class AuthService : AuthTokenHandlerService, IAuthService
 
         _authSession.AuthToken = null;
         _authSession.ClearBrokeredSessions();
+        _authSession.ClearConnectedAccounts();
 
-        // Pass the captured providers to delete their cookies
-        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, providersToDelete);
+        // Pass both provider lists to delete their cookies
+        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(
+            _authSession,
+            brokeredProvidersToDelete,
+            connectedProvidersToDelete);
         _client.SetAuthCookies(cookieJarId, reloadPage: true, triggerMachineReload: null);
     }
 
@@ -170,16 +175,16 @@ public class AuthService : AuthTokenHandlerService, IAuthService
         if (hasChanges)
         {
             // Pass removed providers so their cookies get deleted
-            var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, removedProviders);
-            _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null, triggerMachineBrokeredRefresh: true);
+            var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, removedProviders, triggerMachineAuthSync: true);
+            _client.SetAuthCookies(cookieJarId, reloadPage: false, triggerMachineReload: null);
         }
 
         return BrokeredSessionsResult.Success(filteredSessions);
     }
 
-    public void SetAuthCookies(bool reloadPage = true, bool? triggerMachineReload = null, bool triggerMachineBrokeredRefresh = false)
+    public void SetAuthCookies(bool reloadPage = true, bool? triggerMachineReload = null, bool triggerMachineAuthSync = false)
     {
-        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession);
-        _client.SetAuthCookies(cookieJarId, reloadPage, triggerMachineReload, triggerMachineBrokeredRefresh);
+        var cookieJarId = _sessionStore.RegisterAuthSessionCookies(_authSession, triggerMachineAuthSync: triggerMachineAuthSync);
+        _client.SetAuthCookies(cookieJarId, reloadPage, triggerMachineReload);
     }
 }

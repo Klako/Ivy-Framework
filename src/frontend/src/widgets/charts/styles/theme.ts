@@ -8,6 +8,7 @@ export interface ChartThemeColors {
   mutedForeground: string;
   fontSans: string;
   background: string;
+  card: string;
 }
 
 /**
@@ -39,6 +40,7 @@ export const getChartThemeColors = (colors: ThemeColors, isDark: boolean): Chart
     mutedForeground: colors.mutedForeground || (isDark ? "#a1a1aa" : "#666666"),
     fontSans: getFontSans(),
     background: colors.background || (isDark ? "#000000" : "#ffffff"),
+    card: colors.card || (isDark ? "#1a1a1a" : "#ffffff"),
   };
 };
 

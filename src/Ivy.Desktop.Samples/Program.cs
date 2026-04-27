@@ -30,21 +30,38 @@ var menu = new DesktopMenu()
     .AddSubmenu("Help", h => h
         .AddItem("about", "About Ivy Desktop"));
 
+var trayMenu = new DesktopMenu()
+    .AddItem("tray-show", "Show Window")
+    .AddItem("tray-hide", "Hide Window")
+    .AddSeparator()
+    .AddItem("tray-quit", "Quit");
+
 var window = new DesktopWindow(server)
     .Title("Ivy Desktop Samples")
+    .AppId("Ivy Desktop Samples")
     .Size(1400, 900)
     .MinSize(800, 600)
     .UseDevTools()
     .ZoomHotkeys()
+    .Splash(typeof(Program), "Ivy.Desktop.Samples.splash.png", 200, 200)
     .Menu(menu)
     .OnReady(w =>
     {
+        w.SetTrayIcon(typeof(DesktopWindow), "Ivy.Desktop.ivy.ico", "Ivy Desktop Samples", trayMenu);
+
         w.MenuItemClicked += (_, id) =>
         {
             switch (id)
             {
-                case "exit":
+                case "exit" or "tray-quit":
                     w.Close();
+                    break;
+                case "tray-show":
+                    w.SetVisible(true);
+                    w.Focus();
+                    break;
+                case "tray-hide":
+                    w.SetVisible(false);
                     break;
                 case "toggle-fullscreen":
                     w.SetFullscreen(!w.IsFullscreen);
@@ -73,9 +90,16 @@ var window = new DesktopWindow(server)
                 case "about":
                     DesktopWindow.ShowNotification(
                         "Ivy Desktop Samples",
-                        "Demonstrates all DesktopWindow capabilities powered by Rustino.");
+                        "Demonstrates all DesktopWindow capabilities powered by Rustino.",
+                        appId: "Ivy Desktop Samples");
                     break;
             }
+        };
+
+        w.TrayIconClicked += (_, _) =>
+        {
+            w.SetVisible(true);
+            w.Focus();
         };
 
         w.SizeChanged += (_, e) => Console.WriteLine($"[Event] SizeChanged: {e.Width}x{e.Height}");

@@ -158,7 +158,7 @@ public class UseFolderDialogDemo : ViewBase
     {
         var entries = UseState<FolderDialogEntry[]?>();
 
-        var (folderDialogView, showFolderDialog) = UseFolderDialog();
+        var (folderDialogView, showFolderDialog, _) = UseFolderDialog();
 
         return Layout.Vertical()
                | folderDialogView

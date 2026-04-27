@@ -1,4 +1,5 @@
 using Ivy;
+using Ivy.Auth.Examples.Shared;
 
 namespace BasicAuthExample;
 
@@ -8,6 +9,7 @@ public class MainApp : ViewBase
     public override object? Build()
     {
         var auth = UseService<IAuthService>();
+        var connectedAccounts = UseService<IConnectedAccountsService>();
         var userInfo = UseState<UserInfo?>();
 
         UseEffect(async () =>
@@ -34,8 +36,35 @@ public class MainApp : ViewBase
                      Text.H3(user.FullName ?? "User"),
                      Text.Muted(user.Email)
                  ).Gap(4).AlignContent(Align.Center)
-            ).Gap(20).AlignContent(Align.Center)
+            ).Gap(20).AlignContent(Align.Center),
+
+            // Connected Accounts section
+            Layout.Vertical(
+                Text.H3("Connected Accounts"),
+                new ConnectedAccountButton(OAuthProviders.GitHub),
+                new ConnectedAccountTestSection(connectedAccounts)
+            ).Gap(10)
 
         ).Gap(40).Padding(50).AlignContent(Align.Center).Height(Size.Full());
+    }
+}
+
+public class ConnectedAccountTestSection : ViewBase
+{
+    private readonly IConnectedAccountsService _connectedAccounts;
+
+    public ConnectedAccountTestSection(IConnectedAccountsService connectedAccounts)
+    {
+        _connectedAccounts = connectedAccounts;
+    }
+
+    public override object? Build()
+    {
+        var isGitHubConnected = UseConnectedAccountState(OAuthProviders.GitHub);
+        if (!isGitHubConnected.Value)
+            return null;
+
+        var gitHubSession = _connectedAccounts.GetAccountSession(OAuthProviders.GitHub);
+        return new OAuthProviderTestView(OAuthProviders.GitHub, gitHubSession!);
     }
 }

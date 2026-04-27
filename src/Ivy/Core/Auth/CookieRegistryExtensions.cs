@@ -7,9 +7,15 @@ namespace Ivy.Core.Auth;
 public static class CookieRegistryExtensions
 {
 
-    public static IActionResult? WriteCookiesToResponse(this Controller controller, AppSessionStore sessionStore, CookieJarId cookieJarId, string intent, out CookieJar cookies)
+    public static IActionResult? WriteCookiesToResponse(
+        this Controller controller,
+        AppSessionStore sessionStore,
+        CookieJarId cookieJarId,
+        string intent,
+        out CookieJar cookies,
+        out bool triggerMachineAuthSync)
     {
-        if (!sessionStore.TryRemoveCookies(cookieJarId, intent, out cookies))
+        if (!sessionStore.TryRemoveCookies(cookieJarId, intent, out cookies, out triggerMachineAuthSync))
         {
             return controller.BadRequest("Invalid or expired cookie jar ID, or intent mismatch.");
         }
@@ -18,16 +24,21 @@ public static class CookieRegistryExtensions
         return null;
     }
 
-    public static CookieJarId RegisterAuthSessionCookies(this AppSessionStore sessionStore, IAuthSession authSession, IEnumerable<string>? providersToDelete = null)
+    public static CookieJarId RegisterAuthSessionCookies(
+        this AppSessionStore sessionStore,
+        IAuthSession authSession,
+        IEnumerable<string>? brokeredProvidersToDelete = null,
+        IEnumerable<string>? connectedProvidersToDelete = null,
+        bool triggerMachineAuthSync = false)
     {
         var cookies = new CookieJar();
-        cookies.AddCookiesForAuthToken(authSession.AuthToken, providersToDelete);
+        cookies.AddCookiesForAuthToken(authSession.AuthToken, brokeredProvidersToDelete);
         cookies.AddCookiesForAuthSessionData(authSession.AuthSessionData);
 
         // Filter out brokered session providers that have been globally removed (if machineId is provided)
         IReadOnlyDictionary<string, IAuthTokenHandlerSession> sessionsToWrite = authSession.BrokeredSessions;
-        HashSet<string>? removedProviders = providersToDelete != null
-            ? new(providersToDelete)
+        HashSet<string>? removedProviders = brokeredProvidersToDelete != null
+            ? new(brokeredProvidersToDelete)
             : null;
 
         if (removedProviders != null && removedProviders.Count > 0)
@@ -39,7 +50,22 @@ public static class CookieRegistryExtensions
 
         cookies.AddCookiesForBrokeredSessions(sessionsToWrite);
 
-        // Also delete cookies for removed providers
+        // Add connected accounts
+        cookies.AddCookiesForConnectedAccounts(authSession.ConnectedAccounts);
+
+        // Delete cookies for disconnected connected account providers
+        if (connectedProvidersToDelete != null)
+        {
+            var cookieOptions = CreateAuthCookieOptions();
+            foreach (var provider in connectedProvidersToDelete)
+            {
+                cookies.Delete(PrefixCookieName($"conn_{provider}_access_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"conn_{provider}_refresh_token"), cookieOptions);
+                cookies.Delete(PrefixCookieName($"conn_{provider}_auth_tag"), cookieOptions);
+            }
+        }
+
+        // Also delete cookies for removed brokered providers
         if (removedProviders != null && removedProviders.Count > 0)
         {
             var cookieOptions = CreateAuthCookieOptions();
@@ -51,7 +77,7 @@ public static class CookieRegistryExtensions
             }
         }
 
-        return sessionStore.RegisterCookies(cookies, CookieJarIntents.SetAuthCookies);
+        return sessionStore.RegisterCookies(cookies, CookieJarIntents.SetAuthCookies, triggerMachineAuthSync);
     }
 
     public static CookieJarId RegisterAuthTokenCookies(this AppSessionStore sessionStore, AuthToken? authToken)
@@ -133,6 +159,45 @@ public static class CookieRegistryExtensions
         }
     }
 
+    public static void AddCookiesForConnectedAccounts(this CookieJar cookies, IReadOnlyDictionary<string, IAuthSession> connectedAccounts)
+    {
+        var cookieOptions = CreateAuthCookieOptions();
+
+        foreach (var (provider, session) in connectedAccounts)
+        {
+            var accessTokenName = PrefixCookieName($"conn_{provider}_access_token");
+            var refreshTokenName = PrefixCookieName($"conn_{provider}_refresh_token");
+            var tagName = PrefixCookieName($"conn_{provider}_auth_tag");
+
+            if (!string.IsNullOrEmpty(session.AuthToken?.AccessToken))
+            {
+                cookies.Append(accessTokenName, session.AuthToken.AccessToken, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(accessTokenName, CreateAuthCookieOptions());
+            }
+
+            if (!string.IsNullOrEmpty(session.AuthToken?.RefreshToken))
+            {
+                cookies.Append(refreshTokenName, session.AuthToken.RefreshToken, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(refreshTokenName, CreateAuthCookieOptions());
+            }
+
+            if (session.AuthToken?.Tag != null)
+            {
+                cookies.Append(tagName, session.AuthToken.Tag, cookieOptions);
+            }
+            else
+            {
+                cookies.Delete(tagName, CreateAuthCookieOptions());
+            }
+        }
+    }
+
     public static void AddCookiesForBrokeredSessions(this CookieJar cookies, IReadOnlyDictionary<string, IAuthTokenHandlerSession> brokeredSessions)
     {
         var cookieOptions = CreateAuthCookieOptions();
@@ -181,7 +246,7 @@ public static class CookieRegistryExtensions
         return string.IsNullOrEmpty(prefix) ? name : $"{prefix}__{name}";
     }
 
-    private static CookieOptions CreateAuthCookieOptions(bool forceLaxSameSite = false)
+    private static CookieOptions CreateAuthCookieOptions(ServerArgs? serverArgs = null, bool forceLaxSameSite = false)
     {
         var cookieOptions = new CookieOptions
         {
@@ -192,8 +257,14 @@ public static class CookieRegistryExtensions
             Path = "/",
         };
 
-        // Apply custom configuration if provided
+        // Apply custom configuration if provided (allows apps to customize)
         global::Ivy.Server.ConfigureAuthCookieOptions?.Invoke(cookieOptions);
+
+        // Force non-secure cookies AFTER callback when running in desktop mode
+        if (serverArgs?.ForceNonSecureCookies == true || global::Ivy.Server.ForceNonSecureCookies)
+        {
+            cookieOptions.Secure = false;
+        }
 
         return cookieOptions;
     }

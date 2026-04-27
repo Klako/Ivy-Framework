@@ -1,8 +1,40 @@
 import { CustomRenderer, GridCellKind, CustomCell, type Theme } from "@glideapps/glide-data-grid";
-import { getIconImage, isValidIconName } from "./iconRenderer";
+import { icons } from "lucide-react";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { LruMap } from "./lruMap";
 
-/** Glide passes a realized theme with computed `baseFontFull` to measure/draw. */
-type GridDrawTheme = Theme & { baseFontFull: string };
+const MAX_ICON_IMAGE_CACHE = 128;
+const iconImageCache = new LruMap<string, HTMLImageElement>(MAX_ICON_IMAGE_CACHE);
+
+function isValidIconName(name: string): boolean {
+  return name in icons;
+}
+
+function getIconImage(
+  iconName: string,
+  options: { size?: number; color?: string } = {},
+): HTMLImageElement | null {
+  const { color = "#666" } = options;
+  const cacheKey = `${iconName}-${color}`;
+  const cached = iconImageCache.get(cacheKey);
+  if (cached) return cached;
+
+  const IconComponent = icons[iconName as keyof typeof icons];
+  if (!IconComponent) return null;
+
+  const svg = renderToStaticMarkup(
+    createElement(IconComponent, {
+      size: 24,
+      color,
+      strokeWidth: 2,
+    }),
+  );
+  const img = new Image();
+  img.src = `data:image/svg+xml;base64,${btoa(svg)}`;
+  iconImageCache.set(cacheKey, img);
+  return img;
+}
 
 /**
  * Data structure for icon cells
@@ -24,7 +56,9 @@ export type IconCell = CustomCell<IconCellData>;
 export interface LinkCellData {
   kind: "link-cell";
   url: string;
+  text?: string; // Optional display text (falls back to url if missing)
   align?: "left" | "center" | "right";
+  linkType?: "url" | "email" | "phone"; // For frontend handling
 }
 
 /**
@@ -32,9 +66,8 @@ export interface LinkCellData {
  */
 export type LinkCell = CustomCell<LinkCellData>;
 
-/**
- * Multi-badge cell: per-label background/text (Bubble cells only support one theme per cell).
- */
+type GridDrawTheme = Theme & { baseFontFull: string };
+
 export interface LabelsBadgesCellData {
   kind: "labels-badges-cell";
   items: { text: string; bg?: string; fg?: string }[];
@@ -57,25 +90,20 @@ function measureLabelsBadgesWidth(
   return w;
 }
 
-/**
- * Custom cell renderer for label columns with per-badge colors (badge color mapping).
- */
 export const labelsBadgesCellRenderer: CustomRenderer<LabelsBadgesCell> = {
   kind: GridCellKind.Custom,
-
   isMatch: (cell: CustomCell): cell is LabelsBadgesCell =>
     cell.kind === GridCellKind.Custom &&
     (cell.data as LabelsBadgesCellData | undefined)?.kind === "labels-badges-cell",
-
-  measure: (ctx, cell, theme) => measureLabelsBadgesWidth(ctx, cell.data.items, theme),
-
+  measure: (ctx, cell, theme) =>
+    measureLabelsBadgesWidth(ctx, cell.data.items, theme as GridDrawTheme),
   draw: (args, cell) => {
     const { ctx, rect, theme } = args;
     const { items, align = "left" } = cell.data;
     if (items.length === 0) return true;
 
     const { x, y, width: w, height: h } = rect;
-    ctx.font = theme.baseFontFull;
+    ctx.font = (theme as GridDrawTheme).baseFontFull;
     ctx.textBaseline = "middle";
 
     const bubbleH = theme.bubbleHeight;
@@ -90,11 +118,8 @@ export const labelsBadgesCellRenderer: CustomRenderer<LabelsBadgesCell> = {
     }
 
     let renderX = x + hPad;
-    if (align === "center") {
-      renderX = x + (w - rowWidth) / 2;
-    } else if (align === "right") {
-      renderX = x + w - rowWidth - hPad;
-    }
+    if (align === "center") renderX = x + (w - rowWidth) / 2;
+    else if (align === "right") renderX = x + w - rowWidth - hPad;
 
     for (const item of items) {
       if (renderX > x + w) break;
@@ -102,10 +127,10 @@ export const labelsBadgesCellRenderer: CustomRenderer<LabelsBadgesCell> = {
       const boxW = textW + pad * 2;
       const bg = item.bg ?? theme.bgBubble;
       const fg = item.fg ?? theme.textBubble;
-
-      ctx.fillStyle = bg;
       const bx = renderX;
       const by = y + (h - bubbleH) / 2;
+
+      ctx.fillStyle = bg;
       ctx.beginPath();
       if (typeof ctx.roundRect === "function") {
         ctx.roundRect(bx, by, boxW, bubbleH, radius);
@@ -122,10 +147,8 @@ export const labelsBadgesCellRenderer: CustomRenderer<LabelsBadgesCell> = {
 
       ctx.fillStyle = fg;
       ctx.fillText(item.text, bx + pad, y + h / 2);
-
       renderX += boxW + margin;
     }
-
     return true;
   },
 };
@@ -166,7 +189,6 @@ export const iconCellRenderer: CustomRenderer<IconCell> = {
     const iconImage = getIconImage(iconName, {
       size: 20,
       color: theme.textDark,
-      strokeWidth: 2,
     });
 
     if (iconImage && iconImage.complete) {
@@ -241,9 +263,10 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
   draw: (args, cell) => {
     const { ctx, rect, theme } = args;
     const url = cell.data?.url;
+    const text = cell.data?.text || url; // Use text if provided, fallback to URL
     const align = cell.data?.align || "left";
 
-    if (!url) return false;
+    if (!url || !text) return false;
 
     // Use linkColor from theme (should be blue)
     const linkColor = theme.linkColor || theme.accentColor || "#2563eb";
@@ -255,7 +278,7 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
     ctx.textBaseline = "middle";
 
     // Calculate text position based on alignment
-    const textMetrics = ctx.measureText(url);
+    const textMetrics = ctx.measureText(text); // Measure text, not URL
     let textX: number;
 
     switch (align) {
@@ -273,7 +296,7 @@ export const linkCellRenderer: CustomRenderer<LinkCell> = {
     const textY = rect.y + rect.height / 2;
 
     // Draw the text
-    ctx.fillText(url, textX, textY);
+    ctx.fillText(text, textX, textY); // Draw text, not URL
 
     // Draw underline
     const underlineY = textY + 8;

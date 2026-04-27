@@ -31,6 +31,13 @@ public enum Icons
     XTwitter, //<FaXTwitter />
     IvyCorner,
 
+    // AI Coding Agents:
+    Copilot,   // GitHub Copilot
+    OpenAI,    // OpenAI / Codex
+    ClaudeCode, // Anthropic Claude
+    Gemini,    // Google Gemini
+    OpenCode,  // Generic open-source coding
+
     // Lucide Icons (1000+ scalable vector icons):
     AArrowDown,
     AArrowUp,

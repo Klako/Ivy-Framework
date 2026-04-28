@@ -54,15 +54,33 @@ namespace Ivy.Core.Sync
     {
         public bool DeepEquals(IPropStructureNode? otherNode)
         {
-            if (otherNode is PropStructureLeaf otherLeaf)
+            if (otherNode is not PropStructureLeaf otherLeaf)
             {
-                if (Value == null)
-                {
-                    return otherLeaf.Value == null;
-                }
-                return Value.Equals(otherLeaf.Value);
+                return false;
             }
-            else return false;
+
+            if (ReferenceEquals(Value, otherLeaf.Value))
+            {
+                return true;
+            }
+
+            if (Value is null || otherLeaf.Value is null)
+            {
+                return false;
+            }
+
+            if (Value.Equals(otherLeaf.Value))
+            {
+                return true;
+            }
+
+            if (Value.GetType().IsNumeric() && otherLeaf.Value.GetType().IsNumeric()
+                && (dynamic)Value == (dynamic)otherLeaf.Value)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 

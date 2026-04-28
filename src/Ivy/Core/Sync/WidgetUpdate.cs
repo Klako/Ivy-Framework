@@ -132,8 +132,8 @@ namespace Ivy.Core.Sync
         [IgnoreMember]
         public int SortIndex => Index;
 
-        public static WidgetListSplice Add(int index, WidgetNode widget) => new(index, 0, [widget]);
-        public static WidgetListSplice AddRange(int index, IEnumerable<WidgetNode> widgets) => new(index, 0, widgets);
+        public static WidgetListSplice Insert(int index, WidgetNode widget) => new(index, 0, [widget]);
+        public static WidgetListSplice InsertRange(int index, IEnumerable<WidgetNode> widgets) => new(index, 0, widgets);
         public static WidgetListSplice Remove(int index) => new(index, 1, []);
         public static WidgetListSplice RemoveRange(int index, int length) => new(index, length, []);
         public static WidgetListSplice Replace(int index, WidgetNode widget) => new(index, 1, [widget]);

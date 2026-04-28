@@ -120,7 +120,6 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
             throw new InvalidOperationException($"Slack files.completeUploadExternal error: {error}");
         }
 
-        // Get the message ts from the file shares
         var firstFileId = fileEntries[0]!["id"]!.GetValue<string>();
         var ts = await GetFileMessageTs(firstFileId, channelId, ct);
 
@@ -232,26 +231,48 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
         };
     }
 
+    private static string? ExtractTsFromFiles(JsonArray? files, string channelId)
+    {
+        if (files is null) return null;
+        foreach (var file in files)
+        {
+            var shares = file?["shares"];
+            if (shares is null) continue;
+            foreach (var shareType in new[] { "public", "private" })
+            {
+                var channelShares = shares[shareType]?[channelId]?.AsArray();
+                if (channelShares is { Count: > 0 })
+                    return channelShares[0]?["ts"]?.GetValue<string>();
+            }
+        }
+        return null;
+    }
+
+    private static readonly HashSet<string> PermanentErrors = ["missing_scope", "invalid_auth", "not_authed", "account_inactive", "token_revoked"];
+
     private async Task<string> GetFileMessageTs(string fileId, string channelId, CancellationToken ct)
     {
-        // The file share may take a moment to propagate; retry briefly
         for (var attempt = 0; attempt < 5; attempt++)
         {
             if (attempt > 0)
-                await Task.Delay(500, ct);
+                await Task.Delay(1000, ct);
 
             var response = await _http.GetAsync($"{FilesInfoUrl}?file={fileId}", ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             var result = JsonNode.Parse(body);
 
             if (result?["ok"]?.GetValue<bool>() != true)
+            {
+                var error = result?["error"]?.GetValue<string>() ?? "";
+                if (PermanentErrors.Contains(error))
+                    throw new InvalidOperationException($"Slack files.info error: {error}");
                 continue;
+            }
 
             var shares = result["file"]?["shares"];
             if (shares is null)
                 continue;
 
-            // shares is { "public": { "C123": [...] }, "private": { "C456": [...] } }
             foreach (var shareType in new[] { "public", "private" })
             {
                 var channelShares = shares[shareType]?[channelId]?.AsArray();

@@ -14,8 +14,6 @@ namespace Ivy.Core.Sync
 
         public object? DefaultValue { get; }
 
-        public JsonNode? DefaultJsonValue { get; }
-
         public IPropStructureNode DefaultStructureValue { get; }
 
         public PropAttribute Attribute { get; }
@@ -30,7 +28,6 @@ namespace Ivy.Core.Sync
             CamelCaseName = Utils.PascalCaseToCamelCase(propInfo.Name);
             DefaultValue = defaultValue;
             DefaultStructureValue = PropStructureFactory.Transform(defaultValue);
-            DefaultJsonValue = JsonSerializer.SerializeToNode(defaultValue, _serializerOptions);
             Attribute = attribute;
             this.propInfo = propInfo;
 
@@ -66,22 +63,6 @@ namespace Ivy.Core.Sync
             }
 
             return getter(widget);
-        }
-
-        private static readonly JsonSerializerOptions _serializerOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-            Converters =
-            {
-                new JsonEnumConverter(),
-                new ValueTupleConverterFactory()
-            }
-        };
-
-        public JsonNode? GetValueAsJson(IWidget widget)
-        {
-            return JsonSerializer.SerializeToNode(GetValue(widget), _serializerOptions);
         }
 
         public IPropStructureNode GetValueAsStructure(IWidget widget)

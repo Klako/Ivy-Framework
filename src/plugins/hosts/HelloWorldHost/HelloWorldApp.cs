@@ -1,5 +1,6 @@
 using Ivy;
 using Ivy.Plugin.HelloWorld;
+using Ivy.Plugins;
 using static Ivy.Layout;
 using static Ivy.Text;
 
@@ -10,7 +11,8 @@ public class HelloWorldApp : ViewBase
 {
     public override object? Build()
     {
-        var greeters = this.UseService<IReadOnlyList<IGreeter>>();
+        var plugins = this.UseService<IPluginServiceProvider>();
+        var greeters = plugins.GetServices<IGreeter>().ToList();
         var nameState = UseState("World");
 
         var greeting = greeters.Count > 0

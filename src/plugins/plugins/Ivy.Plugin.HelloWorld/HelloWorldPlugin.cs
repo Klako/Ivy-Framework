@@ -21,9 +21,6 @@ public class HelloWorldPlugin : IIvyPlugin
 
     public void Configure(IPluginContext context)
     {
-        if (context is IHelloWorldPluginContext helloWorldContext)
-        {
-            helloWorldContext.RegisterGreeter(new HelloWorldGreeter());
-        }
+        context.RegisterGreeter(new HelloWorldGreeter());
     }
 }

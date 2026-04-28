@@ -8,15 +8,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Ivy.Core.Plugins;
 
-public abstract class PluginContextBase : IIvyPluginContext
+public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvider
 {
     private readonly List<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> _menuTransformers = [];
     private readonly List<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> _footerMenuTransformers = [];
     private readonly List<(string Tag, Func<IServiceProvider, int> CountProvider)> _badgeProviders = [];
     private readonly List<Action<WebApplication>> _appActions = [];
-    private readonly List<IMessagingChannel> _messagingChannels = [];
+    private readonly ServiceCollection _pluginServices = new();
+    private IServiceProvider? _pluginServiceProvider;
 
-    public abstract IServiceCollection Services { get; }
+    public IServiceCollection Services => _pluginServices;
     public abstract IConfiguration Configuration { get; }
 
     protected abstract AppRepository AppRepository { get; }
@@ -25,7 +26,6 @@ public abstract class PluginContextBase : IIvyPluginContext
     public IReadOnlyList<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> MenuTransformers => _menuTransformers;
     public IReadOnlyList<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> FooterMenuTransformers => _footerMenuTransformers;
     public IReadOnlyList<(string Tag, Func<IServiceProvider, int> CountProvider)> BadgeProviders => _badgeProviders;
-    public IReadOnlyList<IMessagingChannel> MessagingChannels => _messagingChannels;
 
     public void AddApp(AppDescriptor descriptor)
     {
@@ -54,7 +54,7 @@ public abstract class PluginContextBase : IIvyPluginContext
 
     public void RegisterMessagingChannel(IMessagingChannel channel)
     {
-        _messagingChannels.Add(channel);
+        Services.AddSingleton<IMessagingChannel>(channel);
     }
 
     public void UseWebApplication(Action<WebApplication> configure)
@@ -67,6 +67,21 @@ public abstract class PluginContextBase : IIvyPluginContext
         configure(Builder);
     }
 
+    public void BuildServiceProvider()
+    {
+        _pluginServiceProvider = _pluginServices.BuildServiceProvider();
+    }
+
+    public T? GetService<T>() where T : class
+    {
+        return _pluginServiceProvider?.GetService<T>();
+    }
+
+    public IEnumerable<T> GetServices<T>() where T : class
+    {
+        return _pluginServiceProvider?.GetServices<T>() ?? [];
+    }
+
     public void Apply(WebApplication app)
     {
         foreach (var action in _appActions)
@@ -76,7 +91,6 @@ public abstract class PluginContextBase : IIvyPluginContext
 
 internal class PluginContext(Ivy.Server server, WebApplicationBuilder builder) : PluginContextBase
 {
-    public override IServiceCollection Services => server.Services;
     public override IConfiguration Configuration => server.Configuration;
     protected override AppRepository AppRepository => server.AppRepository;
     protected override WebApplicationBuilder Builder => builder;

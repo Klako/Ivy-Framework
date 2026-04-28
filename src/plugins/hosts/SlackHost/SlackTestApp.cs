@@ -1,4 +1,5 @@
 using Ivy;
+using Ivy.Plugins;
 using Ivy.Plugins.Messaging;
 using static Ivy.Layout;
 using static Ivy.Text;
@@ -10,8 +11,8 @@ public class SlackTestApp : ViewBase
 {
     public override object? Build()
     {
-        var channels = this.UseService<IReadOnlyList<IMessagingChannel>>();
-        var slackChannel = channels.FirstOrDefault(c => c.Platform == "slack");
+        var plugins = this.UseService<IPluginServiceProvider>();
+        var slackChannel = plugins.GetServices<IMessagingChannel>().FirstOrDefault(c => c.Platform == "slack");
 
         var channelName = UseState("#general");
         var messageText = UseState("");

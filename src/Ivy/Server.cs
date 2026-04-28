@@ -24,6 +24,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Ivy.Core.Plugins;
+using Ivy.Plugins;
 
 namespace Ivy;
 
@@ -758,6 +759,8 @@ public class Server
             pluginContext = _pluginContextFactory?.Invoke(this, builder)
                 ?? new PluginContext(this, builder);
             _pluginLoader.Configure(pluginContext);
+            pluginContext.BuildServiceProvider();
+            builder.Services.AddSingleton<IPluginServiceProvider>(pluginContext);
         }
 
         var app = builder.Build();

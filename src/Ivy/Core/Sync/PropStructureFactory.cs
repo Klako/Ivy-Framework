@@ -12,7 +12,7 @@ using System.Text.Json.Serialization;
 namespace Ivy.Core.Sync
 {
 
-    internal class StructureFactory
+    internal class PropStructureFactory
     {
 
 

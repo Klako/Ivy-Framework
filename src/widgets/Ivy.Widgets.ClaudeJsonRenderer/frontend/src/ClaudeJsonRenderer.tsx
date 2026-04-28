@@ -1,10 +1,11 @@
-import React, { useMemo, useEffect, useRef, useState, useCallback } from "react";
+import React, { useMemo, useEffect, useState, useCallback } from "react";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import "./claude-json-renderer.css";
 import type { EventHandler, ClaudeEvent, ContentBlock, AssistantEvent, ResultEvent } from "./types";
 import { getWidth, getHeight } from "./styles";
+import { useAutoScroll } from "./use-auto-scroll";
 
 function contentToString(content: unknown): string {
   if (typeof content === "string") return content;
@@ -28,10 +29,11 @@ function buildToolResultMap(events: ClaudeEvent[]): Map<string, string> {
     const blocks = event.message?.content ?? [];
     for (const block of blocks) {
       if (block.type === "tool_result" && block.tool_use_id) {
-        const text = contentToString(block.content)
-          || contentToString(toolResult?.stdout)
-          || contentToString(toolResult?.content)
-          || "";
+        const text =
+          contentToString(block.content) ||
+          contentToString(toolResult?.stdout) ||
+          contentToString(toolResult?.content) ||
+          "";
         map.set(block.tool_use_id, text);
       }
     }
@@ -71,7 +73,15 @@ function parseEvents(jsonStream: string | undefined): ClaudeEvent[] {
   return events;
 }
 
-function ToolUseCard({ name, input, result }: { name: string; input: Record<string, unknown>; result?: string }) {
+function ToolUseCard({
+  name,
+  input,
+  result,
+}: {
+  name: string;
+  input: Record<string, unknown>;
+  result?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   let displayContent: string;
@@ -88,9 +98,8 @@ function ToolUseCard({ name, input, result }: { name: string; input: Record<stri
     displayContent = JSON.stringify(input, null, 2);
   }
 
-  const resultPreview = result != null
-    ? (result.length > 120 ? result.slice(0, 120) + "..." : result)
-    : null;
+  const resultPreview =
+    result != null ? (result.length > 120 ? result.slice(0, 120) + "..." : result) : null;
 
   return (
     <div className="tool-card my-2">
@@ -100,18 +109,20 @@ function ToolUseCard({ name, input, result }: { name: string; input: Record<stri
         {resultPreview != null && (
           <span className="font-mono truncate opacity-60 ml-2">{resultPreview}</span>
         )}
-        {result == null && (
-          <span className="opacity-40 ml-2">running...</span>
-        )}
+        {result == null && <span className="opacity-40 ml-2">running...</span>}
       </div>
       {open && (
         <div className="tool-card-body">
           <div className="opacity-50 text-[0.875rem] mb-1">Input</div>
-          <pre><code>{displayContent}</code></pre>
+          <pre>
+            <code>{displayContent}</code>
+          </pre>
           {result != null && (
             <>
               <div className="opacity-50 text-[0.875rem] mb-1 mt-3">Output</div>
-              <pre><code>{result}</code></pre>
+              <pre>
+                <code>{result}</code>
+              </pre>
             </>
           )}
         </div>
@@ -125,16 +136,16 @@ function ResultSummary({ event }: { event: ResultEvent }) {
   return (
     <div className={`result-card my-3 ${isError ? "error" : ""}`}>
       <div className="flex items-center gap-2 mb-2">
-        <span className="font-semibold text-[0.875rem]">
-          {isError ? "Error" : "Completed"}
-        </span>
+        <span className="font-semibold text-[0.875rem]">{isError ? "Error" : "Completed"}</span>
         <span className="text-[0.875rem] opacity-60">
           {event.num_turns} turn{event.num_turns !== 1 ? "s" : ""}
         </span>
       </div>
       {event.result && (
         <div className="claude-renderer mb-2">
-          <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{event.result}</Markdown>
+          <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+            {event.result}
+          </Markdown>
         </div>
       )}
       <div className="flex flex-wrap gap-4 text-[0.875rem] opacity-70">
@@ -142,7 +153,8 @@ function ResultSummary({ event }: { event: ResultEvent }) {
         <span>Duration: {(event.duration_ms / 1000).toFixed(1)}s</span>
         {event.usage && (
           <span>
-            Tokens: {(event.usage.input_tokens ?? 0).toLocaleString()} in / {(event.usage.output_tokens ?? 0).toLocaleString()} out
+            Tokens: {(event.usage.input_tokens ?? 0).toLocaleString()} in /{" "}
+            {(event.usage.output_tokens ?? 0).toLocaleString()} out
           </span>
         )}
       </div>
@@ -168,7 +180,9 @@ function AssistantMessage({
         if (block.type === "text" && block.text) {
           return (
             <div key={i} className="claude-renderer">
-              <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{block.text}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                {block.text}
+              </Markdown>
             </div>
           );
         }
@@ -204,7 +218,6 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   showSystemEvents = false,
   resetToken = 0,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [streamedLines, setStreamedLines] = useState<string[]>([]);
 
   useEffect(() => {
@@ -233,6 +246,12 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   const parsedEvents = useMemo(() => parseEvents(combinedStream), [combinedStream]);
   const toolResults = useMemo(() => buildToolResultMap(parsedEvents), [parsedEvents]);
 
+  const { scrollRef, disableAutoScroll } = useAutoScroll({
+    content: parsedEvents,
+    enabled: autoScroll,
+    smooth: false,
+  });
+
   const handleComplete = useCallback(
     (resultJson: string) => {
       if (enabledEvents.includes("OnComplete")) {
@@ -249,12 +268,6 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
     }
   }, [parsedEvents, handleComplete]);
 
-  useEffect(() => {
-    if (autoScroll && containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [parsedEvents, autoScroll]);
-
   const style: React.CSSProperties = {
     ...getWidth(width),
     ...getHeight(height),
@@ -266,7 +279,13 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   }
 
   return (
-    <div ref={containerRef} style={style} className="claude-renderer p-4">
+    <div
+      ref={scrollRef}
+      style={style}
+      className="claude-renderer p-4"
+      onWheel={autoScroll ? disableAutoScroll : undefined}
+      onTouchMove={autoScroll ? disableAutoScroll : undefined}
+    >
       {parsedEvents.map((event, index) => {
         if (event.type === "system") {
           if (!showSystemEvents) return null;

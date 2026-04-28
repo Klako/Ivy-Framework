@@ -76,17 +76,12 @@ public class MessageBuilder
         return this;
     }
 
-    public Message Build(
-        string? threadId = null,
-        string? iconEmoji = null,
-        string? username = null)
+    public Message Build(string? threadId = null)
     {
         return new Message
         {
             Content = Flatten(),
             ThreadId = threadId,
-            IconEmoji = iconEmoji,
-            Username = username,
         };
     }
 

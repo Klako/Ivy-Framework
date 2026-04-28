@@ -16,7 +16,8 @@ public class MessagingTestApp : ViewBase
 
         var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
         var channelName = UseState("#ivy-plugin-test");
-        var messageText = UseState("");
+        var messageText = UseState("Hello from an Ivy messaging plugin!");
+        var threadId = UseState("");
         var status = UseState("");
         var sending = UseState(false);
 
@@ -39,6 +40,9 @@ public class MessagingTestApp : ViewBase
             | new Field(
                 messageText.ToTextInput().Placeholder("Type a message...")
             ).Label("Message")
+            | new Field(
+                threadId.ToTextInput().Placeholder("e.g. 1234567890.123456")
+            ).Label("Thread ID")
             | Horizontal().Gap(4)
                 | new Button("Send Plain Text", onClick: async _ =>
                 {
@@ -49,7 +53,7 @@ public class MessagingTestApp : ViewBase
                     {
                         var msg = new MessageBuilder()
                             .Text(messageText.Value)
-                            .Build();
+                            .Build(threadId: NullIfEmpty(threadId.Value));
                         await activeChannel.SendMessageAsync(channelName.Value, msg);
                         status.Set($"Sent via {activeChannel.Platform}!");
                     }
@@ -74,7 +78,7 @@ public class MessagingTestApp : ViewBase
                             .Bold("Project:").Text(" :hammer_and_wrench: Framework").LineBreak()
                             .Bold("PR:").Text(" ").Link("https://github.com/Ivy-Interactive/Ivy-Framework/pull/1", "Ivy-Interactive/Ivy-Framework#1").LineBreak()
                             .Bold("Status:").Text(" ").Italic("Ready for review")
-                            .Build();
+                            .Build(threadId: NullIfEmpty(threadId.Value));
                         await activeChannel.SendMessageAsync(channelName.Value, msg);
                         status.Set($"Sent via {activeChannel.Platform}!");
                     }
@@ -101,7 +105,7 @@ public class MessagingTestApp : ViewBase
                             .Text(":package: Artifacts ready").LineBreak()
                             .Divider()
                             .CodeBlock("dotnet test --filter \"FullyQualifiedName~Ivy\"\n\nPassed! - 42 tests, 0 failed")
-                            .Build();
+                            .Build(threadId: NullIfEmpty(threadId.Value));
                         await activeChannel.SendMessageAsync(channelName.Value, msg);
                         status.Set($"Sent via {activeChannel.Platform}!");
                     }
@@ -116,6 +120,9 @@ public class MessagingTestApp : ViewBase
                 }, variant: ButtonVariant.Outline).Disabled(activeChannel is null || sending.Value)
             | (string.IsNullOrEmpty(status.Value) ? null : StatusBadge(status.Value));
     }
+
+    private static string? NullIfEmpty(string value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 
     private static object StatusBadge(string text) =>
         text.StartsWith("Error")

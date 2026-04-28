@@ -36,10 +36,6 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
 
         if (message.ThreadId is not null)
             payload["thread_ts"] = message.ThreadId;
-        if (message.Username is not null)
-            payload["username"] = message.Username;
-        if (message.IconEmoji is not null)
-            payload["icon_emoji"] = message.IconEmoji;
 
         var content = new StringContent(
             payload.ToJsonString(),

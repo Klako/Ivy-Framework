@@ -14,7 +14,7 @@ public class SlackTestApp : ViewBase
         var plugins = this.UseService<IPluginServiceProvider>();
         var slackChannel = plugins.GetServices<IMessagingChannel>().FirstOrDefault(c => c.Platform == "slack");
 
-        var channelName = UseState("#general");
+        var channelName = UseState("#ivy-plugin-test");
         var messageText = UseState("");
         var status = UseState("");
         var sending = UseState(false);

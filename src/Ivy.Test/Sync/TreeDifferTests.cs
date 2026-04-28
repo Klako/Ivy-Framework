@@ -69,7 +69,7 @@ namespace Ivy.Test.Sync
             var source = new TestWidget()
             {
                 Id = "pokwefp",
-                Children = 
+                Children =
                 [
                     new TestWidget()
                     {
@@ -111,6 +111,11 @@ namespace Ivy.Test.Sync
                     new TestWidget()
                     {
                         Id = "67890",
+                        TestProp1 = "foo"
+                    },
+                    new TestWidget()
+                    {
+                        Id = "78901",
                         TestProp1 = "foo"
                     }
                 ]
@@ -151,6 +156,11 @@ namespace Ivy.Test.Sync
                     {
                         Id = "67890",
                         TestProp1 = "foo"
+                    },
+                    new TestWidget()
+                    {
+                        Id = "78901",
+                        TestProp1 = "foo"
                     }
                 ]
             };
@@ -175,63 +185,6 @@ namespace Ivy.Test.Sync
             TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
         }
 
-        private static string[] texts = [
-                "Five foxes four fairies",
-                "Lorem ipsum dolor sit amet",
-                "Aliquam augue massa",
-                "Vivamus lobortis diam id nulla mattis"
-            ];
-
-        private IWidget GenerateRandomTree(Random rand, int depth)
-        {
-            if (depth == 1)
-            {
-                return (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
-            }
-            var prefix = rand.Next().ToString();
-
-            var textNode = (IWidget)Text.H3(texts[rand.Next(texts.Length)]).Build()!;
-            var nodes = Enumerable.Range(0, rand.Next(2, 5))
-                .Select(idx => rand.Next(2) switch
-                {
-                    0 => (WidgetBase)GenerateRandomTree(rand, depth - 1),
-                    1 => (WidgetBase)Text.H3(texts[rand.Next(texts.Length)]).Build()!,
-                    _ => throw new Exception("Test is faulty")
-                } with
-                { Id = prefix + idx.ToString() });
-
-            return new List(nodes);
-        }
-
-        [Fact]
-        public void TreeDiffer_NoChange()
-        {
-            var source = GenerateRandomTree(new Random(), (int)Math.Log2(100));
-            source.Id = "dwqpokqwd";
-
-            TestAllDiffers(source.ToWidgetNode(), source.ToWidgetNode());
-        }
-
-        [Fact]
-        public void TreeDiffer_Replace()
-        {
-            var sourceNode = new TestWidget("qwodijqwd").ToWidgetNode();
-            var targetNode = ((WidgetBase)Text.H3("qwoijqd").Build()! with { Id = "qwdoijq" }).ToWidgetNode();
-
-            TestAllDiffers(sourceNode, targetNode);
-        }
-
-        [Fact]
-        public void TreeDiffer_RandomTree()
-        {
-            var source = GenerateRandomTree(new Random(), (int)Math.Log2(1000));
-            source.Id = "dwqpokqwd";
-            var target = GenerateRandomTree(new Random(), (int)Math.Log2(1000));
-            target.Id = "dwqpokqwd";
-
-            TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
-        }
-
         [Fact]
         public void TreeDiffer_ComplexPropChange()
         {
@@ -242,6 +195,8 @@ namespace Ivy.Test.Sync
                 {
                     {"Foo", ["Biz", "Baz", "Bar"]},
                     {"Zoo", ["Mis"]},
+                    {"Noo", [null, "Nis", null] },
+                    {"Coo", ["Car", "Cdr"] }
                 }
             };
             var target = new TestWidget()
@@ -251,7 +206,8 @@ namespace Ivy.Test.Sync
                 {
                     {"Foo", ["Biz", "Raz"] },
                     {"Zoo", ["Mis", "Mas", "Mar"]},
-                    {"Roo", [] }
+                    {"Roo", ["Ris"] },
+                    {"Noo", ["Nis", null, null] }
                 }
             };
 
@@ -281,6 +237,65 @@ namespace Ivy.Test.Sync
             { Id = "qwoijd" };
 
             TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
+        }
+
+        [Fact]
+        public void TreeDiffer_Replace()
+        {
+            var sourceNode = new TestWidget("qwodijqwd").ToWidgetNode();
+            var targetNode = ((WidgetBase)Text.H3("qwoijqd").Build()! with { Id = "qwdoijq" }).ToWidgetNode();
+
+            TestAllDiffers(sourceNode, targetNode);
+        }
+
+        [Fact]
+        public void TreeDiffer_ReplaceChildren()
+        {
+            var sourceNode = new TestWidget("qwiojdqw")
+            {
+                Children = [
+                    new TestWidget("dwqiojqwd1"),
+                    new TestWidget("dwqiojqwd2"),
+                    new TestWidget("dwqiojqwd3"),
+                    new TestWidget("dwqiojqwd4")
+                ]
+            }.ToWidgetNode();
+
+            var targetNode = new TestWidget("qwiojdqw")
+            {
+                Children = [
+                    new TestWidget2("dqiowjqwd1"),
+                    new TestWidget2("dqiowjqwd2"),
+                    new TestWidget2("dqiowjqwd3"),
+                ]
+            }.ToWidgetNode();
+
+            TestAllDiffers(sourceNode, targetNode);
+        }
+
+        [Fact]
+        public void TreeDiffer_NoChange()
+        {
+            var sourceNode = new TestWidget("dwqoijd")
+            {
+                Children = [
+                    new TestWidget("dwqiojqd1")
+                    {
+                        TestProp2 = new(){
+                            {"Foo", ["Bar"] }
+                        }
+                    },
+                    new TestWidget2("dwqiojqd2"),
+                    new TestWidget2("dwqiojqd2"),
+                    new TestWidget2("dwqiojqd2"){
+                        TestProp2 = new(){
+                            {"Foo", [null]}
+                        }
+                    },
+                ]
+            }.ToWidgetNode();
+
+            TestAllDiffers(sourceNode, sourceNode);
         }
     }
 }

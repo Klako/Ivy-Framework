@@ -4,8 +4,13 @@ public interface IMessagingChannel
 {
     string Platform { get; }
 
-    Task SendMessageAsync(
+    Task<MessageResult> SendMessageAsync(
         string channel,
         Message message,
+        CancellationToken ct = default);
+
+    Task DeleteMessageAsync(
+        string channel,
+        string messageId,
         CancellationToken ct = default);
 }

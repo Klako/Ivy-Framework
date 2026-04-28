@@ -4,27 +4,35 @@ using Ivy.Plugins.Messaging;
 using static Ivy.Layout;
 using static Ivy.Text;
 
-namespace SlackHost;
+namespace MessagingHost;
 
-[App(icon: Icons.MessageCircle, title: "Slack Test")]
-public class SlackTestApp : ViewBase
+[App(icon: Icons.MessageCircle, title: "Messaging Test")]
+public class MessagingTestApp : ViewBase
 {
     public override object? Build()
     {
         var plugins = this.UseService<IPluginServiceProvider>();
-        var slackChannel = plugins.GetServices<IMessagingChannel>().FirstOrDefault(c => c.Platform == "slack");
+        var channels = plugins.GetServices<IMessagingChannel>().ToList();
 
+        var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
         var channelName = UseState("#ivy-plugin-test");
         var messageText = UseState("");
         var status = UseState("");
         var sending = UseState(false);
 
+        var activeChannel = channels.FirstOrDefault(c => c.Platform == selectedPlatform.Value);
+
         return Vertical().Gap(6).Padding(4)
-            | H1("Slack Plugin Test")
-            | (slackChannel is null
-                ? new Badge("No Slack plugin loaded — check Plugins:Slack:BotToken in config", BadgeVariant.Warning)
-                : new Badge("Slack connected", BadgeVariant.Success))
+            | H1("Messaging Test")
+            | (channels.Count == 0
+                ? new Badge("No messaging plugins loaded", BadgeVariant.Warning)
+                : new Badge($"{channels.Count} channel(s): {string.Join(", ", channels.Select(c => c.Platform))}", BadgeVariant.Success))
             | new Separator()
+            | (channels.Count > 1
+                ? new Field(
+                    selectedPlatform.ToSelectInput(channels.Select(c => c.Platform))
+                  ).Label("Platform")
+                : null)
             | new Field(
                 channelName.ToTextInput().Placeholder("#channel or ID")
             ).Label("Channel")
@@ -34,7 +42,7 @@ public class SlackTestApp : ViewBase
             | Horizontal().Gap(4)
                 | new Button("Send Plain Text", onClick: async _ =>
                 {
-                    if (slackChannel is null || string.IsNullOrWhiteSpace(messageText.Value)) return;
+                    if (activeChannel is null || string.IsNullOrWhiteSpace(messageText.Value)) return;
                     sending.Set(true);
                     status.Set("");
                     try
@@ -42,8 +50,8 @@ public class SlackTestApp : ViewBase
                         var msg = new MessageBuilder()
                             .Text(messageText.Value)
                             .Build();
-                        await slackChannel.SendMessageAsync(channelName.Value, msg);
-                        status.Set("Sent!");
+                        await activeChannel.SendMessageAsync(channelName.Value, msg);
+                        status.Set($"Sent via {activeChannel.Platform}!");
                     }
                     catch (Exception ex)
                     {
@@ -53,10 +61,10 @@ public class SlackTestApp : ViewBase
                     {
                         sending.Set(false);
                     }
-                }).Disabled(slackChannel is null || sending.Value)
+                }).Disabled(activeChannel is null || sending.Value)
                 | new Button("Send Rich Message", onClick: async _ =>
                 {
-                    if (slackChannel is null) return;
+                    if (activeChannel is null) return;
                     sending.Set(true);
                     status.Set("");
                     try
@@ -67,8 +75,8 @@ public class SlackTestApp : ViewBase
                             .Bold("PR:").Text(" ").Link("https://github.com/Ivy-Interactive/Ivy-Framework/pull/1", "Ivy-Interactive/Ivy-Framework#1").LineBreak()
                             .Bold("Status:").Text(" ").Italic("Ready for review")
                             .Build();
-                        await slackChannel.SendMessageAsync(channelName.Value, msg);
-                        status.Set("Sent!");
+                        await activeChannel.SendMessageAsync(channelName.Value, msg);
+                        status.Set($"Sent via {activeChannel.Platform}!");
                     }
                     catch (Exception ex)
                     {
@@ -78,10 +86,10 @@ public class SlackTestApp : ViewBase
                     {
                         sending.Set(false);
                     }
-                }, variant: ButtonVariant.Outline).Disabled(slackChannel is null || sending.Value)
+                }, variant: ButtonVariant.Outline).Disabled(activeChannel is null || sending.Value)
                 | new Button("Send with Divider & Code", onClick: async _ =>
                 {
-                    if (slackChannel is null) return;
+                    if (activeChannel is null) return;
                     sending.Set(true);
                     status.Set("");
                     try
@@ -94,8 +102,8 @@ public class SlackTestApp : ViewBase
                             .Divider()
                             .CodeBlock("dotnet test --filter \"FullyQualifiedName~Ivy\"\n\nPassed! - 42 tests, 0 failed")
                             .Build();
-                        await slackChannel.SendMessageAsync(channelName.Value, msg);
-                        status.Set("Sent!");
+                        await activeChannel.SendMessageAsync(channelName.Value, msg);
+                        status.Set($"Sent via {activeChannel.Platform}!");
                     }
                     catch (Exception ex)
                     {
@@ -105,7 +113,7 @@ public class SlackTestApp : ViewBase
                     {
                         sending.Set(false);
                     }
-                }, variant: ButtonVariant.Outline).Disabled(slackChannel is null || sending.Value)
+                }, variant: ButtonVariant.Outline).Disabled(activeChannel is null || sending.Value)
             | (string.IsNullOrEmpty(status.Value) ? null : StatusBadge(status.Value));
     }
 

@@ -171,7 +171,7 @@ namespace Ivy.Core.Sync
 
             return new PropValueDiff(target);
         }
-
+        
         private WidgetListDiff? ChildrenLinearDiff(WidgetNode[] source, WidgetNode[] target)
         {
             var changes = new List<IWidgetListOperation>(Math.Max(source.Length, target.Length));
@@ -185,7 +185,19 @@ namespace Ivy.Core.Sync
 
                 if (result is WidgetNode widget)
                 {
-                    changes.Add(WidgetListSplice.Replace(i, widget));
+                    if (changes.LastOrDefault() is WidgetListSplice previousSplice
+                        && previousSplice.Index == i - 1)
+                    {
+                        changes.RemoveAt(changes.Count - 1);
+                        changes.Add(WidgetListSplice.ReplaceRange(
+                            previousSplice.Index,
+                            previousSplice.Length + 1,
+                            previousSplice.Widgets.Append(widget)));
+                    }
+                    else
+                    {
+                        changes.Add(WidgetListSplice.Replace(i, widget));
+                    }
                 }
                 else if (result is WidgetUpdate update)
                 {
@@ -201,7 +213,7 @@ namespace Ivy.Core.Sync
             else if (source.Length < target.Length)
             {
                 var widgetsToAdd = target.TakeLast(target.Length - source.Length);
-                changes.Add(WidgetListSplice.AddRange(source.Length, widgetsToAdd));
+                changes.Add(WidgetListSplice.InsertRange(source.Length, widgetsToAdd));
             }
 
             if (changes.Count == 0)
@@ -321,10 +333,11 @@ namespace Ivy.Core.Sync
 
                     if (sourceLength < targetLength)
                     {
-                        changes.Add(WidgetListSplice.AddRange(
-                            previousPair.SourceIndex + sourceLength,
-                            target.Skip(previousPair.TargetIndex + sourceLength)
-                                .Take(targetLength - sourceLength)));
+                        var insertIndex = previousPair.SourceIndex + sourceLength;
+                        var insertWidgets = target
+                            .Skip(previousPair.TargetIndex + sourceLength)
+                            .Take(targetLength - sourceLength);
+                        changes.Add(WidgetListSplice.InsertRange(insertIndex, insertWidgets));
                     }
                 }
             }

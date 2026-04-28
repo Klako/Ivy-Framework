@@ -247,7 +247,7 @@ namespace Ivy.Test.Sync
         [Fact]
         public void ComputeDiff_RemoveChildren()
         {
-            var target = new TestWidget()
+            var source = new TestWidget()
             {
                 Id = "pokwefp",
                 Children =
@@ -279,7 +279,7 @@ namespace Ivy.Test.Sync
                     }
                 ]
             };
-            var source = new TestWidget()
+            var target = new TestWidget()
             {
                 Id = "pokwefp",
                 Children =

@@ -22,7 +22,7 @@ namespace Ivy.Test.Sync
                 ["OnClick"],
                 new WidgetListDiff(null, [
                     new WidgetListUpdate(0, new WidgetUpdate(null, "eqweee", null, null, null)),
-                    WidgetListSplice.Add(1, new TestWidget("dqwpokqw").ToWidgetNode()),
+                    WidgetListSplice.Insert(1, new TestWidget("dqwpokqw").ToWidgetNode()),
                     WidgetListSplice.RemoveRange(2, 1),
                     WidgetListSplice.Replace(3, new TestWidget("dqwdqwe").ToWidgetNode())
                     ]));

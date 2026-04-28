@@ -1,6 +1,7 @@
 using System.Reflection;
 using Ivy.Core.Apps;
 using Ivy.Plugins;
+using Ivy.Plugins.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ public abstract class PluginContextBase : IIvyPluginContext
     private readonly List<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> _footerMenuTransformers = [];
     private readonly List<(string Tag, Func<IServiceProvider, int> CountProvider)> _badgeProviders = [];
     private readonly List<Action<WebApplication>> _appActions = [];
+    private readonly List<IMessagingChannel> _messagingChannels = [];
 
     public abstract IServiceCollection Services { get; }
     public abstract IConfiguration Configuration { get; }
@@ -23,6 +25,7 @@ public abstract class PluginContextBase : IIvyPluginContext
     public IReadOnlyList<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> MenuTransformers => _menuTransformers;
     public IReadOnlyList<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> FooterMenuTransformers => _footerMenuTransformers;
     public IReadOnlyList<(string Tag, Func<IServiceProvider, int> CountProvider)> BadgeProviders => _badgeProviders;
+    public IReadOnlyList<IMessagingChannel> MessagingChannels => _messagingChannels;
 
     public void AddApp(AppDescriptor descriptor)
     {
@@ -47,6 +50,11 @@ public abstract class PluginContextBase : IIvyPluginContext
     public void AddBadgeProvider(string menuTag, Func<IServiceProvider, int> countProvider)
     {
         _badgeProviders.Add((menuTag, countProvider));
+    }
+
+    public void RegisterMessagingChannel(IMessagingChannel channel)
+    {
+        _messagingChannels.Add(channel);
     }
 
     public void UseWebApplication(Action<WebApplication> configure)

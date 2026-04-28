@@ -1,3 +1,4 @@
+using Ivy.Plugins.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,4 +8,5 @@ public interface IPluginContext
 {
     IServiceCollection Services { get; }
     IConfiguration Configuration { get; }
+    void RegisterMessagingChannel(IMessagingChannel channel);
 }

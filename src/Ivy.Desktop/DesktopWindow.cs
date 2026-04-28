@@ -378,6 +378,30 @@ public class DesktopWindow
         {
             var args = new DesktopNavigationEventArgs(e.Url);
             Navigating?.Invoke(this, args);
+
+            if (!args.Cancel && Uri.TryCreate(e.Url, UriKind.Absolute, out var uri))
+            {
+                if (uri.Scheme == "http" || uri.Scheme == "https")
+                {
+                    if (uri.Host != "localhost" && uri.Host != "127.0.0.1")
+                    {
+                        args.Cancel = true;
+                        try
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = e.Url,
+                                UseShellExecute = true
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"[Ivy.Desktop] Failed to open external link: {ex.Message}");
+                        }
+                    }
+                }
+            }
+
             e.Cancel = args.Cancel;
         };
         _window.MenuItemClicked += (_, id) => MenuItemClicked?.Invoke(this, id);

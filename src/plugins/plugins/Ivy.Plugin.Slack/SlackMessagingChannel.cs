@@ -123,10 +123,15 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
         var firstFileId = fileEntries[0]!["id"]!.GetValue<string>();
         var ts = await GetFileMessageTs(firstFileId, channelId, ct);
 
+        // For threaded file uploads, shares may not be populated;
+        // fall back to the parent thread ts so reply chains still work
+        if (string.IsNullOrEmpty(ts))
+            ts = message.ThreadId ?? "";
+
         return new MessageResult
         {
             MessageId = ts,
-            ThreadId = ts,
+            ThreadId = message.ThreadId ?? ts,
             Channel = channelId,
             Timestamp = ts.Length > 0 ? ParseSlackTimestamp(ts) : DateTimeOffset.UtcNow,
         };

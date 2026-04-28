@@ -3,6 +3,7 @@ namespace Ivy.Plugins.Messaging;
 public class MessageBuilder
 {
     private readonly List<MessageContent> _nodes = [];
+    private readonly List<FileAttachment> _attachments = [];
 
     public MessageBuilder Text(string text)
     {
@@ -76,12 +77,19 @@ public class MessageBuilder
         return this;
     }
 
+    public MessageBuilder Attach(byte[] content, string fileName, string? title = null)
+    {
+        _attachments.Add(new FileAttachment(content, fileName, title));
+        return this;
+    }
+
     public Message Build(string? threadId = null)
     {
         return new Message
         {
             Content = Flatten(),
             ThreadId = threadId,
+            Attachments = _attachments.Count > 0 ? _attachments.ToList() : null,
         };
     }
 

@@ -13,4 +13,12 @@ public interface IMessagingChannel
         string channel,
         string messageId,
         CancellationToken ct = default);
+
+    Task<MessageResult> UploadFileAsync(
+        string channel,
+        Stream content,
+        string fileName,
+        string? title = null,
+        string? threadId = null,
+        CancellationToken ct = default);
 }

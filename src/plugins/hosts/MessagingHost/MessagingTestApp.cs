@@ -23,17 +23,40 @@ public class MessagingTestApp : ViewBase
         var status = UseState("");
         var sending = UseState(false);
         var sentMessages = UseState<List<SentMessage>>([]);
+        var fileState = UseState<FileUpload<byte[]>?>(null);
 
         var activeChannel = channels.FirstOrDefault(c => c.Platform == selectedPlatform.Value);
 
-        async Task Send(IMessagingChannel channel, Message msg, string preview)
+        var uploadContext = this.UseUpload(async (file, stream, ct) =>
+        {
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms, ct);
+            fileState.Set(new FileUpload<byte[]>
+            {
+                Id = file.Id,
+                FileName = file.FileName,
+                ContentType = file.ContentType,
+                Length = file.Length,
+                Status = FileUploadStatus.Finished,
+                Progress = 1,
+                Content = ms.ToArray(),
+            });
+        });
+        uploadContext.Accept("image/*");
+
+        async Task Send(IMessagingChannel channel, MessageBuilder builder, string preview)
         {
             sending.Set(true);
             status.Set("");
             try
             {
+                if (fileState.Value?.Content is not null)
+                    builder.Attach(fileState.Value.Content, fileState.Value.FileName);
+
+                var msg = builder.Build(threadId: NullIfEmpty(threadId.Value));
                 var result = await channel.SendMessageAsync(channelName.Value, msg);
                 sentMessages.Set([..sentMessages.Value, new SentMessage(channel.Platform, result, preview)]);
+                fileState.Set(null);
                 status.Set($"Sent via {channel.Platform}!");
             }
             catch (Exception ex)
@@ -66,38 +89,36 @@ public class MessagingTestApp : ViewBase
             | new Field(
                 threadId.ToTextInput().Placeholder("e.g. 1234567890.123456")
             ).Label("Thread ID")
+            | new Field(
+                fileState.ToFileInput(uploadContext).Placeholder("Drop an image here")
+            ).Label("Image Attachment")
             | Horizontal().Gap(4)
                 | new Button("Send Plain Text", onClick: async _ =>
                 {
                     if (activeChannel is null || string.IsNullOrWhiteSpace(messageText.Value)) return;
-                    var msg = new MessageBuilder()
-                        .Text(messageText.Value)
-                        .Build(threadId: NullIfEmpty(threadId.Value));
-                    await Send(activeChannel, msg, messageText.Value);
+                    await Send(activeChannel, new MessageBuilder().Text(messageText.Value), messageText.Value);
                 }).Disabled(activeChannel is null || sending.Value)
                 | new Button("Send Rich Message", onClick: async _ =>
                 {
                     if (activeChannel is null) return;
-                    var msg = new MessageBuilder()
+                    var builder = new MessageBuilder()
                         .Bold("Title:").Text(" Example PR notification").LineBreak()
                         .Bold("Project:").Text(" :hammer_and_wrench: Framework").LineBreak()
                         .Bold("PR:").Text(" ").Link("https://github.com/Ivy-Interactive/Ivy-Framework/pull/1", "Ivy-Interactive/Ivy-Framework#1").LineBreak()
-                        .Bold("Status:").Text(" ").Italic("Ready for review")
-                        .Build(threadId: NullIfEmpty(threadId.Value));
-                    await Send(activeChannel, msg, "Rich: PR notification");
+                        .Bold("Status:").Text(" ").Italic("Ready for review");
+                    await Send(activeChannel, builder, "Rich: PR notification");
                 }, variant: ButtonVariant.Outline).Disabled(activeChannel is null || sending.Value)
                 | new Button("Send with Divider & Code", onClick: async _ =>
                 {
                     if (activeChannel is null) return;
-                    var msg = new MessageBuilder()
+                    var builder = new MessageBuilder()
                         .Bold("Build Report")
                         .Divider()
                         .Text(":white_check_mark: All tests passed").LineBreak()
                         .Text(":package: Artifacts ready").LineBreak()
                         .Divider()
-                        .CodeBlock("dotnet test --filter \"FullyQualifiedName~Ivy\"\n\nPassed! - 42 tests, 0 failed")
-                        .Build(threadId: NullIfEmpty(threadId.Value));
-                    await Send(activeChannel, msg, "Rich: Build report");
+                        .CodeBlock("dotnet test --filter \"FullyQualifiedName~Ivy\"\n\nPassed! - 42 tests, 0 failed");
+                    await Send(activeChannel, builder, "Rich: Build report");
                 }, variant: ButtonVariant.Outline).Disabled(activeChannel is null || sending.Value)
             | (string.IsNullOrEmpty(status.Value) ? null : StatusBadge(status.Value))
             | (sentMessages.Value.Count > 0 ? SentMessagesSection(channels, sentMessages, threadId, status) : null);

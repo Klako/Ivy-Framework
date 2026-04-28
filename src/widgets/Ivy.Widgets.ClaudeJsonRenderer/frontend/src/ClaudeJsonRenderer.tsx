@@ -1,10 +1,11 @@
-import React, { useMemo, useEffect, useRef, useState, useCallback } from "react";
+import React, { useMemo, useEffect, useState, useCallback } from "react";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import "./claude-json-renderer.css";
 import type { EventHandler, ClaudeEvent, ContentBlock, AssistantEvent, ResultEvent } from "./types";
 import { getWidth, getHeight } from "./styles";
+import { useAutoScroll } from "./use-auto-scroll";
 
 function contentToString(content: unknown): string {
   if (typeof content === "string") return content;
@@ -204,7 +205,6 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   showSystemEvents = false,
   resetToken = 0,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [streamedLines, setStreamedLines] = useState<string[]>([]);
 
   useEffect(() => {
@@ -233,6 +233,12 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   const parsedEvents = useMemo(() => parseEvents(combinedStream), [combinedStream]);
   const toolResults = useMemo(() => buildToolResultMap(parsedEvents), [parsedEvents]);
 
+  const { scrollRef, disableAutoScroll } = useAutoScroll({
+    content: parsedEvents,
+    enabled: autoScroll,
+    smooth: false,
+  });
+
   const handleComplete = useCallback(
     (resultJson: string) => {
       if (enabledEvents.includes("OnComplete")) {
@@ -249,12 +255,6 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
     }
   }, [parsedEvents, handleComplete]);
 
-  useEffect(() => {
-    if (autoScroll && containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [parsedEvents, autoScroll]);
-
   const style: React.CSSProperties = {
     ...getWidth(width),
     ...getHeight(height),
@@ -266,7 +266,13 @@ export const ClaudeJsonRenderer: React.FC<ClaudeJsonRendererProps> = ({
   }
 
   return (
-    <div ref={containerRef} style={style} className="claude-renderer p-4">
+    <div
+      ref={scrollRef}
+      style={style}
+      className="claude-renderer p-4"
+      onWheel={autoScroll ? disableAutoScroll : undefined}
+      onTouchMove={autoScroll ? disableAutoScroll : undefined}
+    >
       {parsedEvents.map((event, index) => {
         if (event.type === "system") {
           if (!showSystemEvents) return null;

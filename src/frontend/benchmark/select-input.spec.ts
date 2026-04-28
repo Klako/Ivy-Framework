@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
 
 test.use({
   ignoreHTTPSErrors: true
@@ -68,4 +69,9 @@ test('test', async ({ page }) => {
   //console.log(payloads);
   console.log("payload average: " + average(payloads));
   console.log("payload stddev: " + stdDev(payloads));
+  let f = fs.createWriteStream('benchmark.csv', 'ascii');
+  f.write("payload, latency\n");
+  for (let [payload, latency] of payloads.map((p, i) => [p, latencies[i]])) {
+    
+  }
 });

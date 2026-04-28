@@ -67,10 +67,18 @@
   line-height: 1.375;
 }
 
-.claude-renderer h1 { font-size: 0.875rem; }
-.claude-renderer h2 { font-size: 0.875rem; }
-.claude-renderer h3 { font-size: 0.875rem; }
-.claude-renderer h4 { font-size: 0.875rem; }
+.claude-renderer h1 {
+  font-size: 0.875rem;
+}
+.claude-renderer h2 {
+  font-size: 0.875rem;
+}
+.claude-renderer h3 {
+  font-size: 0.875rem;
+}
+.claude-renderer h4 {
+  font-size: 0.875rem;
+}
 
 .claude-renderer blockquote {
   margin: 0.5rem 0;

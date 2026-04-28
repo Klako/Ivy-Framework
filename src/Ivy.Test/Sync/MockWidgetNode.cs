@@ -48,14 +48,7 @@ namespace Ivy.Test.Sync
                         oldNode = new PropStructureLeaf(null);
                     }
                     var newNode = ApplyPropDiff(oldNode, propUpdate);
-                    if (newNode is PropStructureLeaf leaf && leaf.Value == null)
-                    {
-                        widget = widget with { Props = widget.Props.Remove(name) };
-                    }
-                    else
-                    {
-                        widget = widget with { Props = widget.Props.SetItem(name, newNode) };
-                    }
+                    widget = widget with { Props = widget.Props.SetItem(name, newNode) };
                 }
             }
 

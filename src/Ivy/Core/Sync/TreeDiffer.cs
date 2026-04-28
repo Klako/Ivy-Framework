@@ -68,18 +68,8 @@ namespace Ivy.Core.Sync
             return null;
         }
 
-        private IPropUpdate? PropDiff(IPropStructureNode? source, IPropStructureNode? target)
+        private IPropUpdate? PropDiff(IPropStructureNode source, IPropStructureNode target)
         {
-            if (source == null && target == null)
-            {
-                return null;
-            }
-
-            if (source == null || target == null)
-            {
-                return new PropValueDiff(new PropStructureLeaf(target));
-            }
-
             if (source is PropStructureObject sourceObj && target is PropStructureObject targetObj)
             {
                 var sourceMembers = sourceObj.Members;
@@ -98,7 +88,7 @@ namespace Ivy.Core.Sync
 
                     if (sourceHasKey && targetHasKey)
                     {
-                        var valueDiff = PropDiff(sourceValue, targetValue);
+                        var valueDiff = PropDiff(sourceValue!, targetValue!);
                         if (valueDiff != null)
                         {
                             changes.Add(key, new PropObjectUpdate(valueDiff));

@@ -119,5 +119,34 @@ namespace Ivy.Test.Sync
 
             SerializedWidget.AssertEqual(expected, result);
         }
+
+        [Fact]
+        public void TestWidget_WithComplexProp()
+        {
+            var testProp2 = new PropStructureObject(
+                ImmutableDictionary<string, IPropStructureNode>.Empty
+                    .Add("Foo", new PropStructureList(
+                        ImmutableList<IPropStructureNode>.Empty
+                            .AddRange([new PropStructureLeaf("Bar"),
+                                       new PropStructureLeaf(null)]))));
+
+            var expected = new SerializedWidget("Ivy.Test.Sync.TestWidget", "dqwoijd")
+            {
+                Props = ImmutableDictionary<string, IPropStructureNode>.Empty
+                    .Add("testProp2", testProp2)
+            };
+
+            var widget = new TestWidget(expected.Id)
+            {
+                TestProp2 = new()
+                {
+                    {"Foo", ["Bar", null] }
+                }
+            };
+
+            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
+
+            SerializedWidget.AssertEqual(expected, result);
+        }
     }
 }

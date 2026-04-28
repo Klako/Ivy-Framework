@@ -4,16 +4,16 @@ using System.Text;
 
 namespace Ivy.Test.Sync
 {
-    public record TestWidget : WidgetBase<TestWidget>
+    public record TestWidget2 : WidgetBase<TestWidget>
     {
         public static string StringType = "Ivy.Test.Sync.TestWidget";
 
-        public TestWidget()
+        public TestWidget2()
         {
 
         }
 
-        public TestWidget(string id)
+        public TestWidget2(string id)
         {
             Id = id;
         }

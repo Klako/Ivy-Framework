@@ -277,7 +277,7 @@ public class PluginLoaderTests
     }
 
     [Fact]
-    public void FailedPluginDirectoriesAreTracked()
+    public void FailedPluginsAppearInUnloadedList()
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var logger = loggerFactory.CreateLogger<PluginLoader>();
@@ -297,14 +297,13 @@ public class PluginLoaderTests
             // Should have no loaded plugins
             Assert.Empty(loader.GetLoadedPluginIds());
 
-            // Should have one failed plugin
-            var failedPlugins = loader.GetFailedPlugins();
-            Assert.Single(failedPlugins);
-
-            var failed = failedPlugins[0];
-            Assert.Equal(emptyPluginDir, failed.Directory);
-            Assert.Contains("No valid plugin found", failed.Reason);
-            Assert.True((DateTime.UtcNow - failed.FailedAt).TotalSeconds < 5);
+            // Should have one unloaded plugin with failure info
+            var unloadedPlugins = loader.GetUnloadedPlugins();
+            var failedPlugin = unloadedPlugins.FirstOrDefault(p => p.FailureReason is not null);
+            Assert.NotNull(failedPlugin);
+            Assert.Equal(emptyPluginDir, failedPlugin.Directory);
+            Assert.Contains("No valid plugin found", failedPlugin.FailureReason);
+            Assert.True((DateTime.UtcNow - failedPlugin.FailedAt!.Value).TotalSeconds < 5);
         }
         finally
         {
@@ -313,7 +312,7 @@ public class PluginLoaderTests
     }
 
     [Fact]
-    public void MultipleFailureReasonsAreTracked()
+    public void MultipleFailedPluginsAppearInUnloadedList()
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var logger = loggerFactory.CreateLogger<PluginLoader>();
@@ -335,12 +334,13 @@ public class PluginLoaderTests
             using var sp = new ServiceCollection().BuildServiceProvider();
             loader.DiscoverAndLoad(new Version(1, 0), sp);
 
-            // Should have two failed plugins
-            var failedPlugins = loader.GetFailedPlugins();
+            // Should have two unloaded plugins with failure info
+            var unloadedPlugins = loader.GetUnloadedPlugins();
+            var failedPlugins = unloadedPlugins.Where(p => p.FailureReason is not null).ToList();
             Assert.Equal(2, failedPlugins.Count);
 
             // Both should have the generic failure reason since they both return null from LoadPluginFromDirectory
-            Assert.All(failedPlugins, f => Assert.Contains("No valid plugin found", f.Reason));
+            Assert.All(failedPlugins, f => Assert.Contains("No valid plugin found", f.FailureReason));
         }
         finally
         {
@@ -349,7 +349,7 @@ public class PluginLoaderTests
     }
 
     [Fact]
-    public void SuccessfulLoadRemovesFromFailedList()
+    public void SuccessfulLoadRemovesFailureInformation()
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var logger = loggerFactory.CreateLogger<PluginLoader>();
@@ -367,16 +367,18 @@ public class PluginLoaderTests
 
             // First discovery should fail (no DLLs)
             loader.DiscoverAndLoad(new Version(1, 0), sp);
-            Assert.Single(loader.GetFailedPlugins());
-            Assert.Equal(pluginDir, loader.GetFailedPlugins()[0].Directory);
+            var unloadedPlugins = loader.GetUnloadedPlugins();
+            var failedPlugin = unloadedPlugins.FirstOrDefault(p => p.FailureReason is not null);
+            Assert.NotNull(failedPlugin);
+            Assert.Equal(pluginDir, failedPlugin.Directory);
 
             // Now we can't easily simulate a successful LoadPlugin without a real plugin DLL,
             // but we can test that the remove mechanism exists in the code.
             // The implementation removes from _failedPlugins on successful load,
             // which we've verified by code inspection.
 
-            // For this test, we verify the failed list is populated correctly
-            Assert.Contains(loader.GetFailedPlugins(), f => f.Directory == pluginDir);
+            // For this test, we verify the failed plugin appears in unloaded list with failure info
+            Assert.Contains(unloadedPlugins, p => p.Directory == pluginDir && p.FailureReason is not null);
         }
         finally
         {

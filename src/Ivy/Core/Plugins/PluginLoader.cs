@@ -31,7 +31,7 @@ public class PluginLoader : IPluginManager
     private readonly IReadOnlySet<string> _sharedAssemblyNames;
     private readonly List<LoadedPlugin> _plugins = [];
     private readonly Dictionary<string, string> _knownPlugins = new(); // id -> directory
-    private readonly Dictionary<string, FailedPlugin> _failedPlugins = new(); // directory -> failure info
+    private readonly Dictionary<string, (string Reason, DateTime FailedAt)> _failedPlugins = new(); // directory -> failure info
     private readonly ReaderWriterLockSlim _lock = new();
     private PluginContextBase? _pluginContext;
     private IConfiguration? _configuration;
@@ -81,8 +81,7 @@ public class PluginLoader : IPluginManager
                     _lock.EnterWriteLock();
                     try
                     {
-                        _failedPlugins[directory] = new FailedPlugin(
-                            directory,
+                        _failedPlugins[directory] = (
                             "No valid plugin found (no DLLs, no [IvyPlugin] attribute, or multiple attributes)",
                             DateTime.UtcNow);
                     }
@@ -113,8 +112,7 @@ public class PluginLoader : IPluginManager
                 _lock.EnterWriteLock();
                 try
                 {
-                    _failedPlugins[directory] = new FailedPlugin(
-                        directory,
+                    _failedPlugins[directory] = (
                         $"Exception during load: {ex.Message}",
                         DateTime.UtcNow);
                 }
@@ -334,8 +332,7 @@ public class PluginLoader : IPluginManager
                 foreach (var plugin in invalidPlugins)
                 {
                     _plugins.Remove(plugin);
-                    _failedPlugins[plugin.Directory] = new FailedPlugin(
-                        plugin.Directory,
+                    _failedPlugins[plugin.Directory] = (
                         $"Configuration invalid for '{plugin.Instance.Manifest.Id}'",
                         DateTime.UtcNow);
                 }
@@ -544,24 +541,26 @@ public class PluginLoader : IPluginManager
         try
         {
             var loadedIds = _plugins.Select(p => p.Instance.Manifest.Id).ToHashSet();
-            var failedDirs = _failedPlugins.Keys.ToHashSet();
-            return _knownPlugins
-                .Where(kv => !loadedIds.Contains(kv.Key) && !failedDirs.Contains(kv.Value))
-                .Select(kv => new PluginCandidate(kv.Key, kv.Value))
-                .ToList();
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
+            var result = new List<PluginCandidate>();
 
-    public IReadOnlyList<FailedPlugin> GetFailedPlugins()
-    {
-        _lock.EnterReadLock();
-        try
-        {
-            return _failedPlugins.Values.ToList();
+            // Add known plugins that aren't loaded
+            foreach (var (id, directory) in _knownPlugins)
+            {
+                if (!loadedIds.Contains(id))
+                {
+                    result.Add(new PluginCandidate(id, directory));
+                }
+            }
+
+            // Add failed plugins
+            foreach (var (directory, (reason, failedAt)) in _failedPlugins)
+            {
+                // Extract ID from directory name or use directory name as fallback
+                var id = Path.GetFileName(directory);
+                result.Add(new PluginCandidate(id, directory, reason, failedAt));
+            }
+
+            return result;
         }
         finally
         {

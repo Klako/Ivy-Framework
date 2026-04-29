@@ -18,7 +18,6 @@ public class MessagingTestApp : ViewBase
         var channels = plugins.GetServices<IMessagingChannel>().ToList();
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
-        var failedPlugins = pluginManager.GetFailedPlugins();
 
         var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
         var channelName = UseState(channels.FirstOrDefault()?.DefaultChannel ?? "#ivy-plugin-test");
@@ -30,6 +29,9 @@ public class MessagingTestApp : ViewBase
         var fileState = UseState<FileUpload<byte[]>?>(null);
         var pluginStatus = UseState("");
         var refreshToken = UseRefreshToken();
+
+        if (channels.Count > 0 && !channels.Any(c => c.Platform == selectedPlatform.Value))
+            selectedPlatform.Set(channels.First().Platform);
 
         var activeChannel = channels.FirstOrDefault(c => c.Platform == selectedPlatform.Value);
 
@@ -150,28 +152,16 @@ public class MessagingTestApp : ViewBase
                 }, variant: ButtonVariant.Outline, icon: Icons.Power)
             )).ToArray()
             | unloadedPlugins.Select(p => (object)(Horizontal().Gap(4)
-                | new Badge(p.Id, BadgeVariant.Outline)
-                | Muted("unloaded")
-                | new Button("Load", onClick: _ =>
+                | new Badge(p.Id, p.FailureReason is not null ? BadgeVariant.Destructive : BadgeVariant.Outline)
+                | (p.FailureReason is not null ? Muted(p.FailureReason) : Muted("unloaded"))
+                | new Button(p.FailureReason is not null ? "Retry" : "Load", onClick: _ =>
                 {
                     pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
                         ? $"Loaded '{p.Id}'"
                         : $"Failed to load '{p.Id}'");
                     refreshToken.Refresh();
                     return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.Plus)
-            )).ToArray()
-            | failedPlugins.Select(f => (object)(Horizontal().Gap(4)
-                | new Badge(Path.GetFileName(f.Directory), BadgeVariant.Destructive)
-                | Muted(f.Reason)
-                | new Button("Retry", onClick: _ =>
-                {
-                    pluginStatus.Set(pluginManager.LoadPlugin(f.Directory)
-                        ? $"Loaded from '{Path.GetFileName(f.Directory)}'"
-                        : $"Failed to load '{Path.GetFileName(f.Directory)}'");
-                    refreshToken.Refresh();
-                    return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
+                }, variant: ButtonVariant.Outline, icon: p.FailureReason is not null ? Icons.RefreshCw : Icons.Plus)
             )).ToArray()
             | (string.IsNullOrEmpty(pluginStatus.Value) ? null : StatusBadge(pluginStatus.Value));
     }

@@ -16,7 +16,6 @@ public class HelloWorldApp : ViewBase
         var greeters = plugins.GetServices<IGreeter>().ToList();
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
-        var failedPlugins = pluginManager.GetFailedPlugins();
         var nameState = UseState("World");
         var pluginStatus = UseState("");
         var refreshToken = UseRefreshToken();
@@ -53,28 +52,16 @@ public class HelloWorldApp : ViewBase
                 }, variant: ButtonVariant.Outline, icon: Icons.Power)
             )).ToArray()
             | unloadedPlugins.Select(p => (object)(Horizontal().Gap(4)
-                | new Badge(p.Id, BadgeVariant.Outline)
-                | Muted("unloaded")
-                | new Button("Load", onClick: _ =>
+                | new Badge(p.Id, p.FailureReason is not null ? BadgeVariant.Destructive : BadgeVariant.Outline)
+                | (p.FailureReason is not null ? Muted(p.FailureReason) : Muted("unloaded"))
+                | new Button(p.FailureReason is not null ? "Retry" : "Load", onClick: _ =>
                 {
                     pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
                         ? $"Loaded '{p.Id}'"
                         : $"Failed to load '{p.Id}'");
                     refreshToken.Refresh();
                     return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.Plus)
-            )).ToArray()
-            | failedPlugins.Select(f => (object)(Horizontal().Gap(4)
-                | new Badge(Path.GetFileName(f.Directory), BadgeVariant.Destructive)
-                | Muted(f.Reason)
-                | new Button("Retry", onClick: _ =>
-                {
-                    pluginStatus.Set(pluginManager.LoadPlugin(f.Directory)
-                        ? $"Loaded from '{Path.GetFileName(f.Directory)}'"
-                        : $"Failed to load '{Path.GetFileName(f.Directory)}'");
-                    refreshToken.Refresh();
-                    return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
+                }, variant: ButtonVariant.Outline, icon: p.FailureReason is not null ? Icons.RefreshCw : Icons.Plus)
             )).ToArray()
             | (string.IsNullOrEmpty(pluginStatus.Value) ? null
                 : pluginStatus.Value.StartsWith("Failed")

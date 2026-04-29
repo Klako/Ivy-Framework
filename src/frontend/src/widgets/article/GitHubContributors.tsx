@@ -48,18 +48,10 @@ export const getCommitsUrl = (githubUrl: string): string => {
 
     // Expected format: /owner/repo/blob/branch/path/to/file
     if (pathParts.length >= 6 && pathParts[3] === "blob") {
-      let owner = pathParts[1];
-      let repo = pathParts[2];
+      const owner = pathParts[1];
+      const repo = pathParts[2];
       const branch = pathParts[4];
-      let filePath = pathParts.slice(5).join("/");
-
-      // Mono-repo mapping support
-      if (owner.toLowerCase() === "ivy-interactive") {
-        if (repo.toLowerCase() === "ivy-tendril" || repo.toLowerCase() === "ivy-framework") {
-          filePath = `${repo}/${filePath}`;
-          repo = "ivy";
-        }
-      }
+      const filePath = pathParts.slice(5).join("/");
 
       // Generate commits URL for the specific branch and file path
       return `https://github.com/${owner}/${repo}/commits/${branch}/${filePath}`;
@@ -84,18 +76,10 @@ export const getApiUrl = (githubUrl: string): string | null => {
       return null;
     }
 
-    let owner = pathParts[1];
-    let repo = pathParts[2];
+    const owner = pathParts[1];
+    const repo = pathParts[2];
     const branch = pathParts[4];
-    let filePath = pathParts.slice(5).join("/");
-
-    // Mono-repo mapping support
-    if (owner.toLowerCase() === "ivy-interactive") {
-      if (repo.toLowerCase() === "ivy-tendril" || repo.toLowerCase() === "ivy-framework") {
-        filePath = `${repo}/${filePath}`;
-        repo = "ivy";
-      }
-    }
+    const filePath = pathParts.slice(5).join("/");
 
     // Use the branch from the URL
     return `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(filePath)}&sha=${branch}&per_page=20`;

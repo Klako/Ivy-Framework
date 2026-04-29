@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Ivy.Core.Plugins;
 
-public class PluginLoader
+public class PluginLoader : IPluginManager
 {
     private readonly string _pluginsDirectory;
     private readonly ILogger<PluginLoader> _logger;
@@ -16,7 +16,7 @@ public class PluginLoader
     private readonly ReaderWriterLockSlim _lock = new();
     private PluginContextBase? _pluginContext;
     private IConfiguration? _configuration;
-    private IServiceProvider? _bootstrapProvider;
+    private Func<IServiceProvider>? _serviceProviderFactory;
     private Version? _hostVersion;
 
     internal PluginLoader(string pluginsDirectory, ILogger<PluginLoader> logger, IEnumerable<string>? sharedAssemblyNames = null)
@@ -42,7 +42,6 @@ public class PluginLoader
     public void DiscoverAndLoad(Version hostVersion, IServiceProvider serviceProvider)
     {
         _hostVersion = hostVersion;
-        _bootstrapProvider = serviceProvider;
 
         if (!Directory.Exists(_pluginsDirectory))
         {
@@ -213,6 +212,11 @@ public class PluginLoader
         }
     }
 
+    internal void SetServiceProviderFactory(Func<IServiceProvider> factory)
+    {
+        _serviceProviderFactory = factory;
+    }
+
     public void Configure(PluginContextBase context)
     {
         _pluginContext = context;
@@ -280,16 +284,16 @@ public class PluginLoader
 
     public bool LoadPlugin(string pluginPath)
     {
-        if (_bootstrapProvider is null || _hostVersion is null)
+        if (_serviceProviderFactory is null || _hostVersion is null)
         {
-            _logger.LogError("Cannot load plugin: PluginLoader has not been initialized via DiscoverAndLoad.");
+            _logger.LogError("Cannot load plugin: PluginLoader has not been initialized.");
             return false;
         }
 
         _lock.EnterWriteLock();
         try
         {
-            var loaded = LoadPluginFromDirectory(pluginPath, _bootstrapProvider);
+            var loaded = LoadPluginFromDirectory(pluginPath, _serviceProviderFactory());
             if (loaded is null)
             {
                 _logger.LogError("Failed to load plugin from {Path}.", pluginPath);

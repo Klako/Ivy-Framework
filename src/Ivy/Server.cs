@@ -761,10 +761,13 @@ public class Server
             _pluginLoader.Configure(pluginContext);
             pluginContext.BuildServiceProvider();
             builder.Services.AddSingleton<IPluginServiceProvider>(pluginContext);
+            builder.Services.AddSingleton<IPluginManager>(_pluginLoader);
         }
 
         var app = builder.Build();
         ServiceProvider = app.Services;
+
+        _pluginLoader?.SetServiceProviderFactory(() => app.Services);
 
         pluginContext?.Apply(app);
 

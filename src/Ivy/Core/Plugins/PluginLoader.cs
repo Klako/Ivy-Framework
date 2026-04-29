@@ -105,9 +105,20 @@ public class PluginLoader : IPluginManager
             return null;
         }
 
+        // Shadow-copy all DLLs so the runtime loads fresh bytes on reload
+        var shadowDir = Path.Combine(Path.GetTempPath(), "ivy-plugins", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(shadowDir);
+        var shadowFiles = new List<string>();
+        foreach (var src in dllFiles)
+        {
+            var dest = Path.Combine(shadowDir, Path.GetFileName(src));
+            File.Copy(src, dest, overwrite: true);
+            shadowFiles.Add(dest);
+        }
+
         var found = new List<(Type PluginType, Assembly Assembly, AssemblyLoadContext Context)>();
 
-        foreach (var dllPath in dllFiles)
+        foreach (var dllPath in shadowFiles)
         {
             var loadContext = new PluginAssemblyLoadContext(dllPath, _sharedAssemblyNames);
             Assembly assembly;

@@ -22,9 +22,11 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
         _http = new HttpClient();
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", config.BotToken);
+        DefaultChannel = config.DefaultChannel;
     }
 
     public string Platform => "slack";
+    public string? DefaultChannel { get; }
 
     public async Task<MessageResult> SendMessageAsync(string channel, Message message, CancellationToken ct = default)
     {

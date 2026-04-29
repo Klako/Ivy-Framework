@@ -15,10 +15,8 @@ public record PlanAdjuster : WidgetBase<PlanAdjuster>
     [Prop] public bool DangerouslyAllowLocalFiles { get; init; }
 
     /// <summary>
-    /// Fires whenever the set of adjustments changes. Submission is the host's
-    /// responsibility — wire this to a state holder and trigger the actual update
-    /// from an external button. Value is a JSON string:
-    /// { "adjustments": [{ "paragraphIndex": 0, "originalText": "...", "text": "..." }, ...] }
+    /// Fires when the user clicks "Update" with all adjustments.
+    /// Value is a JSON string: { "adjustments": [{ "paragraphIndex": 0, "text": "..." }, ...] }
     /// </summary>
     [Event] public EventHandler<Event<PlanAdjuster, string>>? OnUpdate { get; init; }
 

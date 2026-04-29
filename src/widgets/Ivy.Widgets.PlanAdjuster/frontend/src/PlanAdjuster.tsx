@@ -13,7 +13,7 @@ interface PlanAdjusterProps {
   id: string;
   width?: string;
   height?: string;
-  eventHandler: EventHandler;
+  onIvyEvent: EventHandler;
   events?: string[];
   content?: string;
   dangerouslyAllowLocalFiles?: boolean;
@@ -143,7 +143,7 @@ export const PlanAdjuster: React.FC<PlanAdjusterProps> = ({
   id,
   width,
   height,
-  eventHandler,
+  onIvyEvent,
   events: enabledEvents = [],
   content = "",
   dangerouslyAllowLocalFiles = false,
@@ -195,10 +195,8 @@ export const PlanAdjuster: React.FC<PlanAdjusterProps> = ({
     setPopoverAnchor(null);
   }, []);
 
-  // Fire OnUpdate whenever adjustments change so the host can react to count/payload.
-  // The actual "submit" trigger lives outside the widget (e.g. an external Update button).
-  useEffect(() => {
-    if (!enabledEvents.includes("OnUpdate")) return;
+  const handleUpdate = useCallback(() => {
+    if (adjustments.size === 0) return;
 
     const payload = {
       adjustments: Array.from(adjustments.entries()).map(([paragraphIndex, text]) => ({
@@ -208,16 +206,18 @@ export const PlanAdjuster: React.FC<PlanAdjusterProps> = ({
       })) satisfies Adjustment[],
     };
 
-    eventHandler("OnUpdate", id, [JSON.stringify(payload)]);
-  }, [adjustments, blocks, enabledEvents, eventHandler, id]);
+    if (enabledEvents.includes("OnUpdate")) {
+      onIvyEvent("OnUpdate", id, [JSON.stringify(payload)]);
+    }
+  }, [adjustments, blocks, enabledEvents, onIvyEvent, id]);
 
   const handleLinkClick = useCallback(
     (href: string) => {
       if (enabledEvents.includes("OnLinkClick")) {
-        eventHandler("OnLinkClick", id, [href]);
+        onIvyEvent("OnLinkClick", id, [href]);
       }
     },
-    [enabledEvents, eventHandler, id],
+    [enabledEvents, onIvyEvent, id],
   );
 
   const markdownComponents = useMemo(
@@ -320,6 +320,19 @@ export const PlanAdjuster: React.FC<PlanAdjusterProps> = ({
           onRemove={handleRemove}
           onCancel={handleCancel}
         />
+      )}
+
+      {adjustments.size > 0 && (
+        <div className="plan-adjuster-update-bar">
+          <Button
+            variant="warning"
+            size="lg"
+            className="plan-adjuster-update-btn"
+            onClick={handleUpdate}
+          >
+            Update ({adjustments.size} adjustment{adjustments.size !== 1 ? "s" : ""})
+          </Button>
+        </div>
       )}
     </div>
   );

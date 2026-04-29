@@ -77,6 +77,11 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   } = useTable();
 
   const densityConfig = DENSITY_CONFIG[density];
+  const actionIndicatorStyle = useMemo(() => {
+    if (density === "Small") return { iconSize: 10, top: 1, right: 2 };
+    if (density === "Large") return { iconSize: 14, top: 3, right: 4 };
+    return { iconSize: 12, top: 2, right: 3 };
+  }, [density]);
 
   const hasWrappingColumns = columns.some((c) => c.wrapText && !c.hidden);
   const effectiveRowHeight = hasWrappingColumns
@@ -355,15 +360,19 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     <div
       style={{
         position: "fixed",
-        left: cellActionIndicator.x + cellActionIndicator.width - 16,
-        top: cellActionIndicator.y + 2,
+        left:
+          cellActionIndicator.x +
+          cellActionIndicator.width -
+          actionIndicatorStyle.iconSize -
+          actionIndicatorStyle.right,
+        top: cellActionIndicator.y + actionIndicatorStyle.top,
         pointerEvents: "none",
         zIndex: 20,
         opacity: 0.7,
       }}
       aria-hidden
     >
-      <ExternalLink size={12} />
+      <ExternalLink size={actionIndicatorStyle.iconSize} />
     </div>
   ) : null;
 

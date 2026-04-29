@@ -34,6 +34,7 @@ import { DENSITY_CONFIG } from "./constants";
 import { useCellContent, useGridColumns, useHeaderMenu } from "./hooks";
 import { getOrderedVisibleDataColumns } from "../utils/columnHelpers";
 import type { SpriteMap } from "@glideapps/glide-data-grid";
+import { ExternalLink } from "lucide-react";
 
 interface TableEditorProps {
   widgetId: string;
@@ -166,15 +167,6 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     visibleRows,
   });
 
-  // Compose onItemHovered: always call link hover, additionally call row hover when enabled
-  const handleItemHovered = useCallback(
-    (args: GridMouseEventArgs) => {
-      onLinkCellHovered(args);
-      onItemHovered(args);
-    },
-    [onLinkCellHovered, onItemHovered],
-  );
-
   // Table theme
   const { tableTheme, getRowThemeOverride, isDark } = useTableTheme({
     showVerticalBorders: showVerticalBorders ?? false,
@@ -245,6 +237,44 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
   const orderedDataColumns = useMemo(
     () => getOrderedVisibleDataColumns(columns, columnOrder),
     [columns, columnOrder],
+  );
+
+  const [cellActionIndicator, setCellActionIndicator] = React.useState<{
+    x: number;
+    y: number;
+    width: number;
+  } | null>(null);
+
+  // Compose onItemHovered: keep existing hover behavior and track actionable-cell affordance.
+  const handleItemHovered = useCallback(
+    (args: GridMouseEventArgs) => {
+      onLinkCellHovered(args);
+      onItemHovered(args);
+
+      if (args.kind !== "cell") {
+        setCellActionIndicator(null);
+        return;
+      }
+
+      const [col, row] = args.location;
+      if (row >= visibleRows) {
+        setCellActionIndicator(null);
+        return;
+      }
+
+      const hoveredColumn = orderedDataColumns[col];
+      if (!hoveredColumn?.hasCellAction) {
+        setCellActionIndicator(null);
+        return;
+      }
+
+      setCellActionIndicator({
+        x: args.bounds.x,
+        y: args.bounds.y,
+        width: args.bounds.width,
+      });
+    },
+    [onLinkCellHovered, onItemHovered, orderedDataColumns, visibleRows],
   );
 
   const wantAggregateFooter =
@@ -321,6 +351,22 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     </TooltipProvider>
   );
 
+  const cellActionIndicatorNode = cellActionIndicator ? (
+    <div
+      style={{
+        position: "fixed",
+        left: cellActionIndicator.x + cellActionIndicator.width - 16,
+        top: cellActionIndicator.y + 2,
+        pointerEvents: "none",
+        zIndex: 20,
+        opacity: 0.7,
+      }}
+      aria-hidden
+    >
+      <ExternalLink size={12} />
+    </div>
+  ) : null;
+
   return (
     <>
       <GridContainer
@@ -375,6 +421,7 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
         hasEmptyRows={emptyRowsCount > 0}
       />
       {linkTooltipNode}
+      {cellActionIndicatorNode}
     </>
   );
 };

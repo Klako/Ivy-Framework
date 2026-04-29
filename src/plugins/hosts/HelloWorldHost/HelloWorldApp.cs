@@ -16,6 +16,7 @@ public class HelloWorldApp : ViewBase
         var greeters = plugins.GetServices<IGreeter>().ToList();
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
+        var failedPlugins = pluginManager.GetFailedPlugins();
         var nameState = UseState("World");
         var pluginStatus = UseState("");
         var refreshToken = UseRefreshToken();
@@ -62,6 +63,18 @@ public class HelloWorldApp : ViewBase
                     refreshToken.Refresh();
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.Plus)
+            )).ToArray()
+            | failedPlugins.Select(f => (object)(Horizontal().Gap(4)
+                | new Badge(Path.GetFileName(f.Directory), BadgeVariant.Destructive)
+                | Muted(f.Reason)
+                | new Button("Retry", onClick: _ =>
+                {
+                    pluginStatus.Set(pluginManager.LoadPlugin(f.Directory)
+                        ? $"Loaded from '{Path.GetFileName(f.Directory)}'"
+                        : $"Failed to load '{Path.GetFileName(f.Directory)}'");
+                    refreshToken.Refresh();
+                    return ValueTask.CompletedTask;
+                }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
             )).ToArray()
             | (string.IsNullOrEmpty(pluginStatus.Value) ? null
                 : pluginStatus.Value.StartsWith("Failed")

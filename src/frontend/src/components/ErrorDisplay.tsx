@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { ClipboardCopy, Check } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { createPrismTheme } from "@/lib/prismTheme";
 
@@ -22,7 +23,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ title, message, stac
       .filter(Boolean)
       .join("\n\n");
 
-    navigator.clipboard.writeText(errorDetails);
+    copyToClipboard(errorDetails);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

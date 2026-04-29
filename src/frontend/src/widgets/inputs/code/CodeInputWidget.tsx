@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, Suspense, lazy, useEffect } from
 import { useOptimisticValue } from "../shared/useOptimisticValue";
 import { useEventHandler } from "@/components/event-handler";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
 import { getHeight, getWidth, inputStyles } from "@/lib/styles";
 import { InvalidIcon } from "@/components/InvalidIcon";
 import { Densities } from "@/types/density";
@@ -187,7 +188,7 @@ export const CodeInputWidget: React.FC<CodeInputWidgetProps> = ({
           {showCopy && (
             <button
               type="button"
-              onClick={() => navigator.clipboard.writeText(localValue)}
+              onClick={() => copyToClipboard(localValue)}
               aria-label="Copy to clipboard"
               className="p-1 rounded hover:bg-accent focus:outline-none cursor-pointer"
             >

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
 
 type HeadingNode = { id: string; text: string; level: number; offset?: number };
 
@@ -12,21 +12,58 @@ interface TableOfContentsProps {
 
 const EMPTY_HEADINGS: HeadingNode[] = [];
 
-/** Find the element that actually scrolls (has overflow and scrollable content). */
+function getLocationHashId(): string | null {
+  const raw = window.location.hash;
+  if (!raw || raw === "#") return null;
+  const withoutHash = raw.slice(1);
+  try {
+    return decodeURIComponent(withoutHash.replace(/\+/g, " "));
+  } catch {
+    return withoutHash;
+  }
+}
+
+/** Don’t sync URL to the first section while a real #fragment is still valid in the DOM. */
+function replaceUrlHashForActiveSection(
+  headingId: string,
+  firstHeadingId: string | undefined,
+  force?: boolean,
+) {
+  if (getLocationHashId() === headingId) return;
+  if (!force && firstHeadingId && headingId === firstHeadingId) {
+    const frag = getLocationHashId();
+    if (frag && frag !== firstHeadingId && document.getElementById(frag)) return;
+  }
+  const u = new URL(window.location.href);
+  u.hash = headingId;
+  window.history.replaceState(null, "", `${u.pathname}${u.search}${u.hash}`);
+}
+
 function getScrollParent(el: HTMLElement | null): HTMLElement | Window {
   if (!el) return window;
   let parent: HTMLElement | null = el.parentElement;
   while (parent) {
     const { overflowY } = getComputedStyle(parent);
-    if (
-      (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-      parent.scrollHeight > parent.clientHeight
-    ) {
-      return parent;
-    }
+    if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") return parent;
     parent = parent.parentElement;
   }
   return window;
+}
+
+function scrollHeadingIntoView(
+  el: HTMLElement,
+  articleRoot: HTMLElement | null,
+  behavior: ScrollBehavior,
+): void {
+  const scrollParent = getScrollParent(articleRoot ?? el);
+  if (scrollParent === window) {
+    el.scrollIntoView({ behavior, block: "start" });
+    return;
+  }
+  const parent = scrollParent as HTMLElement;
+  const delta = el.getBoundingClientRect().top - parent.getBoundingClientRect().top;
+  const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+  parent.scrollTo({ top: Math.max(0, parent.scrollTop + delta - margin), behavior });
 }
 
 export const TableOfContents: React.FC<TableOfContentsProps> = ({
@@ -43,56 +80,53 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
     { activeId: "", isUserNavigating: false },
   );
   const { activeId, isUserNavigating } = navState;
+  const [hashSyncUnlocked, setHashSyncUnlocked] = React.useState(() => !getLocationHashId());
+  const hashSyncUnlockedRef = useRef(hashSyncUnlocked);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isUserNavigatingRef = useRef(isUserNavigating);
   const computeActiveIdRef = useRef<() => string>(() => "");
 
-  // Notify parent about loading state (always loaded since we use props)
+  const headingIdsKey = headings.map((h) => h.id).join("\0");
+  const firstHeadingId = headings[0]?.id;
+
+  useEffect(() => {
+    hashSyncUnlockedRef.current = hashSyncUnlocked;
+  }, [hashSyncUnlocked]);
+
+  useLayoutEffect(() => {
+    if (!getLocationHashId()) {
+      setHashSyncUnlocked(true);
+      return;
+    }
+    setHashSyncUnlocked(false);
+    const t = window.setTimeout(() => setHashSyncUnlocked(true), 500);
+    return () => clearTimeout(t);
+  }, [headingIdsKey]);
+
   useEffect(() => {
     onLoadingChange?.(false);
   }, [onLoadingChange]);
 
-  // Track navigation events to immediately set active state
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const link = target.closest("a");
-
-      if (link && link.getAttribute("href")?.startsWith("#")) {
-        const targetId = link.getAttribute("href")?.substring(1);
-        const isTocLink = link.closest("[data-toc-container]");
-
-        if (targetId && !isTocLink) {
-          // This is a regular section link (not from TOC)
-          // Verify target exists before setting active
-          const targetElement = document.getElementById(targetId);
-          if (targetElement) {
-            // Clear any existing navigation timeout
-            if (navigationTimeoutRef.current) {
-              clearTimeout(navigationTimeoutRef.current);
-            }
-
-            // Set as active immediately and mark as user navigating
-            dispatchNav({ activeId: targetId, isUserNavigating: true });
-
-            // Reset navigation state after scroll completes
-            navigationTimeoutRef.current = setTimeout(() => {
-              dispatchNav({ isUserNavigating: false });
-            }, 1000);
-
-            // Let the browser handle the default scroll behavior for regular links
-            // Don't prevent default - let the browser scroll naturally
-          }
-        }
-      }
+      const link = (event.target as HTMLElement).closest("a");
+      if (!link?.getAttribute("href")?.startsWith("#")) return;
+      const targetId = link.getAttribute("href")?.substring(1);
+      if (!targetId || link.closest("[data-toc-container]")) return;
+      const targetElement = document.getElementById(targetId);
+      if (!targetElement) return;
+      if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
+      dispatchNav({ activeId: targetId, isUserNavigating: true });
+      navigationTimeoutRef.current = setTimeout(
+        () => dispatchNav({ isUserNavigating: false }),
+        1000,
+      );
     };
-
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-  // Compute active heading from current scroll position (used after debounce)
   const computeActiveId = React.useCallback(() => {
     for (let i = headings.length - 1; i >= 0; i--) {
       const el = document.getElementById(headings[i].id);
@@ -112,17 +146,30 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
     computeActiveIdRef.current = computeActiveId;
   }, [computeActiveId]);
 
-  // Handle active heading highlighting with debounce to avoid jank during fast scroll
+  useEffect(() => {
+    if (!hashSyncUnlocked || activeId) return;
+    const frag = getLocationHashId();
+    if (frag && document.getElementById(frag)) {
+      dispatchNav({ activeId: frag });
+      return;
+    }
+    const id = computeActiveIdRef.current();
+    if (id) dispatchNav({ activeId: id });
+  }, [hashSyncUnlocked, activeId]);
+
+  useEffect(() => {
+    if (!activeId || isUserNavigating || !hashSyncUnlocked) return;
+    replaceUrlHashForActiveSection(activeId, firstHeadingId);
+  }, [activeId, isUserNavigating, hashSyncUnlocked, firstHeadingId]);
+
   useEffect(() => {
     if (!articleRef.current || headings.length === 0) return;
 
     const scheduleScrollUpdate = () => {
-      if (scrollUpdateTimeoutRef.current) {
-        clearTimeout(scrollUpdateTimeoutRef.current);
-      }
+      if (scrollUpdateTimeoutRef.current) clearTimeout(scrollUpdateTimeoutRef.current);
       scrollUpdateTimeoutRef.current = setTimeout(() => {
         scrollUpdateTimeoutRef.current = null;
-        if (!isUserNavigatingRef.current) {
+        if (!isUserNavigatingRef.current && hashSyncUnlockedRef.current) {
           dispatchNav({ activeId: computeActiveIdRef.current() });
         }
       }, 120);
@@ -140,13 +187,8 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
       if (element) observer.observe(element);
     });
 
-    // Listen on the actual scroll container (main content div), not window
     const scrollTarget = getScrollParent(articleRef.current);
-    scrollTarget.addEventListener("scroll", scheduleScrollUpdate, {
-      passive: true,
-    });
-
-    // Set initial active section on mount/headings change
+    scrollTarget.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
     scheduleScrollUpdate();
 
     return () => {
@@ -159,32 +201,22 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
     };
   }, [headings, articleRef]);
 
-  // Auto-scroll TOC so the active heading is visible when the TOC is scrollable
   useEffect(() => {
     if (!activeId) return;
-
     const tocContainer = document.querySelector("[data-toc-container]");
     if (!tocContainer) return;
-
     const activeButton = tocContainer.querySelector(
       `[data-toc-link][data-heading-id="${activeId}"]`,
     ) as HTMLElement | null;
     if (!activeButton) return;
-
     try {
       const containerRect = tocContainer.getBoundingClientRect();
       const elementRect = activeButton.getBoundingClientRect();
-      const isVisible =
-        elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
-
-      if (!isVisible) {
-        activeButton.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-        });
+      if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
+        activeButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
-    } catch (error) {
-      console.error("TableOfContents: Error during TOC auto-scroll:", error);
+    } catch (e) {
+      console.error("TableOfContents: TOC auto-scroll:", e);
     }
   }, [activeId]);
 
@@ -222,29 +254,16 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
               activeId === heading.id ? "text-foreground" : "text-muted-foreground",
             )}
             onClick={() => {
-              // Clear any existing navigation timeout
-              if (navigationTimeoutRef.current) {
-                clearTimeout(navigationTimeoutRef.current);
-              }
-
-              // Set as active immediately and mark as user navigating
+              if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
               dispatchNav({ activeId: heading.id, isUserNavigating: true });
-
-              // Reset navigation state after scroll completes
-              navigationTimeoutRef.current = setTimeout(() => {
-                dispatchNav({ isUserNavigating: false });
-              }, 1000);
-
-              // Scroll to the target element with error handling
+              navigationTimeoutRef.current = setTimeout(
+                () => dispatchNav({ isUserNavigating: false }),
+                1000,
+              );
               const targetElement = document.getElementById(heading.id);
               if (targetElement) {
-                targetElement.scrollIntoView({
-                  behavior: "smooth",
-                });
-              } else {
-                console.warn(
-                  `TableOfContents: Target element with id "${heading.id}" not found for TOC navigation`,
-                );
+                replaceUrlHashForActiveSection(heading.id, firstHeadingId, true);
+                scrollHeadingIntoView(targetElement, articleRef.current, "smooth");
               }
             }}
           >

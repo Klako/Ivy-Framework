@@ -201,6 +201,121 @@ public class PluginConfigurationValidationTests
         Assert.True(PluginLoader.ValidateFieldType("false", ConfigFieldType.Boolean));
     }
 
+    [Fact]
+    public void ApplyDefaults_OptionalFieldMissing_InjectsDefault()
+    {
+        var loader = CreateLoader();
+        var schema = new PluginConfigurationSchema
+        {
+            Fields =
+            [
+                new() { Key = "MaxRetries", Type = ConfigFieldType.Integer, IsRequired = false, DefaultValue = "3" }
+            ]
+        };
+        var config = BuildConfig(new Dictionary<string, string?>());
+
+        var configWithDefaults = loader.ApplyConfigurationDefaults("Test", schema, config);
+        var value = configWithDefaults.GetSection("Plugins:Test")["MaxRetries"];
+
+        Assert.Equal("3", value);
+    }
+
+    [Fact]
+    public void ApplyDefaults_OptionalFieldProvided_UsesProvidedValue()
+    {
+        var loader = CreateLoader();
+        var schema = new PluginConfigurationSchema
+        {
+            Fields =
+            [
+                new() { Key = "MaxRetries", Type = ConfigFieldType.Integer, IsRequired = false, DefaultValue = "3" }
+            ]
+        };
+        var config = BuildConfig(new Dictionary<string, string?>
+        {
+            ["Plugins:Test:MaxRetries"] = "5"
+        });
+
+        var configWithDefaults = loader.ApplyConfigurationDefaults("Test", schema, config);
+        var value = configWithDefaults.GetSection("Plugins:Test")["MaxRetries"];
+
+        Assert.Equal("5", value);
+    }
+
+    [Fact]
+    public void ApplyDefaults_NoDefaultValue_DoesNotInject()
+    {
+        var loader = CreateLoader();
+        var schema = new PluginConfigurationSchema
+        {
+            Fields =
+            [
+                new() { Key = "DefaultChannel", Type = ConfigFieldType.String, IsRequired = false }
+            ]
+        };
+        var config = BuildConfig(new Dictionary<string, string?>());
+
+        var configWithDefaults = loader.ApplyConfigurationDefaults("Test", schema, config);
+        var value = configWithDefaults.GetSection("Plugins:Test")["DefaultChannel"];
+
+        Assert.Null(value);
+    }
+
+    [Fact]
+    public void ApplyDefaults_RequiredFieldWithDefault_StillValidatesPresence()
+    {
+        var loader = CreateLoader();
+        var schema = new PluginConfigurationSchema
+        {
+            Fields =
+            [
+                new() { Key = "ApiKey", Type = ConfigFieldType.String, IsRequired = true, DefaultValue = "default-key" }
+            ]
+        };
+        var config = BuildConfig(new Dictionary<string, string?>());
+
+        var errors = loader.ValidatePluginConfiguration("Test", schema, config);
+
+        Assert.Single(errors);
+        Assert.Contains("Required field 'ApiKey' is missing", errors[0]);
+    }
+
+    [Fact]
+    public void Configure_WithDefaults_PluginReceivesDefaultValues()
+    {
+        var context = new TestPluginContext(new Dictionary<string, string?>
+        {
+            ["Plugins:Fake:ApiKey"] = "test-key"
+        });
+        string? receivedMaxRetries = null;
+
+        var plugin = new FakePlugin(
+            schema: new PluginConfigurationSchema
+            {
+                Fields =
+                [
+                    new() { Key = "ApiKey", Type = ConfigFieldType.String, IsRequired = true },
+                    new() { Key = "MaxRetries", Type = ConfigFieldType.Integer, IsRequired = false, DefaultValue = "3" }
+                ]
+            },
+            onConfigure: ctx =>
+            {
+                var section = ctx.Configuration.GetSection("Plugins:Fake");
+                receivedMaxRetries = section["MaxRetries"];
+            });
+
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var logger = loggerFactory.CreateLogger<PluginLoader>();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"ivy-test-plugins-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        var loader = new PluginLoader(tempDir, logger);
+
+        loader.AddTestPlugin(plugin, tempDir);
+        loader.Configure(context);
+
+        Assert.Equal("3", receivedMaxRetries);
+    }
+
     private class TestPluginContext : PluginContextBase
     {
         private readonly AppRepository _appRepository = new();

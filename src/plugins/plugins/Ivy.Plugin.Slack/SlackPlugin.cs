@@ -32,7 +32,16 @@ public class SlackPlugin : IIvyPlugin
                 Key = "DefaultChannel",
                 Type = ConfigFieldType.String,
                 IsRequired = false,
-                Description = "Default channel ID or name for messages"
+                Description = "Default channel ID or name for messages",
+                DefaultValue = "general"
+            },
+            new()
+            {
+                Key = "MaxRetries",
+                Type = ConfigFieldType.Integer,
+                IsRequired = false,
+                Description = "Maximum number of retry attempts for failed messages",
+                DefaultValue = "3"
             }
         ]
     };
@@ -44,10 +53,13 @@ public class SlackPlugin : IIvyPlugin
     public void Configure(IPluginContext context)
     {
         var section = context.Configuration.GetSection("Plugins:Slack");
+
+        // No manual default handling needed — host injects defaults
         var config = new SlackConfig
         {
             BotToken = section["BotToken"]!,
-            DefaultChannel = section["DefaultChannel"],
+            DefaultChannel = section["DefaultChannel"]!,  // Guaranteed non-null due to default
+            MaxRetries = int.Parse(section["MaxRetries"]!)  // Guaranteed valid integer
         };
 
         context.RegisterMessagingChannel(new SlackMessagingChannel(config));

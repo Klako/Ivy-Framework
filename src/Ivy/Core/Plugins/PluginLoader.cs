@@ -1,11 +1,28 @@
 using System.Reflection;
 using System.Runtime.Loader;
 using Ivy.Plugins;
+using Ivy.Plugins.Messaging;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Ivy.Core.Plugins;
+
+internal class PluginContextWithConfiguration(PluginContextBase inner, IConfiguration configuration) : IIvyPluginContext
+{
+    public IServiceCollection Services => inner.Services;
+    public IConfiguration Configuration => configuration;
+
+    public void AddApp(AppDescriptor descriptor) => inner.AddApp(descriptor);
+    public void AddAppsFromAssembly(Assembly assembly) => inner.AddAppsFromAssembly(assembly);
+    public void AddMenuItems(Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>> transformer) => inner.AddMenuItems(transformer);
+    public void AddFooterMenuItems(Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>> transformer) => inner.AddFooterMenuItems(transformer);
+    public void AddBadgeProvider(string menuTag, Func<IServiceProvider, int> countProvider) => inner.AddBadgeProvider(menuTag, countProvider);
+    public void RegisterMessagingChannel(IMessagingChannel channel) => inner.RegisterMessagingChannel(channel);
+    public void UseWebApplication(Action<WebApplication> configure) => inner.UseWebApplication(configure);
+    public void UseWebApplicationBuilder(Action<WebApplicationBuilder> configure) => inner.UseWebApplicationBuilder(configure);
+}
 
 public class PluginLoader : IPluginManager
 {
@@ -238,6 +255,8 @@ public class PluginLoader : IPluginManager
         {
             foreach (var plugin in _plugins)
             {
+                IIvyPluginContext contextToUse = context;
+
                 if (plugin.Instance.ConfigurationSchema is { } schema)
                 {
                     var errors = ValidatePluginConfiguration(
@@ -253,10 +272,19 @@ public class PluginLoader : IPluginManager
                             string.Join(", ", errors));
                         continue;
                     }
+
+                    // Apply defaults before calling Configure
+                    var configWithDefaults = ApplyConfigurationDefaults(
+                        plugin.Instance.Manifest.ConfigSectionName,
+                        schema,
+                        context.Configuration);
+
+                    // Create context wrapper with defaults applied
+                    contextToUse = new PluginContextWithConfiguration(context, configWithDefaults);
                 }
 
                 context.SetCurrentPlugin(plugin.Instance.Manifest.Id, plugin.Directory);
-                plugin.Instance.Configure(context);
+                plugin.Instance.Configure(contextToUse);
                 context.ClearCurrentPlugin();
             }
         }
@@ -386,8 +414,21 @@ public class PluginLoader : IPluginManager
             // Configure context
             if (_pluginContext is not null)
             {
+                IIvyPluginContext contextToUse = _pluginContext;
+
+                // Apply defaults if schema exists
+                if (plugin.Instance.ConfigurationSchema is { } configSchema && _configuration is not null)
+                {
+                    var configWithDefaults = ApplyConfigurationDefaults(
+                        manifest.ConfigSectionName,
+                        configSchema,
+                        _configuration);
+
+                    contextToUse = new PluginContextWithConfiguration(_pluginContext, configWithDefaults);
+                }
+
                 _pluginContext.SetCurrentPlugin(manifest.Id, pluginPath);
-                plugin.Instance.Configure(_pluginContext);
+                plugin.Instance.Configure(contextToUse);
                 _pluginContext.ClearCurrentPlugin();
                 _pluginContext.BuildPluginServiceProvider(manifest.Id, plugin.Services);
                 plugin.ServiceProvider = _pluginContext.GetPluginServiceProvider(manifest.Id);
@@ -505,6 +546,33 @@ public class PluginLoader : IPluginManager
             ConfigFieldType.Boolean => bool.TryParse(value, out _),
             _ => true // String and Secret are always valid if non-empty
         };
+    }
+
+    internal IConfiguration ApplyConfigurationDefaults(
+        string configSectionName,
+        PluginConfigurationSchema schema,
+        IConfiguration config)
+    {
+        var defaults = new Dictionary<string, string?>();
+        var section = config.GetSection($"Plugins:{configSectionName}");
+
+        foreach (var field in schema.Fields.Where(f => f.DefaultValue is not null))
+        {
+            var value = section[field.Key];
+
+            // Only inject default if field is missing or empty
+            if (string.IsNullOrEmpty(value))
+            {
+                defaults[$"Plugins:{configSectionName}:{field.Key}"] = field.DefaultValue;
+            }
+        }
+
+        // Create a configuration that layers defaults under the actual config
+        // Actual config takes precedence over defaults
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(defaults)
+            .AddConfiguration(config)
+            .Build();
     }
 }
 

@@ -124,33 +124,20 @@ internal class PluginWatcher : IDisposable
         if (!e.FullPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
             return;
 
-        // Find the plugin directory (should be the parent of the DLL)
-        var directory = Path.GetDirectoryName(e.FullPath);
-        if (directory == null)
-            return;
-
-        // Ensure this is within a top-level plugin directory
-        var parent = Path.GetDirectoryName(directory);
-        if (parent == null)
-            return;
-
+        // Walk up from the changed file to find which top-level plugin directory it's under
         var normalizedPluginsDir = Path.GetFullPath(_pluginsDirectory);
-        var normalizedParent = Path.GetFullPath(parent);
-        var isTopLevel = string.Equals(normalizedParent, normalizedPluginsDir, StringComparison.OrdinalIgnoreCase);
-
-        var grandParent = Path.GetDirectoryName(parent);
-        var normalizedGrandParent = grandParent != null ? Path.GetFullPath(grandParent) : null;
-        var isTwoLevelsDeep = normalizedGrandParent != null &&
-                              string.Equals(normalizedGrandParent, normalizedPluginsDir, StringComparison.OrdinalIgnoreCase);
-
-        if (!isTopLevel && !isTwoLevelsDeep)
-            return;
-
-        // Use the top-level plugin directory
-        var pluginDirectory = isTopLevel ? directory : parent;
-
-        _logger.LogInformation("DLL changed in plugin: {Path}", e.FullPath);
-        ScheduleReload(pluginDirectory);
+        var current = Path.GetDirectoryName(e.FullPath);
+        while (current != null)
+        {
+            var parent = Path.GetDirectoryName(current);
+            if (parent != null && string.Equals(Path.GetFullPath(parent), normalizedPluginsDir, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("DLL changed in plugin: {Path}", e.FullPath);
+                ScheduleReload(current);
+                return;
+            }
+            current = parent;
+        }
     }
 
     private void ScheduleLoad(string pluginDirectory)

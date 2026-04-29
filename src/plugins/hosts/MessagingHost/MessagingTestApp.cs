@@ -18,6 +18,7 @@ public class MessagingTestApp : ViewBase
         var channels = plugins.GetServices<IMessagingChannel>().ToList();
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
+        var failedPlugins = pluginManager.GetFailedPlugins();
 
         var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
         var channelName = UseState(channels.FirstOrDefault()?.DefaultChannel ?? "#ivy-plugin-test");
@@ -159,6 +160,18 @@ public class MessagingTestApp : ViewBase
                     refreshToken.Refresh();
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.Plus)
+            )).ToArray()
+            | failedPlugins.Select(f => (object)(Horizontal().Gap(4)
+                | new Badge(Path.GetFileName(f.Directory), BadgeVariant.Destructive)
+                | Muted(f.Reason)
+                | new Button("Retry", onClick: _ =>
+                {
+                    pluginStatus.Set(pluginManager.LoadPlugin(f.Directory)
+                        ? $"Loaded from '{Path.GetFileName(f.Directory)}'"
+                        : $"Failed to load '{Path.GetFileName(f.Directory)}'");
+                    refreshToken.Refresh();
+                    return ValueTask.CompletedTask;
+                }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
             )).ToArray()
             | (string.IsNullOrEmpty(pluginStatus.Value) ? null : StatusBadge(pluginStatus.Value));
     }

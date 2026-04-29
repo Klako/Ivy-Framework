@@ -144,34 +144,29 @@ internal class PluginWatcher : IDisposable
     {
         // Cancel any existing pending load for this directory
         if (_pendingReloads.TryRemove(pluginDirectory, out var existingCts))
-        {
             existingCts.Cancel();
-            existingCts.Dispose();
-        }
 
         var cts = new CancellationTokenSource();
         _pendingReloads[pluginDirectory] = cts;
+        var token = cts.Token;
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(_debounceDelay, cts.Token);
+                await Task.Delay(_debounceDelay, token);
 
-                if (!cts.Token.IsCancellationRequested)
+                _logger.LogInformation("Loading plugin from: {Directory}", pluginDirectory);
+                try
                 {
-                    _logger.LogInformation("Loading plugin from: {Directory}", pluginDirectory);
-                    try
-                    {
-                        _pluginManager.LoadPlugin(pluginDirectory);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to load plugin from {Directory}", pluginDirectory);
-                    }
+                    _pluginManager.LoadPlugin(pluginDirectory);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load plugin from {Directory}", pluginDirectory);
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // Expected when a new change occurs during the debounce period
             }
@@ -180,53 +175,48 @@ internal class PluginWatcher : IDisposable
                 _pendingReloads.TryRemove(pluginDirectory, out _);
                 cts.Dispose();
             }
-        }, cts.Token);
+        }, token);
     }
 
     private void ScheduleReload(string pluginDirectory)
     {
         // Cancel any existing pending reload for this directory
         if (_pendingReloads.TryRemove(pluginDirectory, out var existingCts))
-        {
             existingCts.Cancel();
-            existingCts.Dispose();
-        }
 
         var cts = new CancellationTokenSource();
         _pendingReloads[pluginDirectory] = cts;
+        var token = cts.Token;
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(_debounceDelay, cts.Token);
+                await Task.Delay(_debounceDelay, token);
 
-                if (!cts.Token.IsCancellationRequested)
+                // Find the plugin ID for this directory
+                if (_pluginManager is PluginLoader loader)
                 {
-                    // Find the plugin ID for this directory
-                    if (_pluginManager is PluginLoader loader)
+                    var pluginId = loader.GetPluginIdByDirectory(pluginDirectory);
+                    if (pluginId != null)
                     {
-                        var pluginId = loader.GetPluginIdByDirectory(pluginDirectory);
-                        if (pluginId != null)
+                        _logger.LogInformation("Reloading plugin: {PluginId}", pluginId);
+                        try
                         {
-                            _logger.LogInformation("Reloading plugin: {PluginId}", pluginId);
-                            try
-                            {
-                                _pluginManager.ReloadPlugin(pluginId);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, "Failed to reload plugin {PluginId}", pluginId);
-                            }
+                            _pluginManager.ReloadPlugin(pluginId);
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            _logger.LogWarning("Could not find plugin ID for directory: {Directory}", pluginDirectory);
+                            _logger.LogError(ex, "Failed to reload plugin {PluginId}", pluginId);
                         }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Could not find plugin ID for directory: {Directory}", pluginDirectory);
                     }
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // Expected when a new change occurs during the debounce period
             }
@@ -235,7 +225,7 @@ internal class PluginWatcher : IDisposable
                 _pendingReloads.TryRemove(pluginDirectory, out _);
                 cts.Dispose();
             }
-        }, cts.Token);
+        }, token);
     }
 
     public void Dispose()

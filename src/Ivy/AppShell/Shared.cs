@@ -65,7 +65,7 @@ public enum HistoryOp
     Pop,
 }
 
-public record NavigateArgs(string? AppId, object? AppArgs = null, string? TabId = null, HistoryOp HistoryOp = HistoryOp.Push, bool AppShell = true)
+public record NavigateArgs(string? AppId, object? AppArgs = null, string? TabId = null, HistoryOp HistoryOp = HistoryOp.Push, bool AppShell = true, string? UrlFragment = null)
 {
     public AppHost ToAppHost(string? parentId = null)
     {
@@ -113,6 +113,16 @@ public record NavigateArgs(string? AppId, object? AppArgs = null, string? TabId 
             url += "?" + string.Join("&", queryParams);
         }
 
+        if (!string.IsNullOrEmpty(this.UrlFragment))
+        {
+            if (!ValidationHelper.IsSafeUrlFragment(this.UrlFragment))
+            {
+                throw new InvalidOperationException($"Cannot get URL: Invalid UrlFragment '{this.UrlFragment}'.");
+            }
+
+            url += "#" + this.UrlFragment;
+        }
+
         return url;
     }
 }
@@ -150,13 +160,22 @@ public static class NavigateSignalExtensions
             }
             else if (uri.StartsWith("app://"))
             {
-                var appId = uri[6..];
-                // Validate AppId to prevent injection attacks
+                var rest = uri[6..];
+                var hashIdx = rest.IndexOf('#');
+                var appId = hashIdx >= 0 ? rest[..hashIdx] : rest;
+                var fragment = hashIdx >= 0 ? rest[(hashIdx + 1)..] : null;
+
                 if (!ValidationHelper.IsSafeAppId(appId))
                 {
                     throw new ArgumentException($"Invalid AppId: {appId}", nameof(uri));
                 }
-                signal.Send(new NavigateArgs(appId, appArgs));
+
+                if (fragment != null && !ValidationHelper.IsSafeUrlFragment(fragment))
+                {
+                    throw new ArgumentException($"Invalid URL fragment: {fragment}", nameof(uri));
+                }
+
+                signal.Send(new NavigateArgs(appId, appArgs, UrlFragment: string.IsNullOrEmpty(fragment) ? null : fragment));
             }
         }
     }

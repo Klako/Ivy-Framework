@@ -247,4 +247,28 @@ public static class ValidationHelper
 
         return true;
     }
+
+    public static bool IsSafeUrlFragment(string? fragment)
+    {
+        if (string.IsNullOrEmpty(fragment))
+        {
+            return true;
+        }
+
+        if (fragment.Length > 512 || fragment.Any(char.IsControl))
+        {
+            return false;
+        }
+
+        // Slug-style heading anchors: alphanumeric, hyphen, underscore (matches typical DOM ids)
+        foreach (var c in fragment)
+        {
+            if (!(char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

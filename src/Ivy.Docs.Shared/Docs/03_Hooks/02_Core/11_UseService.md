@@ -19,7 +19,7 @@ Services in Ivy provide dependency injection and service management for clean ap
 The service system in Ivy supports:
 
 - Dependency injection
-- Service registration and [configuration](../../../01_Onboarding/02_Concepts/01_Program.md)
+- Service registration and [configuration](../../../01_Onboarding/02_Concepts/01_Program.md#services-and-dependency-injection)
 - Service [lifecycle management](../../../01_Onboarding/02_Concepts/02_Views.md)
 - Scoped and singleton services
 - Service interfaces and implementations

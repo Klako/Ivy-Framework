@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
+  extractAnchorId,
   getFullUrl,
   validateEmbedUrl,
   validateRedirectUrl,
@@ -10,6 +11,18 @@ import {
   validateMediaUrl,
   _getCurrentOriginRef,
 } from "./url";
+
+describe("extractAnchorId", () => {
+  it("returns text after hash for anchor-only URLs", () => {
+    expect(extractAnchorId("#introduction")).toBe("introduction");
+    expect(extractAnchorId("#section-with-dashes")).toBe("section-with-dashes");
+  });
+
+  it("returns empty string when there is no hash prefix", () => {
+    expect(extractAnchorId("app://x")).toBe("");
+    expect(extractAnchorId("/path#x")).toBe("");
+  });
+});
 
 describe("getFullUrl", () => {
   let metaElement: HTMLMetaElement | null = null;
@@ -215,8 +228,17 @@ describe("validateLinkUrl", () => {
       expect(validateLinkUrl("app://MyApp?param=value")).toBe("app://MyApp?param=value");
     });
 
-    it("should reject app:// URLs with fragments", () => {
-      expect(validateLinkUrl("app://path#fragment")).toBe("#");
+    it("should accept app:// URLs with fragments for doc deep links", () => {
+      expect(validateLinkUrl("app://onboarding/getting-started/installation#prerequisites")).toBe(
+        "app://onboarding/getting-started/installation#prerequisites",
+      );
+      expect(validateLinkUrl("app://docs#introduction")).toBe("app://docs#introduction");
+      expect(validateLinkUrl("app://path#fragment")).toBe("app://path#fragment");
+    });
+
+    it("should reject fragments that look like queries or nested hashes", () => {
+      expect(validateLinkUrl("app://path#bad?query")).toBe("#");
+      expect(validateLinkUrl("app://path#bad&evil")).toBe("#");
     });
 
     it("should accept app:// URLs with ampersands in query strings", () => {

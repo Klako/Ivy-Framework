@@ -411,9 +411,9 @@ public class PluginLoaderTests
             // Wait for debounce + processing (increased for macOS)
             await Task.Delay(1000);
 
-            // Verify the loader attempted to load (will be in failed list since no DLLs)
-            var failedPlugins = loader.GetFailedPlugins();
-            Assert.Contains(failedPlugins, f => f.Directory == pluginDir);
+            // Verify the loader attempted to load (will be in unloaded list with a failure reason since no DLLs)
+            var unloadedPlugins = loader.GetUnloadedPlugins();
+            Assert.Contains(unloadedPlugins, f => f.Directory == pluginDir && f.FailureReason != null);
 
             watcher.Dispose();
         }

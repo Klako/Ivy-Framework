@@ -567,7 +567,7 @@ public class Server
         Version? hostVersion = null,
         Func<Server, WebApplicationBuilder, PluginContextBase>? contextFactory = null,
         IEnumerable<string>? sharedAssemblyNames = null,
-        bool enableHotReload = false)
+        bool enableHotReload = true)
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var logger = loggerFactory.CreateLogger<PluginLoader>();

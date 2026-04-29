@@ -1,0 +1,24 @@
+using Ivy.Plugins;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Ivy.Core.Plugins;
+
+internal class PluginState
+{
+    public string PluginId { get; }
+    public string Directory { get; }
+    public ServiceCollection PluginServices { get; } = new();
+
+    public List<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> MenuTransformers { get; } = [];
+    public List<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> FooterMenuTransformers { get; } = [];
+    public List<(string Tag, Func<IServiceProvider, int> CountProvider)> BadgeProviders { get; } = [];
+    public List<Action<WebApplication>> AppActions { get; } = [];
+    public List<Func<AppDescriptor[]>> AppFactories { get; } = [];
+
+    public PluginState(string pluginId, string directory)
+    {
+        PluginId = pluginId;
+        Directory = directory;
+    }
+}

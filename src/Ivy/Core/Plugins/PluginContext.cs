@@ -14,10 +14,24 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
     private readonly List<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> _footerMenuTransformers = [];
     private readonly List<(string Tag, Func<IServiceProvider, int> CountProvider)> _badgeProviders = [];
     private readonly List<Action<WebApplication>> _appActions = [];
-    private readonly ServiceCollection _pluginServices = new();
-    private IServiceProvider? _pluginServiceProvider;
+    private readonly AggregatePluginServiceProvider _aggregateProvider = new();
+    private readonly Dictionary<string, PluginState> _pluginStates = new();
+    private readonly ReaderWriterLockSlim _lock = new();
+    private string? _currentPluginId;
 
-    public IServiceCollection Services => _pluginServices;
+    public IServiceCollection Services
+    {
+        get
+        {
+            if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+                return state.PluginServices;
+            return _fallbackServices;
+        }
+    }
+
+    // Fallback service collection for non-plugin code
+    private readonly ServiceCollection _fallbackServices = new();
+
     public abstract IConfiguration Configuration { get; }
 
     protected abstract AppRepository AppRepository { get; }
@@ -27,29 +41,63 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
     public IReadOnlyList<Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>>> FooterMenuTransformers => _footerMenuTransformers;
     public IReadOnlyList<(string Tag, Func<IServiceProvider, int> CountProvider)> BadgeProviders => _badgeProviders;
 
+    internal void SetCurrentPlugin(string pluginId, string directory)
+    {
+        _currentPluginId = pluginId;
+        _lock.EnterWriteLock();
+        try
+        {
+            if (!_pluginStates.ContainsKey(pluginId))
+                _pluginStates[pluginId] = new PluginState(pluginId, directory);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    internal void ClearCurrentPlugin() => _currentPluginId = null;
+
     public void AddApp(AppDescriptor descriptor)
     {
-        AppRepository.AddFactory(() => [descriptor]);
+        Func<AppDescriptor[]> factory = () => [descriptor];
+        AppRepository.AddFactory(factory);
+
+        if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+            state.AppFactories.Add(factory);
     }
 
     public void AddAppsFromAssembly(Assembly assembly)
     {
-        AppRepository.AddFactory(() => AppHelpers.GetApps(assembly));
+        Func<AppDescriptor[]> factory = () => AppHelpers.GetApps(assembly);
+        AppRepository.AddFactory(factory);
+
+        if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+            state.AppFactories.Add(factory);
     }
 
     public void AddMenuItems(Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>> transformer)
     {
         _menuTransformers.Add(transformer);
+
+        if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+            state.MenuTransformers.Add(transformer);
     }
 
     public void AddFooterMenuItems(Func<IEnumerable<MenuItem>, INavigator, IEnumerable<MenuItem>> transformer)
     {
         _footerMenuTransformers.Add(transformer);
+
+        if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+            state.FooterMenuTransformers.Add(transformer);
     }
 
     public void AddBadgeProvider(string menuTag, Func<IServiceProvider, int> countProvider)
     {
         _badgeProviders.Add((menuTag, countProvider));
+
+        if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+            state.BadgeProviders.Add((menuTag, countProvider));
     }
 
     public void RegisterMessagingChannel(IMessagingChannel channel)
@@ -60,6 +108,9 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
     public void UseWebApplication(Action<WebApplication> configure)
     {
         _appActions.Add(configure);
+
+        if (_currentPluginId is not null && _pluginStates.TryGetValue(_currentPluginId, out var state))
+            state.AppActions.Add(configure);
     }
 
     public void UseWebApplicationBuilder(Action<WebApplicationBuilder> configure)
@@ -69,18 +120,90 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
 
     public void BuildServiceProvider()
     {
-        _pluginServiceProvider = _pluginServices.BuildServiceProvider();
+        _lock.EnterReadLock();
+        try
+        {
+            foreach (var (pluginId, state) in _pluginStates)
+            {
+                var provider = state.PluginServices.BuildServiceProvider();
+                _aggregateProvider.AddProvider(pluginId, provider);
+            }
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+
+        // Also build fallback services if any were registered outside plugin context
+        if (_fallbackServices.Count > 0)
+        {
+            var fallbackProvider = _fallbackServices.BuildServiceProvider();
+            _aggregateProvider.AddProvider("__fallback__", fallbackProvider);
+        }
+    }
+
+    internal void BuildPluginServiceProvider(string pluginId, IServiceCollection services)
+    {
+        var provider = services.BuildServiceProvider();
+        _aggregateProvider.AddProvider(pluginId, provider);
+
+        if (_pluginStates.TryGetValue(pluginId, out var state))
+        {
+            // Also build the plugin's context-level services
+            var contextProvider = state.PluginServices.BuildServiceProvider();
+            _aggregateProvider.AddProvider($"{pluginId}__context", contextProvider);
+        }
+    }
+
+    internal IServiceProvider? GetPluginServiceProvider(string pluginId)
+    {
+        // The aggregate provider manages individual providers, just return it
+        return null; // individual providers are managed by the aggregate
     }
 
     public T? GetService<T>() where T : class
     {
-        return _pluginServiceProvider?.GetService<T>();
+        return _aggregateProvider.GetService<T>();
     }
 
     public IEnumerable<T> GetServices<T>() where T : class
     {
-        return _pluginServiceProvider?.GetServices<T>() ?? [];
+        return _aggregateProvider.GetServices<T>();
     }
+
+    internal void RemovePluginContributions(string pluginId)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            if (!_pluginStates.TryGetValue(pluginId, out var state)) return;
+
+            foreach (var t in state.MenuTransformers)
+                _menuTransformers.Remove(t);
+
+            foreach (var t in state.FooterMenuTransformers)
+                _footerMenuTransformers.Remove(t);
+
+            foreach (var b in state.BadgeProviders)
+                _badgeProviders.Remove(b);
+
+            foreach (var a in state.AppActions)
+                _appActions.Remove(a);
+
+            foreach (var f in state.AppFactories)
+                AppRepository.RemoveFactory(f);
+
+            _aggregateProvider.RemoveProvider(pluginId);
+            _aggregateProvider.RemoveProvider($"{pluginId}__context");
+            _pluginStates.Remove(pluginId);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    internal IReadOnlyDictionary<string, PluginState> PluginStates => _pluginStates;
 
     public void Apply(WebApplication app)
     {

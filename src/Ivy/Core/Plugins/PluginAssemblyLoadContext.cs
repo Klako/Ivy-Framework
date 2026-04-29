@@ -4,7 +4,7 @@ using System.Runtime.Loader;
 namespace Ivy.Core.Plugins;
 
 internal class PluginAssemblyLoadContext(string pluginPath, IReadOnlySet<string> sharedAssemblyNames)
-    : AssemblyLoadContext(isCollectible: false)
+    : AssemblyLoadContext(isCollectible: true)
 {
     private readonly AssemblyDependencyResolver _resolver = new(pluginPath);
 

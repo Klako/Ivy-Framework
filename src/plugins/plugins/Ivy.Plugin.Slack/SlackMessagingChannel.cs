@@ -16,6 +16,7 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
     private const string FilesInfoUrl = "https://slack.com/api/files.info";
 
     private readonly HttpClient _http;
+    private readonly int _maxRetries;
 
     public SlackMessagingChannel(SlackConfig config)
     {
@@ -23,6 +24,7 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", config.BotToken);
         DefaultChannel = config.DefaultChannel;
+        _maxRetries = config.MaxRetries;
     }
 
     public string Platform => "slack";
@@ -259,7 +261,7 @@ public sealed class SlackMessagingChannel : IMessagingChannel, IDisposable
 
     private async Task<string> GetFileMessageTs(string fileId, string channelId, CancellationToken ct)
     {
-        for (var attempt = 0; attempt < 5; attempt++)
+        for (var attempt = 0; attempt < _maxRetries; attempt++)
         {
             if (attempt > 0)
                 await Task.Delay(1000, ct);

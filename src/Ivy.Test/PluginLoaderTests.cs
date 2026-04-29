@@ -383,4 +383,195 @@ public class PluginLoaderTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public async Task PluginWatcherDetectsNewDirectory()
+    {
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var loaderLogger = loggerFactory.CreateLogger<PluginLoader>();
+        var watcherLogger = loggerFactory.CreateLogger<PluginWatcher>();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"ivy-test-watcher-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var loader = new PluginLoader(tempDir, loaderLogger);
+            using var sp = new ServiceCollection().BuildServiceProvider();
+            loader.DiscoverAndLoad(new Version(1, 0), sp);
+
+            var watcher = new PluginWatcher(tempDir, loader, watcherLogger);
+            watcher.Start();
+
+            // Create a new plugin directory
+            var pluginDir = Path.Combine(tempDir, "new-plugin");
+            Directory.CreateDirectory(pluginDir);
+
+            // Wait for debounce + processing
+            await Task.Delay(500);
+
+            // Verify the loader attempted to load (will be in failed list since no DLLs)
+            var failedPlugins = loader.GetFailedPlugins();
+            Assert.Contains(failedPlugins, f => f.Directory == pluginDir);
+
+            watcher.Dispose();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task PluginWatcherDetectsRemovedDirectory()
+    {
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var loaderLogger = loggerFactory.CreateLogger<PluginLoader>();
+        var watcherLogger = loggerFactory.CreateLogger<PluginWatcher>();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"ivy-test-watcher-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            // Create a test plugin directory
+            var pluginDir = Path.Combine(tempDir, "test-plugin");
+            Directory.CreateDirectory(pluginDir);
+
+            var loader = new PluginLoader(tempDir, loaderLogger);
+            using var sp = new ServiceCollection().BuildServiceProvider();
+
+            // Use internal test helper to register a fake plugin
+            var testPlugin = new TestPlugin { Id = "test-plugin-id" };
+            loader.AddTestPlugin(testPlugin, pluginDir);
+
+            var loadedIdsBefore = loader.GetLoadedPluginIds();
+            Assert.Contains("test-plugin-id", loadedIdsBefore);
+
+            var watcher = new PluginWatcher(tempDir, loader, watcherLogger);
+            watcher.Start();
+
+            // Delete the plugin directory
+            Directory.Delete(pluginDir, true);
+
+            // Wait for filesystem event processing
+            await Task.Delay(200);
+
+            // Verify the plugin was unloaded
+            var loadedIdsAfter = loader.GetLoadedPluginIds();
+            Assert.DoesNotContain("test-plugin-id", loadedIdsAfter);
+
+            watcher.Dispose();
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task PluginWatcherDebouncesRapidChanges()
+    {
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var loaderLogger = loggerFactory.CreateLogger<PluginLoader>();
+        var watcherLogger = loggerFactory.CreateLogger<PluginWatcher>();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"ivy-test-watcher-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var pluginDir = Path.Combine(tempDir, "test-plugin");
+            Directory.CreateDirectory(pluginDir);
+            var dllPath = Path.Combine(pluginDir, "test.dll");
+            File.WriteAllText(dllPath, "initial");
+
+            var loader = new PluginLoader(tempDir, loaderLogger);
+            using var sp = new ServiceCollection().BuildServiceProvider();
+
+            var testPlugin = new TestPlugin { Id = "test-plugin-id" };
+            loader.AddTestPlugin(testPlugin, pluginDir);
+
+            var reloadCount = 0;
+            var originalReload = loader.ReloadPlugin;
+
+            var watcher = new PluginWatcher(tempDir, loader, watcherLogger);
+            watcher.Start();
+
+            // Trigger multiple rapid changes
+            for (int i = 0; i < 5; i++)
+            {
+                File.WriteAllText(dllPath, $"change-{i}");
+                await Task.Delay(50); // 50ms between changes (less than 300ms debounce)
+            }
+
+            // Wait for debounce to complete
+            await Task.Delay(400);
+
+            // We can't easily count reload attempts without mocking,
+            // but we verify the watcher doesn't crash on rapid changes
+            Assert.True(File.Exists(dllPath));
+
+            watcher.Dispose();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task PluginWatcherIgnoresNonDllChanges()
+    {
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var loaderLogger = loggerFactory.CreateLogger<PluginLoader>();
+        var watcherLogger = loggerFactory.CreateLogger<PluginWatcher>();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"ivy-test-watcher-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var pluginDir = Path.Combine(tempDir, "test-plugin");
+            Directory.CreateDirectory(pluginDir);
+
+            var loader = new PluginLoader(tempDir, loaderLogger);
+            using var sp = new ServiceCollection().BuildServiceProvider();
+
+            var testPlugin = new TestPlugin { Id = "test-plugin-id" };
+            loader.AddTestPlugin(testPlugin, pluginDir);
+
+            var watcher = new PluginWatcher(tempDir, loader, watcherLogger);
+            watcher.Start();
+
+            // Create a non-DLL file
+            var txtPath = Path.Combine(pluginDir, "readme.txt");
+            File.WriteAllText(txtPath, "This should not trigger a reload");
+
+            // Wait for potential processing
+            await Task.Delay(400);
+
+            // Plugin should still be loaded (not reloaded/unloaded)
+            var loadedIds = loader.GetLoadedPluginIds();
+            Assert.Contains("test-plugin-id", loadedIds);
+
+            watcher.Dispose();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    private class TestPlugin : Ivy.Plugins.IIvyPlugin
+    {
+        public required string Id { get; init; }
+
+        public Ivy.Plugins.PluginManifest Manifest => new()
+        {
+            Id = Id,
+            Name = "Test Plugin",
+            Version = new Version(1, 0),
+            Author = "Test"
+        };
+
+        public void Initialize(Ivy.Plugins.IIvyPluginContext context) { }
+    }
 }

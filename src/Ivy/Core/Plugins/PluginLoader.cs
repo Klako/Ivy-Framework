@@ -569,6 +569,19 @@ public class PluginLoader : IPluginManager
         }
     }
 
+    internal string? GetPluginIdByDirectory(string directory)
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            return _knownPlugins.FirstOrDefault(kv => kv.Value == directory).Key;
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
     internal void AddTestPlugin(IIvyPlugin instance, string directory)
     {
         _lock.EnterWriteLock();

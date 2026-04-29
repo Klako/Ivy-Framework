@@ -15,6 +15,8 @@ public class HelloWorldPlugin : IIvyPlugin
         Version = new Version(1, 0, 0),
     };
 
+    public PluginConfigurationSchema? ConfigurationSchema => null;
+
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
     }

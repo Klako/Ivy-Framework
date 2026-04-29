@@ -15,6 +15,27 @@ public class SlackPlugin : IIvyPlugin
         Version = new Version(1, 0, 0),
     };
 
+    public PluginConfigurationSchema ConfigurationSchema { get; } = new()
+    {
+        Fields =
+        [
+            new()
+            {
+                Key = "BotToken",
+                Type = ConfigFieldType.Secret,
+                IsRequired = true,
+                Description = "Slack Bot User OAuth Token (starts with xoxb-)"
+            },
+            new()
+            {
+                Key = "DefaultChannel",
+                Type = ConfigFieldType.String,
+                IsRequired = false,
+                Description = "Default channel ID or name for messages"
+            }
+        ]
+    };
+
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
     }
@@ -22,14 +43,9 @@ public class SlackPlugin : IIvyPlugin
     public void Configure(IPluginContext context)
     {
         var section = context.Configuration.GetSection("Plugins:Slack");
-        var botToken = section["BotToken"];
-
-        if (string.IsNullOrEmpty(botToken))
-            return;
-
         var config = new SlackConfig
         {
-            BotToken = botToken,
+            BotToken = section["BotToken"]!,
             DefaultChannel = section["DefaultChannel"],
         };
 

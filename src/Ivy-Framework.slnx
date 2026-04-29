@@ -52,4 +52,5 @@
   </Folder>
   <Project Path="Ivy.Agent.EfQuery/Ivy.Agent.EfQuery.csproj" />
   <Project Path="Ivy.Agent.EfQuery.Test/Ivy.Agent.EfQuery.Test.csproj" />
+  <Project Path="Ivy.Plugin.Abstractions/Ivy.Plugin.Abstractions.csproj" />
 </Solution>

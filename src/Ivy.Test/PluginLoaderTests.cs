@@ -1,6 +1,5 @@
 using Ivy.Core.Apps;
 using Ivy.Core.Plugins;
-using Ivy.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

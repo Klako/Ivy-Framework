@@ -39,7 +39,7 @@ public class PluginConfigurationValidationTests
         };
         var config = BuildConfig(new Dictionary<string, string?>());
 
-        var errors = loader.ValidatePluginConfiguration("Ivy.Plugin.Slack", schema, config);
+        var errors = loader.ValidatePluginConfiguration("Slack", schema, config);
 
         Assert.Single(errors);
         Assert.Contains("Required field 'BotToken' is missing", errors[0]);
@@ -61,7 +61,7 @@ public class PluginConfigurationValidationTests
             ["Plugins:Test:MaxRetries"] = "not-a-number"
         });
 
-        var errors = loader.ValidatePluginConfiguration("Ivy.Plugin.Test", schema, config);
+        var errors = loader.ValidatePluginConfiguration("Test", schema, config);
 
         Assert.Single(errors);
         Assert.Contains("invalid type", errors[0]);
@@ -83,7 +83,7 @@ public class PluginConfigurationValidationTests
             ["Plugins:Test:Enabled"] = "not-a-bool"
         });
 
-        var errors = loader.ValidatePluginConfiguration("Ivy.Plugin.Test", schema, config);
+        var errors = loader.ValidatePluginConfiguration("Test", schema, config);
 
         Assert.Single(errors);
         Assert.Contains("invalid type", errors[0]);
@@ -102,7 +102,7 @@ public class PluginConfigurationValidationTests
         };
         var config = BuildConfig(new Dictionary<string, string?>());
 
-        var errors = loader.ValidatePluginConfiguration("Ivy.Plugin.Slack", schema, config);
+        var errors = loader.ValidatePluginConfiguration("Slack", schema, config);
 
         Assert.Empty(errors);
     }
@@ -129,7 +129,7 @@ public class PluginConfigurationValidationTests
             ["Plugins:Slack:Enabled"] = "true"
         });
 
-        var errors = loader.ValidatePluginConfiguration("Ivy.Plugin.Slack", schema, config);
+        var errors = loader.ValidatePluginConfiguration("Slack", schema, config);
 
         Assert.Empty(errors);
     }
@@ -234,6 +234,7 @@ public class PluginConfigurationValidationTests
         {
             Id = "Ivy.Plugin.Fake",
             Name = "Fake",
+            ConfigSectionName = "Fake",
             Version = new Version(1, 0, 0),
         };
 

@@ -12,6 +12,7 @@ public class SlackPlugin : IIvyPlugin
     {
         Id = "Ivy.Plugin.Slack",
         Name = "Slack",
+        ConfigSectionName = "Slack",
         Version = new Version(1, 0, 0),
     };
 

@@ -241,7 +241,7 @@ public class PluginLoader : IPluginManager
                 if (plugin.Instance.ConfigurationSchema is { } schema)
                 {
                     var errors = ValidatePluginConfiguration(
-                        plugin.Instance.Manifest.Id,
+                        plugin.Instance.Manifest.ConfigSectionName,
                         schema,
                         context.Configuration);
 
@@ -366,7 +366,7 @@ public class PluginLoader : IPluginManager
             if (plugin.Instance.ConfigurationSchema is { } schema && _configuration is not null)
             {
                 var errors = ValidatePluginConfiguration(
-                    manifest.Id,
+                    manifest.ConfigSectionName,
                     schema,
                     _configuration);
 
@@ -471,12 +471,12 @@ public class PluginLoader : IPluginManager
     }
 
     internal List<string> ValidatePluginConfiguration(
-        string pluginId,
+        string configSectionName,
         PluginConfigurationSchema schema,
         IConfiguration config)
     {
         var errors = new List<string>();
-        var section = config.GetSection($"Plugins:{pluginId.Split('.').Last()}");
+        var section = config.GetSection($"Plugins:{configSectionName}");
 
         foreach (var field in schema.Fields)
         {

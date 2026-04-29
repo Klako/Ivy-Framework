@@ -7,60 +7,12 @@ public class DataTableApp : SampleBase
     {
         return Layout.Tabs(
             new Tab("Overview", new DataTableMainSample()),
-            new Tab("Cell Actions", new DataTableCellActionsSample()),
             new Tab("Header Slots", new DataTableHeaderSlotsSample()),
             new Tab("Footer", new DataTableFooterSample()),
             new Tab("Multi Agg", new DataTableMultiAggSample()),
             new Tab("Density", new DataTableDensitySample()),
             new Tab("Million Rows", new DataTablesMillionRowsSample())
         ).Variant(TabsVariant.Content);
-    }
-}
-
-public class DataTableCellActionsSample : ViewBase
-{
-    public override object? Build()
-    {
-        var client = UseService<IClientProvider>();
-
-        var data = new[]
-        {
-            new { Name = "Ada Lovelace", Role = "Architect", Email = "ada@ivy.app", Team = "Compiler" },
-            new { Name = "Grace Hopper", Role = "Engineer", Email = "grace@ivy.app", Team = "Runtime" },
-            new { Name = "Barbara Liskov", Role = "Lead", Email = "barbara@ivy.app", Team = "Platform" },
-            new { Name = "Linus Torvalds", Role = "Maintainer", Email = "linus@ivy.app", Team = "Kernel" },
-        }.AsQueryable();
-
-        return Layout.Vertical()
-            | Text.P(
-                "Hover Name and Email cells to see the click indicator in the top-right corner. "
-                + "Those columns use OnCellAction handlers.")
-            | data.ToDataTable()
-                .Header(x => x.Name, "Name")
-                .Header(x => x.Role, "Role")
-                .Header(x => x.Email, "Email")
-                .Header(x => x.Team, "Team")
-                .Width(x => x.Name, Size.Px(180))
-                .Width(x => x.Role, Size.Px(140))
-                .Width(x => x.Email, Size.Px(220))
-                .Width(x => x.Team, Size.Px(160))
-                .OnCellAction(x => x.Name, (Func<object, ValueTask>)(e =>
-                {
-                    client.Toast($"Open profile: {e}");
-                    return ValueTask.CompletedTask;
-                }))
-                .OnCellAction(x => x.Email, (Func<object, ValueTask>)(e =>
-                {
-                    client.Toast($"Compose email: {e}");
-                    return ValueTask.CompletedTask;
-                }))
-                .Config(config =>
-                {
-                    config.AllowFiltering = true;
-                    config.AllowSorting = true;
-                    config.ShowSearch = true;
-                })
-                .Height(Size.Units(70));
     }
 }
 

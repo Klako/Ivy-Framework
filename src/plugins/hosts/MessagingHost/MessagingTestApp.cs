@@ -20,7 +20,7 @@ public class MessagingTestApp : ViewBase
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
 
         var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
-        var channelName = UseState("#ivy-plugin-test");
+        var channelName = UseState(channels.FirstOrDefault()?.DefaultChannel ?? "#ivy-plugin-test");
         var messageText = UseState("Hello from an Ivy messaging plugin!");
         var threadId = UseState("");
         var status = UseState("");

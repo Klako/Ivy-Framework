@@ -238,6 +238,23 @@ public class PluginLoader : IPluginManager
         {
             foreach (var plugin in _plugins)
             {
+                if (plugin.Instance.ConfigurationSchema is { } schema)
+                {
+                    var errors = ValidatePluginConfiguration(
+                        plugin.Instance.Manifest.ConfigSectionName,
+                        schema,
+                        context.Configuration);
+
+                    if (errors.Count > 0)
+                    {
+                        _logger.LogError(
+                            "Plugin '{Id}' configuration is invalid: {Errors}",
+                            plugin.Instance.Manifest.Id,
+                            string.Join(", ", errors));
+                        continue;
+                    }
+                }
+
                 context.SetCurrentPlugin(plugin.Instance.Manifest.Id, plugin.Directory);
                 plugin.Instance.Configure(context);
                 context.ClearCurrentPlugin();
@@ -345,6 +362,27 @@ public class PluginLoader : IPluginManager
             if (_configuration is not null)
                 plugin.Instance.ConfigureServices(plugin.Services, _configuration);
 
+            // Validate configuration before Configure
+            if (plugin.Instance.ConfigurationSchema is { } schema && _configuration is not null)
+            {
+                var errors = ValidatePluginConfiguration(
+                    manifest.ConfigSectionName,
+                    schema,
+                    _configuration);
+
+                if (errors.Count > 0)
+                {
+                    _logger.LogError(
+                        "Plugin '{Id}' configuration is invalid: {Errors}. Plugin load failed.",
+                        manifest.Id,
+                        string.Join(", ", errors));
+
+                    (plugin.ServiceProvider as IDisposable)?.Dispose();
+                    plugin.LoadContext.Unload();
+                    return false;
+                }
+            }
+
             // Configure context
             if (_pluginContext is not null)
             {
@@ -417,6 +455,56 @@ public class PluginLoader : IPluginManager
         {
             _lock.ExitReadLock();
         }
+    }
+
+    internal void AddTestPlugin(IIvyPlugin instance, string directory)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            _plugins.Add(new LoadedPlugin(instance, typeof(PluginLoader).Assembly, AssemblyLoadContext.Default, directory));
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    internal List<string> ValidatePluginConfiguration(
+        string configSectionName,
+        PluginConfigurationSchema schema,
+        IConfiguration config)
+    {
+        var errors = new List<string>();
+        var section = config.GetSection($"Plugins:{configSectionName}");
+
+        foreach (var field in schema.Fields)
+        {
+            var value = section[field.Key];
+
+            if (field.IsRequired && string.IsNullOrEmpty(value))
+            {
+                errors.Add($"Required field '{field.Key}' is missing");
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(value) && !ValidateFieldType(value, field.Type))
+            {
+                errors.Add($"Field '{field.Key}' has invalid type (expected {field.Type})");
+            }
+        }
+
+        return errors;
+    }
+
+    internal static bool ValidateFieldType(string value, ConfigFieldType type)
+    {
+        return type switch
+        {
+            ConfigFieldType.Integer => int.TryParse(value, out _),
+            ConfigFieldType.Boolean => bool.TryParse(value, out _),
+            _ => true // String and Secret are always valid if non-empty
+        };
     }
 }
 

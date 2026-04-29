@@ -30,6 +30,9 @@ public class MessagingTestApp : ViewBase
         var pluginStatus = UseState("");
         var refreshToken = UseRefreshToken();
 
+        if (channels.Count > 0 && !channels.Any(c => c.Platform == selectedPlatform.Value))
+            selectedPlatform.Set(channels.First().Platform);
+
         var activeChannel = channels.FirstOrDefault(c => c.Platform == selectedPlatform.Value);
 
         var uploadContext = this.UseUpload(async (file, stream, ct) =>

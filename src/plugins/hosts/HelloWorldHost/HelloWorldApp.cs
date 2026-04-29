@@ -15,6 +15,7 @@ public class HelloWorldApp : ViewBase
         var pluginManager = this.UseService<IPluginManager>();
         var greeters = plugins.GetServices<IGreeter>().ToList();
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
+        var unloadedPlugins = pluginManager.GetUnloadedPlugins();
         var nameState = UseState("World");
         var pluginStatus = UseState("");
 
@@ -46,6 +47,17 @@ public class HelloWorldApp : ViewBase
                         : $"Failed to unload '{id}'");
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.Power)
+            )).ToArray()
+            | unloadedPlugins.Select(p => (object)(Horizontal().Gap(4)
+                | new Badge(p.Id, BadgeVariant.Outline)
+                | Muted("unloaded")
+                | new Button("Load", onClick: _ =>
+                {
+                    pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
+                        ? $"Loaded '{p.Id}'"
+                        : $"Failed to load '{p.Id}'");
+                    return ValueTask.CompletedTask;
+                }, variant: ButtonVariant.Outline, icon: Icons.Plus)
             )).ToArray()
             | (string.IsNullOrEmpty(pluginStatus.Value) ? null
                 : pluginStatus.Value.StartsWith("Failed")

@@ -17,6 +17,7 @@ public class MessagingTestApp : ViewBase
         var pluginManager = this.UseService<IPluginManager>();
         var channels = plugins.GetServices<IMessagingChannel>().ToList();
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
+        var unloadedPlugins = pluginManager.GetUnloadedPlugins();
 
         var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
         var channelName = UseState("#ivy-plugin-test");
@@ -143,6 +144,17 @@ public class MessagingTestApp : ViewBase
                         : $"Failed to unload '{id}'");
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.Power)
+            )).ToArray()
+            | unloadedPlugins.Select(p => (object)(Horizontal().Gap(4)
+                | new Badge(p.Id, BadgeVariant.Outline)
+                | Muted("unloaded")
+                | new Button("Load", onClick: _ =>
+                {
+                    pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
+                        ? $"Loaded '{p.Id}'"
+                        : $"Failed to load '{p.Id}'");
+                    return ValueTask.CompletedTask;
+                }, variant: ButtonVariant.Outline, icon: Icons.Plus)
             )).ToArray()
             | (string.IsNullOrEmpty(pluginStatus.Value) ? null : StatusBadge(pluginStatus.Value));
     }

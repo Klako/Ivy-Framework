@@ -13,6 +13,7 @@ public class PluginLoader : IPluginManager
     private readonly ILogger<PluginLoader> _logger;
     private readonly IReadOnlySet<string> _sharedAssemblyNames;
     private readonly List<LoadedPlugin> _plugins = [];
+    private readonly Dictionary<string, string> _knownPlugins = new(); // id -> directory
     private readonly ReaderWriterLockSlim _lock = new();
     private PluginContextBase? _pluginContext;
     private IConfiguration? _configuration;
@@ -68,6 +69,7 @@ public class PluginLoader : IPluginManager
                     continue;
                 }
 
+                _knownPlugins[manifest.Id] = directory;
                 candidates.Add(loaded.Value);
             }
             catch (Exception ex)
@@ -342,6 +344,7 @@ public class PluginLoader : IPluginManager
                 plugin.ServiceProvider = _pluginContext.GetPluginServiceProvider(manifest.Id);
             }
 
+            _knownPlugins[manifest.Id] = pluginPath;
             _plugins.Add(plugin);
             _logger.LogInformation("Loaded plugin: {Id} v{Version}", manifest.Id, manifest.Version);
             return true;
@@ -381,6 +384,23 @@ public class PluginLoader : IPluginManager
         try
         {
             return _plugins.Select(p => p.Instance.Manifest.Id).ToList();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public IReadOnlyList<PluginCandidate> GetUnloadedPlugins()
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            var loadedIds = _plugins.Select(p => p.Instance.Manifest.Id).ToHashSet();
+            return _knownPlugins
+                .Where(kv => !loadedIds.Contains(kv.Key))
+                .Select(kv => new PluginCandidate(kv.Key, kv.Value))
+                .ToList();
         }
         finally
         {

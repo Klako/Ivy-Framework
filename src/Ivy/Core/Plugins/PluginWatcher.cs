@@ -66,7 +66,12 @@ internal class PluginWatcher : IDisposable
 
         // Check if this is a top-level plugin directory (direct child of plugins directory)
         var parent = Path.GetDirectoryName(e.FullPath);
-        if (!string.Equals(parent, _pluginsDirectory, StringComparison.OrdinalIgnoreCase))
+        if (parent == null)
+            return;
+
+        var normalizedParent = Path.GetFullPath(parent);
+        var normalizedPluginsDir = Path.GetFullPath(_pluginsDirectory);
+        if (!string.Equals(normalizedParent, normalizedPluginsDir, StringComparison.OrdinalIgnoreCase))
             return;
 
         _logger.LogInformation("New plugin directory detected: {Path}", e.FullPath);
@@ -77,7 +82,12 @@ internal class PluginWatcher : IDisposable
     {
         // Check if a top-level plugin directory was deleted
         var parent = Path.GetDirectoryName(e.FullPath);
-        if (!string.Equals(parent, _pluginsDirectory, StringComparison.OrdinalIgnoreCase))
+        if (parent == null)
+            return;
+
+        var normalizedParent = Path.GetFullPath(parent);
+        var normalizedPluginsDir = Path.GetFullPath(_pluginsDirectory);
+        if (!string.Equals(normalizedParent, normalizedPluginsDir, StringComparison.OrdinalIgnoreCase))
             return;
 
         _logger.LogInformation("Plugin directory deleted: {Path}", e.FullPath);
@@ -121,15 +131,23 @@ internal class PluginWatcher : IDisposable
 
         // Ensure this is within a top-level plugin directory
         var parent = Path.GetDirectoryName(directory);
-        var isTopLevel = string.Equals(parent, _pluginsDirectory, StringComparison.OrdinalIgnoreCase);
-        var isTwoLevelsDeep = parent != null &&
-                              string.Equals(Path.GetDirectoryName(parent), _pluginsDirectory, StringComparison.OrdinalIgnoreCase);
+        if (parent == null)
+            return;
+
+        var normalizedPluginsDir = Path.GetFullPath(_pluginsDirectory);
+        var normalizedParent = Path.GetFullPath(parent);
+        var isTopLevel = string.Equals(normalizedParent, normalizedPluginsDir, StringComparison.OrdinalIgnoreCase);
+
+        var grandParent = Path.GetDirectoryName(parent);
+        var normalizedGrandParent = grandParent != null ? Path.GetFullPath(grandParent) : null;
+        var isTwoLevelsDeep = normalizedGrandParent != null &&
+                              string.Equals(normalizedGrandParent, normalizedPluginsDir, StringComparison.OrdinalIgnoreCase);
 
         if (!isTopLevel && !isTwoLevelsDeep)
             return;
 
         // Use the top-level plugin directory
-        var pluginDirectory = isTopLevel ? directory : parent!;
+        var pluginDirectory = isTopLevel ? directory : parent;
 
         _logger.LogInformation("DLL changed in plugin: {Path}", e.FullPath);
         ScheduleReload(pluginDirectory);

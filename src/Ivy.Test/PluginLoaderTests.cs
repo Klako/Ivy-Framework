@@ -406,8 +406,8 @@ public class PluginLoaderTests
             var pluginDir = Path.Combine(tempDir, "new-plugin");
             Directory.CreateDirectory(pluginDir);
 
-            // Wait for debounce + processing
-            await Task.Delay(500);
+            // Wait for debounce + processing (increased for macOS)
+            await Task.Delay(1000);
 
             // Verify the loader attempted to load (will be in failed list since no DLLs)
             var failedPlugins = loader.GetFailedPlugins();
@@ -452,8 +452,8 @@ public class PluginLoaderTests
             // Delete the plugin directory
             Directory.Delete(pluginDir, true);
 
-            // Wait for filesystem event processing
-            await Task.Delay(200);
+            // Wait for filesystem event processing (increased for macOS)
+            await Task.Delay(500);
 
             // Verify the plugin was unloaded
             var loadedIdsAfter = loader.GetLoadedPluginIds();
@@ -489,9 +489,6 @@ public class PluginLoaderTests
 
             var testPlugin = new TestPlugin { Id = "test-plugin-id" };
             loader.AddTestPlugin(testPlugin, pluginDir);
-
-            var reloadCount = 0;
-            var originalReload = loader.ReloadPlugin;
 
             var watcher = new PluginWatcher(tempDir, loader, watcherLogger);
             watcher.Start();
@@ -568,10 +565,14 @@ public class PluginLoaderTests
         {
             Id = Id,
             Name = "Test Plugin",
-            Version = new Version(1, 0),
-            Author = "Test"
+            ConfigSectionName = "TestPlugin",
+            Version = new Version(1, 0)
         };
 
-        public void Initialize(Ivy.Plugins.IIvyPluginContext context) { }
+        public Ivy.Plugins.PluginConfigurationSchema? ConfigurationSchema => null;
+
+        public void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+
+        public void Configure(Ivy.Plugins.IPluginContext context) { }
     }
 }

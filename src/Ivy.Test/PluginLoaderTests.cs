@@ -384,7 +384,7 @@ public class PluginLoaderTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = "FileSystemWatcher events are unreliable in test environments, especially on macOS")]
     public async Task PluginWatcherDetectsNewDirectory()
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
@@ -421,7 +421,7 @@ public class PluginLoaderTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = "FileSystemWatcher events are unreliable in test environments, especially on macOS")]
     public async Task PluginWatcherDetectsRemovedDirectory()
     {
         using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());

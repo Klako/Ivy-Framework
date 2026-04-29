@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Ivy.Core.Plugins;
 
-public record FailedPlugin(string Directory, string Reason, DateTime FailedAt);
-
 public class PluginLoader : IPluginManager
 {
     private readonly string _pluginsDirectory;

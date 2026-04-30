@@ -241,6 +241,9 @@ importers:
       react-resizable-panels:
         specifier: 3.0.6
         version: 3.0.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react-responsive-carousel:
+        specifier: ^3.2.23
+        version: 3.2.23
       react-syntax-highlighter:
         specifier: 16.1.0
         version: 16.1.0(react@19.2.3)

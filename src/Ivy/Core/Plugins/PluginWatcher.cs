@@ -11,7 +11,9 @@ internal class PluginWatcher : IDisposable
     private readonly ILogger _logger;
     private readonly FileSystemWatcher _watcher;
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _pendingReloads = new();
-    private readonly TimeSpan _debounceDelay = TimeSpan.FromMilliseconds(300);
+    private readonly ConcurrentDictionary<string, DateTime> _reloadCooldowns = new();
+    private readonly TimeSpan _debounceDelay = TimeSpan.FromMilliseconds(500);
+    private readonly TimeSpan _cooldownPeriod = TimeSpan.FromSeconds(2);
     private bool _disposed;
 
     public PluginWatcher(string pluginsDirectory, IPluginManager pluginManager, ILogger logger)
@@ -60,7 +62,14 @@ internal class PluginWatcher : IDisposable
 
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
-        // Only handle directory creation (new plugin added)
+        // Handle new DLL files (dotnet build creates rather than overwrites DLLs)
+        if (e.FullPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            OnDllChanged(e.FullPath);
+            return;
+        }
+
+        // Handle directory creation (new plugin added)
         if (!Directory.Exists(e.FullPath))
             return;
 
@@ -120,19 +129,28 @@ internal class PluginWatcher : IDisposable
 
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
-        // Only handle DLL changes
         if (!e.FullPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        OnDllChanged(e.FullPath);
+    }
+
+    private void OnDllChanged(string fullPath)
+    {
+        // Ignore intermediate build artifacts (obj/ directory) — consistent with
+        // LoadPluginFromDirectory which also filters these out when loading.
+        if (fullPath.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
             return;
 
         // Walk up from the changed file to find which top-level plugin directory it's under
         var normalizedPluginsDir = Path.GetFullPath(_pluginsDirectory);
-        var current = Path.GetDirectoryName(e.FullPath);
+        var current = Path.GetDirectoryName(fullPath);
         while (current != null)
         {
             var parent = Path.GetDirectoryName(current);
             if (parent != null && string.Equals(Path.GetFullPath(parent), normalizedPluginsDir, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogInformation("DLL changed in plugin: {Path}", e.FullPath);
+                _logger.LogInformation("DLL changed in plugin: {Path}", fullPath);
                 ScheduleReload(current);
                 return;
             }
@@ -180,6 +198,11 @@ internal class PluginWatcher : IDisposable
 
     private void ScheduleReload(string pluginDirectory)
     {
+        // Skip if this directory was recently loaded/reloaded (builds produce multiple
+        // waves of file events that can span longer than the debounce window)
+        if (_reloadCooldowns.TryGetValue(pluginDirectory, out var cooldownUntil) && DateTime.UtcNow < cooldownUntil)
+            return;
+
         // Cancel any existing pending reload for this directory
         if (_pendingReloads.TryRemove(pluginDirectory, out var existingCts))
             existingCts.Cancel();
@@ -194,7 +217,12 @@ internal class PluginWatcher : IDisposable
             {
                 await Task.Delay(_debounceDelay, token);
 
-                // Find the plugin ID for this directory
+                // Re-check cooldown after debounce (another operation may have completed during the wait)
+                if (_reloadCooldowns.TryGetValue(pluginDirectory, out var cd) && DateTime.UtcNow < cd)
+                    return;
+
+                bool success = false;
+
                 if (_pluginManager is PluginLoader loader)
                 {
                     var pluginId = loader.GetPluginIdByDirectory(pluginDirectory);
@@ -203,7 +231,7 @@ internal class PluginWatcher : IDisposable
                         _logger.LogInformation("Reloading plugin: {PluginId}", pluginId);
                         try
                         {
-                            _pluginManager.ReloadPlugin(pluginId);
+                            success = _pluginManager.ReloadPlugin(pluginId);
                         }
                         catch (Exception ex)
                         {
@@ -212,9 +240,22 @@ internal class PluginWatcher : IDisposable
                     }
                     else
                     {
-                        _logger.LogWarning("Could not find plugin ID for directory: {Directory}", pluginDirectory);
+                        _logger.LogInformation("Plugin not yet loaded, attempting to load from: {Directory}", pluginDirectory);
+                        try
+                        {
+                            success = _pluginManager.LoadPlugin(pluginDirectory);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to load plugin from {Directory}", pluginDirectory);
+                        }
                     }
                 }
+
+                // Set cooldown to suppress duplicate reloads from subsequent file events
+                // (applies on both success and failure — a failed load shouldn't retry
+                // until the DLLs actually change again from a new build)
+                _reloadCooldowns[pluginDirectory] = DateTime.UtcNow + _cooldownPeriod;
             }
             catch (OperationCanceledException)
             {

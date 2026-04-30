@@ -30,6 +30,8 @@ public class PluginLoaderTests
         public override IConfiguration Configuration => _configuration;
         protected override AppRepository AppRepository => _appRepository;
         protected override WebApplicationBuilder Builder => _builder;
+
+        public AppRepository GetAppRepository() => _appRepository;
     }
 
     [Fact]
@@ -576,5 +578,93 @@ public class PluginLoaderTests
         public void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
 
         public void Configure(Ivy.Plugins.IPluginContext context) { }
+    }
+
+    [Fact]
+    public void PluginCanCastContextToIIvyPluginContext()
+    {
+        var context = new TestPluginContext();
+        Ivy.Plugins.IPluginContext pluginContext = context;
+
+        // Verify the cast succeeds
+        var ivyContext = pluginContext as Ivy.Plugins.IIvyPluginContext;
+        Assert.NotNull(ivyContext);
+        Assert.Same(context, ivyContext);
+    }
+
+    [Fact]
+    public void AsIvyContextReturnsIIvyPluginContext()
+    {
+        var context = new TestPluginContext();
+        Ivy.Plugins.IPluginContext pluginContext = context;
+
+        // Use the extension method
+        var ivyContext = pluginContext.AsIvyContext();
+        Assert.NotNull(ivyContext);
+        Assert.Same(context, ivyContext);
+    }
+
+    [Fact]
+    public void AsIvyContextThrowsForNonIvyContext()
+    {
+        // Create a mock non-Ivy context
+        var mockContext = new MockNonIvyPluginContext();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => mockContext.AsIvyContext());
+        Assert.Contains("This plugin requires Ivy framework features", exception.Message);
+        Assert.Contains("Ensure the plugin is loaded in an Ivy host application", exception.Message);
+    }
+
+    [Fact]
+    public void TryGetIvyContextReturnsContextForIvyContext()
+    {
+        var context = new TestPluginContext();
+        Ivy.Plugins.IPluginContext pluginContext = context;
+
+        var ivyContext = pluginContext.TryGetIvyContext();
+        Assert.NotNull(ivyContext);
+        Assert.Same(context, ivyContext);
+    }
+
+    [Fact]
+    public void TryGetIvyContextReturnsNullForNonIvyContext()
+    {
+        var mockContext = new MockNonIvyPluginContext();
+
+        var ivyContext = mockContext.TryGetIvyContext();
+        Assert.Null(ivyContext);
+    }
+
+    [Fact]
+    public void PluginCanAddAppViaIIvyPluginContext()
+    {
+        var context = new TestPluginContext();
+
+        context.SetCurrentPlugin("test-plugin", "/plugins/test");
+
+        // Plugin casts and adds app
+        Ivy.Plugins.IPluginContext pluginContext = context;
+        var ivyContext = pluginContext.AsIvyContext();
+
+        ivyContext.AddApp(new AppDescriptor
+        {
+            Id = "test-app",
+            Title = "Test App",
+            Group = ["Test"],
+            IsVisible = true
+        });
+
+        context.ClearCurrentPlugin();
+
+        // Verify app was registered
+        var apps = context.GetAppRepository().GetApps().ToList();
+        Assert.Contains(apps, a => a.Id == "test-app");
+    }
+
+    private class MockNonIvyPluginContext : Ivy.Plugins.IPluginContext
+    {
+        public IServiceCollection Services => new ServiceCollection();
+        public IConfiguration Configuration => new ConfigurationBuilder().Build();
+        public void RegisterMessagingChannel(Ivy.Plugins.Messaging.IMessagingChannel channel) { }
     }
 }

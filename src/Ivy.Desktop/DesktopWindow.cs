@@ -130,7 +130,11 @@ public class DesktopWindow
     public bool IsMaximized => _window?.IsMaximized ?? false;
     public bool IsFullscreen => _window?.IsFullscreen ?? false;
     public (int X, int Y) GetPosition() => _window?.GetPosition() ?? (0, 0);
-    public (int Width, int Height) GetSize() => _window?.GetSize() ?? (_width, _height);
+    public (int Width, int Height) GetSize()
+    {
+        var size = _window?.GetSize() ?? (_width, _height);
+        return NormalizeSizeFromNative(size.Width, size.Height);
+    }
 
     // ── Post-run window state ────────────────────────────────────────────
 
@@ -369,7 +373,11 @@ public class DesktopWindow
 
         _window.WindowClosing += (_, e) => WindowClosing?.Invoke(this, e);
         _window.WindowClosed += (_, _) => WindowClosed?.Invoke(this, EventArgs.Empty);
-        _window.SizeChanged += (_, e) => SizeChanged?.Invoke(this, new DesktopSizeEventArgs(e.Width, e.Height));
+        _window.SizeChanged += (_, e) =>
+        {
+            var size = NormalizeSizeFromNative(e.Width, e.Height);
+            SizeChanged?.Invoke(this, new DesktopSizeEventArgs(size.Width, size.Height));
+        };
         _window.LocationChanged += (_, e) => LocationChanged?.Invoke(this, new DesktopPointEventArgs(e.X, e.Y));
         _window.FocusChanged += (_, focused) => FocusChanged?.Invoke(this, focused);
         _window.WebMessageReceived += (_, msg) => WebMessageReceived?.Invoke(this, msg);
@@ -555,5 +563,19 @@ public class DesktopWindow
         using var fileStream = File.Create(tempPath);
         stream.CopyTo(fileStream);
         return tempPath;
+    }
+
+    private (int Width, int Height) NormalizeSizeFromNative(int width, int height)
+    {
+        if (!OperatingSystem.IsMacOS() || !_useDpiScaling)
+            return (width, height);
+
+        var scale = DpiDetector.GetSystemScalingFactor();
+        if (scale <= 1.001)
+            return (width, height);
+
+        var logicalWidth = (int)Math.Round(width / scale, MidpointRounding.AwayFromZero);
+        var logicalHeight = (int)Math.Round(height / scale, MidpointRounding.AwayFromZero);
+        return (logicalWidth, logicalHeight);
     }
 }

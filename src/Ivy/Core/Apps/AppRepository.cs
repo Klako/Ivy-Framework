@@ -194,6 +194,11 @@ public class AppRepository : IAppRepository
         _factories.Add(factory);
     }
 
+    public bool RemoveFactory(Func<AppDescriptor[]> factory)
+    {
+        return _factories.Remove(factory);
+    }
+
     public AppDescriptor GetAppOrDefault(string? id)
     {
         var app = id != null

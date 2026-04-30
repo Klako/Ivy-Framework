@@ -1,5 +1,4 @@
 using Ivy.Apps;
-using Ivy.Core.Apps;
 
 namespace Ivy.Test.Plugins;
 

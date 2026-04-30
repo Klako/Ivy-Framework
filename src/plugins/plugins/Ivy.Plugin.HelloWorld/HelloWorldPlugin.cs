@@ -22,7 +22,7 @@ public class HelloWorldPlugin : IIvyPlugin
     {
     }
 
-    public void Configure(IIvyPluginContext context)
+    public void Configure(IPluginContext context)
     {
         context.RegisterGreeter(new HelloWorldGreeter());
     }

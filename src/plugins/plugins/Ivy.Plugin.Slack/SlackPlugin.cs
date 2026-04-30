@@ -50,7 +50,7 @@ public class SlackPlugin : IIvyPlugin
     {
     }
 
-    public void Configure(IIvyPluginContext context)
+    public void Configure(IPluginContext context)
     {
         var section = context.Configuration.GetSection("Plugins:Slack");
 

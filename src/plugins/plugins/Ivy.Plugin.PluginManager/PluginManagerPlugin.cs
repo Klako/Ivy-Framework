@@ -14,7 +14,7 @@ public class PluginManagerPlugin : IIvyPlugin
     {
         Id = "Ivy.Plugin.PluginManager",
         Name = "Plugin Manager",
-        ConfigSectionName = null,
+        ConfigSectionName = "PluginManager",
         Version = new Version(1, 0, 0),
     };
 

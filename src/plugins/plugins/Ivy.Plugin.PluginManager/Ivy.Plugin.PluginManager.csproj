@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../abstractions/Ivy.Plugin.Abstractions/Ivy.Plugin.Abstractions.csproj" />
+    <ProjectReference Include="../../../Ivy.Plugin.Abstractions/Ivy.Plugin.Abstractions.csproj" />
     <ProjectReference Include="../../../Ivy/Ivy.csproj" />
   </ItemGroup>
 </Project>

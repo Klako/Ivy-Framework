@@ -8,7 +8,7 @@ namespace Ivy.Apps;
 /// Central plugin management UI for loading, unloading, and reloading plugins.
 /// Automatically available when UsePlugins() is called.
 /// </summary>
-[App(icon: Icons.Plug, title: "Plugin Manager")]
+[App(icon: Icons.Plug, title: "Plugin Manager", isVisible: false)]
 public class PluginManagerApp : ViewBase
 {
     public override object? Build()

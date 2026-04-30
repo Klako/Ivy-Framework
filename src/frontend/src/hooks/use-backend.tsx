@@ -7,6 +7,7 @@ import { showError } from "@/hooks/use-error-sheet";
 import { getIvyHost, getIvyBasePath, getMachineId } from "@/lib/utils";
 import { validateRedirectUrl, validateLinkUrl } from "@/lib/url";
 import { logger } from "@/lib/logger";
+import { copyToClipboard } from "@/lib/clipboard";
 import { applyPatch, Operation } from "fast-json-patch";
 import { ToastAction } from "@/components/ui/toast";
 import { setThemeGlobal } from "@/components/theme-provider";
@@ -849,7 +850,7 @@ export const useBackend = (
 
           connection.on("CopyToClipboard", (text: string) => {
             logger.debug(`[${connection.connectionId}] CopyToClipboard`);
-            navigator.clipboard.writeText(text);
+            copyToClipboard(text);
           });
 
           connection.on("OpenUrl", (url: string) => {

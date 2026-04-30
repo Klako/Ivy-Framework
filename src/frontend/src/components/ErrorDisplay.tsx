@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { ClipboardCopy, Check } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { createPrismTheme } from "@/lib/prismTheme";
 
@@ -13,7 +14,7 @@ interface ErrorDisplayProps {
 export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ title, message, stackTrace }) => {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = () => {
+  const handleCopy = () => {
     const errorDetails = [
       title && `Title: ${title}`,
       message && `Message: ${message}`,
@@ -22,7 +23,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ title, message, stac
       .filter(Boolean)
       .join("\n\n");
 
-    navigator.clipboard.writeText(errorDetails);
+    copyToClipboard(errorDetails);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -62,7 +63,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ title, message, stac
       )}
 
       <div className="shrink-0 pt-4 border-t">
-        <Button onClick={copyToClipboard} className="flex items-center gap-2" variant="outline">
+        <Button onClick={handleCopy} className="flex items-center gap-2" variant="outline">
           {copied ? (
             <Check className="h-4 w-4 text-primary animate-in fade-in duration-500" />
           ) : (

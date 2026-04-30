@@ -253,8 +253,9 @@ internal class PluginWatcher : IDisposable
                 }
 
                 // Set cooldown to suppress duplicate reloads from subsequent file events
-                if (success)
-                    _reloadCooldowns[pluginDirectory] = DateTime.UtcNow + _cooldownPeriod;
+                // (applies on both success and failure — a failed load shouldn't retry
+                // until the DLLs actually change again from a new build)
+                _reloadCooldowns[pluginDirectory] = DateTime.UtcNow + _cooldownPeriod;
             }
             catch (OperationCanceledException)
             {

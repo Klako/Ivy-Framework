@@ -14,6 +14,7 @@ public class HelloWorldApp : ViewBase
         var plugins = this.UseService<IPluginServiceProvider>();
         var greeters = plugins.GetServices<IGreeter>().ToList();
         var nameState = UseState("World");
+        var navigator = this.UseNavigation();
 
         var greeting = greeters.Count > 0
             ? greeters[0].Greet(string.IsNullOrWhiteSpace(nameState.Value) ? "World" : nameState.Value)
@@ -30,7 +31,7 @@ public class HelloWorldApp : ViewBase
                 | H2("Plugins")
                 | new Button("Manage Plugins", onClick: _ =>
                 {
-                    this.Navigate("plugin-manager");
+                    navigator.Navigate("plugin-manager");
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.Plug);
     }

@@ -11,6 +11,7 @@ public class HelloWorldApp : ViewBase
 {
     public override object? Build()
     {
+        UsePluginState();
         var plugins = this.UseService<IPluginServiceProvider>();
         var greeters = plugins.GetServices<IGreeter>().ToList();
         var nameState = UseState("World");

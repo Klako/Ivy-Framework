@@ -13,6 +13,7 @@ public class MessagingTestApp : ViewBase
 
     public override object? Build()
     {
+        UsePluginState();
         var plugins = this.UseService<IPluginServiceProvider>();
         var channels = plugins.GetServices<IMessagingChannel>().ToList();
 

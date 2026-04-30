@@ -583,6 +583,10 @@ public class Server
         _pluginLoader = loader;
         _pluginContextFactory = contextFactory;
 
+        // Register Plugin Manager app (consolidates plugin management UI)
+        AddApp(typeof(Apps.PluginManagerApp));
+        AppRepository.Reload(new HashSet<string>());
+
         if (enableHotReload)
         {
             var watcherLogger = loggerFactory.CreateLogger<PluginWatcher>();

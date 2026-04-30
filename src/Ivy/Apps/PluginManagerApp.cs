@@ -17,7 +17,7 @@ public class PluginManagerApp : ViewBase
         var loadedPlugins = pluginManager.GetLoadedPluginIds();
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
         var pluginStatus = UseState("");
-        var refreshToken = UseRefreshToken();
+        UsePluginState();
 
         return Vertical().Gap(6).Padding(4)
             | H1("Plugin Manager")
@@ -33,7 +33,6 @@ public class PluginManagerApp : ViewBase
                         pluginStatus.Set(pluginManager.ReloadPlugin(id)
                             ? $"Reloaded '{id}'"
                             : $"Failed to reload '{id}'");
-                        refreshToken.Refresh();
                         return ValueTask.CompletedTask;
                     }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
                     | new Button("Unload", onClick: _ =>
@@ -41,7 +40,6 @@ public class PluginManagerApp : ViewBase
                         pluginStatus.Set(pluginManager.UnloadPlugin(id)
                             ? $"Unloaded '{id}'"
                             : $"Failed to unload '{id}'");
-                        refreshToken.Refresh();
                         return ValueTask.CompletedTask;
                     }, variant: ButtonVariant.Outline, icon: Icons.Power)
                 )).ToArray())
@@ -57,7 +55,6 @@ public class PluginManagerApp : ViewBase
                         pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
                             ? $"Loaded '{p.Id}'"
                             : $"Failed to load '{p.Id}'");
-                        refreshToken.Refresh();
                         return ValueTask.CompletedTask;
                     }, variant: ButtonVariant.Outline, icon: p.FailureReason is not null ? Icons.RefreshCw : Icons.Plus)
                 )).ToArray())

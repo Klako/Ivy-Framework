@@ -228,9 +228,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           disabled={disabled}
           placeholder={placeholder}
           density={density}
-          className={`${className} ${
-            !isValid ? "border-[var(--color-destructive)]" : ""
-          }`}
+          className={`${className} ${!isValid ? "border-[var(--color-destructive)]" : ""}`}
           data-testid={dataTestId}
           {...props}
         />

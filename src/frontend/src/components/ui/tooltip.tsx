@@ -10,9 +10,65 @@ const TooltipProvider = ({
   <TooltipPrimitive.Provider delayDuration={delayDuration} {...props} />
 );
 
-const Tooltip = TooltipPrimitive.Root;
+type TooltipControl = {
+  open: boolean;
+  setOpen: (next: boolean) => void;
+};
 
-const TooltipTrigger = TooltipPrimitive.Trigger;
+const TooltipContext = React.createContext<TooltipControl | null>(null);
+
+/**
+ * Radix Tooltip is hover/focus driven, so coarse pointers (finger / stylus tap)
+ * never see it on iPad/iPhone. Wrap Root with a small controlled-state shim and
+ * let the Trigger toggle it on touch / pen pointerdown without affecting mouse.
+ */
+const Tooltip = ({
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>) => {
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) {
+        setInternalOpen(next);
+      }
+      onOpenChange?.(next);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  return (
+    <TooltipContext.Provider value={{ open, setOpen }}>
+      <TooltipPrimitive.Root open={open} onOpenChange={setOpen} {...props} />
+    </TooltipContext.Provider>
+  );
+};
+
+const TooltipTrigger = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>
+>((props, ref) => {
+  const ctx = React.useContext(TooltipContext);
+  return (
+    <TooltipPrimitive.Trigger
+      ref={ref}
+      {...props}
+      onPointerDown={(e) => {
+        props.onPointerDown?.(e);
+        if (!ctx) return;
+        if (e.pointerType === "touch" || e.pointerType === "pen") {
+          ctx.setOpen(!ctx.open);
+        }
+      }}
+    />
+  );
+});
+TooltipTrigger.displayName = TooltipPrimitive.Trigger.displayName;
 
 const hasNoSpaces = (str: string): boolean => {
   const trimmed = str.trim();

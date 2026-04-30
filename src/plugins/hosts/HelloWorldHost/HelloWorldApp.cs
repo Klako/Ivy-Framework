@@ -18,7 +18,7 @@ public class HelloWorldApp : ViewBase
         var unloadedPlugins = pluginManager.GetUnloadedPlugins();
         var nameState = UseState("World");
         var pluginStatus = UseState("");
-        var refreshToken = UseRefreshToken();
+        UsePluginState();
 
         var greeting = greeters.Count > 0
             ? greeters[0].Greet(string.IsNullOrWhiteSpace(nameState.Value) ? "World" : nameState.Value)
@@ -39,7 +39,6 @@ public class HelloWorldApp : ViewBase
                     pluginStatus.Set(pluginManager.ReloadPlugin(id)
                         ? $"Reloaded '{id}'"
                         : $"Failed to reload '{id}'");
-                    refreshToken.Refresh();
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
                 | new Button("Unload", onClick: _ =>
@@ -47,7 +46,6 @@ public class HelloWorldApp : ViewBase
                     pluginStatus.Set(pluginManager.UnloadPlugin(id)
                         ? $"Unloaded '{id}'"
                         : $"Failed to unload '{id}'");
-                    refreshToken.Refresh();
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: Icons.Power)
             )).ToArray()
@@ -59,7 +57,6 @@ public class HelloWorldApp : ViewBase
                     pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
                         ? $"Loaded '{p.Id}'"
                         : $"Failed to load '{p.Id}'");
-                    refreshToken.Refresh();
                     return ValueTask.CompletedTask;
                 }, variant: ButtonVariant.Outline, icon: p.FailureReason is not null ? Icons.RefreshCw : Icons.Plus)
             )).ToArray()

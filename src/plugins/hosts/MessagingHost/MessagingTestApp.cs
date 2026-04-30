@@ -124,15 +124,7 @@ public class MessagingTestApp : ViewBase
                     await Send(activeChannel, builder, "Rich: Build report");
                 }, variant: ButtonVariant.Outline).Disabled(activeChannel is null || sending.Value)
             | (string.IsNullOrEmpty(status.Value) ? null : StatusBadge(status.Value))
-            | (sentMessages.Value.Count > 0 ? SentMessagesSection(channels, sentMessages, threadId, status) : null)
-            | new Separator()
-            | Horizontal().Gap(4)
-                | H2("Plugins")
-                | new Button("Manage Plugins", onClick: _ =>
-                {
-                    this.Navigate("plugin-manager");
-                    return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.Plug);
+            | (sentMessages.Value.Count > 0 ? SentMessagesSection(channels, sentMessages, threadId, status) : null);
     }
 
     private object SentMessagesSection(

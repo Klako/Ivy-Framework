@@ -14,8 +14,6 @@ public class HelloWorldApp : ViewBase
         var plugins = this.UseService<IPluginServiceProvider>();
         var greeters = plugins.GetServices<IGreeter>().ToList();
         var nameState = UseState("World");
-        var navigator = this.UseNavigation();
-
         var greeting = greeters.Count > 0
             ? greeters[0].Greet(string.IsNullOrWhiteSpace(nameState.Value) ? "World" : nameState.Value)
             : "No greeter plugin loaded.";
@@ -25,14 +23,6 @@ public class HelloWorldApp : ViewBase
             | new Field(
                 nameState.ToTextInput().Placeholder("Enter a name")
             ).Label("Who to greet?")
-            | Muted($"Using {greeters.Count} greeter plugin(s)")
-            | new Separator()
-            | Horizontal().Gap(4)
-                | H2("Plugins")
-                | new Button("Manage Plugins", onClick: _ =>
-                {
-                    navigator.Navigate("plugin-manager");
-                    return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.Plug);
+            | Muted($"Using {greeters.Count} greeter plugin(s)");
     }
 }

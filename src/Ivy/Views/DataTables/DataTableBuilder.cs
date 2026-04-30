@@ -28,7 +28,7 @@ public class DataTableBuilder<TModel>(
     private FuncViewBuilder? _headerLeftFactory;
     private FuncViewBuilder? _headerRightFactory;
     private Dictionary<string, object>? _footerValuesByColumn;
-    private Density _density = Ivy.Density.Medium;
+    private Responsive<Density?> _density = (Responsive<Density?>)(Density?)Ivy.Density.Medium;
     private IWriteStream<DataTableCellUpdate>? _updateStream;
 
     private readonly string? _idColumnName =
@@ -496,27 +496,33 @@ public class DataTableBuilder<TModel>(
         return this;
     }
 
-    public DataTableBuilder<TModel> Density(Ivy.Density density)
+    public DataTableBuilder<TModel> Density(Responsive<Density?> density)
     {
         _density = density;
         return this;
     }
 
+    public DataTableBuilder<TModel> Density(Ivy.Density density)
+    {
+        _density = (Responsive<Density?>)(Density?)density;
+        return this;
+    }
+
     public DataTableBuilder<TModel> Small()
     {
-        _density = Ivy.Density.Small;
+        _density = (Responsive<Density?>)(Density?)Ivy.Density.Small;
         return this;
     }
 
     public DataTableBuilder<TModel> Medium()
     {
-        _density = Ivy.Density.Medium;
+        _density = (Responsive<Density?>)(Density?)Ivy.Density.Medium;
         return this;
     }
 
     public DataTableBuilder<TModel> Large()
     {
-        _density = Ivy.Density.Large;
+        _density = (Responsive<Density?>)(Density?)Ivy.Density.Large;
         return this;
     }
 

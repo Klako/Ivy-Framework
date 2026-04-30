@@ -38,6 +38,10 @@ public class PluginLoader : IPluginManager
     private Func<IServiceProvider>? _serviceProviderFactory;
     private Version? _hostVersion;
 
+    public event Action<string>? PluginLoaded;
+    public event Action<string>? PluginUnloaded;
+    public event Action<string>? PluginReloaded;
+
     internal PluginLoader(string pluginsDirectory, ILogger<PluginLoader> logger, IEnumerable<string>? sharedAssemblyNames = null)
     {
         _pluginsDirectory = pluginsDirectory;
@@ -382,6 +386,9 @@ public class PluginLoader : IPluginManager
 
             _plugins.Remove(plugin);
             _logger.LogInformation("Unloaded plugin: {Id}", pluginId);
+
+            PluginUnloaded?.Invoke(pluginId);
+
             return true;
         }
         finally
@@ -491,6 +498,9 @@ public class PluginLoader : IPluginManager
             _failedPlugins.Remove(pluginPath);
 
             _logger.LogInformation("Loaded plugin: {Id} v{Version}", manifest.Id, manifest.Version);
+
+            PluginLoaded?.Invoke(manifest.Id);
+
             return true;
         }
         finally
@@ -519,7 +529,12 @@ public class PluginLoader : IPluginManager
         }
 
         if (!UnloadPlugin(pluginId)) return false;
-        return LoadPlugin(directory);
+        var loaded = LoadPlugin(directory);
+        if (loaded)
+        {
+            PluginReloaded?.Invoke(pluginId);
+        }
+        return loaded;
     }
 
     public IReadOnlyList<string> GetLoadedPluginIds()

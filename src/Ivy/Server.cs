@@ -772,6 +772,8 @@ public class Server
             pluginContext.BuildServiceProvider();
             builder.Services.AddSingleton<IPluginServiceProvider>(pluginContext);
             builder.Services.AddSingleton<IPluginManager>(_pluginLoader);
+            builder.Services.AddSingleton<IPluginStateService>(sp =>
+                new PluginStateService(sp.GetRequiredService<IPluginManager>()));
         }
 
         var app = builder.Build();

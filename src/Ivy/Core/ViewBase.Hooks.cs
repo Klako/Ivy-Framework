@@ -262,6 +262,25 @@ public abstract partial class ViewBase
         return isConnected;
     }
 
+    protected IState<RefreshToken> UsePluginState()
+    {
+        var pluginStateService = UseService<IPluginStateService>();
+        var refreshToken = UseRefreshToken();
+
+        UseEffect(() =>
+        {
+            pluginStateService.PluginStateChanged += OnPluginStateChanged;
+            return System.Reactive.Disposables.Disposable.Create(() =>
+            {
+                pluginStateService.PluginStateChanged -= OnPluginStateChanged;
+            });
+
+            void OnPluginStateChanged() => refreshToken.Refresh();
+        }, [EffectTrigger.OnMount()]);
+
+        return UseState(refreshToken);
+    }
+
     protected static EffectTrigger OnMount() =>
         EffectTrigger.OnMount();
 }

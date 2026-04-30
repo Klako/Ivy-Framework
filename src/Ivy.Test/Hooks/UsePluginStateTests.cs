@@ -1,6 +1,5 @@
 using Ivy.Core.Hooks;
 using Ivy.Core.Plugins;
-using Ivy.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ivy.Test.Hooks;

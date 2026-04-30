@@ -12,13 +12,10 @@ internal class PluginStateService : IPluginStateService
     {
         _pluginManager = pluginManager;
 
-        // Subscribe to PluginLoader events
-        if (_pluginManager is PluginLoader loader)
-        {
-            loader.PluginLoaded += OnPluginChanged;
-            loader.PluginUnloaded += OnPluginChanged;
-            loader.PluginReloaded += OnPluginChanged;
-        }
+        // Subscribe to plugin lifecycle events
+        _pluginManager.PluginLoaded += OnPluginChanged;
+        _pluginManager.PluginUnloaded += OnPluginChanged;
+        _pluginManager.PluginReloaded += OnPluginChanged;
     }
 
     private void OnPluginChanged(string pluginId) => PluginStateChanged?.Invoke();

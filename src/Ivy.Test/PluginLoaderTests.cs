@@ -656,9 +656,13 @@ public class PluginLoaderTests
 
         context.ClearCurrentPlugin();
 
+        // Trigger reload to process added app
+        context.GetAppRepository().Reload(new HashSet<string>());
+
         // Verify app was registered
-        var apps = context.GetAppRepository().GetApps().ToList();
-        Assert.Contains(apps, a => a.Id == "test-app");
+        var app = context.GetAppRepository().GetApp("test-app");
+        Assert.NotNull(app);
+        Assert.Equal("Test App", app.Title);
     }
 
     private class MockNonIvyPluginContext : Ivy.Plugins.IPluginContext

@@ -14,10 +14,7 @@ public class MessagingTestApp : ViewBase
     public override object? Build()
     {
         var plugins = this.UseService<IPluginServiceProvider>();
-        var pluginManager = this.UseService<IPluginManager>();
         var channels = plugins.GetServices<IMessagingChannel>().ToList();
-        var loadedPlugins = pluginManager.GetLoadedPluginIds();
-        var unloadedPlugins = pluginManager.GetUnloadedPlugins();
 
         var selectedPlatform = UseState(channels.FirstOrDefault()?.Platform ?? "");
         var channelName = UseState(channels.FirstOrDefault()?.DefaultChannel ?? "#ivy-plugin-test");
@@ -27,8 +24,6 @@ public class MessagingTestApp : ViewBase
         var sending = UseState(false);
         var sentMessages = UseState<List<SentMessage>>([]);
         var fileState = UseState<FileUpload<byte[]>?>(null);
-        var pluginStatus = UseState("");
-        var refreshToken = UseRefreshToken();
 
         if (channels.Count > 0 && !channels.Any(c => c.Platform == selectedPlatform.Value))
             selectedPlatform.Set(channels.First().Platform);
@@ -131,39 +126,13 @@ public class MessagingTestApp : ViewBase
             | (string.IsNullOrEmpty(status.Value) ? null : StatusBadge(status.Value))
             | (sentMessages.Value.Count > 0 ? SentMessagesSection(channels, sentMessages, threadId, status) : null)
             | new Separator()
-            | H2("Plugin Management")
-            | loadedPlugins.Select(id => (object)(Horizontal().Gap(4)
-                | new Badge(id, BadgeVariant.Secondary)
-                | new Button("Reload", onClick: _ =>
+            | Horizontal().Gap(4)
+                | H2("Plugins")
+                | new Button("Manage Plugins", onClick: _ =>
                 {
-                    pluginStatus.Set(pluginManager.ReloadPlugin(id)
-                        ? $"Reloaded '{id}'"
-                        : $"Failed to reload '{id}'");
-                    refreshToken.Refresh();
+                    this.Navigate("plugin-manager");
                     return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.RefreshCw)
-                | new Button("Unload", onClick: _ =>
-                {
-                    pluginStatus.Set(pluginManager.UnloadPlugin(id)
-                        ? $"Unloaded '{id}'"
-                        : $"Failed to unload '{id}'");
-                    refreshToken.Refresh();
-                    return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: Icons.Power)
-            )).ToArray()
-            | unloadedPlugins.Select(p => (object)(Horizontal().Gap(4)
-                | new Badge(p.Id, p.FailureReason is not null ? BadgeVariant.Destructive : BadgeVariant.Outline)
-                | (p.FailureReason is not null ? Muted(p.FailureReason) : Muted("unloaded"))
-                | new Button(p.FailureReason is not null ? "Retry" : "Load", onClick: _ =>
-                {
-                    pluginStatus.Set(pluginManager.LoadPlugin(p.Directory)
-                        ? $"Loaded '{p.Id}'"
-                        : $"Failed to load '{p.Id}'");
-                    refreshToken.Refresh();
-                    return ValueTask.CompletedTask;
-                }, variant: ButtonVariant.Outline, icon: p.FailureReason is not null ? Icons.RefreshCw : Icons.Plus)
-            )).ToArray()
-            | (string.IsNullOrEmpty(pluginStatus.Value) ? null : StatusBadge(pluginStatus.Value));
+                }, variant: ButtonVariant.Outline, icon: Icons.Plug);
     }
 
     private object SentMessagesSection(

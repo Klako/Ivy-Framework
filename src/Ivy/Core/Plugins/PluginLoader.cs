@@ -38,6 +38,10 @@ public class PluginLoader : IPluginManager
     private Func<IServiceProvider>? _serviceProviderFactory;
     private Version? _hostVersion;
 
+    public event Action<string>? PluginLoaded;
+    public event Action<string>? PluginUnloaded;
+    public event Action<string>? PluginReloaded;
+
     internal PluginLoader(string pluginsDirectory, ILogger<PluginLoader> logger, IEnumerable<string>? sharedAssemblyNames = null)
     {
         _pluginsDirectory = pluginsDirectory;
@@ -382,12 +386,17 @@ public class PluginLoader : IPluginManager
 
             _plugins.Remove(plugin);
             _logger.LogInformation("Unloaded plugin: {Id}", pluginId);
-            return true;
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+
+        // Fire event outside the lock to avoid deadlocks — subscribers may call
+        // GetLoadedPluginIds() which needs a read lock.
+        PluginUnloaded?.Invoke(pluginId);
+
+        return true;
     }
 
     public bool LoadPlugin(string pluginPath)
@@ -398,6 +407,7 @@ public class PluginLoader : IPluginManager
             return false;
         }
 
+        string? loadedPluginId = null;
         _lock.EnterWriteLock();
         try
         {
@@ -491,12 +501,20 @@ public class PluginLoader : IPluginManager
             _failedPlugins.Remove(pluginPath);
 
             _logger.LogInformation("Loaded plugin: {Id} v{Version}", manifest.Id, manifest.Version);
-            return true;
+
+            loadedPluginId = manifest.Id;
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+
+        // Fire event outside the lock to avoid deadlocks — subscribers may call
+        // GetLoadedPluginIds() which needs a read lock.
+        if (loadedPluginId is not null)
+            PluginLoaded?.Invoke(loadedPluginId);
+
+        return loadedPluginId is not null;
     }
 
     public bool ReloadPlugin(string pluginId)
@@ -519,7 +537,12 @@ public class PluginLoader : IPluginManager
         }
 
         if (!UnloadPlugin(pluginId)) return false;
-        return LoadPlugin(directory);
+        var loaded = LoadPlugin(directory);
+        if (loaded)
+        {
+            PluginReloaded?.Invoke(pluginId);
+        }
+        return loaded;
     }
 
     public IReadOnlyList<string> GetLoadedPluginIds()

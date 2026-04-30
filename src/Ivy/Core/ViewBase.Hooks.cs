@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Ivy.Core;
+using Ivy.Core.Plugins;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

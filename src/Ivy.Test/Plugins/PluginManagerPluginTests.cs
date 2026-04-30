@@ -1,48 +1,35 @@
+using Ivy.Apps;
 using Ivy.Core.Apps;
-using Ivy.Plugin.PluginManager;
-using Ivy.Plugins;
-using Ivy.Plugins.Messaging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Ivy.Test.Plugins;
 
-public class PluginManagerPluginTests
+public class PluginManagerAppTests
 {
     [Fact]
-    public void PluginManagerPlugin_InjectsAppIntoRepository()
+    public void UsePlugins_RegistersPluginManagerApp()
     {
         // Arrange
-        var services = new ServiceCollection();
-        var appRepository = new AppRepository();
-        services.AddSingleton(appRepository);
-        var config = new ConfigurationBuilder().Build();
-        var context = new TestPluginContext(services, config);
-        var plugin = new PluginManagerPlugin();
+        var tempPluginsDir = Path.Combine(Path.GetTempPath(), "ivy-test-plugins-" + Guid.NewGuid());
+        Directory.CreateDirectory(tempPluginsDir);
 
-        // Act
-        plugin.Configure(context);
-
-        // Assert
-        var app = appRepository.GetApp("plugin-manager");
-        Assert.NotNull(app);
-        Assert.Equal("Plugin Manager", app.Title);
-        Assert.Equal(typeof(PluginManagerApp), app.Type);
-    }
-
-    private class TestPluginContext : IPluginContext
-    {
-        private readonly IServiceCollection _services;
-        private readonly IConfiguration _configuration;
-
-        public TestPluginContext(IServiceCollection services, IConfiguration configuration)
+        try
         {
-            _services = services;
-            _configuration = configuration;
-        }
+            var args = new ServerArgs();
+            var server = new Server(args);
+            server.UsePlugins(tempPluginsDir, enableHotReload: false);
 
-        public IServiceCollection Services => _services;
-        public IConfiguration Configuration => _configuration;
-        public void RegisterMessagingChannel(IMessagingChannel channel) { }
+            // Act
+            var app = server.AppRepository.GetApp("plugin-manager");
+
+            // Assert
+            Assert.NotNull(app);
+            Assert.Equal("Plugin Manager", app.Title);
+            Assert.Equal(typeof(PluginManagerApp), app.Type);
+        }
+        finally
+        {
+            if (Directory.Exists(tempPluginsDir))
+                Directory.Delete(tempPluginsDir, true);
+        }
     }
 }

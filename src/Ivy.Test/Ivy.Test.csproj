@@ -32,7 +32,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Ivy/Ivy.csproj" />
-    <ProjectReference Include="../plugins/plugins/Ivy.Plugin.PluginManager/Ivy.Plugin.PluginManager.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,13 @@
-using Ivy;
 using Ivy.Plugins;
 using static Ivy.Layout;
 using static Ivy.Text;
 
-namespace Ivy.Plugin.PluginManager;
+namespace Ivy.Apps;
 
+/// <summary>
+/// Central plugin management UI for loading, unloading, and reloading plugins.
+/// Automatically available when UsePlugins() is called.
+/// </summary>
 [App(icon: Icons.Plug, title: "Plugin Manager")]
 public class PluginManagerApp : ViewBase
 {

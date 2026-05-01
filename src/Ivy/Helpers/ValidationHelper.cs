@@ -65,7 +65,7 @@ public static class ValidationHelper
             {
                 return null; // Query parameters not allowed in anchor links
             }
-            
+
             var afterHash = url.Substring(1);
             if (afterHash.Contains("://"))
             {

@@ -5,7 +5,7 @@ import { WidgetEventHandlerType, WidgetNode } from "@/types/widgets";
 import { useToast } from "@/hooks/use-toast";
 import { showError } from "@/hooks/use-error-sheet";
 import { getIvyHost, getIvyBasePath, getMachineId } from "@/lib/utils";
-import { validateRedirectUrl, validateLinkUrl } from "@/lib/url";
+import { validateRedirectUrl, validateLinkUrl, extractAnchorId } from "@/lib/url";
 import { logger } from "@/lib/logger";
 import { applyPatch, Operation } from "fast-json-patch";
 import { ToastAction } from "@/components/ui/toast";
@@ -509,6 +509,21 @@ export const useBackend = (
         window.history.replaceState(message.state, "", prefixedUrl);
       } else {
         window.history.pushState(message.state, "", prefixedUrl);
+      }
+    } else if (validatedUrl.startsWith("#")) {
+      const targetId = extractAnchorId(validatedUrl);
+      if (targetId) {
+        requestAnimationFrame(() => {
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+            if (replaceHistory) {
+              window.history.replaceState(message.state, "", validatedUrl);
+            } else {
+              window.history.pushState(message.state, "", validatedUrl);
+            }
+          }
+        });
       }
     } else {
       // For full URL redirects (same-origin only)

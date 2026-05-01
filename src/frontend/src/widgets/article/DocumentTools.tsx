@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Copy, Download, ChevronDown } from "lucide-react";
 import React from "react";
 
@@ -104,7 +105,7 @@ export const DocumentTools: React.FC<DocumentToolsProps> = ({
       }
 
       const content = stripMarkdownLinks(rawContent);
-      await navigator.clipboard.writeText(content);
+      await copyToClipboard(content);
       toast({
         title: "Copied!",
         description: "Markdown copied to clipboard",

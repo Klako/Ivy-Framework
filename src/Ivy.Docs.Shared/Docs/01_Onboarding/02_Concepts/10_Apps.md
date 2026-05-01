@@ -23,7 +23,7 @@ In Ivy, an "App" is a self-contained unit of functionality, typically represente
 This attribute provides essential metadata that the framework uses to:
 
 1. **Generate Routes**: Automatically creates URL routes for navigation.
-2. **Generate UI**: Populates [navigation](./09_Navigation.md) menus, search results, and window titles.
+2. **Generate UI**: Populates [navigation](./09_Navigation.md#overview) menus, search results, and window titles.
 3. **Configure Behavior**: Controls visibility, ordering, and searchability.
 
 ## The `[App]` Attribute

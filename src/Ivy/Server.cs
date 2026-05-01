@@ -23,6 +23,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Ivy.Core.Plugins;
+using Ivy.Plugins;
 
 namespace Ivy;
 
@@ -109,6 +111,9 @@ public class Server
     private HashSet<string> _fluentApiReservedPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<IHtmlFilter> _customHtmlFilters = new();
     private Action<HtmlPipeline>? _pipelineConfigurator;
+    private PluginLoader? _pluginLoader;
+    private PluginWatcher? _pluginWatcher;
+    private Func<Server, WebApplicationBuilder, PluginContextBase>? _pluginContextFactory;
     private ManifestOptions? _manifestOptions;
     private ServerArgs _args;
     private bool _presetsLoaded;
@@ -557,6 +562,41 @@ public class Server
         return this;
     }
 
+    public Server UsePlugins(
+        string pluginsDirectory,
+        Version? hostVersion = null,
+        Func<Server, WebApplicationBuilder, PluginContextBase>? contextFactory = null,
+        IEnumerable<string>? sharedAssemblyNames = null,
+        bool enableHotReload = true)
+    {
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var logger = loggerFactory.CreateLogger<PluginLoader>();
+        var loader = new PluginLoader(pluginsDirectory, logger, sharedAssemblyNames);
+
+        using var bootstrapProvider = Services.BuildServiceProvider();
+        loader.DiscoverAndLoad(
+            hostVersion ?? Assembly.GetEntryAssembly()!.GetName().Version!,
+            bootstrapProvider);
+
+        loader.ConfigureServices(Services, Configuration);
+
+        _pluginLoader = loader;
+        _pluginContextFactory = contextFactory;
+
+        // Register Plugin Manager app (consolidates plugin management UI)
+        AddApp(typeof(Apps.PluginManagerApp));
+        AppRepository.Reload(new HashSet<string>());
+
+        if (enableHotReload)
+        {
+            var watcherLogger = loggerFactory.CreateLogger<PluginWatcher>();
+            _pluginWatcher = new PluginWatcher(pluginsDirectory, loader, watcherLogger);
+            _pluginWatcher.Start();
+        }
+
+        return this;
+    }
+
     internal IReadOnlyList<IHtmlFilter> GetCustomFilters() => _customHtmlFilters;
 
     internal Action<HtmlPipeline>? GetPipelineConfigurator() => _pipelineConfigurator;
@@ -725,8 +765,27 @@ public class Server
             });
         }
 
+        // Plugin Configure runs before Build so UseWebApplicationBuilder actions
+        // apply directly to the builder. UseWebApplication actions are deferred to Apply.
+        PluginContextBase? pluginContext = null;
+        if (_pluginLoader != null)
+        {
+            pluginContext = _pluginContextFactory?.Invoke(this, builder)
+                ?? new PluginContext(this, builder);
+            _pluginLoader.Configure(pluginContext);
+            pluginContext.BuildServiceProvider();
+            builder.Services.AddSingleton<IPluginServiceProvider>(pluginContext);
+            builder.Services.AddSingleton<IPluginManager>(_pluginLoader);
+            builder.Services.AddSingleton<IPluginStateService>(sp =>
+                new PluginStateService(sp.GetRequiredService<IPluginManager>()));
+        }
+
         var app = builder.Build();
         ServiceProvider = app.Services;
+
+        _pluginLoader?.SetServiceProviderFactory(() => app.Services);
+
+        pluginContext?.Apply(app);
 
         // Update reserved paths with discovered controller routes before reloading apps
         UpdateReservedPaths(app);
@@ -958,6 +1017,11 @@ public class Server
             {
                 ProcessHelper.OpenBrowser(localUrl);
             }
+        });
+
+        app.Lifetime.ApplicationStopping.Register(() =>
+        {
+            _pluginWatcher?.Dispose();
         });
 
         if (_args.Describe)

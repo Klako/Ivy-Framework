@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Densities } from "@/types/density";
 import { cva } from "class-variance-authority";
 
@@ -52,24 +53,11 @@ const CopyToClipboardButton: React.FC<CopyToClipboardButtonProps> = ({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(textToCopy);
+      await copyToClipboard(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      try {
-        const textarea = document.createElement("textarea");
-        textarea.value = textToCopy;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (fallbackErr) {
-        console.error("Copy failed:", fallbackErr);
-      }
+    } catch (err) {
+      console.error("Copy failed:", err);
     }
   };
 

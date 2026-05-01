@@ -794,6 +794,13 @@
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.5, )",
           "YamlDotNet": "[16.3.0, )"
         }
+      },
+      "ivy.plugin.abstractions": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "[10.0.5, )",
+          "Microsoft.Extensions.DependencyInjection": "[10.0.5, )"
+        }
       }
     }
   }

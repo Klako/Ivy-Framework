@@ -4,6 +4,7 @@ import { DocumentTools } from "@/widgets/article/DocumentTools";
 import React, { useState } from "react";
 
 interface ArticleSidebarProps {
+  articleId: string;
   articleRef: React.RefObject<HTMLElement | null>;
   showToc?: boolean;
   documentSource?: string;
@@ -12,6 +13,7 @@ interface ArticleSidebarProps {
 }
 
 export const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
+  articleId,
   articleRef,
   showToc,
   documentSource,
@@ -20,11 +22,7 @@ export const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
 }) => {
   const [tocLoading, setTocLoading] = useState(true);
   const [contributorsLoading, setContributorsLoading] = useState(true);
-  // Only show contributors when TOC is ready too
   const showContributors = !tocLoading && !contributorsLoading;
-  // Only show sidebar if TOC should be displayed
-  // If headings are provided, we don't need to block on loading state for TOC to check emptiness
-  // But TableOfContents component handles loading state
   if (!showToc) return null;
 
   return (
@@ -33,6 +31,7 @@ export const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
         <DocumentTools articleRef={articleRef} documentSource={documentSource} title={title} />
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           <TableOfContents
+            key={articleId}
             articleRef={articleRef}
             show={showToc}
             onLoadingChange={setTocLoading}

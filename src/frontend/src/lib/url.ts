@@ -240,17 +240,25 @@ export function validateLinkUrl(
     return url;
   }
 
-  // Allow app:// URLs (Ivy internal navigation)
+  // Allow app:// URLs (Ivy internal navigation), including optional #fragment for article deep links
   if (url.startsWith("app://")) {
-    // Validate app:// URLs don't contain dangerous characters
-    // Pattern: app://[app-id][?query-params] where app-id has no colons/hashes, query-params have no #
-    if (!/^app:\/\/[^:#]*(\?[^#]*)?$/.test(url)) {
+    const rest = url.slice(6);
+    if (rest.includes("://")) {
+      return "#";
+    }
+    const hashIdx = rest.indexOf("#");
+    const beforeHash = hashIdx >= 0 ? rest.slice(0, hashIdx) : rest;
+    const fragment = hashIdx >= 0 ? rest.slice(hashIdx) : "";
+    // Path + query (before #): same rules as before — no : except in ?query values handled below
+    if (!/^[^:#]*(\?[^#]*)?$/.test(beforeHash)) {
+      return "#";
+    }
+    if (fragment && !/^#[^?&]*$/.test(fragment)) {
       return "#";
     }
     // Additional check: prevent protocol injection attempts
-    // Catches '://' in query params and colons that could be used for protocol injection
     const afterProtocol = extractAppProtocolContent(url);
-    if (afterProtocol.includes("://") || afterProtocol.match(/:[^?&/]/)) {
+    if (afterProtocol.match(/:[^?&#/]/)) {
       return "#";
     }
     return url;

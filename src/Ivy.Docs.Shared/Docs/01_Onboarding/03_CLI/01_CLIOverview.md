@@ -24,7 +24,7 @@ Ivy CLI is a powerful tool designed to streamline the development of Ivy project
 
 ## Quick Start
 
-Get started with Ivy CLI in just a few commands:
+Install `Ivy.Console` first if you have not already—see [Installation (CLI)](../01_GettingStarted/02_Installation.md#quick-start-using-the-cli). Then get started with Ivy CLI in just a few commands:
 
 ```terminal
 >ivy init

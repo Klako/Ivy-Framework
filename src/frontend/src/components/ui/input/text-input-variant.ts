@@ -1,5 +1,29 @@
 import { cva } from "class-variance-authority";
 
+import { cn } from "@/lib/utils";
+
+/** Prefix/suffix regions: boxed chrome by default; with ghost they blend into the parent. */
+export function textInputAffixCellClasses(
+  side: "prefix" | "suffix",
+  isFocused: boolean,
+  ghostWithAffixes: boolean,
+): string {
+  return cn(
+    "flex items-center text-muted-foreground [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
+    ghostWithAffixes
+      ? "px-2 shrink-0 bg-transparent"
+      : cn(
+          "px-3 bg-muted",
+          side === "prefix"
+            ? "rounded-tl-fields rounded-bl-fields"
+            : "rounded-tr-fields rounded-br-fields",
+        ),
+    side === "prefix"
+      ? !ghostWithAffixes && !isFocused && "border-r border-input"
+      : !ghostWithAffixes && !isFocused && "border-l border-input",
+  );
+}
+
 // Size variants for TextInputWidget
 export const textInputSizeVariant = cva("w-full", {
   variants: {

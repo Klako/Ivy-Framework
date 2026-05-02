@@ -8,6 +8,7 @@ import { useFocusable } from "@/hooks/use-focus-management";
 import { sidebarMenuRef } from "@/widgets/layouts/sidebar";
 import { Densities } from "@/types/density";
 import {
+  textInputAffixCellClasses,
   textInputSizeVariant,
   searchIconVariant,
   xIconVariant,
@@ -90,6 +91,7 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
   const hasPrefix = (prefixContent?.length ?? 0) > 0;
   const hasSuffix = (suffixContent?.length ?? 0) > 0;
   const hasAffixes = hasPrefix || hasSuffix;
+  const ghostAffixChrome = Boolean(props.ghost && hasAffixes);
 
   // Merge focusRef and inputRef
   const mergedRef = useCallback(
@@ -121,12 +123,7 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
         )}
       >
         {hasPrefix && (
-          <div
-            className={cn(
-              "flex items-center px-3 bg-muted text-muted-foreground rounded-tl-[var(--radius-fields)] rounded-bl-[var(--radius-fields)] [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
-              !isFocused && "border-r border-input",
-            )}
-          >
+          <div className={textInputAffixCellClasses("prefix", isFocused, ghostAffixChrome)}>
             {prefixContent}
           </div>
         )}
@@ -198,12 +195,7 @@ export const SearchVariant: React.FC<SearchVariantProps> = ({
         </div>
 
         {hasSuffix && (
-          <div
-            className={cn(
-              "flex items-center px-3 bg-muted text-muted-foreground rounded-tr-[var(--radius-fields)] rounded-br-[var(--radius-fields)] [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
-              !isFocused && "border-l border-input",
-            )}
-          >
+          <div className={textInputAffixCellClasses("suffix", isFocused, ghostAffixChrome)}>
             {suffixContent}
           </div>
         )}

@@ -1,7 +1,7 @@
 
 namespace Ivy.Samples.Shared.Apps.Widgets.Primitives;
 
-[App(icon: Icons.FileText, searchHints: ["formatting", "markup", "markdown", "md", "text", "content"])]
+[App(icon: Icons.FileText, searchHints: ["formatting", "markup", "markdown", "md", "text", "content", "copy", "clipboard"])]
 public class MarkdownApp : SampleBase
 {
     protected override object? BuildSample()
@@ -15,7 +15,8 @@ public class MarkdownApp : SampleBase
             new Tab("Tables", new TablesTab()),
             new Tab("Math", new MathTab()),
             new Tab("Diagrams", new DiagramsTab()),
-            new Tab("Media", new MediaTab())
+            new Tab("Media", new MediaTab()),
+            new Tab("Copy overlays", new CopyOverlayTab())
         ).Variant(TabsVariant.Content);
     }
 }
@@ -459,6 +460,45 @@ public class MediaTab : ViewBase
                        > - Tables and more!
                        
                        [^note]: This is a footnote in a blockquote!
+                       """;
+
+        return new Markdown(markdown);
+    }
+}
+
+public class CopyOverlayTab : ViewBase
+{
+    public override object? Build()
+    {
+        var markdown = """
+                       # Copy chip + text (markdown reproduction)
+
+                       Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.
+
+                       ## Bash / long single line
+
+                       ```bash
+                       dotnet tool update -g Ivy.Tooling.EngineeringSuite --verbosity minimal --add-source https://api.nuget.org/v3/index.json --prerelease --version 9.9.9Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.
+                       ```
+
+                       ## Plain fenced (no language)
+
+                       ```
+                       dotnet tool install -g Corporate.Prefix.VeryLongPackageName.WithManySegments --global --framework net10.0Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.
+                       ```
+
+                       ## Terminal fence
+
+                       ```terminal
+                       > dotnet restore && dotnet build -c Release --no-incremental /p:TreatWarningsAsErrors=trueFenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.
+                       ```
+
+                       ## Highlighted multi-line C#
+
+                       ```csharp
+                       Console.WriteLine("Second line avoids comparing against a one-line-only glitch.");Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.Fenced blocks use the floating copy control. Inline text uses backticks only, e.g. `dotnet --list`.
+                       await Task.CompletedTask;
+                       ```
                        """;
 
         return new Markdown(markdown);

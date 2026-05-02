@@ -31,7 +31,7 @@ export const CodeBlock = memo(
     const isMermaid = match && match[1] === "mermaid";
     const isGraphviz = match && (match[1] === "graphviz" || match[1] === "dot");
 
-    // Create dynamic theme that adapts to current CSS variables
+    // Create dynamic theme that uses CSS variables for dynamic theming
     const dynamicTheme = useMemo(() => createPrismTheme(), []);
     const typography = useTypography();
 

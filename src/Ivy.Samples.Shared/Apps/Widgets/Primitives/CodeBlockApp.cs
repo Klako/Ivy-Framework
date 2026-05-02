@@ -1,7 +1,7 @@
 
 namespace Ivy.Samples.Shared.Apps.Widgets.Primitives;
 
-[App(icon: Icons.Code, group: ["Widgets", "Primitives"], searchHints: ["syntax", "highlighting", "programming", "code-block", "snippet", "pre", "copy", "clipboard"])]
+[App(icon: Icons.Code, group: ["Widgets", "Primitives"], searchHints: ["syntax", "highlighting", "programming", "code-block", "snippet", "pre"])]
 public class CodeBlockApp : SampleBase
 {
     protected override object? BuildSample()
@@ -272,11 +272,6 @@ public class CodeBlockApp : SampleBase
             Layout.Vertical()
                 | Text.Monospaced("Wrap Lines")
                 | new CodeBlock("public class VeryLongClassName { public void VeryLongMethodName(string veryLongParameterName, int anotherVeryLongParameterName, bool yetAnotherParameter) { Console.WriteLine(\"This is a very long line that should wrap when WrapLines is enabled.\"); } }", Languages.Csharp).WrapLines().ShowLineNumbers(),
-            Layout.Vertical()
-                | Text.Monospaced("Repro: long one-liner + copy (CodeBlock widget, same UX as markdown fences)")
-                | new CodeBlock(
-                    """dotnet tool update -g Ivy.Tooling.EngineeringSuite --verbosity detailed --dry-run-previewdotnet tool update -g Ivy.Tooling.EngineeringSuite --verbosity detailed --dry-run-previewdotnet tool update -g Ivy.Tooling.EngineeringSuite --verbosity detailed --dry-run-preview""",
-                    Languages.Bash)
         };
 
         var variants = Layout.Grid().Columns(2).Gap(4) | optionBlocks;

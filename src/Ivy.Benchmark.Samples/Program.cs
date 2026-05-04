@@ -1,7 +1,9 @@
-﻿using Ivy.Samples.Shared;
+﻿//using Ivy.Samples.Shared;
+
+using Ivy.Benchmark.Samples;
 
 #if BENCHMARK
     Console.WriteLine("BENCHMARKS defined");
 #endif
 
-await SamplesServer.RunAsync();
+await BenchmarkServer.RunAsync();

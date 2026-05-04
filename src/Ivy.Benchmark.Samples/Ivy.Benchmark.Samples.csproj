@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ivy.Samples.Shared\Ivy.Samples.Shared.csproj" />
+    <ProjectReference Include="..\Ivy\Ivy.csproj" />
   </ItemGroup>
 
   <ItemGroup>

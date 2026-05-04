@@ -9,7 +9,6 @@ public class TextInputApp : SampleBase
                | Text.H1("Text Input")
                | Layout.Tabs(
                    new Tab("Variants", new TextInputVariants()),
-                   new Tab("Ghost", new TextInputGhostDemo()),
                    new Tab("Sizes", new TextInputSizes()),
                    new Tab("Affixes", new TextInputAffixes()),
                    new Tab("Data Binding", new TextInputDataBinding()),
@@ -236,97 +235,6 @@ public class TextInputSizes : ViewBase
                | searchState.ToSearchInput().Small()
                | searchState.ToSearchInput()
                | searchState.ToSearchInput().Large();
-    }
-}
-
-/// <summary>Variants grid with <c>.Ghost()</c>, plus rows that combine suffix, <c>ShortcutKey</c> (kbd), and <c>Invalid</c>.</summary>
-public class TextInputGhostDemo : ViewBase
-{
-    private const string InvalidSample =
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec purus nec eros";
-
-    public override object Build()
-    {
-        var withoutValue = UseState((string?)null);
-        var withValue = UseState("Hello");
-
-        var matrix = Layout.Grid().Columns(5)
-               | null!
-               | Text.Monospaced("Empty")
-               | Text.Monospaced("With Value")
-               | Text.Monospaced("Disabled")
-               | Text.Monospaced("Invalid")
-
-               | Text.Monospaced("TextInputVariant.Text")
-               | withoutValue.ToTextInput().Placeholder("Placeholder").Ghost()
-               | withValue.ToTextInput().Ghost()
-               | withValue.ToTextInput().Ghost().Disabled()
-               | withValue.ToTextInput().Ghost().Invalid(InvalidSample)
-
-               | Text.Monospaced("TextInputVariant.Password")
-               | withoutValue.ToPasswordInput().Placeholder("Placeholder").ShortcutKey("Ctrl+L").Ghost()
-               | withValue.ToPasswordInput().Ghost()
-               | withValue.ToPasswordInput().Ghost().Disabled()
-               | withValue.ToPasswordInput().Ghost().Invalid(InvalidSample)
-
-               | Text.Monospaced("TextInputVariant.Textarea")
-               | withoutValue.ToTextareaInput().Placeholder("Placeholder").ShortcutKey("Ctrl+T").Ghost()
-               | withValue.ToTextareaInput().Ghost()
-               | withValue.ToTextareaInput().Ghost().Disabled()
-               | withValue.ToTextareaInput().Ghost().Invalid(InvalidSample)
-
-               | Text.Monospaced("TextInputVariant.Search")
-               | withoutValue.ToSearchInput().Placeholder("Placeholder").ShortcutKey("Ctrl+K").Ghost()
-               | withValue.ToSearchInput().Ghost()
-               | withValue.ToSearchInput().Ghost().Disabled()
-               | withValue.ToSearchInput().Ghost().Invalid(InvalidSample)
-
-               | Text.Monospaced("Search + Suffix (Ghost)")
-               | withoutValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown)
-               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown)
-               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).Disabled()
-               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).Invalid(InvalidSample)
-
-               | Text.Monospaced("Search + Suffix + ShortcutKey")
-               | withoutValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H")
-               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H")
-               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H").Disabled()
-               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H").Invalid(InvalidSample)
-
-               | Text.Monospaced("Text + Suffix + ShortcutKey")
-               | withoutValue.ToTextInput().Placeholder("Query").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y")
-               | withValue.ToTextInput().Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y")
-               | withValue.ToTextInput().Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y").Disabled()
-               | withValue.ToTextInput().Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y").Invalid(InvalidSample)
-
-               | Text.Monospaced("Text + Prefix + Suffix + ShortcutKey")
-               | withoutValue.ToTextInput().Placeholder("Token").Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y")
-               | withValue.ToTextInput().Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y")
-               | withValue.ToTextInput().Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y").Disabled()
-               | withValue.ToTextInput().Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y").Invalid(InvalidSample)
-
-               | Text.Monospaced("TextInputVariant.Email")
-               | withoutValue.ToEmailInput().Placeholder("Placeholder").ShortcutKey("Ctrl+E").Ghost()
-               | withValue.ToEmailInput().Ghost()
-               | withValue.ToEmailInput().Ghost().Disabled()
-               | withValue.ToEmailInput().Ghost().Invalid(InvalidSample)
-
-               | Text.Monospaced("TextInputVariant.Tel")
-               | withoutValue.ToTelInput().Placeholder("Placeholder").ShortcutKey("Ctrl+J").Ghost()
-               | withValue.ToTelInput().Ghost()
-               | withValue.ToTelInput().Ghost().Disabled()
-               | withValue.ToTelInput().Ghost().Invalid(InvalidSample)
-
-               | Text.Monospaced("TextInputVariant.Url")
-               | withoutValue.ToUrlInput().Placeholder("Placeholder").ShortcutKey("Ctrl+U").Ghost()
-               | withValue.ToUrlInput().Ghost()
-               | withValue.ToUrlInput().Ghost().Disabled()
-               | withValue.ToUrlInput().Ghost().Invalid(InvalidSample);
-
-        return Layout.Vertical().Gap(6)
-               | Text.P(
-                   "Ghost removes the default field border. Search with a suffix uses a tight trailing strip for clear (×), shortcut kbd, and invalid icon. Text inputs keep the overlay on the field; rows below mix suffix, ShortcutKey, and Invalid.")
-               | matrix;
     }
 }
 

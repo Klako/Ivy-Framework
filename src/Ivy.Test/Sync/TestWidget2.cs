@@ -6,7 +6,7 @@ namespace Ivy.Test.Sync
 {
     public record TestWidget2 : WidgetBase<TestWidget>
     {
-        public static string StringType = "Ivy.Test.Sync.TestWidget";
+        public static string StringType = "Ivy.Test.Sync.TestWidget2";
 
         public TestWidget2()
         {

@@ -16,7 +16,7 @@ namespace Ivy.Test.Sync
         public void TestWidget_BasicValues()
         {
             var expected = new SerializedWidget(
-                "Ivy.Test.Sync.TestWidget",
+                TestWidget.StringType,
                 "greoij");
 
             var widget = new TestWidget()
@@ -33,7 +33,7 @@ namespace Ivy.Test.Sync
         public void TestWidget_AddedValues()
         {
             var expected = new SerializedWidget(
-                "Ivy.Test.Sync.TestWidget",
+                TestWidget.StringType,
                 "greoij")
             {
                 Props = ImmutableDictionary<string, IPropStructureNode>.Empty
@@ -100,7 +100,7 @@ namespace Ivy.Test.Sync
         public void TestWidget_WithEnumProp()
         {
             var expected = new SerializedWidget(
-                "Ivy.Test.Sync.TestWidget",
+                TestWidget.StringType,
                 "greoij")
             {
                 Props = ImmutableDictionary<string, IPropStructureNode>.Empty

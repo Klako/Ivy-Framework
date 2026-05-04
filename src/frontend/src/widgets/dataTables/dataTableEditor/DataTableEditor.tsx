@@ -260,9 +260,9 @@ export const DataTableEditor: React.FC<TableEditorProps> = ({
     (range: { x: number; y: number; width: number; height: number }) => {
       handleVisibleRegionChanged(range);
       const prev = prevVisibleScrollOriginRef.current;
-      const originMoved = prev !== null && (prev.x !== range.x || prev.y !== range.y);
+      const verticalScrolled = prev !== null && prev.y !== range.y;
       prevVisibleScrollOriginRef.current = { x: range.x, y: range.y };
-      if (!originMoved) return;
+      if (!verticalScrolled) return;
       clearRowHover();
       clearLinkCellHover();
       setCellActionIndicator(null);

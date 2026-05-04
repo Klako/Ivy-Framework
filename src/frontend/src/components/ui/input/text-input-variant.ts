@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-/** Affix cells: muted box by default; ghost + affixes uses transparent chrome (suffix leading padding tight to clear). */
+/** Affix cells: muted box by default; ghost uses transparent chrome with tight padding toward the input. */
 export function textInputAffixCellClasses(
   side: "prefix" | "suffix",
   isFocused: boolean,
@@ -12,8 +12,8 @@ export function textInputAffixCellClasses(
     "flex items-center text-muted-foreground [&_button]:rounded [&_button]:px-1 [&_button]:hover:bg-accent [&_button]:cursor-pointer [&_button]:transition-colors",
     ghostWithAffixes
       ? side === "suffix"
-        ? "shrink-0 bg-transparent pl-0 pr-2"
-        : "shrink-0 bg-transparent px-2"
+        ? "shrink-0 bg-transparent pl-0 pr-1.5"
+        : "shrink-0 bg-transparent pl-2 pr-0.5"
       : cn(
           "px-3 bg-muted",
           side === "prefix"

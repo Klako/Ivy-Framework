@@ -239,7 +239,7 @@ public class TextInputSizes : ViewBase
     }
 }
 
-/// <summary>Variants grid with <c>.Ghost()</c> on every cell, including search + chevron suffix.</summary>
+/// <summary>Variants grid with <c>.Ghost()</c>, plus rows that combine suffix, <c>ShortcutKey</c> (kbd), and <c>Invalid</c>.</summary>
 public class TextInputGhostDemo : ViewBase
 {
     private const string InvalidSample =
@@ -250,7 +250,7 @@ public class TextInputGhostDemo : ViewBase
         var withoutValue = UseState((string?)null);
         var withValue = UseState("Hello");
 
-        return Layout.Grid().Columns(5)
+        var matrix = Layout.Grid().Columns(5)
                | null!
                | Text.Monospaced("Empty")
                | Text.Monospaced("With Value")
@@ -287,6 +287,24 @@ public class TextInputGhostDemo : ViewBase
                | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).Disabled()
                | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).Invalid(InvalidSample)
 
+               | Text.Monospaced("Search + Suffix + ShortcutKey")
+               | withoutValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H")
+               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H")
+               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H").Disabled()
+               | withValue.ToSearchInput().Placeholder("Search").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+H").Invalid(InvalidSample)
+
+               | Text.Monospaced("Text + Suffix + ShortcutKey")
+               | withoutValue.ToTextInput().Placeholder("Query").Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y")
+               | withValue.ToTextInput().Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y")
+               | withValue.ToTextInput().Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y").Disabled()
+               | withValue.ToTextInput().Ghost().Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Y").Invalid(InvalidSample)
+
+               | Text.Monospaced("Text + Prefix + Suffix + ShortcutKey")
+               | withoutValue.ToTextInput().Placeholder("Token").Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y")
+               | withValue.ToTextInput().Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y")
+               | withValue.ToTextInput().Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y").Disabled()
+               | withValue.ToTextInput().Ghost().Prefix(Icons.Mail).Suffix(Icons.ChevronDown).ShortcutKey("Ctrl+Shift+Y").Invalid(InvalidSample)
+
                | Text.Monospaced("TextInputVariant.Email")
                | withoutValue.ToEmailInput().Placeholder("Placeholder").ShortcutKey("Ctrl+E").Ghost()
                | withValue.ToEmailInput().Ghost()
@@ -304,6 +322,11 @@ public class TextInputGhostDemo : ViewBase
                | withValue.ToUrlInput().Ghost()
                | withValue.ToUrlInput().Ghost().Disabled()
                | withValue.ToUrlInput().Ghost().Invalid(InvalidSample);
+
+        return Layout.Vertical().Gap(6)
+               | Text.P(
+                   "Ghost removes the default field border. Search with a suffix uses a tight trailing strip for clear (×), shortcut kbd, and invalid icon. Text inputs keep the overlay on the field; rows below mix suffix, ShortcutKey, and Invalid.")
+               | matrix;
     }
 }
 

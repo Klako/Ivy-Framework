@@ -75,6 +75,7 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
   const hasAffixes = hasPrefix || hasSuffix;
   const ghostAffixChrome = Boolean(props.ghost && hasAffixes);
   const showClear = props.nullable && !props.disabled && hasValue;
+  const ghostTrailingTight = Boolean(props.ghost && hasSuffix);
 
   return (
     <div className="relative w-full select-none" style={styles}>
@@ -135,7 +136,12 @@ export const DefaultVariant: React.FC<DefaultVariantProps> = ({
 
           {/* Right side container: shortcut (if any), clear (if nullable), then invalid (if any) */}
           {(props.shortcutKey || showClear || props.invalid) && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-row items-center gap-1 pointer-events-none">
+            <div
+              className={cn(
+                "pointer-events-none absolute top-1/2 flex -translate-y-1/2 flex-row items-center",
+                ghostTrailingTight ? "right-0 gap-0 pr-0" : "right-2 gap-1",
+              )}
+            >
               {props.shortcutKey && !isFocused && !hasValue && !showClear && !props.invalid && (
                 <div className="pointer-events-auto flex items-center h-6">
                   <kbd className="px-1 py-0.5 text-xs font-medium text-foreground bg-muted border border-border rounded-selector">

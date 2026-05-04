@@ -230,7 +230,7 @@ export const TreeItem: React.FC<TreeItemWidgetProps> = ({
       onKeyDown={handleKeyDown}
       onClick={handleClick}
     >
-      {hasSiblingWithChildren && !isNested && <span className="h-5 w-5 shrink-0" />}
+      {hasSiblingWithChildren && isNested && <span className="h-5 w-5 shrink-0" />}
       {item.icon && item.icon !== "None" && (
         <Icon className="h-4 w-4 shrink-0 text-muted-foreground" name={item.icon} />
       )}

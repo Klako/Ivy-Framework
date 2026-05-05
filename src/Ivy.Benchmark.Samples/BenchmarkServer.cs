@@ -9,6 +9,7 @@ public static class BenchmarkServer
         server.AddAppsFromAssembly(typeof(BenchmarkServer).Assembly);
 
         var appShellSettings = new AppShellSettings()
+            .SidebarOpen(false)
             .UseTabs(preventDuplicates: true);
         server.UseAppShell(() => new DefaultSidebarAppShell(appShellSettings));
 

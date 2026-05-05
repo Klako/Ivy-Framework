@@ -45,6 +45,8 @@ namespace Ivy.Benchmark.Samples.Apps
 
         public override object? Build()
         {
+            var interactCounter = UseState(0);
+
             var fileTree = UseState<Directory?>(() => _initialFileTree);
 
             var enableKeys = UseState(false);
@@ -73,10 +75,12 @@ namespace Ivy.Benchmark.Samples.Apps
                     newTree = FilterDirectory(newTree, search.Value);
                 }
                 fileTree.Set(newTree);
-            }, search);
+                interactCounter.Set(interactCounter.Value + 1);
+            }, search, enableKeys);
 
             return Layout.Vertical()
-                | search.ToTextInput()
+                | interactCounter.ToNumberInput().Disabled().TestId("interactCounter")
+                | search.ToTextInput().TestId("searchText")
                 | (fileTree.Value is null ? new Tree() : new Tree(Directory2MenuItem(fileTree.Value)));
         }
     }

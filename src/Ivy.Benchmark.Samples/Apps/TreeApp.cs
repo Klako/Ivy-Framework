@@ -42,18 +42,18 @@ namespace Ivy.Benchmark.Samples.Apps
 
         public override object? Build()
         {
+            var interactCounter = UseState(0);
+
             var nodeTree = UseState<Node?>(() => _initialTree);
 
             var mixTypes = UseState(false);
-
             var enableKeys = UseState(false);
-
             var search = UseState<string?>(null);
 
             UseEffect(() =>
             {
                 var newTree = _initialTree;
-                if (search.Value is not null)
+                if (search.Value is not null && search.Value is not "")
                 {
                     Node? FilterNode(Node node, string term)
                     {
@@ -67,18 +67,19 @@ namespace Ivy.Benchmark.Samples.Apps
                             return null;
                         }
                         return node with { Children = children };
-                    }
-                    ;
+                    };
                     newTree = FilterNode(newTree, search.Value);
                 }
                 nodeTree.Set(newTree);
+                interactCounter.Set(interactCounter.Value + 1);
             }, search, enableKeys, mixTypes);
 
             return Layout.Vertical()
-                | "Mix types" | mixTypes.ToBoolInput()
-                | "Enable Keys" | enableKeys.ToBoolInput()
-                | search.ToTextInput()
-                | (nodeTree.Value is null ? new List() : new List(Node2Widget(nodeTree.Value)));
+                | "Interact counter" | interactCounter.ToNumberInput().Disabled().TestId("interactCounter")
+                | "Mix types" | mixTypes.ToBoolInput().TestId("mixTypes")
+                | "Enable Keys" | enableKeys.ToBoolInput().TestId("enableKeys")
+                | search.ToTextInput().TestId("searchText")
+                | (nodeTree.Value is null ? null : Node2Widget(nodeTree.Value));
         }
 
     }

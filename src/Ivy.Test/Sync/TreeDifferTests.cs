@@ -32,12 +32,20 @@ namespace Ivy.Test.Sync
                 _lcsWithPropDiffer
             ];
 
-            foreach (var differ in differs)
+            var testCase = new
+            {
+                source = source,
+                target = target,
+                updates = new WidgetUpdate?[4]
+            };
+
+            foreach (var (index, differ) in differs.Index())
             {
                 var result = differ.ComputeDiff(source, target);
                 switch (result)
                 {
                     case WidgetUpdate update:
+                        testCase.updates[index] = update;
                         var updatedSource = convertedSource.ApplyDiff(update);
                         MockWidgetNode.AssertEqual(convertedTarget, updatedSource);
                         break;
@@ -52,6 +60,20 @@ namespace Ivy.Test.Sync
                         throw new Exception("Invalid result from ComputeDiff");
                 }
             }
+#pragma warning disable 0162
+            if (false)
+            {
+
+                if (!File.Exists("tests.msgpack"))
+                {
+                    File.Create("tests.msgpack").Close();
+                }
+
+                FileStream fs = File.Open("tests.msgpack", FileMode.Append);
+                MessagePackSerializer.Serialize(fs, testCase);
+                fs.Close();
+            }
+#pragma warning restore 0162
         }
 
         [Fact]

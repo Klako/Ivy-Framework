@@ -8,7 +8,7 @@ overrides:
   postcss: 8.5.10
   uuid: 14.0.0
   '@swc/helpers': 0.5.17
-  axios: 1.15.0
+  axios: 1.15.2
   dompurify: 3.4.0
   follow-redirects: '>=1.16.0'
   lodash-es: 4.18.1
@@ -2010,8 +2010,8 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  axios@1.15.0:
-    resolution: {integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==}
+  axios@1.15.2:
+    resolution: {integrity: sha512-wLrXxPtcrPTsNlJmKjkPnNPK2Ihe0hn0wGSaTEiHRPxwjvJwT3hKmXF4dpqxmPO9SoNb2FsYXj/xEo0gHN+D5A==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -5298,7 +5298,7 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  axios@1.15.0(debug@4.4.3):
+  axios@1.15.2(debug@4.4.3):
     dependencies:
       follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.5
@@ -7229,7 +7229,7 @@ snapshots:
 
   vite-plugin-mkcert@1.17.10(@voidzero-dev/vite-plus-core@0.1.20(@types/node@24.10.0)(jiti@2.6.1)(typescript@5.9.3)(yaml@2.8.3)):
     dependencies:
-      axios: 1.15.0(debug@4.4.3)
+      axios: 1.15.2(debug@4.4.3)
       debug: 4.4.3
       picocolors: 1.1.1
       vite: '@voidzero-dev/vite-plus-core@0.1.20(@types/node@24.10.0)(jiti@2.6.1)(typescript@5.9.3)(yaml@2.8.3)'

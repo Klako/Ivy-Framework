@@ -35,6 +35,7 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
     public abstract IConfiguration Configuration { get; }
 
     protected abstract AppRepository AppRepository { get; }
+    protected abstract IReadOnlySet<string> ReservedPaths { get; }
     protected abstract WebApplicationBuilder Builder { get; }
 
     public IReadOnlyList<Func<IEnumerable<MenuItem>, IEnumerable<MenuItem>>> MenuTransformers => _menuTransformers;
@@ -201,6 +202,9 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
         {
             _lock.ExitWriteLock();
         }
+
+        // Reload the app repository so removed apps are reflected in the UI
+        AppRepository.Reload(ReservedPaths);
     }
 
     internal IReadOnlyDictionary<string, PluginState> PluginStates => _pluginStates;
@@ -216,5 +220,6 @@ internal class PluginContext(Ivy.Server server, WebApplicationBuilder builder) :
 {
     public override IConfiguration Configuration => server.Configuration;
     protected override AppRepository AppRepository => server.AppRepository;
+    protected override IReadOnlySet<string> ReservedPaths => server.ReservedPaths;
     protected override WebApplicationBuilder Builder => builder;
 }

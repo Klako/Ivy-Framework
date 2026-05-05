@@ -28,9 +28,6 @@ public record DiffView : WidgetBase<DiffView>
     /// <summary>Whether to wrap long lines instead of scrolling horizontally</summary>
     [Prop] public bool WordWrap { get; init; } = false;
 
-    /// <summary>Whether to show the file header (OLD/NEW indicator) above the diff</summary>
-    [Prop] public bool ShowHeader { get; init; } = true;
-
     [Event] public Func<Event<DiffView, int>, ValueTask>? OnLineClick { get; init; }
 }
 
@@ -56,9 +53,6 @@ public static class DiffViewExtensions
 
     public static DiffView WordWrap(this DiffView w, bool wordWrap = true) =>
         w with { WordWrap = wordWrap };
-
-    public static DiffView ShowHeader(this DiffView w, bool show = true) =>
-        w with { ShowHeader = show };
 
     public static DiffView OnLineClick(
         this DiffView w,

@@ -17,7 +17,6 @@ interface DiffViewProps {
   oldRevision?: string;
   newRevision?: string;
   wordWrap?: boolean;
-  showHeader?: boolean;
 }
 
 function getLineNumber(change: ChangeData | null): number {
@@ -37,7 +36,6 @@ export const DiffView: React.FC<DiffViewProps> = ({
   oldRevision,
   newRevision,
   wordWrap,
-  showHeader = true,
 }) => {
   const files = useMemo(() => {
     if (!diff) return [];
@@ -72,10 +70,9 @@ export const DiffView: React.FC<DiffViewProps> = ({
         const oldName = rawOld === "/dev/null" ? "" : rawOld;
         const newName = rawNew === "/dev/null" ? "" : rawNew;
         const isRename = oldName !== newName && oldName !== "" && newName !== "";
-        const hasHeader = showHeader && (oldName || newName);
+        const hasHeader = oldName || newName;
         const fileId = file.newPath || file.oldPath || `diff-${fileIndex}`;
 
-        // Extract basename for display
         const getBasename = (path: string) => {
           const parts = path.split("/");
           return parts[parts.length - 1] || path;

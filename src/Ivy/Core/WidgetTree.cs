@@ -86,7 +86,7 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if BENCHMARK
         var viewTypeName = rootView.GetType().Name;
         var now = DateTime.Now;
-        var logTime = $"{now:yyyy-MM-ddTHHmmssZ}";
+        var logTime = $"{now:yyyy-MM-ddTHH-mm-ssZ}";
         Directory.CreateDirectory("Benchmark");
         _benchmarkLog = new StreamWriter(File.OpenWrite($"benchmark\\Timings_{rootView.GetType().Name}_{logTime}.csv"));
 #if JSONPATCH
@@ -97,7 +97,6 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
         _benchmarkLog.Flush();
 #endif
 #endif
-#if !JSONPATCH
         var treeDifferOptions = new TreeDifferOptions()
         {
 #if NEWDIFF_LCS
@@ -111,7 +110,6 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             PropDiff = false
 #endif
         };
-#endif
         _treeDiffer = new TreeDiffer(treeDifferOptions);
 
         async void OnNext(string[] requestedViewIds) =>
@@ -717,6 +715,9 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
             _disposables.Dispose();
             _treeChangedSubject.Dispose();
             _buildRequestedSubject.Dispose();
+#if BENCHMARK
+            _benchmarkLog.Close();
+#endif
         }
         finally
         {

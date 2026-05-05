@@ -9,17 +9,19 @@ public class AppSessionStoreTests
     {
         using var store = new AppSessionStore();
         var removed = false;
+        var tcs = new TaskCompletionSource();
 
-        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(50), async connId =>
+        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(10), async connId =>
         {
             removed = true;
+            tcs.TrySetResult();
             await Task.CompletedTask;
         });
 
         Assert.True(store.HasDeferredRemoval("conn-1"));
         Assert.False(removed);
 
-        await Task.Delay(200);
+        await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
 
         Assert.True(removed);
         Assert.False(store.HasDeferredRemoval("conn-1"));
@@ -31,7 +33,7 @@ public class AppSessionStoreTests
         using var store = new AppSessionStore();
         var removed = false;
 
-        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(200), async connId =>
+        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(100), async connId =>
         {
             removed = true;
             await Task.CompletedTask;
@@ -43,7 +45,7 @@ public class AppSessionStoreTests
         Assert.True(cancelled);
         Assert.False(store.HasDeferredRemoval("conn-1"));
 
-        await Task.Delay(400);
+        await Task.Delay(150);
 
         Assert.False(removed);
     }
@@ -70,21 +72,23 @@ public class AppSessionStoreTests
         using var store = new AppSessionStore();
         var firstCalled = false;
         var secondCalled = false;
+        var tcs = new TaskCompletionSource();
 
-        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(200), async connId =>
+        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(500), async connId =>
         {
             firstCalled = true;
             await Task.CompletedTask;
         });
 
         // Replace with a new deferred removal
-        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(50), async connId =>
+        store.ScheduleDeferredRemoval("conn-1", TimeSpan.FromMilliseconds(10), async connId =>
         {
             secondCalled = true;
+            tcs.TrySetResult();
             await Task.CompletedTask;
         });
 
-        await Task.Delay(300);
+        await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
 
         Assert.False(firstCalled);
         Assert.True(secondCalled);

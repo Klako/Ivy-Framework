@@ -51,5 +51,15 @@ export const useLinkCellHover = ({ getCellContent, visibleRows }: UseLinkCellHov
     [],
   );
 
-  return { isLinkHovered: linkTooltipPos !== null, virtualRef, onItemHovered, linkTooltipPos };
+  const clearLinkCellHover = useCallback(() => {
+    setLinkTooltipPos(null);
+  }, []);
+
+  return {
+    isLinkHovered: linkTooltipPos !== null,
+    virtualRef,
+    onItemHovered,
+    linkTooltipPos,
+    clearLinkCellHover,
+  };
 };

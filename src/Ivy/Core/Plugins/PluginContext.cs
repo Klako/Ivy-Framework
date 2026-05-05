@@ -204,6 +204,11 @@ public abstract class PluginContextBase : IIvyPluginContext, IPluginServiceProvi
         }
 
         // Reload the app repository so removed apps are reflected in the UI
+        ReloadApps();
+    }
+
+    internal void ReloadApps()
+    {
         AppRepository.Reload(ReservedPaths);
     }
 

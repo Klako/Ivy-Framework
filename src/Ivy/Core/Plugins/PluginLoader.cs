@@ -537,6 +537,10 @@ public class PluginLoader : IPluginManager
             _lock.ExitWriteLock();
         }
 
+        // Reload app repository so newly added apps appear in the UI
+        if (loadedPluginId is not null)
+            _pluginContext?.ReloadApps();
+
         // Fire event outside the lock to avoid deadlocks — subscribers may call
         // GetLoadedPluginIds() which needs a read lock.
         if (loadedPluginId is not null)

@@ -684,7 +684,13 @@ export const useBackend = (
         logger.warn("No current widget tree available for update");
         return null;
       }
-      return applyUpdateMessage(currentTree, newUpdates);
+      let beforeTime = performance.now();
+      let newWidgetTree = applyUpdateMessage(currentTree, newUpdates);
+      let afterTime = performance.now();
+      if ((window as any).recordWidgetTreeUpdateBenchmark) {
+        (window as any).recordWidgetTreeUpdateBenchmark(parentId, afterTime - beforeTime);
+      }
+      return newWidgetTree;
     });
   }, []);
 

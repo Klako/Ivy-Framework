@@ -539,7 +539,13 @@ public class PluginLoader : IPluginManager
 
         // Reload app repository so newly added apps appear in the UI
         if (loadedPluginId is not null)
+        {
             _pluginContext?.ReloadApps();
+            // Refresh any open tabs showing apps from this plugin (e.g. after reload)
+            var appIds = _pluginContext?.GetPluginAppIds(loadedPluginId!);
+            if (appIds is { Count: > 0 })
+                _pluginContext!.RefreshApps(appIds);
+        }
 
         // Fire event outside the lock to avoid deadlocks — subscribers may call
         // GetLoadedPluginIds() which needs a read lock.

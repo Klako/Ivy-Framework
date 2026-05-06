@@ -28,6 +28,7 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/coverage/
 
 # React Doctor
 doctor.txt

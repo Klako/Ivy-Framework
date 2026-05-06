@@ -20,6 +20,26 @@ namespace Ivy.Test.Sync
         private TreeDiffer _lcsNoPropDiffer = new(new(TreeChildrenDiffer.LCS, false));
         private TreeDiffer _lcsWithPropDiffer = new(new(TreeChildrenDiffer.LCS, true));
 
+        private static void AssertUpdateIsSorted(WidgetUpdate update)
+        {
+            var changes = update.Children?.Changes;
+            if (changes is null)
+            {
+                return;
+            }
+            foreach (var (left, right) in changes.SkipLast(1).Zip(changes.Skip(1)))
+            {
+                Assert.True(left.SortIndex < right.SortIndex);
+            }
+            foreach (var change in changes)
+            {
+                if (change is WidgetListUpdate elementUpdate)
+                {
+                    AssertUpdateIsSorted(elementUpdate.Update);
+                }
+            }
+        }
+
         private void TestAllDiffers(WidgetNode source, WidgetNode target)
         {
             var convertedSource = MockWidgetNode.FromWidgetNode(source);
@@ -45,6 +65,7 @@ namespace Ivy.Test.Sync
                 switch (result)
                 {
                     case WidgetUpdate update:
+                        AssertUpdateIsSorted(update);
                         testCase.updates[index] = update;
                         var updatedSource = convertedSource.ApplyDiff(update);
                         MockWidgetNode.AssertEqual(convertedTarget, updatedSource);

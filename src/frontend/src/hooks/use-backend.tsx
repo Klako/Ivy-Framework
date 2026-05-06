@@ -37,7 +37,7 @@ type WidgetPatch =
       patches: Operation[];
     };
 
-type WidgetUpdate = [
+export type WidgetUpdate = [
   type: string | null,
   id: string | null,
   props: {
@@ -47,7 +47,7 @@ type WidgetUpdate = [
   children: WidgetListDiff | null,
 ];
 
-type CompactWidgetNode = [
+export type CompactWidgetNode = [
   type: string,
   id: string,
   props: {
@@ -254,7 +254,11 @@ function applyWidgetUpdate(node: WidgetNode, update: WidgetUpdate): WidgetNode {
     newProps = { ...node.props };
     for (let key in props) {
       let propUpdate = props[key];
-      newProps[key] = applyWidgetPropUpdate(newProps[key], propUpdate);
+      if (propUpdate) {
+        newProps[key] = applyWidgetPropUpdate(newProps[key], propUpdate);
+      } else {
+        delete newProps[key];
+      }
     }
   }
   return {
@@ -1306,4 +1310,9 @@ export const useBackend = (
     disconnected,
     connectionState,
   };
+};
+
+export const _private = {
+  applyWidgetUpdate,
+  decompactWidgetNode,
 };

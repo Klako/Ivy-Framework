@@ -20,9 +20,9 @@ namespace Ivy.Core.Sync
 
             // Compare props
 
-            var propUpdates = new Dictionary<string, IPropUpdate>();
+            var propUpdates = new Dictionary<string, IPropUpdate?>();
 
-            foreach (var ((name, sourceValue), (_, targetValue)) in source.Props.Zip(target.Props))
+            foreach (var (idx, ((name, sourceValue), (_, targetValue))) in source.Props.Zip(target.Props).Index())
             {
                 var propUpdate = options.PropDiff switch
                 {
@@ -32,7 +32,15 @@ namespace Ivy.Core.Sync
 
                 if (propUpdate != null)
                 {
-                    propUpdates.Add(name, propUpdate);
+                    if (propUpdate is PropValueDiff valueDiff
+                        && valueDiff.NewValue.DeepEquals(source.Metadata.PropMetadatas[idx].DefaultStructureValue))
+                    {
+                        propUpdates.Add(name, null);
+                    }
+                    else
+                    {
+                        propUpdates.Add(name, propUpdate);
+                    }
                 }
             }
 

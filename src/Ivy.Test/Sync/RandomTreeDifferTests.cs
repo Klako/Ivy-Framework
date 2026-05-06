@@ -35,8 +35,8 @@ namespace Ivy.Test.Sync
 
         private void TestAllDiffers(WidgetNode source, WidgetNode target)
         {
-            var convertedSource = MockWidgetNode.FromWidgetNode(source);
-            var convertedTarget = MockWidgetNode.FromWidgetNode(target);
+            var convertedSource = SerializedWidget.FromWidgetNode(source);
+            var convertedTarget = SerializedWidget.FromWidgetNode(target);
 
             TreeDiffer[] differs = [
                 _linearNoPropDiffer,
@@ -53,14 +53,14 @@ namespace Ivy.Test.Sync
                     case WidgetUpdate update:
                         AssertUpdateIsSorted(update);
                         var updatedSource = convertedSource.ApplyDiff(update);
-                        MockWidgetNode.AssertEqual(convertedTarget, updatedSource);
+                        SerializedWidget.AssertEqual(convertedTarget, updatedSource);
                         break;
                     case WidgetNode newNode:
-                        var convertedNewNode = MockWidgetNode.FromWidgetNode(newNode);
-                        MockWidgetNode.AssertEqual(convertedTarget, convertedNewNode);
+                        var convertedNewNode = SerializedWidget.FromWidgetNode(newNode);
+                        SerializedWidget.AssertEqual(convertedTarget, convertedNewNode);
                         break;
                     case null:
-                        MockWidgetNode.AssertEqual(convertedTarget, convertedSource);
+                        SerializedWidget.AssertEqual(convertedTarget, convertedSource);
                         break;
                     default:
                         throw new Exception("Invalid result from ComputeDiff");

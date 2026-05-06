@@ -13,12 +13,20 @@ using System.Text.Json.Nodes;
 
 namespace Ivy.Test.Sync
 {
+    [Collection("TestCasesAccumulator")]
     public class TreeDifferTests
     {
         private TreeDiffer _linearNoPropDiffer = new(new(TreeChildrenDiffer.Linear, false));
         private TreeDiffer _linearWithPropDiffer = new(new(TreeChildrenDiffer.Linear, true));
         private TreeDiffer _lcsNoPropDiffer = new(new(TreeChildrenDiffer.LCS, false));
         private TreeDiffer _lcsWithPropDiffer = new(new(TreeChildrenDiffer.LCS, true));
+
+        private readonly UpdateTestCaseFixture _fixture;
+
+        public TreeDifferTests(UpdateTestCaseFixture fixture)
+        {
+            _fixture = fixture;
+        }
 
         private static void AssertUpdateIsSorted(WidgetUpdate update)
         {
@@ -41,60 +49,46 @@ namespace Ivy.Test.Sync
         }
 
         private void TestAllDiffers(WidgetNode source, WidgetNode target)
-        {
-            var convertedSource = MockWidgetNode.FromWidgetNode(source);
-            var convertedTarget = MockWidgetNode.FromWidgetNode(target);
+        { 
+            var convertedSource = SerializedWidget.FromWidgetNode(source);
+            var convertedTarget = SerializedWidget.FromWidgetNode(target);
 
-            TreeDiffer[] differs = [
-                _linearNoPropDiffer,
-                _linearWithPropDiffer,
-                _lcsNoPropDiffer,
-                _lcsWithPropDiffer
+            (string, TreeDiffer)[] differs = [
+                ("linear+nopropdiff",_linearNoPropDiffer),
+                ("linear+propdiff", _linearWithPropDiffer),
+                ("lcs+nopropdiff",_lcsNoPropDiffer),
+                ("lcs+propdiff",_lcsWithPropDiffer)
             ];
 
-            var testCase = new
-            {
-                source = source,
-                target = target,
-                updates = new WidgetUpdate?[4]
-            };
+            var updates = new List<(string, WidgetUpdate)>();
 
-            foreach (var (index, differ) in differs.Index())
+            foreach (var (index, (algo, differ)) in differs.Index())
             {
                 var result = differ.ComputeDiff(source, target);
                 switch (result)
                 {
                     case WidgetUpdate update:
                         AssertUpdateIsSorted(update);
-                        testCase.updates[index] = update;
+                        updates.Add((algo, update));
                         var updatedSource = convertedSource.ApplyDiff(update);
-                        MockWidgetNode.AssertEqual(convertedTarget, updatedSource);
+                        SerializedWidget.AssertEqual(convertedTarget, updatedSource);
                         break;
                     case WidgetNode newNode:
-                        var convertedNewNode = MockWidgetNode.FromWidgetNode(newNode);
-                        MockWidgetNode.AssertEqual(convertedTarget, convertedNewNode);
+                        var convertedNewNode = SerializedWidget.FromWidgetNode(newNode);
+                        SerializedWidget.AssertEqual(convertedTarget, convertedNewNode);
                         break;
                     case null:
-                        MockWidgetNode.AssertEqual(convertedTarget, convertedSource);
+                        SerializedWidget.AssertEqual(convertedTarget, convertedSource);
                         break;
                     default:
                         throw new Exception("Invalid result from ComputeDiff");
                 }
             }
-#pragma warning disable 0162
-            if (false)
+           
+            if (updates.Count > 0)
             {
-
-                if (!File.Exists("tests.msgpack"))
-                {
-                    File.Create("tests.msgpack").Close();
-                }
-
-                FileStream fs = File.Open("tests.msgpack", FileMode.Append);
-                MessagePackSerializer.Serialize(fs, testCase);
-                fs.Close();
+                _fixture.TestCases.Add(new(source, target, updates));
             }
-#pragma warning restore 0162
         }
 
         [Fact]
@@ -222,6 +216,58 @@ namespace Ivy.Test.Sync
                         Id = "34567",
                         TestEvent = new(_ => ValueTask.CompletedTask)
                     },
+                ]
+            };
+
+            TestAllDiffers(source.ToWidgetNode(), target.ToWidgetNode());
+        }
+
+        [Fact]
+        public void TreeDiffer_ChildrenSameEnd()
+        {
+            var source = new TestWidget()
+            {
+                Id = "pokwefp",
+                Children =
+                [
+                    new TestWidget()
+                    {
+                        Id = "12345",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "23456",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "34567",
+                        TestProp3 = TestWidget.TestEnum.Second
+                    }
+                ]
+            };
+            var target = new TestWidget()
+            {
+                Id = "pokwefp",
+                Children =
+                [
+                    new TestWidget()
+                    {
+                        Id = "12345",
+                        TestProp1 = "nondefault",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "23456",
+                        TestEvent = new(_ => ValueTask.CompletedTask)
+                    },
+                    new TestWidget()
+                    {
+                        Id = "34567",
+                        TestProp3 = TestWidget.TestEnum.Second
+                    }
                 ]
             };
 

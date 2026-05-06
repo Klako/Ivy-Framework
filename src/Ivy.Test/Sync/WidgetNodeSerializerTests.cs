@@ -24,7 +24,7 @@ namespace Ivy.Test.Sync
                 Id = expected.Id
             }.ToWidgetNode();
 
-            var result = SerializedWidget.FromWidget(widget);
+            var result = SerializedWidget.FromWidgetNode(widget);
 
             Assert.Equivalent(expected, result, true);
         }
@@ -49,7 +49,7 @@ namespace Ivy.Test.Sync
             };
             widget.Id = expected.Id;
 
-            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
+            var result = SerializedWidget.FromWidgetNode(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }
@@ -91,7 +91,7 @@ namespace Ivy.Test.Sync
                 }
             };
 
-            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
+            var result = SerializedWidget.FromWidgetNode(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }
@@ -115,7 +115,7 @@ namespace Ivy.Test.Sync
             };
             widget.Id = expected.Id;
 
-            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
+            var result = SerializedWidget.FromWidgetNode(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }
@@ -144,7 +144,7 @@ namespace Ivy.Test.Sync
                 }
             };
 
-            var result = SerializedWidget.FromWidget(widget.ToWidgetNode());
+            var result = SerializedWidget.FromWidgetNode(widget.ToWidgetNode());
 
             SerializedWidget.AssertEqual(expected, result);
         }

@@ -42,7 +42,7 @@ namespace Ivy.Core.Sync
             throw new NotImplementedException();
         }
 
-        public void Serialize(ref MessagePackWriter writer, IPropUpdate value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, IPropUpdate? value, MessagePackSerializerOptions options)
         {
             if (value is PropObjectDiff objectDiff)
             {

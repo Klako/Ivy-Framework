@@ -63,6 +63,133 @@ namespace Ivy.Test.Sync
             }
         }
 
+        public SerializedWidget ApplyDiff(WidgetUpdate update)
+        {
+            var widget = this;
+
+            if (update.Type != null)
+            {
+                widget = widget with { Type = CleanTypeName(update.Type) };
+            }
+
+            if (update.Id != null)
+            {
+                widget = widget with { Id = update.Id };
+            }
+
+            if (update.Props != null)
+            {
+                foreach (var (name, propUpdate) in update.Props)
+                {
+                    if (propUpdate is null)
+                    {
+                        widget = widget with { Props = widget.Props.Remove(name) };
+                    }
+                    else
+                    {
+                        if (!widget.Props.TryGetValue(name, out var oldNode))
+                        {
+                            oldNode = new PropStructureLeaf(null);
+                        }
+                        var newNode = ApplyPropDiff(oldNode, propUpdate);
+                        widget = widget with { Props = widget.Props.SetItem(name, newNode) };
+                    }
+                }
+            }
+
+            if (update.Events != null)
+            {
+                widget = widget with { Events = update.Events };
+            }
+
+            if (update.Children != null)
+            {
+                if (update.Children.Changes != null)
+                {
+                    var children = widget.Children;
+
+                    // Assume changes are sorted by SortIndex.
+                    // Reversing ensures that unaffected children
+                    // keep the same index after each change.
+                    foreach (var change in update.Children.Changes.Reverse())
+                    {
+                        if (change is WidgetListUpdate nestedUpdate)
+                        {
+                            var newWidget = children[nestedUpdate.Index].ApplyDiff(nestedUpdate.Update);
+                            children = children.SetItem(nestedUpdate.Index, newWidget);
+                        }
+                        else if (change is WidgetListSplice splice)
+                        {
+                            var convertedWidgets = splice.Widgets.Select(SerializedWidget.FromWidgetNode);
+                            children = children.RemoveRange(splice.Index, splice.Length);
+                            children = children.InsertRange(splice.Index, convertedWidgets);
+                        }
+                    }
+                    widget = widget with { Children = children };
+                }
+            }
+
+            return widget;
+        }
+
+        private static IPropStructureNode ApplyPropDiff(IPropStructureNode source, IPropUpdate? update)
+        {
+            if (update is PropValueDiff valueDiff)
+            {
+                var serializedNewValue = MessagePackSerializer.Serialize(valueDiff.NewValue, SerializeOptions);
+                var deserializedNewValue = MessagePackSerializer.Deserialize<IPropStructureNode>(serializedNewValue, SerializeOptions);
+                return deserializedNewValue;
+            }
+            else if (update is PropObjectDiff objectDiff)
+            {
+                Assert.NotNull(source);
+                Assert.IsType<PropStructureObject>(source);
+                var members = ((PropStructureObject)source).Members;
+                foreach (var (key, change) in objectDiff.Changes)
+                {
+                    if (change is PropObjectUpdate fieldUpdate)
+                    {
+                        members = members.SetItem(key, ApplyPropDiff(members[key], fieldUpdate.Update));
+                    }
+                    else if (change is PropObjectSet fieldSet)
+                    {
+                        members = members.SetItem(key, fieldSet.NewValue);
+                    }
+                    else if (change is PropObjectRemove fieldRemove)
+                    {
+                        members = members.Remove(key);
+                    }
+                }
+                return new PropStructureObject(members);
+            }
+            else if (update is PropArrayDiff arrayDiff)
+            {
+                Assert.NotNull(source);
+                Assert.IsType<PropStructureList>(source);
+                var members = ((PropStructureList)source).Members;
+                foreach (var (index, change) in arrayDiff.Changes)
+                {
+                    members = members.SetItem(index, ApplyPropDiff(members[index], change));
+                }
+                if (arrayDiff.Removals > 0)
+                {
+                    var fromIndex = members.Count - arrayDiff.Removals;
+                    members = members.RemoveRange(fromIndex, arrayDiff.Removals);
+                }
+                foreach (var node in arrayDiff.Appends)
+                {
+                    members = members.Add(node);
+                }
+                return new PropStructureList(members);
+            }
+            return source;
+        }
+
+        private static string CleanTypeName(Type t)
+        {
+            return t.Namespace + "." + Utils.CleanGenericNotation(t.Name);
+        }
+
         internal static MessagePackSerializerOptions SerializeOptions { get; } =
             new MessagePackSerializerOptions(
                CompositeResolver.Create([
@@ -83,7 +210,7 @@ namespace Ivy.Test.Sync
         internal static MessagePackSerializerOptions DeserializeOptions { get; } =
             new MessagePackSerializerOptions(StandardResolver.Instance);
 
-        public static SerializedWidget FromWidget(WidgetNode widget)
+        public static SerializedWidget FromWidgetNode(WidgetNode widget)
         {
             var data = MessagePackSerializer.Serialize(widget, SerializeOptions);
             return MessagePackSerializer.Deserialize<SerializedWidget>(data, DeserializeOptions);

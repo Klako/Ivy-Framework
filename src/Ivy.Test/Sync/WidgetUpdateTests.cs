@@ -17,7 +17,7 @@ namespace Ivy.Test.Sync
             var update = new WidgetUpdate(
                 typeof(TestWidget),
                 "qwdppq",
-                ImmutableDictionary<string, IPropUpdate>.Empty
+                ImmutableDictionary<string, IPropUpdate?>.Empty
                     .Add("testProp1", new PropValueDiff(new PropStructureLeaf("test"))),
                 ["OnClick"],
                 new WidgetListDiff(null, [

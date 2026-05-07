@@ -83,6 +83,8 @@ public record ServerArgs
     /// cookies work over HTTP in desktop environments.
     /// </summary>
     public bool ForceNonSecureCookies { get; set; } = false;
+
+    public WidgetTreeOptions? WidgetTreeOptions { get; set; }
 }
 
 public class Server

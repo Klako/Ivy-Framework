@@ -229,7 +229,7 @@ public class AppHub(
 
             var app = routeResult.AppDescriptor.CreateApp();
 
-            var widgetTree = new WidgetTree(app, contentBuilder, serviceProvider);
+            var widgetTree = new WidgetTree(app, contentBuilder, serviceProvider, server.Args?.WidgetTreeOptions);
 
             var appState = new AppSession
             {

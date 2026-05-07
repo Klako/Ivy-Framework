@@ -322,7 +322,10 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if BENCHMARK
                 if (_options is not null && _options.ReportTimeCallback is not null)
                 {
-                    _options.ReportTimeCallback(timingBeforeJsonSerialize, timingBeforeJsonDiff, timingAfterJsonPatch);
+                    _options.ReportTimeCallback(
+                        timingAfterJsonPatch - timingBeforeJsonSerialize,
+                        timingAfterJsonPatch - timingBeforeJsonDiff
+                    );
                 }
 #endif
 
@@ -374,7 +377,10 @@ public class WidgetTree : IWidgetTree, IObservable<WidgetTreeChanged[]>
 #if BENCHMARK
                 if (_options is not null && _options.ReportTimeCallback is not null)
                 {
-                    _options.ReportTimeCallback(timingBeforeGetWidgetTree, timingBeforeDiff, timingAfterDiff);
+                    _options.ReportTimeCallback(
+                        timingAfterDiff - timingBeforeGetWidgetTree,
+                        timingAfterDiff - timingBeforeDiff
+                    );
                 }
 #endif
 

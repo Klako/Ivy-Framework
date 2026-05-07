@@ -11,8 +11,7 @@ namespace Ivy.Core
         New
     }
     public record WidgetTreeOptions(
-        bool Benchmark,
-        TreeDifferType DiffType, 
+        TreeDifferType DiffType,
         TreeDifferOptions? NewDiffOptions,
-        Func<double, double, double, int>? ReportTimeCallback);
+        Func<double, double, int>? ReportTimeCallback);
 }

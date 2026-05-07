@@ -15,11 +15,11 @@ namespace Ivy.Benchmark.Samples.Apps
 
         private static Directory GenerateFileTree(int maxDepth)
         {
-            var directories = Enumerable.Repeat(0, maxDepth == 0 ? 0 : _rand.Next(5))
+            var directories = Enumerable.Repeat(0, maxDepth == 0 ? 0 : _rand.Next(3))
                 .Select(_ => GenerateFileTree(maxDepth - 1))
                 .ToImmutableList();
 
-            var files = Enumerable.Repeat(0, _rand.Next(5))
+            var files = Enumerable.Repeat(0, _rand.Next(10))
                 .Select(_ => new File(_rand.Next().ToString()))
                 .ToImmutableList();
 
@@ -49,6 +49,8 @@ namespace Ivy.Benchmark.Samples.Apps
 
             var fileTree = UseState<Directory?>(() => _initialFileTree);
 
+            var treeDepth = UseState(5);
+
             var enableKeys = UseState(false);
 
             var search = UseState<string?>(null);
@@ -58,10 +60,14 @@ namespace Ivy.Benchmark.Samples.Apps
                 var newTree = _initialFileTree;
                 if (search.Value is not null)
                 {
-                    Directory? FilterDirectory(Directory dir, string term)
+                    Directory? FilterDirectory(Directory dir, string term, int maxDepth)
                     {
+                        if (maxDepth == 0)
+                        {
+                            return null;
+                        }
                         var files = dir.Files.RemoveAll((file) => !file.Name.Contains(term));
-                        var directories = dir.Directories.Select(subdir => FilterDirectory(subdir, term))
+                        var directories = dir.Directories.Select(subdir => FilterDirectory(subdir, term, maxDepth - 1))
                             .Where(subdir => subdir != null)
                             .Cast<Directory>()
                             .ToImmutableList();
@@ -71,16 +77,19 @@ namespace Ivy.Benchmark.Samples.Apps
                             return null;
                         }
                         return dir with { Directories = directories, Files = files };
-                    };
-                    newTree = FilterDirectory(newTree, search.Value);
+                    }
+                    ;
+                    newTree = FilterDirectory(newTree, search.Value, treeDepth.Value);
                 }
                 fileTree.Set(newTree);
                 interactCounter.Set(interactCounter.Value + 1);
-            }, search, enableKeys);
+            }, search, enableKeys, treeDepth);
 
             return Layout.Vertical()
-                | interactCounter.ToNumberInput().Disabled().TestId("interactCounter")
-                | search.ToTextInput().TestId("searchText")
+                | "Interact counter" | interactCounter.ToNumberInput().Disabled().TestId("interactCounter")
+                | "Search filter" | search.ToTextInput().TestId("searchText")
+                | "Enable keys" | enableKeys.ToBoolInput().TestId("enableKeys")
+                | "Tree depth" | treeDepth.ToNumberInput().TestId("treeDepth")
                 | (fileTree.Value is null ? new Tree() : new Tree(Directory2MenuItem(fileTree.Value)));
         }
     }

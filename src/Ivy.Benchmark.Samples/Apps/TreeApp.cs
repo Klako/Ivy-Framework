@@ -8,7 +8,7 @@ namespace Ivy.Benchmark.Samples.Apps
     [App]
     internal class TreeApp : ViewBase
     {
-        private record Node(string Text, ImmutableList<Node> Children);
+        private record Node(string Text, int Type, ImmutableList<Node> Children);
 
         private static Random _rand = new Random(123456789);
 
@@ -19,25 +19,53 @@ namespace Ivy.Benchmark.Samples.Apps
                 .Select(_ => GenerateTree(maxDepth - 1))
                 .ToImmutableList();
 
-            return new Node(_rand.Next().ToString(), children);
+            return new Node(_rand.Next().ToString(), _rand.Next(3), children);
         }
 
         private static Node _initialTree = GenerateTree(5);
 
-        private object Node2Widget(Node node)
+        private object? GenerateItem(string text, int type, bool mixTypes, bool enableKeys)
         {
-            var subdirItems = node.Children.Select(Node2Widget);
+            if (mixTypes)
+            {
+                if (type is 0)
+                {
+                    return new ListItem(text) with { Key = enableKeys ? text : null };
+                }
+                else if (type is 1)
+                {
+                    var item = Text.Block(text);
+                    if (enableKeys)
+                    {
+                        item = item.Key(text);
+                    }
+                    return item;
+                }
+                else if (type is 2)
+                {
+                    return new Button(text) with { Key = enableKeys ? text : null };
+                }
+                return null;
+            }
+            else
+            {
+                return new ListItem(text) with { Key = enableKeys ? text : null };
+            }
+        }
+
+        private object Node2Widget(Node node, bool mixTypes, bool enableKeys)
+        {
+
+            var item = GenerateItem(node.Text, node.Type, mixTypes, enableKeys)!;
 
             if (node.Children.IsEmpty)
             {
-                return new ListItem(title: node.Text);
+                return item;
             }
 
-            
-
             return Layout.Horizontal()
-                | Text.Literal(node.Text)
-                | new List(node.Children.Select(Node2Widget));
+                | item
+                | new List(node.Children.Select(child => Node2Widget(child, mixTypes, enableKeys)));
         }
 
         public override object? Build()
@@ -79,7 +107,7 @@ namespace Ivy.Benchmark.Samples.Apps
                 | "Mix types" | mixTypes.ToBoolInput().TestId("mixTypes")
                 | "Enable Keys" | enableKeys.ToBoolInput().TestId("enableKeys")
                 | search.ToTextInput().TestId("searchText")
-                | (nodeTree.Value is null ? null : Node2Widget(nodeTree.Value));
+                | (nodeTree.Value is null ? null : Node2Widget(nodeTree.Value, mixTypes.Value, enableKeys.Value));
         }
 
     }

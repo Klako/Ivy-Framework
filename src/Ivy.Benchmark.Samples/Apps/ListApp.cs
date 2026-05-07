@@ -10,9 +10,9 @@ namespace Ivy.Benchmark.Samples.Apps
     internal class ListApp : ViewBase
     {
         private static Random _rand = new Random(123456789);
-        private static ImmutableList<string> _initialList =
+        private static ImmutableList<(string Text, int Type)> _initialList =
             Enumerable.Repeat(0, 1000)
-                .Select(_ => _rand.Next().ToString())
+                .Select(_ => (_rand.Next().ToString(), _rand.Next(3)))
                 .ToImmutableList();
 
         enum SortOrder
@@ -20,6 +20,35 @@ namespace Ivy.Benchmark.Samples.Apps
             Ascending,
             Descending
         };
+
+        private object? GenerateListItem(string text, int type, bool mixTypes, bool enableKeys)
+        {
+            if (mixTypes)
+            {
+                if (type is 0)
+                {
+                    return new ListItem(text) with { Key = enableKeys ? text : null };
+                }
+                else if (type is 1)
+                {
+                    var item = Text.Block(text);
+                    if (enableKeys)
+                    {
+                        item = item.Key(text);
+                    }
+                    return item;
+                }
+                else if (type is 2)
+                {
+                    return new Button(text) with { Key = enableKeys ? text : null };
+                }
+                return null;
+            }
+            else
+            {
+                return new ListItem(text) with { Key = enableKeys ? text : null };
+            }
+        }
 
         public override object? Build()
         {
@@ -38,7 +67,7 @@ namespace Ivy.Benchmark.Samples.Apps
                 var newList = _initialList.Take(listSize.Value).ToImmutableList();
                 if (filter.Value is not null)
                 {
-                    newList = newList.RemoveAll((e) => !e.Contains(filter.Value));
+                    newList = newList.RemoveAll((e) => !e.Text.Contains(filter.Value));
                 }
                 if (sort.Value is not null)
                 {
@@ -52,7 +81,7 @@ namespace Ivy.Benchmark.Samples.Apps
                 }
                 list.Set(newList);
                 interactCounter.Set(interactCounter.Value + 1);
-            }, filter, sort, listSize, enableKeys);
+            }, filter, sort, listSize, enableKeys, mixTypes);
 
             return Layout.Vertical()
                 | "Interact counter" | interactCounter.ToNumberInput().Disabled().TestId("interactCounter")
@@ -63,7 +92,7 @@ namespace Ivy.Benchmark.Samples.Apps
                 | "Sort by" | sort.ToSelectInput(variant: SelectInputVariant.Radio).TestId("sortBy")
                 | list.Value
                     .Take(listSize.Value)
-                    .Select(e => new ListItem(e) with { Key = enableKeys.Value ? e : null });
+                    .Select((e) => GenerateListItem(e.Text, e.Type, mixTypes.Value, enableKeys.Value));
         }
     }
 }
